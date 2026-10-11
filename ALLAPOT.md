@@ -15,12 +15,14 @@
 - Csomagmátrix csak AGH_OWNER_MODE-ban szerkeszthető; ügyféloldalon fix.
 - Licenc: Ed25519, 14 nap türelmi idő, frissítés nonce + SHA-256; referencia-szerver: tools/license-server.
 - Eltávolítás alapból megtartja az adatokat (delete_on_uninstall kapcsoló).
+- Tervező: backdrop-filter csak kis elemen (indítógomb); a paneleken és a teljes képernyős fátylon tilos, mert akadozást okozott (szoftveres Chromium-mérés: 2 → 26–29 képkocka/mp). Az elmosás-beállítás a háttérképre hat.
 - Autoloader: útvonal mindig „/”-rel, DIRECTORY_SEPARATOR tilos (Windowson aktiváláskor fatal volt).
 - Repó gyökere = a plugin; ZIP: bin/build-zip.sh. Verzió maradt 1.0.0 (kiadás előtti javítás).
 - Helyi teszt: Local (Windows, nginx, MySQL) – C:\Users\Andi\Local Sites\htombau.
 
 **Nyitott tételek**
-- htombau: aktiválás visszaigazolása a javítással, utána Windowson végignézni (privát tároló, fájlírás, cron).
+- htombau (Windows, Firefox): visszaigazolni, hogy a tervező már nem akad; ha igen, pontosan hol (görgetés, csúszka, megnyitás). Firefoxban nincs mérés.
+- Windowson végignézni: privát tároló, fájlírás, cron.
 - A teljes forrás-ZIP (tools/license-server, integrációs és regressziós tesztek) nincs a repóban – ha megvan, feltölteni.
 - Éles Magnific + Anthropic kulccsal végigtesztelni (eddig szimulált szerződés).
 - MySQL/MariaDB teljes kör, valódi e-mail (SMTP/SPF/DKIM), éles cron.
