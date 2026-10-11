@@ -1,0 +1,453 @@
+<?php
+/**
+ * Image and style catalogue: roof brands/products, materials, colour
+ * collections, architectural style packs, interior collections and presets.
+ *
+ * @package AutoGroweHome
+ */
+
+namespace AutoGroweHome\Catalog;
+
+use AutoGroweHome\Installer;
+use AutoGroweHome\Support\Util;
+
+defined( 'ABSPATH' ) || exit;
+
+final class Catalog {
+
+	public const TYPES = array(
+		'roof_brand'          => 'Tetőfedési márka',
+		'roof_product'        => 'Tetőfedési termék',
+		'material'            => 'Anyag',
+		'color_collection'    => 'Színkollekció',
+		'style'               => 'Építészeti stíluscsomag',
+		'interior_collection' => 'Belsőépítészeti kollekció',
+		'preset'              => 'Előre beállított csomag',
+	);
+
+	/**
+	 * Roof brand made mandatory by the specification (BRAMAC). Its "required"
+	 * flag and published status cannot be switched off by catalogue edits and
+	 * it cannot be deleted.
+	 */
+	public const SPEC_ROOF_BRAND = 'bramac';
+
+	/** @var array */
+	private static $cache = array();
+
+	public static function all( string $type, bool $only_published = true ): array {
+		$key = $type . ( $only_published ? ':p' : ':a' );
+		if ( isset( self::$cache[ $key ] ) ) {
+			return self::$cache[ $key ];
+		}
+		global $wpdb;
+		$t   = Installer::table( 'catalog' );
+		$sql = $only_published
+			? $wpdb->prepare( "SELECT * FROM {$t} WHERE type = %s AND status = 'published' ORDER BY sort ASC, name ASC", $type ) // phpcs:ignore
+			: $wpdb->prepare( "SELECT * FROM {$t} WHERE type = %s ORDER BY sort ASC, name ASC", $type ); // phpcs:ignore
+		$rows = $wpdb->get_results( $sql, ARRAY_A ) ?: array(); // phpcs:ignore
+		foreach ( $rows as &$r ) {
+			$r['data'] = Util::decode( $r['data'] );
+		}
+		unset( $r );
+		self::$cache[ $key ] = $rows;
+		return $rows;
+	}
+
+	public static function get( string $type, string $slug ): ?array {
+		foreach ( self::all( $type, false ) as $r ) {
+			if ( $r['slug'] === $slug ) {
+				return $r;
+			}
+		}
+		return null;
+	}
+
+	public static function exists( string $type, string $slug ): bool {
+		$r = self::get( $type, $slug );
+		return $r && 'published' === $r['status'];
+	}
+
+	public static function flush(): void {
+		self::$cache = array();
+	}
+
+	/**
+	 * Create or update a catalogue item.
+	 *
+	 * On update, data keys that the incoming item does not contain keep their
+	 * stored value (the admin form only posts the fields it shows, e.g. a
+	 * brand's "required" or a product's "recommended" flag would otherwise be
+	 * lost). To clear a field, send it with an empty value.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public static function save( string $type, array $item ) {
+		global $wpdb;
+		if ( ! isset( self::TYPES[ $type ] ) ) {
+			return new \WP_Error( 'agh_catalog', 'Unknown type' );
+		}
+		$slug = sanitize_key( $item['slug'] ?? '' );
+		$name = sanitize_text_field( $item['name'] ?? '' );
+		if ( '' === $slug ) {
+			$slug = sanitize_key( Util::slugify_filename( $name ) );
+		}
+		if ( '' === $slug || '' === $name ) {
+			return new \WP_Error( 'agh_catalog', __( 'Név és azonosító kötelező.', 'autogrowehome' ) );
+		}
+		$data   = self::sanitize_data( $type, is_array( $item['data'] ?? null ) ? $item['data'] : array() );
+		$t      = Installer::table( 'catalog' );
+		$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$t} WHERE type = %s AND slug = %s", $type, $slug ) ); // phpcs:ignore
+		if ( $exists ) {
+			$stored = Util::decode( (string) $wpdb->get_var( $wpdb->prepare( "SELECT data FROM {$t} WHERE id = %d", (int) $exists ) ) ); // phpcs:ignore
+			$data   = array_merge( $stored, $data );
+		}
+		$status = in_array( $item['status'] ?? 'published', array( 'published', 'hidden' ), true ) ? ( $item['status'] ?? 'published' ) : 'published';
+		if ( 'roof_brand' === $type && self::SPEC_ROOF_BRAND === $slug ) {
+			// Mandatory by specification: never switched off by an edit.
+			$data['required'] = true;
+			$status           = 'published';
+		}
+		$row = array(
+			'type'       => $type,
+			'slug'       => $slug,
+			'name'       => $name,
+			'data'       => Util::json( $data ),
+			'image_id'   => absint( $item['image_id'] ?? 0 ),
+			'sort'       => (int) ( $item['sort'] ?? 0 ),
+			'status'     => $status,
+			'updated_at' => Util::now(),
+		);
+		if ( $exists ) {
+			$wpdb->update( $t, $row, array( 'id' => (int) $exists ) );
+		} else {
+			$row['created_at'] = Util::now();
+			$wpdb->insert( $t, $row );
+		}
+		self::flush();
+		return true;
+	}
+
+	/**
+	 * @return bool False when the item may not be deleted (the mandatory roof brand).
+	 */
+	public static function delete( string $type, string $slug ): bool {
+		global $wpdb;
+		if ( 'roof_brand' === $type && self::SPEC_ROOF_BRAND === $slug ) {
+			return false;
+		}
+		$wpdb->delete( Installer::table( 'catalog' ), array( 'type' => $type, 'slug' => $slug ) );
+		self::flush();
+		return true;
+	}
+
+	private static function sanitize_data( string $type, array $d ): array {
+		$out = array();
+		foreach ( $d as $k => $v ) {
+			$k = sanitize_key( $k );
+			if ( is_array( $v ) ) {
+				$out[ $k ] = self::sanitize_data( $type, $v );
+			} elseif ( is_bool( $v ) || is_int( $v ) || is_float( $v ) ) {
+				$out[ $k ] = $v;
+			} else {
+				$v         = (string) $v;
+				$out[ $k ] = preg_match( '/^#[0-9a-fA-F]{6}$/', $v ) ? strtoupper( $v ) : ( 'url' === $k || 'source' === $k ? esc_url_raw( $v ) : sanitize_textarea_field( $v ) );
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Slug of the mandatory roof brand: the first published roof_brand entry
+	 * whose data has "required" = true; the specification brand (BRAMAC)
+	 * counts as required even if an earlier edit dropped its flag. Null when
+	 * none exists.
+	 */
+	public static function required_brand(): ?string {
+		foreach ( self::all( 'roof_brand' ) as $r ) {
+			if ( ! empty( $r['data']['required'] ) || self::SPEC_ROOF_BRAND === $r['slug'] ) {
+				return (string) $r['slug'];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Default product line of a roof brand: a published product of that brand
+	 * flagged "recommended" (or "default") in its data; otherwise the product
+	 * whose swatch is closest to $color (so an auto-selected tile keeps the
+	 * visitor's roof colour); otherwise the first one in catalogue order.
+	 */
+	public static function default_roof_product( string $brand, string $color = '' ): ?array {
+		$list = array_values(
+			array_filter(
+				self::all( 'roof_product' ),
+				static fn( $r ) => ( $r['data']['brand'] ?? '' ) === $brand
+			)
+		);
+		if ( empty( $list ) ) {
+			return null;
+		}
+		foreach ( $list as $r ) {
+			if ( ! empty( $r['data']['recommended'] ) || ! empty( $r['data']['default'] ) ) {
+				return $r;
+			}
+		}
+		if ( preg_match( '/^#[0-9a-fA-F]{6}$/', $color ) ) {
+			$best = null;
+			$dist = PHP_INT_MAX;
+			foreach ( $list as $r ) {
+				$hex = (string) ( $r['data']['hex'] ?? '' );
+				if ( ! preg_match( '/^#[0-9a-fA-F]{6}$/', $hex ) ) {
+					continue;
+				}
+				$d = 0;
+				for ( $i = 1; $i < 7; $i += 2 ) {
+					$d += ( hexdec( substr( $color, $i, 2 ) ) - hexdec( substr( $hex, $i, 2 ) ) ) ** 2;
+				}
+				if ( $d < $dist ) {
+					$dist = $d;
+					$best = $r;
+				}
+			}
+			if ( $best ) {
+				return $best;
+			}
+		}
+		return $list[0];
+	}
+
+	/**
+	 * Frontend options for a catalogue-backed select.
+	 *
+	 * When a mandatory roof brand exists (required_brand()), the brand select
+	 * only offers that brand – the spec makes it binding for pitched roofs.
+	 */
+	public static function options_for( string $type ): array {
+		$out      = array();
+		$required = 'roof_brand' === $type ? self::required_brand() : null;
+		foreach ( self::all( $type ) as $r ) {
+			if ( null !== $required && $r['slug'] !== $required ) {
+				continue;
+			}
+			$o = array(
+				'value' => $r['slug'],
+				'label' => $r['name'],
+			);
+			if ( ! empty( $r['data']['brand'] ) ) {
+				$o['parent'] = $r['data']['brand'];
+			}
+			if ( ! empty( $r['data']['hex'] ) ) {
+				$o['color'] = $r['data']['hex'];
+			}
+			if ( 'roof_product' === $type ) {
+				// Seeded product data (colour names, swatches) awaits manufacturer verification.
+				$o['verified'] = ! empty( $r['data']['verified'] );
+			}
+			if ( $r['image_id'] ) {
+				$o['image'] = wp_get_attachment_image_url( (int) $r['image_id'], 'thumbnail' ) ?: '';
+			}
+			$out[] = $o;
+		}
+		return $out;
+	}
+
+	public static function color_collections(): array {
+		$out = array();
+		foreach ( self::all( 'color_collection' ) as $r ) {
+			$out[] = array(
+				'slug'   => $r['slug'],
+				'name'   => $r['name'],
+				'colors' => array_values( (array) ( $r['data']['colors'] ?? array() ) ),
+			);
+		}
+		return $out;
+	}
+
+	public static function presets(): array {
+		$out = array();
+		foreach ( self::all( 'preset' ) as $r ) {
+			$out[] = array(
+				'slug'   => $r['slug'],
+				'name'   => $r['name'],
+				'desc'   => (string) ( $r['data']['description'] ?? '' ),
+				'values' => (array) ( $r['data']['values'] ?? array() ),
+				'image'  => $r['image_id'] ? ( wp_get_attachment_image_url( (int) $r['image_id'], 'medium' ) ?: '' ) : '',
+			);
+		}
+		foreach ( self::all( 'style' ) as $r ) {
+			$out[] = array(
+				'slug'   => 'style-' . $r['slug'],
+				'name'   => $r['name'],
+				'desc'   => (string) ( $r['data']['description'] ?? '' ),
+				'values' => array_merge( array( 'arch_style' => $r['slug'] ), (array) ( $r['data']['defaults'] ?? array() ) ),
+				'style'  => true,
+				'image'  => $r['image_id'] ? ( wp_get_attachment_image_url( (int) $r['image_id'], 'medium' ) ?: '' ) : '',
+			);
+		}
+		return $out;
+	}
+
+	/**
+	 * Resolve the roof product description for prompts.
+	 */
+	public static function roof_prompt( string $brand, string $product ): string {
+		$b = $brand ? self::get( 'roof_brand', $brand ) : null;
+		$p = $product ? self::get( 'roof_product', $product ) : null;
+		if ( ! $p ) {
+			return $b ? ( $b['data']['prompt'] ?? '' ) : '';
+		}
+		$parts = array();
+		$parts[] = $p['data']['prompt'] ?? '';
+		if ( ! empty( $p['data']['color_en'] ) ) {
+			$parts[] = 'in ' . $p['data']['color_en'];
+		}
+		return trim( implode( ' ', array_filter( $parts ) ) );
+	}
+
+	/**
+	 * Seed initial catalogue on activation (idempotent; never overwrites admin edits).
+	 */
+	public static function seed(): void {
+		if ( get_option( 'agh_catalog_seeded' ) ) {
+			return;
+		}
+		$src = 'https://feketeteto.hu/bramac/';
+
+		self::save(
+			'roof_brand',
+			array(
+				'slug' => 'bramac',
+				'name' => 'BRAMAC',
+				'sort' => 0,
+				'data' => array(
+					'prompt'   => 'concrete roof tiles',
+					'url'      => 'https://www.bramac.hu',
+					'required' => true,
+				),
+			)
+		);
+		self::save( 'roof_brand', array( 'slug' => 'other', 'name' => __( 'Egyéb / nem meghatározott', 'autogrowehome' ), 'sort' => 99, 'data' => array( 'prompt' => 'roof tiles' ) ) );
+
+		// Product lines and colour names as listed by a Hungarian reseller (see source).
+		// Swatch HEX values are display approximations only. Verify against the official
+		// BRAMAC catalogue and adjust in Admin → Katalógus.
+		$lines = array(
+			'romai'       => array( 'Bramac Római', 'classic Roman-profile concrete roof tiles', array( 'téglavörös' => array( 'brick red', '#9E4A33' ), 'rubinvörös' => array( 'ruby red', '#7E2E2A' ), 'barna' => array( 'brown', '#5A3D2E' ), 'antracit' => array( 'anthracite', '#3A3D40' ) ) ),
+			'reviva'      => array( 'Bramac Reviva', 'concrete roof tiles', array( 'téglavörös' => array( 'brick red', '#9E4A33' ), 'rubinvörös' => array( 'ruby red', '#7E2E2A' ), 'barna' => array( 'brown', '#5A3D2E' ), 'antracit' => array( 'anthracite', '#3A3D40' ) ) ),
+			'tectura'     => array( 'Bramac Tectura', 'flat concrete roof tiles', array( 'antracit' => array( 'anthracite', '#36393C' ), 'sötétbarna' => array( 'dark brown', '#43332A' ), 'ébenfekete' => array( 'ebony black', '#1E1F21' ) ) ),
+			'tegalit'     => array( 'Bramac Tegalit Star', 'flat smooth concrete roof tiles', array( 'terracotta' => array( 'terracotta', '#A65A3A' ), 'vörösbarna' => array( 'reddish brown', '#6B3A2C' ), 'platina ezüst metál' => array( 'platinum silver metallic', '#8C9095' ), 'ébenfekete' => array( 'ebony black', '#1E1F21' ) ) ),
+			'duna'        => array( 'Bramac Duna', 'concrete roof tiles', array( 'antracit' => array( 'anthracite', '#3A3D40' ) ) ),
+			'adria'       => array( 'Bramac Adria', 'Mediterranean-look concrete roof tiles', array( 'magico' => array( 'warm mixed terracotta', '#A0583B' ), 'vecchio' => array( 'aged terracotta', '#8E5A42' ), 'montano' => array( 'earthy brown', '#6E4B3A' ), 'antico' => array( 'antique terracotta', '#9A6A4F' ) ) ),
+			'aerlox'      => array( 'Bramac Aerlox', 'roof tiles', array( 'rubinvörös' => array( 'ruby red', '#7E2E2A' ), 'antracit' => array( 'anthracite', '#3A3D40' ) ) ),
+			'7fok'        => array( 'Bramac 7°', 'low-pitch roof tiles', array( 'téglavörös' => array( 'brick red', '#9E4A33' ), 'ébenfekete' => array( 'ebony black', '#1E1F21' ) ) ),
+			'montero'     => array( 'Bramac Montero', 'roof tiles', array( 'rubinvörös' => array( 'ruby red', '#7E2E2A' ), 'canyon' => array( 'canyon red-brown', '#8A4B35' ), 'gránit' => array( 'granite grey', '#55585B' ), 'bordaux' => array( 'bordeaux', '#5E2A2C' ), 'terra' => array( 'terra', '#9B5B3F' ) ) ),
+		);
+		$sort = 0;
+		foreach ( $lines as $slug => $line ) {
+			foreach ( $line[2] as $color_hu => $c ) {
+				self::save(
+					'roof_product',
+					array(
+						'slug' => 'bramac-' . $slug . '-' . sanitize_key( remove_accents( $color_hu ) ),
+						'name' => $line[0] . ' – ' . $color_hu,
+						'sort' => $sort++,
+						'data' => array(
+							'brand'    => 'bramac',
+							'line'     => $line[0],
+							'color'    => $color_hu,
+							'color_en' => $c[0],
+							'hex'      => $c[1],
+							'prompt'   => $line[1],
+							'source'   => $src,
+							'verified' => false,
+							'note'     => 'A színminta-HEX csak megjelenítési közelítés.',
+						),
+					)
+				);
+			}
+		}
+
+		$collections = array(
+			'meleg-feher'   => array( __( 'Meleg fehér + tölgy', 'autogrowehome' ), array( '#F2EFE9', '#E6DED2', '#B9824F', '#2F3235', '#4A4D50' ) ),
+			'grafit'        => array( __( 'Grafit kontraszt', 'autogrowehome' ), array( '#ECEBE8', '#9EA2A6', '#4A4D50', '#2B2E31', '#1E2226' ) ),
+			'skandinav'     => array( __( 'Skandináv világos', 'autogrowehome' ), array( '#FAFAF8', '#E9E6E1', '#CDBFAE', '#7F8C8D', '#3C4043' ) ),
+			'mediterran'    => array( __( 'Mediterrán föld', 'autogrowehome' ), array( '#F3E9DA', '#E3CFAF', '#C8915A', '#A65A3A', '#5B6B4E' ) ),
+			'termeszetes'   => array( __( 'Természetes kő és zsálya', 'autogrowehome' ), array( '#EDE8E0', '#CFC6B8', '#8E9A80', '#6F8A68', '#3F4A3C' ) ),
+			'alpesi'        => array( __( 'Alpesi fa', 'autogrowehome' ), array( '#F0EBE3', '#A27B5C', '#6B4F3A', '#3F2E23', '#2A2C2E' ) ),
+		);
+		$sort = 0;
+		foreach ( $collections as $slug => $c ) {
+			self::save( 'color_collection', array( 'slug' => $slug, 'name' => $c[0], 'sort' => $sort++, 'data' => array( 'colors' => $c[1] ) ) );
+		}
+
+		$materials = array(
+			'feher-vakolat' => array( __( 'Fehér szilikát vakolat', 'autogrowehome' ), 'facade', '#F2EFE9', 'white silicate render' ),
+			'tolgy-lamella' => array( __( 'Tölgy lamella', 'autogrowehome' ), 'facade', '#B9824F', 'vertical oak lamellas' ),
+			'szurke-kő'     => array( __( 'Szürke mészkő burkolat', 'autogrowehome' ), 'facade', '#9D9A93', 'grey limestone cladding' ),
+			'antracit-fem'  => array( __( 'Antracit állókorcos fém', 'autogrowehome' ), 'facade', '#3A3D40', 'anthracite standing-seam metal' ),
+			'klinker-voros' => array( __( 'Vörös klinker', 'autogrowehome' ), 'facade', '#8E3F2E', 'red clinker brick' ),
+			'tolgy-parketta'=> array( __( 'Natúr tölgy parketta', 'autogrowehome' ), 'floor', '#C9A57C', 'natural oak parquet' ),
+			'mikrocement'   => array( __( 'Világos mikrocement', 'autogrowehome' ), 'floor', '#CFCAC2', 'light microcement' ),
+		);
+		$sort = 0;
+		foreach ( $materials as $slug => $m ) {
+			self::save( 'material', array( 'slug' => sanitize_key( remove_accents( $slug ) ), 'name' => $m[0], 'sort' => $sort++, 'data' => array( 'group' => $m[1], 'hex' => $m[2], 'prompt' => $m[3] ) ) );
+		}
+
+		$styles = array(
+			'modern_minimal'   => array( __( 'Modern minimalista', 'autogrowehome' ), 'clean orthogonal volumes, reduced detailing, crisp white render, large glazing, slim dark frames', array( 'roof_type' => 'flat', 'facade_main' => 'render', 'facade_color' => '#F2EFE9', 'window_style' => 'panoramic', 'window_frame_color' => '#2F3235' ) ),
+			'contemporary_lux' => array( __( 'Kortárs luxus', 'autogrowehome' ), 'refined contemporary luxury, generous cantilevers, natural stone and warm timber, frameless glass, premium landscape lighting', array( 'roof_type' => 'flat', 'facade_main' => 'stone', 'facade_accent' => array( 'wood' ), 'window_style' => 'panoramic' ) ),
+			'mediterranean'    => array( __( 'Mediterrán', 'autogrowehome' ), 'whitewashed or warm sand render, terracotta roof, arched or deep-set openings, olive trees and lavender', array( 'roof_type' => 'hip', 'roof_pitch' => 25, 'facade_color' => '#F3E9DA', 'garden_style' => 'mediterranean' ) ),
+			'scandinavian'     => array( __( 'Skandináv', 'autogrowehome' ), 'simple gabled volumes, light timber cladding, minimal eaves, calm light palette, birch and grasses', array( 'roof_type' => 'gable', 'roof_pitch' => 40, 'facade_main' => 'wood', 'facade_color' => '#E9E6E1' ) ),
+			'bauhaus'          => array( __( 'Bauhaus', 'autogrowehome' ), 'cubic composition, flat roofs, horizontal ribbon windows, white render with dark accents', array( 'roof_type' => 'flat', 'window_style' => 'large', 'facade_color' => '#F7F7F5' ) ),
+			'japandi'          => array( __( 'Japandi', 'autogrowehome' ), 'calm low-profile massing, charred or natural timber, deep eaves, zen garden elements, muted earthy palette', array( 'roof_type' => 'gable', 'roof_pitch' => 22, 'facade_main' => 'wood', 'facade_accent_color' => '#3F2E23' ) ),
+			'classic_burgher'  => array( __( 'Klasszikus polgári', 'autogrowehome' ), 'symmetrical facade, vertical proportioned windows, cornices, hipped roof, rendered walls in soft tones', array( 'roof_type' => 'hip', 'window_style' => 'vertical', 'facade_ornaments' => true ) ),
+			'rustic'           => array( __( 'Vidéki, rusztikus', 'autogrowehome' ), 'natural stone base, timber elements, traditional pitched roof, cottage garden', array( 'roof_type' => 'gable', 'facade_main' => 'stone', 'garden_style' => 'cottage' ) ),
+			'modern_farmhouse' => array( __( 'Modern parasztház', 'autogrowehome' ), 'elongated narrow volume, steep gable roof without overhang, dark roof, white walls, timber accents (Hungarian barnhouse)', array( 'roof_type' => 'gable', 'roof_pitch' => 45, 'gable_finish' => 'flush', 'roof_overhang' => 0 ) ),
+			'american_farm'    => array( __( 'Amerikai farmhouse', 'autogrowehome' ), 'board-and-batten siding, wraparound porch, black windows, standing-seam metal roof', array( 'roof_type' => 'gable', 'facade_main' => 'wood', 'facade_color' => '#F4F4F2', 'window_frame_color' => '#1E1F21' ) ),
+			'alpine'           => array( __( 'Alpesi', 'autogrowehome' ), 'wide overhanging gable roof, timber upper floor over stone or rendered base, balconies with timber railings', array( 'roof_type' => 'gable', 'roof_pitch' => 30, 'roof_overhang' => 1.2, 'facade_accent' => array( 'wood', 'stone' ) ) ),
+			'industrial'       => array( __( 'Ipari stílus', 'autogrowehome' ), 'exposed brick, black steel frames, factory-style glazing, concrete', array( 'facade_main' => 'brick', 'window_divided' => true, 'window_frame_color' => '#1E1F21' ) ),
+			'organic_modern'   => array( __( 'Organikus modern', 'autogrowehome' ), 'soft curved forms, natural textures, earthy render, integration with landscape', array( 'facade_texture' => 'coarse', 'facade_color' => '#E3D6C3' ) ),
+			'high_tech'        => array( __( 'High-tech', 'autogrowehome' ), 'precise metal and glass, expressed structure, slim profiles, cool palette', array( 'roof_type' => 'flat', 'facade_main' => 'metal', 'window_style' => 'panoramic' ) ),
+			'passive'          => array( __( 'Passzívház', 'autogrowehome' ), 'compact efficient volume, deep window reveals, triple glazing, external shading, solar panels', array( 'footprint' => 'rectangle', 'roof_solar' => true, 'shading' => array( 'blinds' ) ) ),
+			'custom'           => array( __( 'Egyedi stílus', 'autogrowehome' ), '', array() ),
+		);
+		$sort = 0;
+		foreach ( $styles as $slug => $s ) {
+			self::save( 'style', array( 'slug' => $slug, 'name' => $s[0], 'sort' => $sort++, 'status' => 'custom' === $slug ? 'hidden' : 'published', 'data' => array( 'direction' => $s[1], 'defaults' => $s[2], 'description' => '' ) ) );
+		}
+
+		self::save(
+			'preset',
+			array(
+				'slug' => 'modern-90-nyereg',
+				'name' => __( 'Modern földszintes, 90 m², nyeregtető', 'autogrowehome' ),
+				'sort' => 0,
+				'data' => array(
+					'description' => __( 'Szürke nyeregtető, világos vakolat, fa és kő kiegészítők, fedett terasz.', 'autogrowehome' ),
+					'values'      => array( 'levels' => 'single', 'net_area' => 90, 'bedrooms' => 2, 'bathrooms' => 1, 'roof_type' => 'gable', 'roof_pitch' => 35, 'roof_brand' => 'bramac', 'roof_color' => '#3A3D40', 'facade_main' => 'render', 'facade_accent' => array( 'wood', 'stone' ), 'terrace_area' => 19, 'arch_style' => 'modern_minimal' ),
+				),
+			)
+		);
+		self::save(
+			'preset',
+			array(
+				'slug' => 'csaladi-120-lapos',
+				'name' => __( 'Modern családi ház, 120 m², lapostető', 'autogrowehome' ),
+				'sort' => 1,
+				'data' => array(
+					'description' => __( 'Lapostető széles kinyúlással, tölgy burkolat, padlóig érő üvegezés.', 'autogrowehome' ),
+					'values'      => array( 'levels' => 'single', 'net_area' => 120, 'bedrooms' => 3, 'bathrooms' => 2, 'roof_type' => 'flat', 'eaves_depth' => 1.5, 'facade_main' => 'render', 'facade_accent' => array( 'wood' ), 'window_style' => 'panoramic', 'terrace_area' => 30, 'arch_style' => 'contemporary_lux', 'time_of_day' => 'golden' ),
+				),
+			)
+		);
+
+		update_option( 'agh_catalog_seeded', 1, false );
+	}
+
+	public static function style_direction( string $slug ): string {
+		$s = self::get( 'style', $slug );
+		return $s ? (string) ( $s['data']['direction'] ?? '' ) : '';
+	}
+}

@@ -1,0 +1,183 @@
+<?php
+/**
+ * Room programme: automatic proposal from the basic parameters and sanitizing
+ * of user-edited rooms.
+ *
+ * @package AutoGroweHome
+ */
+
+namespace AutoGroweHome\Params;
+
+use AutoGroweHome\Support\Util;
+
+defined( 'ABSPATH' ) || exit;
+
+final class RoomProgram {
+
+	public const MAX_ROOMS = 40;
+
+	public static function level_count( array $c ): int {
+		$map = array( 'single' => 1, 'attic' => 2, 'two' => 2, 'three' => 3 );
+		return $map[ $c['levels'] ?? 'single' ] ?? 1;
+	}
+
+	/**
+	 * Propose a room programme from the basic data.
+	 */
+	public static function auto( array $c ): array {
+		$types    = Definitions::room_types();
+		$net      = max( 25.0, (float) ( $c['net_area'] ?? 120 ) );
+		$beds     = max( 0, (int) ( $c['bedrooms'] ?? 3 ) );
+		$baths    = max( 1, (int) ( $c['bathrooms'] ?? 1 ) );
+		$levels   = self::level_count( $c );
+		$open     = ! empty( $c['open_plan'] );
+		$upper    = $levels > 1 ? 1 : 0;
+		$rooms    = array();
+		$add      = static function ( string $type, int $level, float $area, string $name = '' ) use ( &$rooms, $types ) {
+			$rooms[] = array(
+				'type'   => $type,
+				'name'   => '' !== $name ? $name : $types[ $type ][0],
+				'area'   => $area,
+				'level'  => $level,
+				'render' => (bool) $types[ $type ][3],
+			);
+		};
+
+		$add( 'hall', 0, $net >= 150 ? 8 : 5 );
+		if ( $open ) {
+			$add( 'living_kitchen', 0, max( 24, $net * 0.30 ) );
+		} else {
+			$add( 'living', 0, max( 16, $net * 0.18 ) );
+			$add( 'kitchen', 0, max( 8, $net * 0.08 ) );
+			$add( 'dining', 0, max( 8, $net * 0.07 ) );
+		}
+		if ( ! empty( $c['pantry_link'] ) && $net >= 70 ) {
+			$add( 'pantry', 0, 3 );
+		}
+		if ( $net >= 85 || $levels > 1 ) {
+			$add( 'wc', 0, 2 );
+		}
+		if ( $net >= 75 ) {
+			$add( 'utility', 0, 4 );
+		}
+		if ( ! empty( $c['technical_room'] ) && $net >= 100 ) {
+			$add( 'technical', 0, 4.5 );
+		}
+		if ( $levels > 1 ) {
+			for ( $l = 0; $l < $levels; $l++ ) {
+				$add( 'stairs', $l, 6 );
+			}
+		}
+
+		$night_level = $upper;
+		if ( $beds > 0 ) {
+			$add( 'master', $night_level, $net >= 140 ? 16 : 13.5 );
+			for ( $i = 1; $i < $beds; $i++ ) {
+				$level = ( 3 === $levels && $i >= 3 ) ? 2 : $night_level;
+				$add( 'bedroom', $level, $net >= 140 ? 12.5 : 11, sprintf( /* translators: %d: bedroom number */ __( 'Hálószoba %d', 'autogrowehome' ), $i + 1 ) );
+			}
+		}
+		for ( $i = 0; $i < $baths; $i++ ) {
+			$level = ( 0 === $i ) ? $night_level : ( $levels > 1 && 1 === $i ? 0 : $night_level );
+			$add( 'bathroom', $level, 0 === $i ? ( $net >= 140 ? 8 : 6.5 ) : 5, $i > 0 ? sprintf( /* translators: %d: bathroom number */ __( 'Fürdőszoba %d', 'autogrowehome' ), $i + 1 ) : '' );
+		}
+		if ( $net >= 130 && $beds > 0 ) {
+			$add( 'wardrobe', $night_level, 4.5 );
+		}
+		if ( $net >= 160 ) {
+			$add( 'office', 0, 10 );
+		}
+		if ( $beds > 1 || $levels > 1 ) {
+			for ( $l = 0; $l < $levels; $l++ ) {
+				$add( 'corridor', $l, $l === 0 ? 5 : 4 );
+			}
+		}
+
+		// Scale to the requested net area (keep circulation & wet rooms close to their sizes).
+		$sum = array_sum( wp_list_pluck( $rooms, 'area' ) );
+		if ( $sum > 0 ) {
+			$flex_types = array( 'living_kitchen', 'living', 'kitchen', 'dining', 'master', 'bedroom', 'office' );
+			$flex_sum   = 0.0;
+			foreach ( $rooms as $r ) {
+				if ( in_array( $r['type'], $flex_types, true ) ) {
+					$flex_sum += $r['area'];
+				}
+			}
+			$fixed  = $sum - $flex_sum;
+			$factor = $flex_sum > 0 ? max( 0.6, ( $net - $fixed ) / $flex_sum ) : 1;
+			foreach ( $rooms as &$r ) {
+				if ( in_array( $r['type'], $flex_types, true ) ) {
+					$r['area'] = $r['area'] * $factor;
+				}
+				$r['area'] = round( max( $types[ $r['type'] ][5], $r['area'] ) * 2 ) / 2;
+			}
+			unset( $r );
+		}
+
+		foreach ( $rooms as $i => &$r ) {
+			$r['id'] = 'r' . ( $i + 1 );
+		}
+		unset( $r );
+		return $rooms;
+	}
+
+	/**
+	 * Sanitize a user-provided room list.
+	 */
+	public static function sanitize( $rooms, int $max_level = 2 ): array {
+		if ( ! is_array( $rooms ) ) {
+			return array();
+		}
+		$types   = Definitions::room_types();
+		$styles  = Definitions::interior_styles();
+		$out     = array();
+		$seen    = array();
+		foreach ( array_slice( array_values( $rooms ), 0, self::MAX_ROOMS ) as $i => $r ) {
+			if ( ! is_array( $r ) ) {
+				continue;
+			}
+			$type = isset( $types[ $r['type'] ?? '' ] ) ? $r['type'] : 'custom';
+			$id   = preg_replace( '/[^a-z0-9_]/', '', strtolower( (string) ( $r['id'] ?? '' ) ) );
+			if ( '' === $id || isset( $seen[ $id ] ) ) {
+				$id = 'r' . ( $i + 1 ) . '_' . substr( md5( (string) $i . $type ), 0, 4 );
+			}
+			$seen[ $id ] = true;
+			$room        = array(
+				'id'     => $id,
+				'type'   => $type,
+				'name'   => Util::clean_text( $r['name'] ?? $types[ $type ][0], 60 ) ?: $types[ $type ][0],
+				'area'   => self::num( $r['area'] ?? $types[ $type ][2], 1, 250 ),
+				'level'  => (int) max( 0, min( $max_level, (int) ( $r['level'] ?? 0 ) ) ),
+				'render' => ! empty( $r['render'] ),
+			);
+			foreach ( array( 'width', 'length' ) as $dim ) {
+				if ( isset( $r[ $dim ] ) && '' !== $r[ $dim ] && (float) $r[ $dim ] > 0 ) {
+					$room[ $dim ] = self::num( $r[ $dim ], 0.8, 30 );
+				}
+			}
+			if ( isset( $r['ceiling_height'] ) && (float) $r['ceiling_height'] > 0 ) {
+				$room['ceiling_height'] = self::num( $r['ceiling_height'], 2.2, 8 );
+			}
+			foreach ( array( 'floor', 'wall', 'ceiling', 'lighting', 'furniture', 'decor', 'curtains', 'doors', 'windows', 'electrical', 'heating', 'notes' ) as $txt ) {
+				if ( isset( $r[ $txt ] ) && '' !== $r[ $txt ] ) {
+					$room[ $txt ] = Util::clean_text( $r[ $txt ], 'notes' === $txt ? 400 : 120 );
+				}
+			}
+			foreach ( array( 'wall_color', 'furniture_color' ) as $col ) {
+				if ( ! empty( $r[ $col ] ) && preg_match( '/^#[0-9a-fA-F]{6}$/', (string) $r[ $col ] ) ) {
+					$room[ $col ] = strtoupper( $r[ $col ] );
+				}
+			}
+			if ( ! empty( $r['interior_style'] ) && isset( $styles[ $r['interior_style'] ] ) ) {
+				$room['interior_style'] = $r['interior_style'];
+			}
+			$out[] = $room;
+		}
+		return $out;
+	}
+
+	private static function num( $v, float $min, float $max ): float {
+		$v = is_numeric( $v ) ? (float) $v : $min;
+		return round( max( $min, min( $max, $v ) ), 2 );
+	}
+}

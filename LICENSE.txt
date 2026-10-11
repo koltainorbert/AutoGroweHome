@@ -1,0 +1,71 @@
+AutoGroweHome – Kereskedelmi felhasználási licenc (EULA)
+Verzió: 1.0 · Hatályos: 2026-10-11
+
+Szerzői jog © 2026 Koltai Norbert – Infostudio (https://infostudio.hu). Minden jog fenntartva.
+
+FIGYELEM: ez a szöveg sablon. Éles értékesítés előtt jogásszal kell véglegesíteni
+(különösen a felelősségkorlátozást, a fogyasztói jogokat és az alkalmazandó jogot).
+
+1. Tárgy
+   Ez a licenc az AutoGroweHome WordPress-bővítmény (a továbbiakban: Szoftver)
+   forráskódjára, dokumentációjára, nyelvi fájljaira és kiegészítő eszközeire
+   (pl. tools/license-server) vonatkozik.
+
+2. Licencbe adás
+   A Licencadó a megvásárolt csomag (Starter, Professional vagy Agency) és
+   időszak (havi, éves vagy a megállapodás szerinti) idejére nem kizárólagos,
+   át nem ruházható felhasználási jogot ad a Szoftver telepítésére és
+   használatára annyi weboldalon, ahányat a csomag megenged. A weboldalak
+   számát és a funkciókat a licencszerver aláírt válasza határozza meg.
+
+3. Korlátozások – a Licencvevő nem jogosult:
+   a) a Szoftvert vagy annak módosított változatát továbbértékesíteni,
+      bérbe adni, allicencbe adni vagy nyilvánosan terjeszteni;
+   b) a licencellenőrzést, a funkciókapukat vagy a weboldal-limitet
+      megkerülni, eltávolítani vagy hatástalanítani;
+   c) a szerzői jogi és márkajelzéseket eltávolítani, kivéve, ha a csomag
+      (Agency, white-label) ezt kifejezetten megengedi.
+   A Szoftver a WordPress GPL-licencű API-jait használja; a Licencadó saját
+   kódjára és tartalmára ez a kereskedelmi licenc vonatkozik. Ha egy
+   jogszabály vagy a WordPress licencfeltételei ennél tágabb jogot biztosítanak,
+   az az irányadó.
+
+4. Külső szolgáltatások
+   A Szoftver külső szolgáltatásokat (pl. Magnific, Anthropic) a Licencvevő
+   saját API-kulcsaival és saját költségére használ. Ezek díjai, feltételei és
+   elérhetősége nem részei ennek a licencnek, és a Licencadó nem felel értük.
+
+5. Az eredmények jellege
+   A generált látványtervek mesterséges intelligenciával készült koncepciók;
+   a tervvázlatok nem engedélyezési vagy kiviteli tervek. A Licencvevő felel
+   azért, hogy a látogatóknak ezt egyértelműen jelezze (a Szoftver ehhez
+   beépített figyelmeztetéseket ad), és hogy jogszerű adatkezelési
+   tájékoztatót és ÁSZF-et tegyen közzé.
+
+6. Lejárat és megszűnés
+   Az előfizetés lejárta vagy a licenc megszűnése után a prémium funkciók
+   kikapcsolnak; a Licencvevő adatai (projektek, ajánlatkérések, beállítások)
+   nem törlődnek. Frissítésre és támogatásra csak érvényes licenc jogosít.
+
+7. Szavatosság és felelősség
+   A Szoftver „ahogy van” állapotban kerül átadásra. A Licencadó felelőssége –
+   a jogszabály által megengedett legnagyobb mértékben – a Licencvevő által
+   az adott licencidőszakra megfizetett díj összegére korlátozódik. A
+   Licencadó nem felel a külső szolgáltatások kieséséből, a tárhely hibájából
+   vagy a nem megfelelő konfigurációból eredő károkért.
+
+8. Adatvédelem
+   A Szoftver a Licencvevő szerverén tárolja az adatokat; a Licencvevő az
+   adatkezelő. A licencszerver csak a licenc működéséhez szükséges adatokat
+   (kulcs-hash, weboldal-URL, példányazonosító, verzió) kezeli.
+
+9. Alkalmazandó jog
+   Erre a licencre a magyar jog az irányadó.
+
+---------------------------------------------------------------------------
+English summary (non-binding): Commercial, non-exclusive, non-transferable
+licence for the purchased plan, period and number of sites. No resale,
+redistribution or circumvention of licence checks. Third-party AI services are
+used with the licensee's own keys and costs. Generated images are AI concepts;
+sketch plans are not permit or construction drawings. Provided "as is"; data
+is kept after expiry. Hungarian law applies. Template – legal review required.

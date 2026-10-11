@@ -1,0 +1,47 @@
+=== AutoGroweHome ===
+Contributors: infostudio
+Tags: house designer, ai, configurator, quote request, construction
+Requires at least: 6.2
+Tested up to: 7.2
+Requires PHP: 8.0
+Stable tag: 1.0.0
+License: Commercial
+License URI: https://infostudio.hu/autogrowehome
+
+AI-alapú háztervező és kivitelezői ajánlatkérő: három házkoncepció, galériák, méretezett tervvázlatok, védett kivitelezői csomag.
+
+== Description ==
+
+A látogató egy popupban megadja az álomháza paramétereit, a rendszer kérésenként három eltérő koncepciót készít (AI-látványterv + determinisztikus, méretezett tervvázlat), a kiválasztott házhoz galériát generál, majd a látogató mentheti a projektet vagy ajánlatot kérhet. Az ajánlatkérésből védett kivitelezői csomag (ZIP) és e-mail-értesítés készül.
+
+* Képgenerálás: Magnific (saját API-kulccsal), tervezés/értelmezés: Anthropic (opcionális, saját kulccsal), helyi teszt mód jelölt vázlatképekkel.
+* A látványtervek MI-vel készült koncepciók; a tervvázlatok nem engedélyezési vagy kiviteli tervek.
+* 16 nyelv, GDPR-eszközök, IP-alapú napi keret, kereskedelmi licencmodul.
+
+Részletes dokumentáció: a csomag `docs/` mappája (magyarul).
+
+== Installation ==
+
+1. Bővítmények → Új hozzáadása → Bővítmény feltöltése → `autogrowehome-1.0.0.zip`, majd Bekapcsolás.
+2. Követelmények: PHP 8.0+, kiterjesztések: mbstring, sodium, gd, zip, json.
+3. AutoGroweHome → Beállítások: Magnific API-kulcs (vagy teszt mód), opcionálisan Anthropic-kulcs; kivitelezői e-mail-címek; jogi dokumentumok.
+4. Tedd az `[autogrowehome]` shortcode-ot egy oldalra, vagy kapcsold be a lebegő indítógombot.
+5. Éles üzem előtt: `docs/TELEPITES-UTANI-ELLENORZOLISTA.md`.
+
+== Frequently Asked Questions ==
+
+= Kell API-kulcs? =
+Éles képgeneráláshoz Magnific API-kulcs kell (saját előfizetés, saját költség). Kulcs nélkül teszt módban kipróbálható: ekkor a képek helyi, jelölt vázlatok.
+
+= 4K-s képeket ad? =
+Csak akkor jelöli 4K-nak, ha a kép tényleges felbontása eléri azt; egyébként a valós felbontást írja ki.
+
+= Mi történik, ha lejár a licenc? =
+A projektek és beállítások megmaradnak; a prémium funkciók kikapcsolnak, a Starter szint működik tovább.
+
+További kérdések: `docs/GYIK.md`.
+
+== Changelog ==
+
+= 1.0.0 =
+* Első kiadás. Részletek: CHANGELOG.md.

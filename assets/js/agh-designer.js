@@ -1,0 +1,1702 @@
+/*!
+ * AutoGroweHome – háztervező (designer) app
+ * Koltai Norbert – Infostudio
+ * Vanilla JS, no external dependencies.
+ */
+(function () {
+	'use strict';
+
+	var LOADER = window.AGH_LOADER || {};
+	var REST = LOADER.rest || (window.wpApiSettings ? window.wpApiSettings.root + 'agh/v1/' : '/wp-json/agh/v1/');
+	var LS_KEY = 'agh_draft_v1';
+	var LS_THEME = 'agh_theme';
+	var LS_PRESETS = 'agh_presets';
+	// WordPress REST nonce of a logged-in visitor (empty for guests): sent as X-WP-Nonce so the REST layer sees the user.
+	var WP_NONCE = LOADER.wpNonce || '';
+
+	/* ------------------------------------------------------------------ utils */
+	function h(tag, attrs) {
+		var el = document.createElement(tag);
+		if (attrs) {
+			for (var k in attrs) {
+				if (!Object.prototype.hasOwnProperty.call(attrs, k)) { continue; }
+				var v = attrs[k];
+				if (v === null || v === undefined || v === false) { continue; }
+				if (k === 'class') { el.className = v; }
+				else if (k === 'text') { el.textContent = v; }
+				else if (k === 'html') { el.innerHTML = v; }
+				else if (k.indexOf('on') === 0 && typeof v === 'function') { el.addEventListener(k.slice(2), v); }
+				else if (k === 'style' && typeof v === 'object') { for (var s in v) { el.style.setProperty(s, v[s]); } }
+				else { el.setAttribute(k, v === true ? '' : v); }
+			}
+		}
+		for (var i = 2; i < arguments.length; i++) { append(el, arguments[i]); }
+		return el;
+	}
+	function append(el, c) {
+		if (c === null || c === undefined || c === false) { return; }
+		if (Array.isArray(c)) { c.forEach(function (x) { append(el, x); }); return; }
+		el.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+	}
+	function clear(el) { while (el && el.firstChild) { el.removeChild(el.firstChild); } return el; }
+	function clone(o) { return JSON.parse(JSON.stringify(o)); }
+	function debounce(fn, ms) { var t; return function () { var a = arguments, s = this; clearTimeout(t); t = setTimeout(function () { fn.apply(s, a); }, ms); }; }
+	function lsGet(k, d) { try { var v = window.localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+	function lsSet(k, v) { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+	function fmt(n, d) { var x = Number(n); if (!isFinite(x)) { return '–'; } return x.toLocaleString(S.locale.replace('_', '-'), { maximumFractionDigits: d === undefined ? 1 : d }); }
+
+	var ICONS = {
+		home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+		sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+		cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
+		roof: '<path d="M2 12l10-8 10 8"/><path d="M6 10v10h12V10"/><path d="M16 6V3h2v4.5"/>',
+		wall: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M3 14h18M9 4v5M15 9v5M9 14v6"/>',
+		window: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M12 3v18M4 12h16"/>',
+		plan: '<rect x="3" y="3" width="18" height="18" rx="1.5"/><path d="M3 12h7v9M10 3v5M14 12h7M14 12V3"/>',
+		sofa: '<path d="M4 11V8a2 2 0 012-2h12a2 2 0 012 2v3"/><path d="M2 12a2 2 0 014 0v3h12v-3a2 2 0 014 0v6H2z"/><path d="M5 18v2M19 18v2"/>',
+		kitchen: '<rect x="3" y="3" width="18" height="18" rx="1.5"/><path d="M3 9h18"/><circle cx="8" cy="6" r=".8"/><circle cx="12" cy="6" r=".8"/><path d="M8 13h8M8 17h5"/>',
+		bath: '<path d="M4 12h16v3a5 5 0 01-5 5H9a5 5 0 01-5-5z"/><path d="M6 12V5a2 2 0 014 0"/><path d="M7 20l-1 2M17 20l1 2"/>',
+		tiles: '<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>',
+		tree: '<path d="M12 22v-6"/><path d="M12 16c-4 0-7-2.5-7-6 0-3 2-5 4-5.5C9.5 2.8 10.7 2 12 2s2.5.8 3 2.5c2 .5 4 2.5 4 5.5 0 3.5-3 6-7 6z"/>',
+		bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+		camera: '<path d="M4 7h3l2-3h6l2 3h3a1 1 0 011 1v11a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1z"/><circle cx="12" cy="13" r="4"/>',
+		pen: '<path d="M4 20h4L20 8l-4-4L4 16z"/><path d="M14 6l4 4"/>',
+		sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+		moon: '<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>',
+		close: '<path d="M6 6l12 12M18 6L6 18"/>',
+		help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .5c0 1.7-2.5 2-2.5 4"/><circle cx="12" cy="17" r=".6"/>',
+		folder: '<path d="M3 6a1 1 0 011-1h5l2 2h9a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>',
+		save: '<path d="M5 3h11l3 3v14a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',
+		send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+		mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+		download: '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+		check: '<path d="M5 12l5 5L20 7"/>',
+		alert: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>',
+		info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+		error: '<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>',
+		search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+		plus: '<path d="M12 5v14M5 12h14"/>',
+		trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+		chev: '<path d="M9 6l6 6-6 6"/>',
+		left: '<path d="M15 6l-6 6 6 6"/>',
+		grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+		sliders: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+		layers: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+		refresh: '<path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 4v7h-7"/>',
+		globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
+		ai: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 15l2-6 2 6M9.7 13h2.6M16 9v6"/>',
+		expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+		area: '<path d="M4 4h16v16H4z"/><path d="M4 9h5V4"/>',
+		bed: '<path d="M3 18V7M3 13h18v5M21 18v-3a3 3 0 00-3-3h-7v1"/><circle cx="7" cy="10" r="1.6"/>',
+		stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+		star: '<path d="M12 3l2.7 5.6 6.1.8-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1L3.2 9.4l6.1-.8z"/>',
+		more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>'
+	};
+	function icon(name, cls) {
+		var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		s.setAttribute('viewBox', '0 0 24 24');
+		s.setAttribute('class', 'agh-ico' + (cls ? ' ' + cls : ''));
+		s.setAttribute('aria-hidden', 'true');
+		s.innerHTML = ICONS[name] || ICONS.info;
+		return s;
+	}
+
+	/* ------------------------------------------------------------------ state */
+	var S = {
+		boot: null,
+		locale: 'hu_HU',
+		config: null,
+		explicit: {},
+		mode: 'simple',
+		cat: 'basics',
+		search: '',
+		theme: 'light',
+		view: 'design',
+		project: null,
+		projectId: null,
+		selected: null,
+		galleryTab: 'exterior',
+		galleryIndex: 0,
+		check: { errors: [], warnings: [], info: [], metrics: {} },
+		dirty: false,
+		busy: false,
+		poll: null,
+		pollDelay: 3000,
+		tab: 'params',
+		lang: '',
+		openRooms: {},
+		// Roof product chosen by the server (/validate) while the visitor has not picked one.
+		autoRoof: ''
+	};
+	var root, shell, els = {};
+
+	function t(key) {
+		var i = S.boot && S.boot.i18n;
+		return (i && i[key]) || key;
+	}
+	function tf(key) {
+		var s = t(key);
+		for (var i = 1; i < arguments.length; i++) { s = s.replace('%' + i + '$s', arguments[i]).replace('%s', arguments[i]).replace('%d', arguments[i]); }
+		return s;
+	}
+
+	/* ------------------------------------------------------------------ api */
+	function api(method, path, body) {
+		var headers = { 'Accept': 'application/json' };
+		if (S.boot) { headers['X-AGH-Nonce'] = S.boot.nonce; }
+		if (WP_NONCE) { headers['X-WP-Nonce'] = WP_NONCE; }
+		var opt = { method: method, credentials: 'same-origin', headers: headers };
+		if (body !== undefined) { headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+		var url = REST + path;
+		if (S.lang) { url += (url.indexOf('?') === -1 ? '?' : '&') + 'agh_lang=' + encodeURIComponent(S.lang); }
+		return fetch(url, opt).then(function (r) {
+			return r.text().then(function (txt) {
+				var data = {};
+				try { data = txt ? JSON.parse(txt) : {}; } catch (e) { data = { message: t('err_network') }; }
+				if (!r.ok) { var err = new Error(data.message || ('HTTP ' + r.status)); err.status = r.status; err.data = data; throw err; }
+				return data;
+			});
+		});
+	}
+	function event(type) { api('POST', 'events', { type: type }).catch(function () {}); }
+
+	/* ------------------------------------------------------------------ boot */
+	function loadBoot(lang) {
+		var u = REST + 'bootstrap';
+		if (lang) { u += (u.indexOf('?') === -1 ? '?' : '&') + 'lang=' + encodeURIComponent(lang) + '&agh_lang=' + encodeURIComponent(lang); }
+		function get(withNonce) {
+			var headers = { 'Accept': 'application/json' };
+			if (withNonce) { headers['X-WP-Nonce'] = WP_NONCE; }
+			return fetch(u, { credentials: 'same-origin', headers: headers });
+		}
+		return get(!!WP_NONCE)
+			.then(function (r) {
+				// A stale REST nonce (e.g. logged out in another tab) is rejected by WordPress: continue as a guest.
+				if (r.status === 403 && WP_NONCE) { WP_NONCE = ''; return get(false); }
+				return r;
+			})
+			.then(function (r) { if (!r.ok) { throw new Error('bootstrap'); } return r.json(); })
+			.then(function (b) {
+				S.boot = b;
+				if (b.wpNonce) { WP_NONCE = b.wpNonce; }
+				S.locale = b.locale || 'hu_HU';
+				S.fields = {};
+				b.schema.fields.forEach(function (f) { S.fields[f.id] = f; });
+				return b;
+			});
+	}
+
+	function initConfig() {
+		var draft = lsGet(LS_KEY, null);
+		S.config = clone(S.boot.defaults);
+		if (draft && draft.config && draft.v === S.boot.version) {
+			Object.keys(draft.config).forEach(function (k) { if (k in S.config || k === 'rooms') { S.config[k] = draft.config[k]; } });
+			S.explicit = draft.explicit || {};
+			S.projectId = draft.project || null;
+			S.mode = draft.mode || S.boot.layout.mode;
+			S.autoRoof = draft.autoRoof || '';
+		} else {
+			S.mode = S.boot.layout.mode;
+		}
+	}
+	var persist = debounce(function () {
+		lsSet(LS_KEY, { v: S.boot.version, config: S.config, explicit: S.explicit, project: S.projectId, mode: S.mode, autoRoof: S.autoRoof });
+	}, 300);
+
+	/* ------------------------------------------------------------------ open/close */
+	function open() {
+		if (root && document.body.contains(root)) { return; }
+		var p = S.boot ? Promise.resolve(S.boot) : loadBoot();
+		p.then(function () {
+			if (!S.config) { initConfig(); }
+			build();
+			event('popup_open');
+			if (S.projectId) { loadProject(S.projectId, true); }
+			if (S.boot.layout.tour && !lsGet('agh_tour_done', false)) { setTimeout(showTour, 400); }
+		}).catch(function () {
+			window.alert(S.boot ? t('err_boot') : (LOADER.errBoot || t('err_boot')));
+		});
+	}
+
+	function close(force) {
+		if (!force && S.dirty) {
+			confirmDialog(t('unsaved_title'), t('unsaved_text'), t('close_anyway'), function () { close(true); });
+			return;
+		}
+		stopPoll();
+		closeMenu(false);
+		document.removeEventListener('keydown', onKey);
+		if (root) { root.remove(); }
+		root = null;
+		document.documentElement.style.overflow = '';
+		if (S.lastFocus && S.lastFocus.focus) { S.lastFocus.focus(); }
+	}
+
+	function onKey(e) {
+		if (e.key === 'Escape') {
+			if (menuOpen()) { closeMenu(true); return; }
+			var top = root.querySelector('.agh-lightbox, .agh-dialog-wrap');
+			if (top) { top.remove(); return; }
+			close(false);
+		}
+		if (e.key === 'Tab') { trapFocus(e); }
+		if (S.view === 'gallery' && root.querySelector('.agh-lightbox')) {
+			if (e.key === 'ArrowRight') { stepLightbox(1); }
+			if (e.key === 'ArrowLeft') { stepLightbox(-1); }
+		}
+	}
+	function trapFocus(e) {
+		var scope = root.querySelector('.agh-dialog-wrap, .agh-lightbox') || shell;
+		// Only rendered controls count (elements hidden on small screens must not become the trap's ends).
+		var f = Array.prototype.filter.call(scope.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'), function (el) { return el.getClientRects().length > 0; });
+		if (!f.length) { return; }
+		var first = f[0], last = f[f.length - 1];
+		if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+		else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+	}
+
+	/* ------------------------------------------------------------------ theme */
+	function initialTheme() {
+		var saved = lsGet(LS_THEME, null);
+		if (saved) { return saved; }
+		var def = S.boot.brand.theme;
+		if (def === 'dark' || def === 'light') { return def; }
+		return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+	}
+	function setTheme(th) {
+		S.theme = th;
+		root.setAttribute('data-theme', th);
+		lsSet(LS_THEME, th);
+		if (els.themeBtn) { clear(els.themeBtn); els.themeBtn.appendChild(icon(th === 'dark' ? 'sun' : 'moon')); els.themeBtn.setAttribute('aria-label', th === 'dark' ? t('theme_light') : t('theme_dark')); }
+	}
+
+	/* ------------------------------------------------------------------ build shell */
+	function build() {
+		S.lastFocus = document.activeElement;
+		root = h('div', { class: 'agh-root agh-overlay' + (S.boot.brand.animations ? '' : ' agh-noanim'), role: 'dialog', 'aria-modal': 'true', 'aria-label': S.boot.brand.name, 'data-shadow': S.boot.brand.shadow || 'soft' });
+		S.theme = initialTheme();
+		root.setAttribute('data-theme', S.theme);
+		root.addEventListener('mousedown', function (e) { if (e.target === root) { close(false); } });
+
+		shell = h('div', { class: 'agh-shell is-tab-' + S.tab, 'data-actionbar': S.boot.layout.action_bar });
+		if (S.boot.brand.background) { shell.setAttribute('data-bg', '1'); shell.style.setProperty('--agh-bg-img', 'url("' + S.boot.brand.background.replace(/"/g, '') + '")'); }
+
+		shell.appendChild(buildHeader());
+		var body = h('div', { class: 'agh-body' });
+		var panels = {
+			params: els.paramsPanel = h('section', { class: 'agh-panel agh-glass agh-panel-params', 'aria-label': t('panel_params') }),
+			stage: els.stagePanel = h('section', { class: 'agh-panel agh-glass agh-panel-stage agh-stage', 'aria-label': t('panel_stage') }),
+			summary: els.summaryPanel = h('aside', { class: 'agh-panel agh-glass agh-panel-summary', 'aria-label': t('panel_summary') })
+		};
+		var order = S.boot.layout.order.length === 3 ? S.boot.layout.order : ['params', 'stage', 'summary'];
+		order.forEach(function (k) { body.appendChild(panels[k]); });
+		if (order[0] !== 'params') {
+			var widths = order.map(function (k) { return k === 'params' ? 'var(--agh-left-w)' : (k === 'summary' ? 'var(--agh-right-w)' : 'minmax(0,1fr)'); });
+			body.style.gridTemplateColumns = widths.join(' ');
+		}
+		shell.appendChild(body);
+		shell.appendChild(els.actionbar = h('footer', { class: 'agh-actionbar' }));
+		shell.appendChild(buildMobileTabs());
+		shell.appendChild(els.toasts = h('div', { class: 'agh-toasts', 'aria-live': 'polite' }));
+		root.appendChild(shell);
+		document.body.appendChild(root);
+		document.documentElement.style.overflow = 'hidden';
+		document.addEventListener('keydown', onKey);
+
+		renderParams();
+		renderStage();
+		renderSummary();
+		renderActionbar();
+		validate();
+		setTimeout(function () { var f = shell.querySelector('.agh-rail button'); if (f) { f.focus(); } }, 50);
+	}
+
+	function buildHeader() {
+		var b = S.boot.brand;
+		var mark = b.logo ? h('img', { src: b.logo, alt: b.name })
+			: (b.icon ? h('img', { class: 'agh-brand-icon', src: b.icon, alt: b.name }) : h('div', { class: 'agh-brand-mark' }, icon('home')));
+		var brand = h('div', { class: 'agh-brand' },
+			mark,
+			h('div', { style: { 'min-width': '0' } },
+				h('div', { class: 'agh-brand-name', text: b.title || b.name }),
+				h('div', { class: 'agh-brand-sub', text: b.header || (b.author ? b.author : t('tagline')) })
+			)
+		);
+		var mode = h('div', { class: 'agh-seg agh-hide-m', role: 'group', 'aria-label': t('mode') },
+			h('button', { type: 'button', 'aria-pressed': S.mode === 'simple' ? 'true' : 'false', onclick: function () { setMode('simple'); }, text: t('mode_simple') }),
+			h('button', { type: 'button', 'aria-pressed': S.mode === 'detailed' ? 'true' : 'false', onclick: function () { setMode('detailed'); }, text: t('mode_detailed') })
+		);
+		els.modeSeg = mode;
+		var tools = h('div', { class: 'agh-header-tools' });
+		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', onclick: showPresets }, icon('layers', 'agh-ico-s'), t('presets')));
+		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', onclick: showProjects }, icon('folder', 'agh-ico-s'), t('my_projects')));
+		if (S.boot.languages && S.boot.languages.length > 1) {
+			var sel = h('select', { class: 'agh-select agh-hide-m', 'aria-label': t('language'), style: { width: 'auto', 'min-height': '36px', 'border-radius': '999px' }, onchange: function (e) { switchLang(e.target.value); } });
+			S.boot.languages.forEach(function (l) { sel.appendChild(h('option', { value: l.code, selected: l.code === S.locale ? 'selected' : null, text: l.label })); });
+			tools.appendChild(sel);
+		}
+		// Small screens: the controls hidden above are reachable from this overflow menu.
+		els.menuBtn = h('button', { type: 'button', class: 'agh-iconbtn agh-show-m', 'aria-label': t('more'), title: t('more'), 'aria-expanded': 'false', 'aria-controls': 'agh-hmenu', onclick: function () { if (menuOpen()) { closeMenu(true); } else { openMenu(); } } }, icon('more'));
+		tools.appendChild(els.menuBtn);
+		els.themeBtn = h('button', { type: 'button', class: 'agh-iconbtn', onclick: function () { setTheme(S.theme === 'dark' ? 'light' : 'dark'); } });
+		tools.appendChild(els.themeBtn);
+		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn agh-hide-m', 'aria-label': t('help'), title: t('help'), onclick: showTour }, icon('help')));
+		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), title: t('close'), onclick: function () { close(false); } }, icon('close')));
+		var header = h('header', { class: 'agh-header' }, brand, h('div', { class: 'agh-header-spacer' }), mode, tools, buildMenu());
+		setTimeout(function () { setTheme(S.theme); }, 0);
+		return header;
+	}
+
+	/* ------------------------------------------------------------------ header overflow menu (small screens) */
+	function buildMenu() {
+		var m = h('div', { class: 'agh-hmenu', id: 'agh-hmenu', role: 'group', 'aria-label': t('more'), hidden: true });
+		m.appendChild(h('div', { class: 'agh-hmenu-label', id: 'agh-hmenu-mode', text: t('mode') }));
+		els.menuModeSeg = h('div', { class: 'agh-seg', role: 'group', 'aria-labelledby': 'agh-hmenu-mode' },
+			h('button', { type: 'button', 'aria-pressed': S.mode === 'simple' ? 'true' : 'false', onclick: function () { setMode('simple'); }, text: t('mode_simple') }),
+			h('button', { type: 'button', 'aria-pressed': S.mode === 'detailed' ? 'true' : 'false', onclick: function () { setMode('detailed'); }, text: t('mode_detailed') })
+		);
+		m.appendChild(els.menuModeSeg);
+		m.appendChild(h('div', { class: 'agh-hmenu-sep', role: 'presentation' }));
+		function item(ico, label, fn) {
+			return h('button', { type: 'button', class: 'agh-hmenu-item', onclick: function () { closeMenu(false); fn(); } }, icon(ico, 'agh-ico-s'), label);
+		}
+		m.appendChild(item('layers', t('presets'), showPresets));
+		m.appendChild(item('folder', t('my_projects'), showProjects));
+		m.appendChild(item('help', t('help'), showTour));
+		if (S.boot.languages && S.boot.languages.length > 1) {
+			var sel = h('select', { class: 'agh-select', id: 'agh-hmenu-lang', onchange: function (e) { closeMenu(false); switchLang(e.target.value); } });
+			S.boot.languages.forEach(function (l) { sel.appendChild(h('option', { value: l.code, selected: l.code === S.locale ? 'selected' : null, text: l.label })); });
+			m.appendChild(h('div', { class: 'agh-hmenu-sep', role: 'presentation' }));
+			m.appendChild(h('label', { class: 'agh-hmenu-lang', for: 'agh-hmenu-lang' }, h('span', { class: 'agh-hmenu-label' }, icon('globe', 'agh-ico-s'), t('language')), sel));
+		}
+		m.addEventListener('keydown', onMenuKey);
+		m.addEventListener('focusout', function (e) {
+			// Tabbing out of the menu closes it (focus stays where the user moved it).
+			if (e.relatedTarget && !m.contains(e.relatedTarget) && e.relatedTarget !== els.menuBtn) { closeMenu(false); }
+		});
+		els.menu = m;
+		return m;
+	}
+	function menuItems() {
+		return Array.prototype.filter.call(els.menu.querySelectorAll('button, select'), function (el) { return !el.disabled; });
+	}
+	function menuOpen() { return !!(els.menu && !els.menu.hidden && root && root.contains(els.menu)); }
+	function openMenu() {
+		els.menu.hidden = false;
+		els.menuBtn.setAttribute('aria-expanded', 'true');
+		document.addEventListener('pointerdown', onMenuOutside, true);
+		var first = menuItems()[0];
+		if (first) { first.focus(); }
+	}
+	function closeMenu(restoreFocus) {
+		document.removeEventListener('pointerdown', onMenuOutside, true);
+		if (!els.menu || els.menu.hidden) { return; }
+		els.menu.hidden = true;
+		els.menuBtn.setAttribute('aria-expanded', 'false');
+		if (restoreFocus) { els.menuBtn.focus(); }
+	}
+	function onMenuOutside(e) {
+		if (els.menu && !els.menu.contains(e.target) && !els.menuBtn.contains(e.target)) { closeMenu(false); }
+	}
+	function onMenuKey(e) {
+		if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') { return; }
+		if (e.target.tagName === 'SELECT') { return; }
+		var list = menuItems(), i = list.indexOf(document.activeElement);
+		if (!list.length) { return; }
+		e.preventDefault();
+		var n = e.key === 'Home' ? 0 : (e.key === 'End' ? list.length - 1 : (i + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length);
+		list[n].focus();
+	}
+
+	function buildMobileTabs() {
+		var tabs = h('nav', { class: 'agh-mobile-tabs', 'aria-label': t('panels') });
+		[['params', 'sliders', t('tab_params')], ['stage', 'home', t('tab_stage')], ['summary', 'info', t('tab_summary')]].forEach(function (x) {
+			tabs.appendChild(h('button', { type: 'button', 'aria-current': S.tab === x[0] ? 'true' : 'false', onclick: function () { setTab(x[0]); } }, icon(x[1]), x[2]));
+		});
+		els.mtabs = tabs;
+		return tabs;
+	}
+	function setTab(tab) {
+		S.tab = tab;
+		shell.className = shell.className.replace(/is-tab-\w+/, 'is-tab-' + tab);
+		Array.prototype.forEach.call(els.mtabs.children, function (b, i) { b.setAttribute('aria-current', ['params', 'stage', 'summary'][i] === tab ? 'true' : 'false'); });
+	}
+
+	function setMode(m) {
+		S.mode = m;
+		[els.modeSeg, els.menuModeSeg].forEach(function (seg) {
+			if (!seg) { return; }
+			Array.prototype.forEach.call(seg.children, function (b, i) { b.setAttribute('aria-pressed', (i === 0 ? 'simple' : 'detailed') === m ? 'true' : 'false'); });
+		});
+		persist();
+		renderFields();
+	}
+
+	function switchLang(code) {
+		lsSet(LS_KEY, { v: S.boot.version, config: S.config, explicit: S.explicit, project: S.projectId, mode: S.mode, autoRoof: S.autoRoof });
+		S.lang = code;
+		loadBoot(code).then(function () {
+			var cfg = S.config;
+			stopPoll();
+			document.removeEventListener('keydown', onKey);
+			root.remove();
+			root = null;
+			S.config = cfg;
+			build();
+			if (S.project) { renderStage(); renderSummary(); schedulePoll(); }
+		});
+	}
+
+	/* ------------------------------------------------------------------ params panel */
+	function catFields(cat) {
+		var q = S.search.trim().toLowerCase();
+		return S.boot.schema.fields.filter(function (f) {
+			if (q) { return (f.label + ' ' + (f.help || '')).toLowerCase().indexOf(q) !== -1; }
+			if (f.category !== cat) { return false; }
+			if (S.mode === 'simple' && f.advanced) { return false; }
+			return visible(f);
+		});
+	}
+	function visible(f) {
+		var s = f.show_if;
+		if (!s) { return true; }
+		var cur = S.config[s.field];
+		switch (s.op) {
+			case '!=': return String(cur) !== String(s.value);
+			case '>': return Number(cur) > Number(s.value);
+			case '<': return Number(cur) < Number(s.value);
+			case 'in': return (s.value || []).map(String).indexOf(String(cur)) !== -1;
+			default: return String(cur) === String(s.value);
+		}
+	}
+
+	function renderParams() {
+		var p = clear(els.paramsPanel);
+		var rail = h('nav', { class: 'agh-rail', 'aria-label': t('categories') });
+		S.boot.schema.categories.forEach(function (c) {
+			var hasFields = S.boot.schema.fields.some(function (f) { return f.category === c.id; });
+			if (!hasFields) { return; }
+			var btn = h('button', { type: 'button', title: c.label, 'aria-label': c.label, 'aria-current': S.cat === c.id && !S.search ? 'true' : 'false', 'data-cat': c.id, onclick: function () { S.cat = c.id; S.search = ''; if (els.searchInput) { els.searchInput.value = ''; } updateRail(); renderFields(); } }, icon(c.icon));
+			rail.appendChild(btn);
+		});
+		els.rail = rail;
+		var fieldsWrap = h('div', { class: 'agh-fields' });
+		els.fieldsHead = h('div', { class: 'agh-fields-head' });
+		els.searchInput = h('input', { type: 'search', placeholder: t('search_params'), 'aria-label': t('search_params'), oninput: debounce(function (e) { S.search = e.target.value; updateRail(); renderFields(); }, 150) });
+		els.fieldsList = h('div', { class: 'agh-fields-list' });
+		fieldsWrap.appendChild(els.fieldsHead);
+		fieldsWrap.appendChild(h('div', { class: 'agh-scroll' }, els.fieldsList));
+		p.appendChild(h('div', { class: 'agh-params' }, rail, fieldsWrap));
+		renderFields();
+	}
+	function updateRail() {
+		var flags = {};
+		S.check.errors.forEach(function (m) { var f = S.fields[m.field]; if (f) { flags[f.category] = 'err'; } });
+		S.check.warnings.forEach(function (m) { var f = S.fields[m.field]; if (f && !flags[f.category]) { flags[f.category] = 'warn'; } });
+		Array.prototype.forEach.call(els.rail.children, function (b) {
+			var c = b.getAttribute('data-cat');
+			b.setAttribute('aria-current', !S.search && c === S.cat ? 'true' : 'false');
+			var old = b.querySelector('.agh-rail-flag');
+			if (old) { old.remove(); }
+			if (flags[c]) { b.appendChild(h('span', { class: 'agh-rail-flag' + (flags[c] === 'warn' ? ' is-warn' : '') })); }
+		});
+	}
+
+	function renderFields() {
+		var cat = S.boot.schema.categories.filter(function (c) { return c.id === S.cat; })[0] || S.boot.schema.categories[0];
+		clear(els.fieldsHead).appendChild(h('h3', { class: 'agh-h', text: S.search ? t('search_results') : cat.label }));
+		els.fieldsHead.appendChild(h('div', { class: 'agh-search' }, icon('search'), els.searchInput));
+		var list = clear(els.fieldsList);
+		var fields = catFields(S.cat);
+		if (!fields.length) { list.appendChild(h('p', { class: 'agh-muted', text: t('no_fields') })); }
+		fields.forEach(function (f) { list.appendChild(renderField(f)); });
+		if (!S.search && S.mode === 'simple') {
+			var hidden = S.boot.schema.fields.filter(function (f) { return f.category === S.cat && f.advanced && visible(f); }).length;
+			if (hidden) { list.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', onclick: function () { setMode('detailed'); } }, icon('sliders', 'agh-ico-s'), tf('show_advanced', hidden))); }
+		}
+		if (S.cat === 'custom' && !S.search) { list.appendChild(renderInterpret()); }
+		updateRail();
+	}
+
+	function setValue(id, value, rerender) {
+		if (id === 'roof_product') { S.autoRoof = ''; }
+		S.config[id] = value;
+		S.explicit[id] = true;
+		S.dirty = true;
+		persist();
+		validate();
+		renderPreviewOnly();
+		renderSummary();
+		var dependents = S.boot.schema.fields.some(function (f) { return f.show_if && f.show_if.field === id; }) || S.boot.schema.fields.some(function (f) { return f.filter_by === id; });
+		if (rerender || dependents) { renderFields(); }
+	}
+
+	function fieldMessages(id) {
+		var out = [];
+		['errors', 'warnings', 'info'].forEach(function (k) {
+			(S.check[k] || []).forEach(function (m) { if (m.field === id) { out.push({ type: k === 'errors' ? 'error' : (k === 'warnings' ? 'warning' : 'info'), text: m.message }); } });
+		});
+		return out;
+	}
+
+	function renderField(f) {
+		var wrap = h('div', { class: 'agh-field', 'data-field': f.id });
+		var top = h('div', { class: 'agh-field-top' }, h('label', { class: 'agh-label', for: 'agh-f-' + f.id, text: f.label }), f.required ? h('span', { class: 'agh-req', text: '*', title: t('required') }) : null, f.advanced ? h('span', { class: 'agh-adv-tag', text: t('advanced') }) : null);
+		wrap.appendChild(top);
+		if (f.help) { wrap.appendChild(h('p', { class: 'agh-help', text: f.help })); }
+		var v = S.config[f.id];
+		var ctl;
+		switch (f.type) {
+			case 'toggle':
+				ctl = h('label', { class: 'agh-switch' }, h('input', { type: 'checkbox', id: 'agh-f-' + f.id, checked: v ? 'checked' : null, onchange: function (e) { setValue(f.id, e.target.checked); } }), h('span', { class: 'agh-switch-track' }), h('span', { class: 'agh-small agh-muted', text: v ? t('yes') : t('no') }));
+				ctl.querySelector('input').addEventListener('change', function (e) { ctl.lastChild.textContent = e.target.checked ? t('yes') : t('no'); });
+				break;
+			case 'integer':
+			case 'number':
+			case 'range':
+				ctl = renderNumber(f, v);
+				break;
+			case 'color':
+				ctl = renderColor(f, v);
+				break;
+			case 'cards':
+				ctl = h('div', { class: 'agh-cards', role: 'radiogroup', 'aria-label': f.label });
+				(f.options || []).forEach(function (o) {
+					ctl.appendChild(h('button', { type: 'button', class: 'agh-card-opt', role: 'radio', 'aria-pressed': String(v) === o.value ? 'true' : 'false', 'aria-checked': String(v) === o.value ? 'true' : 'false', onclick: function () { setValue(f.id, o.value, true); maybeStylePack(f, o.value); } }, glyph(f.id, o.value), o.label));
+				});
+				break;
+			case 'multiselect':
+				ctl = h('div', { class: 'agh-quick', role: 'group', 'aria-label': f.label });
+				var arr = Array.isArray(v) ? v.slice() : [];
+				(f.options || []).forEach(function (o) {
+					var on = arr.indexOf(o.value) !== -1;
+					ctl.appendChild(h('button', { type: 'button', class: 'agh-chip', 'aria-pressed': on ? 'true' : 'false', onclick: function (e) {
+						var cur = Array.isArray(S.config[f.id]) ? S.config[f.id].slice() : [];
+						var i = cur.indexOf(o.value);
+						if (i === -1) {
+							if (f.max_items && cur.length >= f.max_items) { toast(tf('max_items', f.max_items), 'warn'); return; }
+							cur.push(o.value);
+						} else { cur.splice(i, 1); }
+						e.currentTarget.setAttribute('aria-pressed', i === -1 ? 'true' : 'false');
+						setValue(f.id, cur);
+					} }, on ? icon('check', 'agh-ico-s') : null, o.label));
+				});
+				break;
+			case 'select':
+				ctl = renderSelect(f, v);
+				break;
+			case 'textarea':
+				ctl = h('textarea', { class: 'agh-textarea', id: 'agh-f-' + f.id, maxlength: f.max || 1500, oninput: debounce(function (e) { setValue(f.id, e.target.value); }, 400) });
+				ctl.value = v || '';
+				break;
+			case 'rooms':
+				ctl = renderRooms();
+				break;
+			default:
+				ctl = h('input', { class: 'agh-input', id: 'agh-f-' + f.id, type: 'text', maxlength: f.max || 200, value: v || '', oninput: debounce(function (e) { setValue(f.id, e.target.value); }, 400) });
+		}
+		wrap.appendChild(ctl);
+		fieldMessages(f.id).forEach(function (m) { wrap.appendChild(h('div', { class: 'agh-field-msg is-' + m.type, text: m.text })); });
+		return wrap;
+	}
+
+	function renderNumber(f, v) {
+		var box = h('div', { style: { display: 'flex', 'flex-direction': 'column', gap: '8px' } });
+		var min = f.min !== undefined ? f.min : 0, max = f.max !== undefined ? f.max : 100000, step = f.step || 1;
+		var num = h('input', { class: 'agh-input', type: 'number', id: 'agh-f-' + f.id, min: min, max: max, step: step, value: v, inputmode: 'decimal' });
+		var range = null;
+		function fill(val) { if (range) { range.style.setProperty('--agh-fill', ((val - min) / (max - min) * 100) + '%'); } }
+		if (f.type === 'range' || (max - min <= 1000 && f.type !== 'integer')) {
+			range = h('input', { class: 'agh-range', type: 'range', min: min, max: max, step: step, value: v, 'aria-label': f.label });
+			range.addEventListener('input', function (e) { num.value = e.target.value; fill(e.target.value); setValueQuiet(f.id, Number(e.target.value)); });
+			range.addEventListener('change', function (e) { setValue(f.id, Number(e.target.value)); });
+			fill(v);
+		}
+		num.addEventListener('change', function (e) {
+			var x = Math.min(max, Math.max(min, Number(e.target.value)));
+			if (!isFinite(x)) { x = min; }
+			if (f.type === 'integer') { x = Math.round(x); }
+			e.target.value = x;
+			if (range) { range.value = x; fill(x); }
+			setValue(f.id, x);
+		});
+		var row = h('div', { class: 'agh-numrow' });
+		if (f.type === 'integer') {
+			row.appendChild(h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': '−', onclick: function () { num.value = Math.max(min, Number(num.value) - 1); num.dispatchEvent(new Event('change')); }, text: '−' }));
+		}
+		row.appendChild(num);
+		if (f.type === 'integer') {
+			row.appendChild(h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': '+', onclick: function () { num.value = Math.min(max, Number(num.value) + 1); num.dispatchEvent(new Event('change')); }, text: '+' }));
+		}
+		if (f.unit) { row.appendChild(h('span', { class: 'agh-unit', text: f.unit })); }
+		if (range) { box.appendChild(range); }
+		box.appendChild(row);
+		if (f.quick && f.quick.length) {
+			var q = h('div', { class: 'agh-quick' });
+			f.quick.forEach(function (x) {
+				q.appendChild(h('button', { type: 'button', class: 'agh-chip', 'aria-pressed': Number(v) === Number(x) ? 'true' : 'false', onclick: function () { num.value = x; num.dispatchEvent(new Event('change')); setTimeout(renderFields, 0); }, text: fmt(x, 0) + (f.unit ? ' ' + f.unit : '') }));
+			});
+			box.appendChild(q);
+		}
+		return box;
+	}
+	var setValueQuiet = debounce(function (id, v) { S.config[id] = v; S.explicit[id] = true; S.dirty = true; renderPreviewOnly(); renderSummary(); }, 60);
+
+	function renderColor(f, v) {
+		var box = h('div', { class: 'agh-color' });
+		var picker = h('input', { type: 'color', value: v || '#ffffff', 'aria-label': f.label });
+		var hex = h('input', { class: 'agh-input', type: 'text', value: v || '', maxlength: 7, 'aria-label': f.label + ' HEX', id: 'agh-f-' + f.id });
+		picker.addEventListener('input', function (e) { hex.value = e.target.value.toUpperCase(); });
+		picker.addEventListener('change', function (e) { setValue(f.id, e.target.value.toUpperCase()); });
+		hex.addEventListener('change', function (e) {
+			var x = e.target.value.trim();
+			if (x.charAt(0) !== '#') { x = '#' + x; }
+			if (/^#[0-9a-fA-F]{6}$/.test(x)) { picker.value = x; e.target.value = x.toUpperCase(); setValue(f.id, x.toUpperCase()); }
+			else { e.target.value = S.config[f.id]; toast(t('invalid_hex'), 'warn'); }
+		});
+		box.appendChild(picker);
+		box.appendChild(hex);
+		box.appendChild(h('span', { class: 'agh-swatch', style: { background: v }, title: v }));
+		if (f.collections || f.category === 'facade' || f.category === 'roof') {
+			var sw = h('div', { class: 'agh-swatches' });
+			(S.boot.schema.color_collections || []).forEach(function (c) {
+				var g = h('div', { class: 'agh-swatch-group' }, h('span', { text: c.name }));
+				c.colors.forEach(function (col) { g.appendChild(h('button', { type: 'button', class: 'agh-swatch', style: { background: col }, title: c.name + ' ' + col, 'aria-label': col, onclick: function () { picker.value = col; hex.value = col; setValue(f.id, col, true); } })); });
+				sw.appendChild(g);
+			});
+			box.appendChild(sw);
+		}
+		return box;
+	}
+
+	function renderSelect(f, v) {
+		var opts = f.options || [];
+		if (f.filter_by) {
+			var parent = S.config[f.filter_by];
+			opts = opts.filter(function (o) { return !o.parent || o.parent === parent; });
+		}
+		if (opts.length <= 8) {
+			var sel = h('select', { class: 'agh-select', id: 'agh-f-' + f.id, onchange: function (e) { setValue(f.id, e.target.value); onCatalogPick(f, e.target.value); } });
+			if (!f.required) { sel.appendChild(h('option', { value: '', text: '—' })); }
+			opts.forEach(function (o) { sel.appendChild(h('option', { value: o.value, selected: String(v) === o.value ? 'selected' : null, title: o.verified === false ? t('unverified_product') : null, text: o.label })); });
+			return sel;
+		}
+		// Searchable combobox.
+		var wrap = h('div', { class: 'agh-combo' });
+		var cur = opts.filter(function (o) { return o.value === String(v); })[0];
+		var input = h('input', { class: 'agh-input', id: 'agh-f-' + f.id, type: 'text', role: 'combobox', 'aria-expanded': 'false', autocomplete: 'off', placeholder: t('search_or_pick'), value: cur ? cur.label : '' });
+		var list = h('div', { class: 'agh-combo-list', role: 'listbox', hidden: true });
+		function fill(q) {
+			clear(list);
+			var ql = (q || '').toLowerCase();
+			var shown = opts.filter(function (o) { return !ql || o.label.toLowerCase().indexOf(ql) !== -1; }).slice(0, 80);
+			if (!f.required) { shown.unshift({ value: '', label: '—' }); }
+			shown.forEach(function (o) {
+				list.appendChild(h('button', { type: 'button', role: 'option', title: o.verified === false ? t('unverified_product') : null, 'aria-selected': o.value === String(S.config[f.id]) ? 'true' : 'false', onmousedown: function (e) { e.preventDefault(); input.value = o.value ? o.label : ''; list.hidden = true; input.setAttribute('aria-expanded', 'false'); setValue(f.id, o.value); onCatalogPick(f, o.value); } }, o.color ? h('span', { class: 'agh-swatch', style: { background: o.color } }) : null, o.label, o.verified === false ? unverifiedMark() : null));
+			});
+			if (!shown.length) { list.appendChild(h('div', { class: 'agh-muted agh-small', style: { padding: '8px' }, text: t('no_results') })); }
+		}
+		input.addEventListener('focus', function () { fill(''); list.hidden = false; input.setAttribute('aria-expanded', 'true'); input.select(); });
+		input.addEventListener('input', function () { fill(input.value); list.hidden = false; });
+		input.addEventListener('blur', function () { setTimeout(function () { list.hidden = true; input.setAttribute('aria-expanded', 'false'); var c2 = opts.filter(function (o) { return o.value === String(S.config[f.id]); })[0]; input.value = c2 ? c2.label : ''; }, 120); });
+		wrap.appendChild(input);
+		wrap.appendChild(list);
+		return wrap;
+	}
+
+	function onCatalogPick(f, value) {
+		if (f.id === 'roof_product' && value) {
+			var o = (f.options || []).filter(function (x) { return x.value === value; })[0];
+			// The product's colour is authoritative (see the field help "Termék választásakor a termék színe az irányadó").
+			if (o && o.color) { S.config.roof_color = o.color; persist(); renderPreviewOnly(); }
+		}
+	}
+
+	function maybeStylePack(f, value) {
+		if (f.id !== 'arch_style') { return; }
+		var pack = (S.boot.schema.presets || []).filter(function (p) { return p.slug === 'style-' + value; })[0];
+		if (!pack || !Object.keys(pack.values).length) { return; }
+		var keys = Object.keys(pack.values).filter(function (k) { return k !== 'arch_style'; });
+		if (!keys.length) { return; }
+		toast(h('span', null, tf('style_pack_offer', pack.name) + ' ', h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-accent', onclick: function (e) { applyValues(pack.values, true); e.currentTarget.closest('.agh-toast').remove(); } }, t('apply'))), 'ok', 9000);
+	}
+
+	function glyph(field, value) {
+		var g = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		g.setAttribute('viewBox', '0 0 40 30');
+		g.setAttribute('class', 'agh-card-glyph');
+		g.setAttribute('aria-hidden', 'true');
+		var p = '';
+		if (field === 'roof_type') {
+			var roofs = {
+				gable: '<path d="M4 16L20 5l16 11"/><rect x="8" y="16" width="24" height="11"/>',
+				hip: '<path d="M4 16l8-9h16l8 9z"/><rect x="8" y="16" width="24" height="11"/>',
+				half_hip: '<path d="M4 16l6-6 4-4h12l4 4 6 6z"/><rect x="8" y="16" width="24" height="11"/>',
+				shed: '<path d="M4 18L36 8v10z"/><rect x="8" y="18" width="24" height="9"/>',
+				pyramid: '<path d="M4 16L20 4l16 12z"/><rect x="8" y="16" width="24" height="11"/>',
+				flat: '<rect x="6" y="11" width="28" height="3"/><rect x="8" y="14" width="24" height="13"/>',
+				multi: '<path d="M2 17l10-8 8 6 8-8 10 10"/><rect x="6" y="17" width="28" height="10"/>',
+				complex: '<path d="M2 17l9-9 9 9M18 15l9-9 11 11"/><rect x="6" y="17" width="28" height="10"/>'
+			};
+			p = roofs[value] || roofs.gable;
+		} else if (field === 'footprint') {
+			var fp = { rectangle: '<rect x="6" y="7" width="28" height="16"/>', l_shape: '<path d="M6 6h28v10H18v9H6z"/>', u_shape: '<path d="M6 6h28v19h-9v-9H15v9H6z"/>', staggered: '<path d="M4 9h16v14H4zM18 5h18v13H18z"/>' };
+			p = fp[value] || fp.rectangle;
+		} else if (field === 'kitchen_layout') {
+			var kl = { straight: '<path d="M6 8h28"/>', l: '<path d="M6 8h28M6 8v16"/>', u: '<path d="M6 24V8h28v16"/>', island: '<path d="M6 8h28"/><rect x="13" y="16" width="14" height="6"/>', galley: '<path d="M6 8h28M6 22h28"/>' };
+			p = '<rect x="4" y="4" width="32" height="22" rx="2" opacity=".35"/>' + (kl[value] || kl.straight);
+		} else if (field === 'time_of_day') {
+			var tod = { morning: '<circle cx="12" cy="18" r="5"/><path d="M2 24h36"/>', midday: '<circle cx="20" cy="10" r="6"/><path d="M2 24h36"/>', golden: '<circle cx="28" cy="18" r="6"/><path d="M2 24h36"/>', blue: '<path d="M26 8a7 7 0 108 9 6 6 0 01-8-9z"/><path d="M2 24h36"/>', night: '<path d="M24 6a8 8 0 109 11 7 7 0 01-9-11z"/><circle cx="10" cy="8" r=".8"/><path d="M2 24h36"/>' };
+			p = tod[value] || tod.midday;
+		} else if (field === 'window_style') {
+			var ws = { classic: '<rect x="8" y="8" width="8" height="10"/><rect x="24" y="8" width="8" height="10"/>', large: '<rect x="6" y="8" width="13" height="14"/><rect x="22" y="8" width="13" height="14"/>', panoramic: '<rect x="4" y="6" width="32" height="19"/><path d="M15 6v19M26 6v19"/>', vertical: '<rect x="8" y="5" width="5" height="20"/><rect x="18" y="5" width="5" height="20"/><rect x="28" y="5" width="5" height="20"/>' };
+			p = ws[value] || ws.classic;
+		} else {
+			p = '<path d="M6 16L20 6l14 10"/><rect x="10" y="16" width="20" height="10"/>';
+		}
+		g.innerHTML = '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">' + p + '</g>';
+		return g;
+	}
+
+	/* ------------------------------------------------------------------ rooms editor */
+	function roomType(v) { return S.boot.schema.room_types.filter(function (r) { return r.value === v; })[0] || { label: v, area: 10 }; }
+	function levelCount() { return { single: 1, attic: 2, two: 2, three: 3 }[S.config.levels] || 1; }
+	function levelName(i) { return i === 0 ? t('level_ground') : (S.config.levels === 'attic' ? t('level_attic') : tf('level_n', i)); }
+
+	function renderRooms() {
+		var box = h('div', { style: { display: 'flex', 'flex-direction': 'column', gap: '8px' } });
+		var rooms = S.config.rooms || [];
+		var sum = rooms.reduce(function (a, r) { return a + Number(r.area || 0); }, 0);
+		var net = Number(S.config.net_area || 0);
+		var diff = net ? Math.round((sum - net) / net * 100) : 0;
+		box.appendChild(h('div', { class: 'agh-rooms-head' },
+			h('span', { class: 'agh-rooms-sum' + (Math.abs(diff) > 10 ? ' agh-badge-warn' : ''), text: tf('rooms_sum', fmt(sum), fmt(net), (diff > 0 ? '+' : '') + diff + '%') }),
+			h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: autoRooms }, icon('refresh', 'agh-ico-s'), t('rooms_auto')),
+			h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { addRoom('bedroom'); } }, icon('plus', 'agh-ico-s'), t('rooms_add'))
+		));
+		rooms.forEach(function (r, idx) { box.appendChild(renderRoom(r, idx)); });
+		return box;
+	}
+	function updateRoom(idx, key, val, rerender) {
+		var rooms = (S.config.rooms || []).slice();
+		rooms[idx] = Object.assign({}, rooms[idx]);
+		if (val === '' || val === null) { delete rooms[idx][key]; } else { rooms[idx][key] = val; }
+		setValue('rooms', rooms, rerender);
+	}
+	function renderRoom(r, idx) {
+		var types = S.boot.schema.room_types;
+		var card = h('div', { class: 'agh-room' });
+		var name = h('input', { class: 'agh-input agh-room-name', value: r.name, maxlength: 60, 'aria-label': t('room_name'), onchange: function (e) { updateRoom(idx, 'name', e.target.value); } });
+		var area = h('input', { class: 'agh-input', type: 'number', min: 1, max: 250, step: 0.5, value: r.area, 'aria-label': t('room_area'), onchange: function (e) { updateRoom(idx, 'area', Math.max(1, Number(e.target.value) || 1), true); } });
+		card.appendChild(h('div', { class: 'agh-room-row' }, name, h('div', { class: 'agh-numrow' }, area, h('span', { class: 'agh-unit', text: 'm²' })),
+			h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('delete'), title: t('delete'), style: { width: '30px', height: '30px' }, onclick: function () { var rooms = S.config.rooms.slice(); rooms.splice(idx, 1); setValue('rooms', rooms, true); } }, icon('trash', 'agh-ico-s'))));
+		var typeSel = h('select', { class: 'agh-select', 'aria-label': t('room_type'), onchange: function (e) { updateRoom(idx, 'type', e.target.value, true); } });
+		types.forEach(function (rt) { typeSel.appendChild(h('option', { value: rt.value, selected: rt.value === r.type ? 'selected' : null, text: rt.label })); });
+		var lvl = h('select', { class: 'agh-select', 'aria-label': t('room_level'), onchange: function (e) { updateRoom(idx, 'level', Number(e.target.value)); } });
+		for (var i = 0; i < levelCount(); i++) { lvl.appendChild(h('option', { value: i, selected: Number(r.level) === i ? 'selected' : null, text: levelName(i) })); }
+		var render = h('label', { class: 'agh-switch', title: t('room_render_help') }, h('input', { type: 'checkbox', checked: r.render ? 'checked' : null, onchange: function (e) { updateRoom(idx, 'render', e.target.checked); } }), h('span', { class: 'agh-switch-track' }), h('span', { class: 'agh-small', text: t('room_render') }));
+		var more = h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', 'aria-expanded': S.openRooms[r.id] ? 'true' : 'false', onclick: function () { S.openRooms[r.id] = !S.openRooms[r.id]; renderFields(); } }, t('room_details'));
+		card.appendChild(h('div', { class: 'agh-room-meta' }, typeSel, lvl, render, more));
+		if (S.openRooms[r.id]) {
+			var d = h('div', { class: 'agh-room-details' });
+			function txt(key, label, full) {
+				var inp = h('input', { class: 'agh-input', value: r[key] || '', maxlength: key === 'notes' ? 400 : 120, onchange: function (e) { updateRoom(idx, key, e.target.value); } });
+				d.appendChild(h('label', { class: full ? 'agh-full' : null }, label, inp));
+			}
+			function num(key, label, min, max, step) {
+				d.appendChild(h('label', null, label, h('input', { class: 'agh-input', type: 'number', min: min, max: max, step: step, value: r[key] || '', onchange: function (e) { updateRoom(idx, key, e.target.value === '' ? '' : Number(e.target.value)); } })));
+			}
+			function col(key, label) {
+				d.appendChild(h('label', null, label, h('input', { type: 'color', value: r[key] || '#F4F1EC', style: { width: '100%', height: '34px', 'border-radius': '10px', border: '1px solid var(--agh-line-2)' }, onchange: function (e) { updateRoom(idx, key, e.target.value.toUpperCase()); } })));
+			}
+			num('width', t('room_width'), 0.8, 30, 0.1);
+			num('length', t('room_length'), 0.8, 30, 0.1);
+			num('ceiling_height', t('room_ceiling_h'), 2.2, 8, 0.05);
+			var st = h('select', { class: 'agh-select', onchange: function (e) { updateRoom(idx, 'interior_style', e.target.value); } }, h('option', { value: '', text: t('room_style_inherit') }));
+			S.boot.schema.interior_styles.forEach(function (s) { st.appendChild(h('option', { value: s.value, selected: r.interior_style === s.value ? 'selected' : null, text: s.label })); });
+			d.appendChild(h('label', null, t('room_style'), st));
+			txt('floor', t('room_floor'));
+			txt('wall', t('room_wall'));
+			col('wall_color', t('room_wall_color'));
+			txt('ceiling', t('room_ceiling'));
+			txt('lighting', t('room_lighting'));
+			txt('furniture', t('room_furniture'));
+			col('furniture_color', t('room_furniture_color'));
+			txt('decor', t('room_decor'));
+			txt('curtains', t('room_curtains'));
+			txt('doors', t('room_doors'));
+			txt('windows', t('room_windows'));
+			txt('electrical', t('room_electrical'));
+			txt('heating', t('room_heating'));
+			txt('notes', t('room_notes'), true);
+			card.appendChild(d);
+		}
+		return card;
+	}
+	function addRoom(type) {
+		var rt = roomType(type);
+		var rooms = (S.config.rooms || []).slice();
+		rooms.push({ id: 'r' + Date.now().toString(36), type: type, name: rt.label, area: rt.area, level: 0, render: !!rt.render });
+		setValue('rooms', rooms, true);
+	}
+	function autoRooms() {
+		api('POST', 'rooms/auto', { config: payloadConfig() }).then(function (r) { S.config.rooms = r.rooms; S.dirty = true; persist(); validate(); renderFields(); renderSummary(); toast(t('rooms_auto_done'), 'ok'); }).catch(errToast);
+	}
+
+	/* ------------------------------------------------------------------ AI interpret */
+	function renderInterpret() {
+		var box = h('div', { class: 'agh-field' });
+		if (!S.boot.features.interpret) {
+			box.appendChild(h('p', { class: 'agh-help', text: t('interpret_off') }));
+			return box;
+		}
+		var btn = h('button', { type: 'button', class: 'agh-btn agh-btn-accent', onclick: function () {
+			if (!(S.config.custom_text || '').trim()) { toast(t('interpret_empty'), 'warn'); return; }
+			btn.disabled = true; btn.insertBefore(h('span', { class: 'agh-spinner' }), btn.firstChild);
+			api('POST', 'interpret', { config: payloadConfig() }).then(function (res) { showSuggestions(res); }).catch(errToast).then(function () { btn.disabled = false; var sp = btn.querySelector('.agh-spinner'); if (sp) { sp.remove(); } });
+		} }, icon('ai', 'agh-ico-s'), t('interpret'));
+		box.appendChild(btn);
+		box.appendChild(h('p', { class: 'agh-help', text: t('interpret_help') }));
+		return box;
+	}
+	function showSuggestions(res) {
+		var body = h('div', null);
+		var chosen = {};
+		if (!res.suggestions.length) { body.appendChild(h('p', { text: t('interpret_none') })); }
+		res.suggestions.forEach(function (s) {
+			chosen[s.field] = true;
+			var f = S.fields[s.field] || { label: s.label };
+			var val = Array.isArray(s.value) ? s.value.map(function (x) { return optLabel(f, x); }).join(', ') : (typeof s.value === 'boolean' ? (s.value ? t('yes') : t('no')) : optLabel(f, s.value));
+			body.appendChild(h('label', { class: 'agh-check' }, h('input', { type: 'checkbox', checked: 'checked', onchange: function (e) { chosen[s.field] = e.target.checked; } }), h('span', null, h('b', { text: s.label + ': ' }), val, s.reason ? h('div', { class: 'agh-small agh-muted', text: s.reason }) : null)));
+		});
+		(res.conflicts || []).forEach(function (c) { body.appendChild(h('div', { class: 'agh-field-msg is-warning', text: c })); });
+		dialog(t('interpret_title'), body, [
+			{ label: t('cancel') },
+			{ label: t('apply_selected'), cls: 'agh-btn-primary', onclick: function () {
+				var vals = {};
+				res.suggestions.forEach(function (s) { if (chosen[s.field]) { vals[s.field] = s.value; } });
+				applyValues(vals, true);
+			} }
+		]);
+	}
+	function optLabel(f, v) { var o = (f.options || []).filter(function (x) { return x.value === String(v); })[0]; return o ? o.label : String(v) + (f.unit ? ' ' + f.unit : ''); }
+	function applyValues(vals, markExplicit) {
+		Object.keys(vals).forEach(function (k) { if (k in S.config || S.fields[k]) { S.config[k] = vals[k]; if (markExplicit) { S.explicit[k] = true; } } });
+		S.dirty = true; persist(); validate(); renderFields(); renderPreviewOnly(); renderSummary();
+		toast(t('applied'), 'ok');
+	}
+
+	/* ------------------------------------------------------------------ validation */
+	function payloadConfig() {
+		var c = clone(S.config);
+		if (S.autoRoof && c.roof_product === S.autoRoof) { c.roof_product = ''; }
+		c._explicit = Object.keys(S.explicit);
+		return c;
+	}
+	var validate = debounce(function () {
+		api('POST', 'validate', { config: payloadConfig() }).then(function (r) {
+			S.check = r.check;
+			// Keep server-sanitized rooms ids, but do not overwrite what the user is typing.
+			if (r.config && r.config.rooms && (!S.config.rooms || !S.config.rooms.length)) { S.config.rooms = r.config.rooms; }
+			adoptAutoRoof(r.config);
+			updateRail();
+			renderSummary();
+			refreshFieldMessages();
+			renderActionbar();
+		}).catch(function () {});
+	}, 450);
+	/**
+	 * The server picks a roof product (mandatory brand) when the visitor has
+	 * none: show it in the state/summary, never replacing a visitor's own pick.
+	 */
+	function adoptAutoRoof(cfg) {
+		if (!cfg || typeof cfg.roof_product !== 'string') { return; }
+		var cur = String(S.config.roof_product || '');
+		if ((cur !== '' && cur !== S.autoRoof) || cfg.roof_product === cur) { return; }
+		S.config.roof_product = cfg.roof_product;
+		S.autoRoof = cfg.roof_product;
+		if (cfg.roof_brand && cfg.roof_brand !== S.config.roof_brand) { S.config.roof_brand = cfg.roof_brand; }
+		persist();
+		var el = els.fieldsList && els.fieldsList.querySelector('#agh-f-roof_product');
+		if (el && el !== document.activeElement) {
+			if (el.tagName === 'SELECT') { el.value = cfg.roof_product; }
+			else { var o = optByValue(S.fields.roof_product, cfg.roof_product); el.value = o ? o.label : ''; }
+		}
+	}
+	function optByValue(f, v) { return ((f && f.options) || []).filter(function (o) { return o.value === String(v); })[0]; }
+	// Subtle marker for catalogue items whose data awaits manufacturer verification (verified === false).
+	function unverifiedMark() {
+		return h('span', { class: 'agh-unv', title: t('unverified_product') }, h('span', { class: 'agh-sr', text: ' (' + t('unverified_product') + ')' }));
+	}
+	function refreshFieldMessages() {
+		Array.prototype.forEach.call(els.fieldsList.querySelectorAll('.agh-field[data-field]'), function (w) {
+			Array.prototype.forEach.call(w.querySelectorAll(':scope > .agh-field-msg'), function (m) { m.remove(); });
+			fieldMessages(w.getAttribute('data-field')).forEach(function (m) { w.appendChild(h('div', { class: 'agh-field-msg is-' + m.type, text: m.text })); });
+		});
+	}
+	function focusField(id) {
+		var f = S.fields[id];
+		if (!f) { return; }
+		S.search = '';
+		S.cat = f.category;
+		if (f.advanced && S.mode === 'simple') { setMode('detailed'); }
+		renderFields();
+		setTab('params');
+		setTimeout(function () { var el = els.fieldsList.querySelector('[data-field="' + id + '"]'); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); var i = el.querySelector('input,select,textarea,button'); if (i) { i.focus({ preventScroll: true }); } } }, 60);
+	}
+
+	/* ------------------------------------------------------------------ stage */
+	function renderStage() {
+		var st = clear(els.stagePanel);
+		var tabs = h('div', { class: 'agh-stage-tabs' });
+		var seg = h('div', { class: 'agh-seg', role: 'tablist' });
+		var views = [['design', t('view_design')]];
+		if (S.project) { views.push(['concepts', t('view_concepts')]); }
+		if (S.project && concepts().length) { views.push(['compare', t('view_compare')]); }
+		if (S.project && S.selected) { views.push(['gallery', t('view_gallery')]); }
+		views.forEach(function (v) { seg.appendChild(h('button', { type: 'button', role: 'tab', 'aria-pressed': S.view === v[0] ? 'true' : 'false', onclick: function () { S.view = v[0]; renderStage(); }, text: v[1] })); });
+		tabs.appendChild(seg);
+		tabs.appendChild(h('div', { style: { flex: '1' } }));
+		if (S.boot.provider.test) { tabs.appendChild(h('span', { class: 'agh-badge agh-badge-test', title: t('test_mode_help'), text: t('test_mode') })); }
+		if (S.project) { tabs.appendChild(h('span', { class: 'agh-badge', text: '#' + S.project.id.slice(0, 8) })); }
+		st.appendChild(tabs);
+		var body = h('div', { class: 'agh-stage-body' });
+		st.appendChild(body);
+		els.stageBody = body;
+		if (S.view === 'concepts' && S.project) { renderConcepts(body); }
+		else if (S.view === 'compare' && S.project) { renderCompare(body); }
+		else if (S.view === 'gallery' && S.project && S.selected) { renderGallery(body); }
+		else { S.view = 'design'; renderDesign(body); }
+	}
+
+	function renderDesign(body) {
+		var box = h('div', { class: 'agh-hero-empty' });
+		els.previewBox = h('div', { class: 'agh-preview-box' });
+		box.appendChild(els.previewBox);
+		box.appendChild(els.kpis = h('div', { class: 'agh-kpis' }));
+		body.appendChild(box);
+		renderPreviewOnly();
+	}
+
+	function renderPreviewOnly() {
+		if (!els.previewBox || !document.body.contains(els.previewBox)) { return; }
+		var c = S.config;
+		els.previewBox.innerHTML = previewSvg(c);
+		var styleF = S.fields.arch_style;
+		var cap = h('div', { class: 'agh-preview-cap' },
+			h('div', null, h('div', { class: 'agh-eyebrow', text: t('live_preview') }), h('div', { class: 'agh-h', text: (c.house_name || optLabel(styleF || {}, c.arch_style)) })),
+			h('span', { class: 'agh-badge', text: t('schematic') }));
+		els.previewBox.appendChild(cap);
+		clear(els.kpis);
+		var beds = c.bedrooms, baths = c.bathrooms;
+		[['area', fmt(c.net_area, 0) + ' m²', t('kpi_area')], ['bed', beds, t('kpi_bedrooms')], ['bath', baths, t('kpi_bathrooms')], ['roof', optLabel(S.fields.roof_type || {}, c.roof_type), t('kpi_roof')]].forEach(function (k) {
+			els.kpis.appendChild(h('div', { class: 'agh-kpi' }, icon(k[0]), h('div', null, h('b', { text: String(k[1]) }), h('span', { text: k[2] }))));
+		});
+	}
+
+	function previewSvg(c) {
+		var esc = function (s) { return String(s).replace(/[^#0-9A-Fa-f]/g, ''); };
+		var facade = esc(c.facade_color || '#F2EFE9'), roofc = esc(c.roof_color || '#3A3D40'), frame = esc(c.window_frame_color || '#2F3235'), accent = esc(c.facade_accent_color || '#B9824F');
+		var levels = levelCount(); var attic = c.levels === 'attic';
+		var W = 520, x0 = 140, ground = 330;
+		var storey = 62, wallH = attic ? storey + 18 : storey * levels;
+		var top = ground - wallH;
+		var pitch = Math.max(5, Math.min(60, Number(c.roof_pitch || 35)));
+		var rise = c.roof_type === 'flat' ? 10 : Math.tan(pitch * Math.PI / 180) * (c.roof_type === 'shed' ? 120 : 60) + 10;
+		rise = Math.min(rise, 170);
+		var sky = { morning: ['#CFE1F2', '#F7EBDD'], midday: ['#BFD8EE', '#EEF3F7'], golden: ['#F2C99A', '#FBEAD6'], blue: ['#27375E', '#6E7FA8'], night: ['#0F1730', '#2C3A5E'] }[c.time_of_day] || ['#BFD8EE', '#EEF3F7'];
+		var night = c.time_of_day === 'night' || c.time_of_day === 'blue';
+		var glass = night ? '#FFCF85' : '#9DB6C8';
+		var s = '<svg viewBox="0 -150 800 560" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="preview">';
+		s += '<defs><linearGradient id="aghsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sky[0] + '"/><stop offset="1" stop-color="' + sky[1] + '"/></linearGradient></defs>';
+		s += '<rect y="-400" width="800" height="1200" fill="url(#aghsky)"/>';
+		if (c.time_of_day === 'golden') { s += '<circle cx="660" cy="250" r="46" fill="#FFD9A0" opacity=".8"/>'; }
+		if (c.time_of_day === 'midday' || c.time_of_day === 'morning') { s += '<circle cx="' + (c.time_of_day === 'morning' ? 120 : 640) + '" cy="80" r="26" fill="#FFF5D6" opacity=".9"/>'; }
+		s += '<rect x="-400" y="' + ground + '" width="1600" height="400" fill="' + (night ? '#2E3A2E' : '#7FA36A') + '"/>';
+		// garage
+		var gW = { none: 0, carport: 90, garage_1: 100, garage_2: 160, separate: 150 }[c.garage] || 0;
+		if (gW) {
+			var gx = x0 - gW - (c.garage === 'separate' ? 30 : 0);
+			s += '<rect x="' + gx + '" y="' + (ground - 58) + '" width="' + gW + '" height="58" fill="' + (c.garage === 'carport' ? 'none' : facade) + '" stroke="#2B2E31" stroke-width="2"/>';
+			s += '<rect x="' + (gx - 6) + '" y="' + (ground - 64) + '" width="' + (gW + 12) + '" height="8" fill="' + roofc + '"/>';
+			if (c.garage !== 'carport') { s += '<rect x="' + (gx + 12) + '" y="' + (ground - 44) + '" width="' + (gW - 24) + '" height="44" fill="#6B7075" opacity=".7"/>'; }
+		}
+		// walls
+		s += '<rect x="' + x0 + '" y="' + top + '" width="' + W + '" height="' + wallH + '" fill="#' + facade.replace('#', '') + '" stroke="#2B2E31" stroke-width="2"/>';
+		var acc = c.facade_accent || [];
+		if (acc.indexOf('wood') !== -1) { s += '<rect x="' + (x0 + W * 0.58) + '" y="' + top + '" width="' + (W * 0.16) + '" height="' + wallH + '" fill="' + accent + '" opacity=".95"/>'; for (var k = 0; k < 14; k++) { s += '<line x1="' + (x0 + W * 0.58 + k * W * 0.0115) + '" y1="' + top + '" x2="' + (x0 + W * 0.58 + k * W * 0.0115) + '" y2="' + ground + '" stroke="#000" stroke-opacity=".12"/>'; } }
+		if (acc.indexOf('stone') !== -1) { s += '<rect x="' + (x0 + W * 0.05) + '" y="' + top + '" width="' + (W * 0.12) + '" height="' + wallH + '" fill="#9D9A93"/>'; }
+		s += '<rect x="' + x0 + '" y="' + (ground - 10) + '" width="' + W + '" height="10" fill="' + esc(c.plinth_color || '#4A4D50') + '"/>';
+		// roof
+		var o = 18;
+		if (c.roof_type === 'flat') { s += '<rect x="' + (x0 - 8) + '" y="' + (top - 14) + '" width="' + (W + 16) + '" height="14" fill="' + roofc + '"/>'; }
+		else if (c.roof_type === 'shed') { s += '<polygon points="' + (x0 - o) + ',' + top + ' ' + (x0 + W + o) + ',' + top + ' ' + (x0 + W + o) + ',' + (top - 14) + ' ' + (x0 - o) + ',' + (top - rise) + '" fill="' + roofc + '"/>'; }
+		else if (c.roof_type === 'gable' || c.roof_type === 'complex' || c.roof_type === 'multi') { s += '<polygon points="' + (x0 - o) + ',' + top + ' ' + (x0 + W + o) + ',' + top + ' ' + (x0 + W + o) + ',' + (top - rise) + ' ' + (x0 - o) + ',' + (top - rise) + '" fill="' + roofc + '"/><line x1="' + (x0 - o) + '" y1="' + (top - rise) + '" x2="' + (x0 + W + o) + '" y2="' + (top - rise) + '" stroke="#000" stroke-opacity=".25" stroke-width="3"/>'; }
+		else { var ins = c.roof_type === 'pyramid' ? W / 2 : (c.roof_type === 'half_hip' ? 70 : 130); s += '<polygon points="' + (x0 - o) + ',' + top + ' ' + (x0 + W + o) + ',' + top + ' ' + (x0 + W - ins + o) + ',' + (top - rise) + ' ' + (x0 + ins - o) + ',' + (top - rise) + '" fill="' + roofc + '"/>'; }
+		if (c.roof_solar && c.roof_type !== 'flat') { for (var p = 0; p < 6; p++) { s += '<rect x="' + (x0 + 70 + p * 34) + '" y="' + (top - rise * 0.75) + '" width="30" height="' + (rise * 0.45) + '" fill="#1F2A36" stroke="#8FA3B5" stroke-width="1"/>'; } }
+		if (c.chimney) { s += '<rect x="' + (x0 + W * 0.7) + '" y="' + (top - rise - 18) + '" width="18" height="' + (rise * 0.5 + 18) + '" fill="#9D9A93" stroke="#2B2E31"/>'; }
+		// windows
+		var style = c.window_style;
+		for (var l = 0; l < levels; l++) {
+			var base = ground - 10 - l * storey;
+			if (attic && l > 0) { base = ground - storey - 6; }
+			var n = style === 'vertical' ? 6 : (style === 'panoramic' ? 3 : 4);
+			for (var i = 0; i < n; i++) {
+				var cx = x0 + 40 + i * ((W - 80) / (n - 1 || 1));
+				var ww = style === 'panoramic' ? 110 : (style === 'large' ? 62 : (style === 'vertical' ? 22 : 40));
+				var wh = style === 'panoramic' && l === 0 ? 50 : (style === 'vertical' ? 46 : 32);
+				if (attic && l > 0) { wh = 18; ww = Math.min(ww, 40); }
+				var wy = base - (style === 'panoramic' && l === 0 ? 50 : 42);
+				if (l === 0 && i === 1 && style !== 'panoramic') { s += '<rect x="' + (cx - 16) + '" y="' + (base - 50) + '" width="32" height="50" fill="' + esc(c.entrance_door_color || '#2B2E31') + '" stroke="' + frame + '" stroke-width="3"/>'; continue; }
+				s += '<rect x="' + (cx - ww / 2) + '" y="' + wy + '" width="' + ww + '" height="' + wh + '" fill="' + glass + '" stroke="' + frame + '" stroke-width="3"/>';
+				if (c.window_divided) { s += '<line x1="' + cx + '" y1="' + wy + '" x2="' + cx + '" y2="' + (wy + wh) + '" stroke="' + frame + '" stroke-width="2"/>'; }
+			}
+		}
+		// terrace
+		if (Number(c.terrace_area) > 0) { s += '<polygon points="' + (x0 + 30) + ',' + ground + ' ' + (x0 + W - 30) + ',' + ground + ' ' + (x0 + W - 10) + ',' + (ground + 22) + ' ' + (x0 + 10) + ',' + (ground + 22) + '" fill="#C8A57E"/>'; }
+		// trees
+		[[60, 0.9], [720, 1.1], [770, 0.7]].forEach(function (tr) { s += '<rect x="' + (tr[0] - 3) + '" y="' + (ground - 40 * tr[1]) + '" width="6" height="' + (40 * tr[1]) + '" fill="#5B4636"/><circle cx="' + tr[0] + '" cy="' + (ground - 60 * tr[1]) + '" r="' + (30 * tr[1]) + '" fill="' + (night ? '#2C4430' : '#6E9460') + '"/>'; });
+		s += '</svg>';
+		return s;
+	}
+
+	function concepts() { return (S.project && S.project.concepts) || []; }
+	function isRunning(p) { return !!p && ['queued', 'planning', 'rendering'].indexOf(p.status) !== -1; }
+	// Final states without further work: no polling, the visitor can start a new generation.
+	function isStopped(p) { return !!p && ['cancelled', 'failed', 'deleted'].indexOf(p.status) !== -1; }
+	function conceptById(id) { return concepts().filter(function (c) { return c.id === id; })[0]; }
+
+	function renderConcepts(body) {
+		var grid = h('div', { class: 'agh-concepts' });
+		var list = concepts();
+		if (!list.length) {
+			if (isStopped(S.project)) {
+				// Cancelled (possibly before any concept) or failed: explain and offer a new generation.
+				var cancelled = S.project.status === 'cancelled';
+				body.appendChild(h('div', { class: 'agh-empty agh-stopped', role: 'status' }, h('div', null,
+					icon(cancelled ? 'stop' : 'alert'),
+					h('p', { class: 'agh-stopped-title', text: cancelled ? t('project_cancelled') : t('failed_toast') }),
+					h('p', { class: 'agh-small', text: t('project_cancelled_help') }),
+					h('button', { type: 'button', class: 'agh-btn agh-btn-primary', disabled: !S.boot.provider.ready ? 'disabled' : null, onclick: generate }, icon('sparkle', 'agh-ico-s'), t('generate_new')))));
+				return;
+			}
+			body.appendChild(h('div', { class: 'agh-empty' }, h('div', null, h('span', { class: 'agh-spinner' }), h('p', { text: t('preparing_concepts') }))));
+			return;
+		}
+		list.forEach(function (c) {
+			var img = h('div', { class: 'agh-concept-img' + (c.hero && c.hero.preview ? ' is-ready' : '') });
+			if (c.hero && c.hero.preview) { img.appendChild(h('img', { src: c.hero.preview, alt: c.title, loading: 'lazy' })); }
+			else if (c.hero && c.hero.status === 'failed' || c.status === 'failed') { img.appendChild(h('div', { class: 'agh-state' }, icon('alert'), t('render_failed'))); }
+			else if (!isRunning(S.project) && (isStopped(S.project) || !c.hero || c.hero.status === 'cancelled')) { img.appendChild(h('div', { class: 'agh-state' }, icon('stop'), t('render_cancelled'))); }
+			else { img.appendChild(h('div', { class: 'agh-state' }, h('span', { class: 'agh-spinner' }), t('rendering'))); }
+			img.appendChild(h('span', { class: 'agh-concept-letter', text: c.variant }));
+			var flags = h('div', { class: 'agh-concept-flags' });
+			if (c.selected) { flags.appendChild(h('span', { class: 'agh-badge agh-badge-ok', text: t('selected') })); }
+			if (c.hero && c.hero.is_test) { flags.appendChild(h('span', { class: 'agh-badge agh-badge-test', text: t('test_image') })); }
+			img.appendChild(flags);
+			var pal = h('div', { class: 'agh-palette' });
+			(c.palette || []).forEach(function (col) { pal.appendChild(h('i', { style: { background: col } })); });
+			var m = c.metrics || {};
+			var actions = h('div', { class: 'agh-concept-actions' });
+			actions.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s ' + (c.selected ? 'agh-btn-accent' : 'agh-btn-primary'), disabled: !(c.hero && c.hero.preview) ? 'disabled' : null, onclick: function (e) { e.stopPropagation(); selectConcept(c.id); } }, icon('check', 'agh-ico-s'), c.selected ? t('open_gallery') : t('choose')));
+			if (c.hero && c.hero.preview) { actions.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function (e) { e.stopPropagation(); lightbox([c.hero], 0, c); } }, icon('expand', 'agh-ico-s'), t('enlarge'))); }
+			var card = h('article', { class: 'agh-concept' + (c.selected ? ' is-selected' : ''), tabindex: '0', onclick: function () { if (c.hero && c.hero.preview) { lightbox([c.hero], 0, c); } } },
+				img,
+				h('div', { class: 'agh-concept-body' },
+					h('h4', { text: c.title }),
+					h('p', { text: c.tagline }),
+					h('div', { class: 'agh-concept-metrics' }, h('span', { text: fmt(m.width, 1) + ' × ' + fmt(m.length, 1) + ' m' }), h('span', { text: fmt(m.net_planned, 0) + ' m²' }), h('span', { text: '▲ ' + fmt(m.ridge, 1) + ' m' }), pal),
+					(c.warnings || []).length ? h('div', { class: 'agh-small', style: { color: 'var(--agh-warning)' }, title: c.warnings.join('\n'), text: '⚠ ' + tf('n_notes', c.warnings.length) }) : null,
+					actions));
+			grid.appendChild(card);
+		});
+		body.appendChild(grid);
+		body.appendChild(h('p', { class: 'agh-disclaimer', style: { 'margin-top': '10px' }, text: S.project.disclaimer }));
+	}
+
+	function renderCompare(body) {
+		var list = concepts();
+		var grid = h('div', { class: 'agh-compare' });
+		grid.appendChild(h('div', { class: 'agh-compare-h' }));
+		list.forEach(function (c) { grid.appendChild(h('div', null, c.hero && c.hero.preview ? h('img', { src: c.hero.preview, alt: c.title, style: { 'border-radius': '12px', 'aspect-ratio': '16/10', 'object-fit': 'cover', width: '100%' } }) : h('div', { class: 'agh-muted', text: t('rendering') }), h('b', { text: c.variant + ' – ' + c.title }))); });
+		var rows = [
+			[t('cmp_character'), function (c) { return c.tagline; }],
+			[t('cmp_dims'), function (c) { return fmt(c.metrics.width, 1) + ' × ' + fmt(c.metrics.length, 1) + ' m'; }],
+			[t('cmp_net'), function (c) { return fmt(c.metrics.net_planned, 1) + ' m²'; }],
+			[t('cmp_footprint'), function (c) { return fmt(c.metrics.footprint, 1) + ' m²'; }],
+			[t('cmp_ridge'), function (c) { return fmt(c.metrics.ridge, 2) + ' m'; }],
+			[t('cmp_shape'), function (c) { return t('shape_' + (c.metrics.shape || 'rectangle')); }],
+			[t('cmp_rooms'), function (c) { return String(c.metrics.rooms); }],
+			[t('cmp_notes'), function (c) { return (c.warnings || []).length ? c.warnings.join(' · ') : '–'; }]
+		];
+		rows.forEach(function (r) {
+			grid.appendChild(h('div', { class: 'agh-compare-h', text: r[0] }));
+			list.forEach(function (c) { grid.appendChild(h('div', { text: r[1](c) })); });
+		});
+		grid.appendChild(h('div', { class: 'agh-compare-h' }));
+		list.forEach(function (c) { grid.appendChild(h('div', null, h('button', { type: 'button', class: 'agh-btn agh-btn-s ' + (c.selected ? 'agh-btn-accent' : 'agh-btn-primary'), disabled: !(c.hero && c.hero.preview) ? 'disabled' : null, onclick: function () { selectConcept(c.id); } }, c.selected ? t('selected') : t('choose')))); });
+		body.appendChild(h('div', { class: 'agh-scroll' }, grid));
+	}
+
+	function galleryItems(c) {
+		var out = [];
+		if (S.galleryTab === 'exterior' && c.hero) { out.push(c.hero); }
+		(c.assets || []).forEach(function (a) {
+			var interior = a.view.indexOf('interior_') === 0;
+			if (S.galleryTab === 'exterior' && a.kind === 'render' && !interior) { out.push(a); }
+			if (S.galleryTab === 'interior' && a.kind === 'render' && interior) { out.push(a); }
+			if (S.galleryTab === 'plans' && a.kind === 'plan') { out.push(a); }
+		});
+		return out.filter(function (a) { return a.status !== 'archived' && a.status !== 'cancelled'; });
+	}
+
+	function renderGallery(body) {
+		var c = conceptById(S.selected);
+		if (!c) { S.view = 'concepts'; renderStage(); return; }
+		var head = h('div', { style: { display: 'flex', gap: '8px', 'align-items': 'center', 'flex-wrap': 'wrap', 'margin-bottom': '10px' } });
+		var seg = h('div', { class: 'agh-seg' });
+		[['exterior', t('tab_exterior')], ['interior', t('tab_interior')], ['plans', t('tab_plans')]].forEach(function (x) {
+			if (x[0] === 'plans' && !S.boot.features.floorplans) { return; }
+			seg.appendChild(h('button', { type: 'button', 'aria-pressed': S.galleryTab === x[0] ? 'true' : 'false', onclick: function () { S.galleryTab = x[0]; S.galleryIndex = 0; renderStage(); }, text: x[1] }));
+		});
+		head.appendChild(h('b', { text: c.variant + ' – ' + c.title, style: { 'letter-spacing': '.1em', 'text-transform': 'uppercase', 'font-size': '13px' } }));
+		head.appendChild(seg);
+		head.appendChild(h('div', { style: { flex: '1' } }));
+		if (c.gallery_status === 'rendering' || c.gallery_status === 'pending') { head.appendChild(h('span', { class: 'agh-badge' }, h('span', { class: 'agh-spinner', style: { width: '11px', height: '11px' } }), t('gallery_rendering'))); }
+		if (c.hero && c.hero.download) { head.appendChild(h('a', { class: 'agh-btn agh-btn-s agh-btn-accent', href: c.hero.download, download: '' }, icon('download', 'agh-ico-s'), t('download_hero'))); }
+		head.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s', title: rebuildsLeft() === null ? null : tf('regenerate_left', rebuildsLeft()), onclick: function () { regenerate(c); } }, icon('refresh', 'agh-ico-s'), t('regenerate')));
+		body.appendChild(head);
+		var items = galleryItems(c);
+		if (!items.length) {
+			body.appendChild(h('div', { class: 'agh-empty' }, h('div', null, c.gallery_status === 'rendering' || c.gallery_status === 'pending' ? h('span', { class: 'agh-spinner' }) : icon('info'), h('p', { text: S.galleryTab === 'interior' ? t('no_interiors') : t('gallery_empty') }))));
+			return;
+		}
+		if (S.galleryIndex >= items.length) { S.galleryIndex = 0; }
+		var cur = items[S.galleryIndex];
+		var main = h('div', { class: 'agh-gallery-main' + (cur.kind === 'plan' ? ' is-plan' : '') });
+		if (cur.preview) { main.appendChild(h('img', { src: cur.preview, alt: cur.label, onclick: function () { lightbox(items, S.galleryIndex, c); }, style: { cursor: 'zoom-in' } })); }
+		else { main.appendChild(h('div', { class: 'agh-empty', style: { color: '#ccc' } }, cur.status === 'failed' ? t('render_failed') : h('span', null, h('span', { class: 'agh-spinner' }), ' ', t('rendering')))); }
+		main.appendChild(h('div', { class: 'agh-gallery-cap' },
+			h('span', { class: 'agh-badge', style: { background: 'rgba(255,255,255,.85)', color: '#1E2226' } }, cur.label, cur.resolution ? ' · ' + cur.resolution : '', cur.is_test ? ' · ' + t('test_image') : ''),
+			h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('enlarge'), onclick: function () { lightbox(items, S.galleryIndex, c); } }, icon('expand'))));
+		var strip = h('div', { class: 'agh-strip' });
+		items.forEach(function (a, i) {
+			strip.appendChild(h('button', { type: 'button', class: 'agh-thumb', 'aria-current': i === S.galleryIndex ? 'true' : 'false', 'aria-label': a.label, onclick: function () { S.galleryIndex = i; renderStage(); } },
+				a.preview ? h('img', { src: a.preview, alt: '', loading: 'lazy' }) : h('span', { class: 'agh-state' }, a.status === 'failed' ? '⚠' : h('span', { class: 'agh-spinner', style: { width: '12px', height: '12px' } })),
+				h('span', { class: 'agh-thumb-label', text: a.label })));
+		});
+		body.appendChild(h('div', { class: 'agh-gallery' }, main, strip));
+	}
+
+	function lightbox(items, index, concept) {
+		var lb = h('div', { class: 'agh-lightbox', role: 'dialog', 'aria-label': t('enlarge') });
+		S.lb = { items: items.filter(function (a) { return a.preview; }), index: 0, el: lb, concept: concept };
+		S.lb.index = Math.max(0, S.lb.items.indexOf(items[index]));
+		drawLightbox();
+		shell.appendChild(lb);
+	}
+	function stepLightbox(d) { if (!S.lb) { return; } S.lb.index = (S.lb.index + d + S.lb.items.length) % S.lb.items.length; drawLightbox(); }
+	function drawLightbox() {
+		var lb = clear(S.lb.el), a = S.lb.items[S.lb.index];
+		if (!a) { lb.remove(); return; }
+		lb.appendChild(h('div', { class: 'agh-lightbox-top' }, h('b', { text: (S.lb.concept ? S.lb.concept.variant + ' – ' : '') + a.label }), h('span', { class: 'agh-small', style: { opacity: '.7' }, text: a.resolution || '' }), h('div', { style: { flex: '1' } }),
+			a.download ? h('a', { class: 'agh-btn agh-btn-s agh-btn-accent', href: a.download, download: '' }, icon('download', 'agh-ico-s'), t('download')) : null,
+			h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), onclick: function () { lb.remove(); S.lb = null; } }, icon('close'))));
+		lb.appendChild(h('div', { class: 'agh-lightbox-img' }, h('img', { src: a.preview, alt: a.label })));
+		lb.appendChild(h('div', { class: 'agh-lightbox-bottom' }, S.lb.items.length > 1 ? h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('prev'), onclick: function () { stepLightbox(-1); } }, icon('left')) : null, h('div', { style: { flex: '1', 'text-align': 'center' }, class: 'agh-small', text: (S.lb.index + 1) + ' / ' + S.lb.items.length }), S.lb.items.length > 1 ? h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('next'), onclick: function () { stepLightbox(1); } }, icon('chev')) : null));
+	}
+
+	/* ------------------------------------------------------------------ summary */
+	function renderSummary() {
+		if (!els.summaryPanel) { return; }
+		var p = clear(els.summaryPanel);
+		p.appendChild(h('div', { class: 'agh-panel-head' }, h('span', { class: 'agh-panel-title', text: t('summary') })));
+		var box = h('div', { class: 'agh-summary' });
+		var c = S.config;
+		if (isRunning(S.project) || (S.project && S.project.status === 'cancelled') || (S.project && S.project.stage !== 'done' && ['ready', 'partial'].indexOf(S.project.status) !== -1)) {
+			box.appendChild(renderProgress());
+		}
+		var dl = h('dl', { class: 'agh-sum-list' });
+		function row(k, v) { dl.appendChild(h('dt', { text: k })); dl.appendChild(h('dd', { text: v })); }
+		row(t('kpi_style'), optLabel(S.fields.arch_style || {}, c.arch_style));
+		row(t('kpi_type'), optLabel(S.fields.property_type || {}, c.property_type));
+		row(t('kpi_levels'), optLabel(S.fields.levels || {}, c.levels));
+		row(t('kpi_area'), fmt(c.net_area, 0) + ' m²');
+		row(t('kpi_rooms_total'), String((c.rooms || []).length));
+		row(t('kpi_bedrooms'), String(c.bedrooms));
+		row(t('kpi_bathrooms'), String(c.bathrooms));
+		row(t('kpi_roof'), optLabel(S.fields.roof_type || {}, c.roof_type) + (c.roof_type !== 'flat' && c.roof_pitch ? ' · ' + c.roof_pitch + '°' : ''));
+		if (S.fields.roof_product && c.roof_product) {
+			var rp = optByValue(S.fields.roof_product, c.roof_product);
+			dl.appendChild(h('dt', { text: t('kpi_roof_product') }));
+			dl.appendChild(h('dd', null, optLabel(S.fields.roof_product, c.roof_product), rp && rp.verified === false ? unverifiedMark() : null));
+		}
+		row(t('kpi_facade'), optLabel(S.fields.facade_main || {}, c.facade_main));
+		if (Number(c.terrace_area) > 0) { row(t('kpi_terrace'), fmt(c.terrace_area, 0) + ' m²'); }
+		row(t('kpi_garage'), optLabel(S.fields.garage || {}, c.garage));
+		box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_house') }), dl));
+
+		var msgs = h('div', { class: 'agh-msgs' });
+		var any = false;
+		[['errors', 'error', 'error'], ['warnings', 'warning', 'alert'], ['info', 'info', 'info']].forEach(function (k) {
+			(S.check[k[0]] || []).forEach(function (m) { any = true; msgs.appendChild(h('div', { class: 'agh-msg is-' + k[1], role: 'button', tabindex: '0', onclick: function () { focusField(m.field); } }, icon(k[2]), h('span', { text: m.message }))); });
+		});
+		if (!any) { msgs.appendChild(h('div', { class: 'agh-msg is-info' }, icon('check'), h('span', { text: t('all_consistent') }))); }
+		box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_checks') }), msgs));
+
+		var lim = S.boot.limits || {};
+		if (lim.limit) {
+			var dots = h('div', { class: 'agh-limit-dots' });
+			for (var i = 0; i < Math.min(lim.limit, 12); i++) { dots.appendChild(h('i', { class: i < lim.used ? 'is-used' : '' })); }
+			box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_limit') }), h('div', { class: 'agh-limit' }, dots, h('span', { text: tf('limit_text', lim.remaining, lim.limit) }))));
+		}
+		if (S.boot.provider.test) { box.appendChild(h('div', { class: 'agh-disclaimer', text: t('test_mode_help') })); }
+		box.appendChild(h('div', { class: 'agh-disclaimer', text: t('disclaimer') }));
+		p.appendChild(h('div', { class: 'agh-scroll' }, box));
+	}
+
+	function renderProgress() {
+		var pr = S.project.progress || {};
+		var g = h('div', { class: 'agh-sum-group' }, h('h5', { text: t('progress') }));
+		if (pr.percent !== null && pr.percent !== undefined) {
+			g.appendChild(h('div', { class: 'agh-bar', role: 'progressbar', 'aria-valuenow': pr.percent, 'aria-valuemin': 0, 'aria-valuemax': 100, style: { 'margin-bottom': '10px' } }, h('i', { style: { width: pr.percent + '%' } })));
+		}
+		var steps = h('div', { class: 'agh-steps' });
+		var ico = { done: 'check', active: 'refresh', error: 'error', pending: 'info', skipped: 'stop' };
+		(pr.stages || []).forEach(function (s) {
+			var n = Number(s.errors) || 0;
+			var note = '';
+			if (s.state === 'done' && n > 0) { note = tf('stage_done_errors', n); }
+			else if (s.state === 'error' && n > 0) { note = tf('stage_errors', n); }
+			else if (s.state === 'skipped') { note = t('stage_skipped'); }
+			steps.appendChild(h('div', { class: 'agh-step is-' + s.state + (s.state === 'done' && n > 0 ? ' has-errors' : '') },
+				h('span', { class: 'agh-step-ico' }, icon(s.state === 'done' && n > 0 ? 'alert' : (ico[s.state] || 'info'), 'agh-ico-s')),
+				h('span', { class: 'agh-step-label' }, s.label, note ? h('small', { class: 'agh-step-note', text: note }) : null)));
+		});
+		g.appendChild(steps);
+		if (pr.counts) { g.appendChild(h('p', { class: 'agh-small agh-muted', text: tf('images_done', pr.counts.ext_done + pr.counts.int_done, pr.counts.ext_total + pr.counts.int_total) })); }
+		if (S.project.status === 'cancelled') { g.appendChild(h('p', { class: 'agh-field-msg is-warning', text: t('project_cancelled') })); }
+		return g;
+	}
+
+	/* ------------------------------------------------------------------ action bar */
+	function renderActionbar() {
+		var a = clear(els.actionbar);
+		var running = S.project && ['queued', 'planning', 'rendering'].indexOf(S.project.status) !== -1;
+		var status = h('div', { class: 'agh-actionbar-status' });
+		if (running) { status.appendChild(h('span', { class: 'agh-spinner' })); status.appendChild(h('span', { text: t('status_generating') })); }
+		else if (S.check.errors && S.check.errors.length) { status.appendChild(icon('error')); status.appendChild(h('span', { text: tf('status_errors', S.check.errors.length) })); }
+		else if (S.project && S.project.quote) { status.appendChild(icon('check')); status.appendChild(h('span', { text: t('status_quoted') })); }
+		else if (S.project && !S.dirty && ['ready', 'partial'].indexOf(S.project.status) !== -1) { status.appendChild(icon('check')); status.appendChild(h('span', { text: S.selected ? t('status_ready_selected') : t('done_toast') })); }
+		else if (!S.boot.provider.ready) { status.appendChild(icon('alert')); status.appendChild(h('span', { text: t('not_configured_visitor') })); }
+		else if (S.project && S.project.status === 'cancelled') { status.appendChild(icon('stop')); status.appendChild(h('span', { text: t('status_cancelled') })); }
+		else { status.appendChild(icon('info')); status.appendChild(h('span', { text: S.dirty && S.project ? t('status_changed') : t('status_ready') })); }
+		a.appendChild(status);
+		if (S.boot.features.save) {
+			a.appendChild(h('button', { type: 'button', class: 'agh-btn', disabled: !S.project ? 'disabled' : null, title: !S.project ? t('save_after_generate') : '', onclick: saveProject }, icon('save', 'agh-ico-s'), t('save')));
+		}
+		if (running) {
+			a.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-ghost', onclick: cancelGeneration }, icon('stop', 'agh-ico-s'), t('cancel_generation')));
+		}
+		var canQuote = S.project && S.selected && S.boot.features.quote && !(S.project.quote);
+		a.appendChild(h('button', { type: 'button', class: 'agh-btn', disabled: canQuote ? null : 'disabled', title: canQuote ? '' : t('quote_hint'), onclick: showQuote }, icon('send', 'agh-ico-s'), t('quote')));
+		var gen = h('button', { type: 'button', class: 'agh-btn agh-btn-primary agh-btn-lg', disabled: running || (S.check.errors && S.check.errors.length) || !S.boot.provider.ready ? 'disabled' : null, title: !S.boot.provider.ready ? t('not_configured_visitor') : '', onclick: generate }, icon('sparkle', 'agh-ico-s'), S.project ? t('generate_new') : t('generate'));
+		a.appendChild(gen);
+	}
+
+	/* ------------------------------------------------------------------ generation */
+	function generate() {
+		if (S.busy) { return; }
+		var lim = S.boot.limits || {};
+		var go = function (force) {
+			S.busy = true;
+			event('design_start');
+			api('POST', 'generate', { config: payloadConfig(), force: !!force }).then(function (r) {
+				S.busy = false;
+				if (r.limits) { S.boot.limits = r.limits; }
+				if (r.reused) { toast(r.message, 'ok', 6000); }
+				S.projectId = r.project;
+				S.selected = null;
+				S.view = 'concepts';
+				S.dirty = false;
+				persist();
+				setTab('stage');
+				loadProject(r.project);
+			}).catch(function (err) {
+				S.busy = false;
+				if (err.status === 503 && err.data && err.data.code === 'agh_not_configured') {
+					// No image provider: friendly, translated notice instead of a technical error.
+					S.boot.provider.ready = false;
+					renderActionbar();
+					toast(t('not_configured_visitor'), 'warn', 8000);
+					return;
+				}
+				if (err.data && err.data.check) { S.check = err.data.check; renderSummary(); updateRail(); }
+				if (err.data && err.data.limits) { S.boot.limits = err.data.limits; renderSummary(); }
+				errToast(err);
+			});
+		};
+		var msg = lim.limit ? tf('confirm_generate', lim.remaining, lim.limit) : t('confirm_generate_nolimit');
+		confirmDialog(t('generate'), msg, t('generate_go'), function () { go(false); });
+	}
+
+	function loadProject(id, quiet) {
+		return api('GET', 'projects/' + id).then(function (p) {
+			S.project = p;
+			S.projectId = p.id;
+			var sel = (p.concepts || []).filter(function (c) { return c.selected; })[0];
+			S.selected = sel ? sel.id : null;
+			if (quiet && S.view === 'design' && p.concepts && p.concepts.length) { S.view = 'concepts'; }
+			persist();
+			renderStage(); renderSummary(); renderActionbar();
+			schedulePoll();
+		}).catch(function (err) {
+			if (err.status === 404) { S.projectId = null; S.project = null; persist(); }
+			if (!quiet) { errToast(err); }
+		});
+	}
+	function needsPoll() {
+		var p = S.project;
+		if (!p || isStopped(p)) { return false; }
+		if (isRunning(p)) { return true; }
+		return (p.concepts || []).some(function (c) { return c.gallery_status === 'rendering' || c.gallery_status === 'pending'; });
+	}
+	function schedulePoll() {
+		stopPoll();
+		if (!needsPoll() || !root) { S.pollDelay = 3000; return; }
+		S.poll = setTimeout(function () {
+			var before = JSON.stringify(S.project.progress);
+			var prevStatus = S.project.status;
+			api('GET', 'projects/' + S.project.id).then(function (p) {
+				var hadImages = countImages(S.project);
+				S.project = p;
+				if (JSON.stringify(p.progress) === before) { S.pollDelay = Math.min(10000, S.pollDelay + 1000); } else { S.pollDelay = 3000; }
+				if (countImages(p) !== hadImages || !needsPoll()) { renderStage(); }
+				renderSummary(); renderActionbar();
+				if (!needsPoll() && ['ready', 'partial'].indexOf(p.status) !== -1) { toast(t('done_toast'), 'ok'); }
+				if (p.status === 'failed') { toast(t('failed_toast'), 'error', 8000); }
+				if (p.status === 'cancelled' && prevStatus !== 'cancelled') { renderStage(); toast(t('cancelled'), 'warn'); }
+				schedulePoll();
+			}).catch(function () { S.pollDelay = Math.min(15000, S.pollDelay * 2); schedulePoll(); });
+		}, S.pollDelay);
+	}
+	function countImages(p) { var n = 0; (p.concepts || []).forEach(function (c) { if (c.hero && c.hero.preview) { n++; } (c.assets || []).forEach(function (a) { if (a.preview) { n++; } }); }); return n; }
+	function stopPoll() { if (S.poll) { clearTimeout(S.poll); S.poll = null; } }
+
+	function selectConcept(id) {
+		api('POST', 'projects/' + S.project.id + '/select', { concept: id }).then(function (p) {
+			S.project = p; S.selected = id; S.view = 'gallery'; S.galleryTab = 'exterior'; S.galleryIndex = 0;
+			renderStage(); renderSummary(); renderActionbar(); schedulePoll();
+			if (S.boot.provider.gallery === 'selected') { toast(t('gallery_started'), 'ok'); }
+		}).catch(errToast);
+	}
+
+	function rebuildsLeft() {
+		var l = S.boot.limits || {};
+		return typeof l.gallery_remaining === 'number' ? l.gallery_remaining : null;
+	}
+	function regenerate(c) {
+		var left = rebuildsLeft();
+		var msg = t('regenerate_confirm') + (left === null ? '' : ' ' + (left > 0 ? tf('regenerate_left', left) : t('regenerate_none')));
+		confirmDialog(t('regenerate'), msg, t('regenerate_go'), function () {
+			api('POST', 'projects/' + S.project.id + '/regenerate', { concept: c.id, config: payloadConfig() }).then(function (p) {
+				// One rebuild unit was reserved by the server.
+				if (rebuildsLeft() !== null) { S.boot.limits.gallery_remaining = Math.max(0, rebuildsLeft() - 1); }
+				S.project = p; renderStage(); renderSummary(); renderActionbar(); schedulePoll(); toast(t('regenerate_started'), 'ok');
+			}).catch(function (err) {
+				if (err.data && err.data.limits) { S.boot.limits = err.data.limits; }
+				errToast(err);
+			});
+		});
+	}
+
+	function cancelGeneration() {
+		api('POST', 'projects/' + S.project.id + '/cancel', {}).then(function () { return loadProject(S.project.id); }).then(function () { toast(t('cancelled'), 'warn'); }).catch(errToast);
+	}
+
+	function saveProject() {
+		if (!S.project) { return; }
+		var name = h('input', { class: 'agh-input', value: S.config.project_name || S.project.name || '', maxlength: 120 });
+		dialog(t('save_title'), h('div', null, h('p', { class: 'agh-help', text: S.boot.logged_in ? t('save_help_user') : t('save_help_guest') }), h('label', { class: 'agh-label', text: t('project_name') }), name), [
+			{ label: t('cancel') },
+			{ label: t('save'), cls: 'agh-btn-primary', onclick: function () {
+				api('POST', 'projects/' + S.project.id + '/save', { name: name.value }).then(function () { S.dirty = false; S.config.project_name = name.value; persist(); renderActionbar(); toast(t('saved'), 'ok'); }).catch(errToast);
+			} }
+		]);
+	}
+
+	/* ------------------------------------------------------------------ quote */
+	function showQuote() {
+		var c = conceptById(S.selected);
+		if (!c) { toast(t('quote_hint'), 'warn'); return; }
+		var projectId = S.project.id;
+		// Server-issued form token (anti-bot timing); requested when the form opens, sent back as form_token.
+		var tok = { value: '', at: 0 };
+		var tokMsg = h('div', { class: 'agh-field-msg is-error agh-form-alert', role: 'alert', hidden: true });
+		var submitBtn = null;
+		function fetchToken() {
+			tok.value = '';
+			tokMsg.hidden = true;
+			if (submitBtn) { submitBtn.disabled = true; }
+			return api('GET', 'projects/' + projectId + '/quote-token').then(function (r) {
+				if (!r || !r.token) { throw new Error(t('q_token_error')); }
+				tok.value = r.token;
+				tok.at = Date.now();
+				if (submitBtn) { submitBtn.disabled = false; }
+			}).catch(function (err) {
+				clear(tokMsg).appendChild(h('span', { text: t('q_token_error') + (err && err.message && err.message !== t('q_token_error') ? ' (' + err.message + ')' : '') + ' ' }));
+				tokMsg.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { fetchToken(); } }, icon('refresh', 'agh-ico-s'), t('retry')));
+				tokMsg.hidden = false;
+			});
+		}
+		var f = {};
+		function inp(key, label, type, req, full) {
+			f[key] = h(type === 'textarea' ? 'textarea' : 'input', { class: type === 'textarea' ? 'agh-textarea' : 'agh-input', type: type === 'textarea' ? null : type, name: key, required: req ? 'required' : null, autocomplete: { full_name: 'name', email: 'email', phone: 'tel', city: 'address-level2' }[key] || 'off', maxlength: type === 'textarea' ? 2000 : 190 });
+			return h('label', { class: full ? 'agh-full' : null }, h('span', null, label, req ? h('span', { class: 'agh-req', text: ' *' }) : null), f[key], h('span', { class: 'agh-field-msg is-error', hidden: true, 'data-err': key }));
+		}
+		var grid = h('div', { class: 'agh-form-grid' },
+			inp('full_name', t('q_name'), 'text', true),
+			inp('email', t('q_email'), 'email', true),
+			inp('phone', t('q_phone'), 'tel', true),
+			inp('city', t('q_city'), 'text', true),
+			inp('site_location', t('q_site'), 'text', false, true),
+			inp('start_period', t('q_start'), 'text', false),
+			inp('budget', t('q_budget'), 'text', false),
+			inp('note', t('q_note'), 'textarea', false, true));
+		if (S.config.budget) { f.budget.value = fmt(S.config.budget, 0) + ' Ft'; }
+		if (S.config.build_period) { f.start_period.value = S.config.build_period; }
+		var hp = h('input', { class: 'agh-hp', name: 'website', tabindex: '-1', autocomplete: 'off', 'aria-hidden': 'true' });
+		var consents = h('div', { style: { display: 'flex', 'flex-direction': 'column', gap: '8px', 'margin-top': '14px' } });
+		var cboxes = {};
+		Object.keys(S.boot.consents).forEach(function (k) {
+			var d = S.boot.consents[k];
+			cboxes[k] = h('input', { type: 'checkbox' });
+			consents.appendChild(h('label', { class: 'agh-check', 'data-consent': k }, cboxes[k], h('span', null, d.label, d.required ? h('span', { class: 'agh-req', text: ' *' }) : h('span', { class: 'agh-muted', text: ' (' + t('optional') + ')' }), d.url ? h('span', null, ' ', h('a', { href: d.url, target: '_blank', rel: 'noopener', text: t('read_doc') })) : null)));
+		});
+		var body = h('div', null,
+			h('div', { class: 'agh-list-item', style: { 'margin-bottom': '14px' } }, c.hero && c.hero.preview ? h('img', { src: c.hero.preview, alt: '', style: { width: '96px', 'border-radius': '10px', 'aspect-ratio': '16/10', 'object-fit': 'cover' } }) : null, h('div', { class: 'agh-grow' }, h('b', { text: c.variant + ' – ' + c.title }), h('span', { class: 'agh-small agh-muted', text: t('q_project') + ': ' + S.project.id }))),
+			h('p', { class: 'agh-help', text: t('q_intro') }), tokMsg, grid, hp, consents,
+			h('p', { class: 'agh-small agh-muted', style: { 'margin-top': '10px' }, text: t('q_data_note') }));
+		var dlg = dialog(t('quote_title'), body, [
+			{ label: t('cancel') },
+			{ label: t('q_submit'), cls: 'agh-btn-primary', keep: true, onclick: function (btn) {
+				if (!tok.value) { fetchToken(); return; }
+				Array.prototype.forEach.call(body.querySelectorAll('[data-err]'), function (e) { e.hidden = true; });
+				Array.prototype.forEach.call(body.querySelectorAll('.agh-check'), function (e) { e.classList.remove('is-error'); });
+				btn.disabled = true;
+				btn.setAttribute('aria-busy', 'true');
+				// The server rejects tokens younger than 3 s or older than 2 h: wait / renew as needed.
+				var age = Date.now() - tok.at;
+				var ready = age > 110 * 60 * 1000 ? fetchToken().then(function () { return wait(3200); }) : wait(Math.max(0, 3200 - age));
+				ready.then(function () {
+					if (!document.body.contains(btn)) { return; } // Dialog closed meanwhile: do not submit.
+					if (!tok.value) { btn.disabled = true; btn.removeAttribute('aria-busy'); return; }
+					send(btn);
+				});
+			} }
+		], true);
+		submitBtn = dlg.foot.querySelector('.agh-btn-primary');
+		fetchToken();
+		function wait(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
+		function send(btn) {
+			var data = { concept: c.id, website: hp.value, form_token: tok.value, consents: {} };
+			Object.keys(f).forEach(function (k) { data[k] = f[k].value.trim(); });
+			Object.keys(cboxes).forEach(function (k) { data.consents[k] = cboxes[k].checked; });
+			api('POST', 'projects/' + projectId + '/quote', data).then(function (r) {
+				var box = clear(dlg.body);
+				box.appendChild(h('div', { class: 'agh-success-box' }, h('div', { class: 'agh-success-ico' }, icon('check')), h('h3', { class: 'agh-h', text: t('q_thanks') }), h('p', { text: r.message })));
+				clear(dlg.foot).appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-primary', onclick: function () { dlg.close(); } }, t('close')));
+				loadProject(projectId);
+			}).catch(function (err) {
+				btn.disabled = false;
+				btn.removeAttribute('aria-busy');
+				var errs = (err.data && err.data.errors) || {};
+				if (errs.form_token || errs._form) {
+					// Form-level rejection (e.g. expired/invalid token): get a fresh token; the next submit waits for its minimum age.
+					fetchToken().then(function () {
+						if (tok.value && errs.form_token) { clear(tokMsg).appendChild(h('span', { text: errs.form_token })); tokMsg.hidden = false; }
+					});
+				}
+				Object.keys(errs).forEach(function (k) {
+					if (k.indexOf('consent_') === 0) { var cb = body.querySelector('[data-consent="' + k.slice(8) + '"]'); if (cb) { cb.classList.add('is-error'); } }
+					var el = body.querySelector('[data-err="' + k + '"]');
+					if (el) { el.textContent = errs[k]; el.hidden = false; }
+				});
+				toast(errs._form || errs.form_token || err.message, 'error');
+			});
+		}
+	}
+
+	/* ------------------------------------------------------------------ presets & projects */
+	function showPresets() {
+		var body = h('div', { class: 'agh-list' });
+		(S.boot.schema.presets || []).forEach(function (p) {
+			body.appendChild(h('div', { class: 'agh-list-item' }, p.image ? h('img', { src: p.image, alt: '', style: { width: '64px', height: '44px', 'object-fit': 'cover', 'border-radius': '8px' } }) : icon(p.style ? 'sparkle' : 'layers'), h('div', { class: 'agh-grow' }, h('b', { text: p.name }), h('span', { class: 'agh-small agh-muted', text: p.desc || '' })), h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { applyValues(p.values, true); closeDialogs(); } }, t('apply'))));
+		});
+		var mine = lsGet(LS_PRESETS, []);
+		var mineBox = h('div', { class: 'agh-list', style: { 'margin-top': '14px' } }, h('div', { class: 'agh-eyebrow', text: t('my_presets') }));
+		function drawMine() {
+			Array.prototype.slice.call(mineBox.querySelectorAll('.agh-list-item')).forEach(function (x) { x.remove(); });
+			mine.forEach(function (p, i) {
+				mineBox.appendChild(h('div', { class: 'agh-list-item' }, icon('star'), h('div', { class: 'agh-grow' }, h('b', { text: p.name })), h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { S.config = Object.assign(clone(S.boot.defaults), p.values); applyValues({}, false); closeDialogs(); } }, t('apply')), h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('delete'), onclick: function () { mine.splice(i, 1); lsSet(LS_PRESETS, mine); syncPresets(mine); drawMine(); } }, icon('trash', 'agh-ico-s'))));
+			});
+		}
+		drawMine();
+		var nm = h('input', { class: 'agh-input', placeholder: t('preset_name'), maxlength: 80 });
+		var add = h('div', { class: 'agh-numrow', style: { 'margin-top': '10px' } }, nm, h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { if (!nm.value.trim()) { return; } mine.unshift({ name: nm.value.trim(), values: clone(S.config) }); mine = mine.slice(0, 20); lsSet(LS_PRESETS, mine); syncPresets(mine); nm.value = ''; drawMine(); toast(t('preset_saved'), 'ok'); } }, icon('plus', 'agh-ico-s'), t('save_as_preset')));
+		dialog(t('presets'), h('div', null, body, mineBox, add), [{ label: t('close') }]);
+		if (S.boot.logged_in) {
+			api('GET', 'presets').then(function (r) { if (r.presets && r.presets.length && !mine.length) { mine = r.presets; lsSet(LS_PRESETS, mine); drawMine(); } }).catch(function () {});
+		}
+	}
+	function syncPresets(list) { if (S.boot.logged_in) { api('POST', 'presets', { presets: list }).catch(function () {}); } }
+
+	function showProjects() {
+		var body = h('div', { class: 'agh-list' });
+		var dlg = dialog(t('my_projects'), body, [{ label: t('close') }]);
+		function load(focusAfter) {
+			clear(body).appendChild(h('div', { class: 'agh-empty' }, h('span', { class: 'agh-spinner' })));
+			api('GET', 'projects').then(function (r) {
+				clear(body);
+				if (!r.items.length) { body.appendChild(h('p', { class: 'agh-muted', text: S.boot.logged_in ? t('no_projects') : t('no_projects_guest') })); }
+				r.items.forEach(function (p) { body.appendChild(projectRow(p, load)); });
+				if (focusAfter) {
+					var f = body.querySelector('button') || dlg.foot.querySelector('button');
+					if (f) { f.focus(); }
+				}
+			}).catch(function (err) {
+				clear(body).appendChild(h('p', { class: 'agh-field-msg is-error', role: 'alert', text: (err && err.message) || t('err_network') }));
+			});
+		}
+		load(false);
+	}
+
+	/**
+	 * One row of "Projektjeim": open + delete with an inline confirmation step.
+	 */
+	function projectRow(p, reload) {
+		var name = p.name || ('#' + p.id.slice(0, 8));
+		var actions = h('div', { class: 'agh-list-actions' });
+		var msg = h('div', { class: 'agh-field-msg is-error agh-list-msg', role: 'alert', hidden: true });
+		var row = h('div', { class: 'agh-list-item agh-project-row' },
+			icon('folder'),
+			h('div', { class: 'agh-grow' }, h('b', { text: name }), h('span', { class: 'agh-small agh-muted', text: p.created + ' · ' + t('pstatus_' + p.status) })),
+			p.has_quote ? h('span', { class: 'agh-badge', text: t('quoted_badge') }) : null,
+			p.saved ? h('span', { class: 'agh-badge agh-badge-ok', text: t('saved_badge') }) : null,
+			actions, msg);
+		var delBtn;
+		function drawActions() {
+			clear(actions);
+			actions.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () {
+				closeDialogs();
+				api('GET', 'projects/' + p.id).then(function (pr) { S.config = Object.assign(clone(S.boot.defaults), pr.config); S.explicit = {}; (pr.config._explicit || []).forEach(function (k) { S.explicit[k] = true; }); delete S.config._explicit; S.dirty = false; return loadProject(p.id); }).then(function () { S.view = 'concepts'; renderParams(); renderStage(); validate(); }).catch(errToast);
+			} }, t('open')));
+			if (p.has_quote) {
+				// Server refuses it anyway (409); the wrapper carries the tooltip because disabled buttons get no hover events in every browser.
+				actions.appendChild(h('span', { class: 'agh-del-blocked', title: t('delete_blocked_quote') },
+					h('button', { type: 'button', class: 'agh-iconbtn agh-iconbtn-s', disabled: 'disabled', 'aria-label': t('delete_project') + ': ' + name + ' – ' + t('delete_blocked_quote') }, icon('trash', 'agh-ico-s'))));
+				return;
+			}
+			delBtn = h('button', { type: 'button', class: 'agh-iconbtn agh-iconbtn-s', 'aria-label': t('delete_project') + ': ' + name, title: t('delete_project'), onclick: askDelete }, icon('trash', 'agh-ico-s'));
+			actions.appendChild(delBtn);
+		}
+		function askDelete() {
+			msg.hidden = true;
+			actions.hidden = true;
+			var no = h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: cancel }, t('cancel'));
+			var yes = h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-danger-solid', onclick: doDelete }, icon('trash', 'agh-ico-s'), t('delete'));
+			var box = h('div', { class: 'agh-inline-confirm', role: 'group', 'aria-label': t('delete_project') + ': ' + name },
+				h('p', { text: t('delete_project_confirm') }), no, yes);
+			// Escape cancels only this confirmation, not the dialog.
+			box.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); cancel(); } });
+			row.insertBefore(box, msg);
+			no.focus();
+			function cancel() {
+				box.remove();
+				actions.hidden = false;
+				if (delBtn) { delBtn.focus(); }
+			}
+			function doDelete() {
+				yes.disabled = true; no.disabled = true;
+				yes.insertBefore(h('span', { class: 'agh-spinner', style: { width: '12px', height: '12px' } }), yes.firstChild);
+				api('DELETE', 'projects/' + p.id).then(function () {
+					if (S.projectId === p.id) {
+						stopPoll();
+						S.project = null; S.projectId = null; S.selected = null; S.view = 'design';
+						persist();
+						renderStage(); renderSummary(); renderActionbar();
+					}
+					toast(t('project_deleted'), 'ok');
+					reload(true);
+				}).catch(function (err) {
+					box.remove();
+					actions.hidden = false;
+					msg.textContent = (err && err.message) || t('err_network');
+					msg.hidden = false;
+					if (delBtn) { delBtn.focus(); }
+				});
+			}
+		}
+		drawActions();
+		return row;
+	}
+
+	/* ------------------------------------------------------------------ tour */
+	function showTour() {
+		var steps = S.boot.tour || [];
+		if (!steps.length) { return; }
+		var i = 0;
+		var wrap = h('div', { class: 'agh-dialog-wrap' });
+		var card = h('div', { class: 'agh-dialog agh-tour', role: 'dialog', 'aria-modal': 'true' });
+		function draw() {
+			var s = steps[i];
+			clear(card);
+			var dots = h('div', { class: 'agh-tour-dots' });
+			steps.forEach(function (x, j) { dots.appendChild(h('i', { class: j === i ? 'is-on' : '' })); });
+			card.appendChild(h('div', { class: 'agh-dialog-body', style: { padding: '26px 26px 10px' } }, h('div', { class: 'agh-tour-ico' }, icon(s.icon || 'sparkle')), h('h3', { class: 'agh-h', style: { 'font-size': '17px', 'margin-bottom': '8px' }, text: s.title }), h('div', { class: 'agh-muted', html: s.text }), dots));
+			card.appendChild(h('div', { class: 'agh-dialog-foot', style: { 'justify-content': 'space-between' } },
+				h('button', { type: 'button', class: 'agh-btn agh-btn-ghost', onclick: done, text: t('skip') }),
+				h('div', { style: { display: 'flex', gap: '8px' } },
+					i > 0 ? h('button', { type: 'button', class: 'agh-btn', onclick: function () { i--; draw(); }, text: t('back') }) : null,
+					h('button', { type: 'button', class: 'agh-btn agh-btn-primary', onclick: function () { if (i < steps.length - 1) { i++; draw(); } else { done(); } }, text: i < steps.length - 1 ? t('next') : t('start') }))));
+			var b = card.querySelector('.agh-btn-primary'); if (b) { b.focus(); }
+		}
+		function done() { lsSet('agh_tour_done', true); wrap.remove(); }
+		wrap.appendChild(card);
+		shell.appendChild(wrap);
+		draw();
+	}
+
+	/* ------------------------------------------------------------------ dialogs & toasts */
+	function closeDialogs() { Array.prototype.forEach.call(shell.querySelectorAll('.agh-dialog-wrap'), function (d) { d.remove(); }); }
+	function dialog(title, content, buttons, wide) {
+		var wrap = h('div', { class: 'agh-dialog-wrap', onmousedown: function (e) { if (e.target === wrap) { wrap.remove(); } } });
+		var body = h('div', { class: 'agh-dialog-body' }, content);
+		var foot = h('div', { class: 'agh-dialog-foot' });
+		var api2 = { body: body, foot: foot, close: function () { wrap.remove(); } };
+		(buttons || []).forEach(function (b) {
+			var btn = h('button', { type: 'button', class: 'agh-btn ' + (b.cls || ''), text: b.label });
+			btn.addEventListener('click', function () { if (b.onclick) { b.onclick(btn); } if (!b.keep) { wrap.remove(); } });
+			foot.appendChild(btn);
+		});
+		var d = h('div', { class: 'agh-dialog' + (wide ? ' agh-dialog-wide' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
+			h('div', { class: 'agh-dialog-head' }, h('h3', { class: 'agh-h', text: title }), h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), onclick: function () { wrap.remove(); } }, icon('close'))),
+			body, foot);
+		wrap.appendChild(d);
+		shell.appendChild(wrap);
+		setTimeout(function () { var f = d.querySelector('input, textarea, .agh-dialog-foot .agh-btn-primary'); if (f) { f.focus(); } }, 30);
+		return api2;
+	}
+	function confirmDialog(title, text, okLabel, onOk) {
+		dialog(title, h('p', { text: text }), [{ label: t('cancel') }, { label: okLabel, cls: 'agh-btn-primary', onclick: onOk }]);
+	}
+	function toast(msg, type, ms) {
+		if (!els.toasts) { return; }
+		var el = h('div', { class: 'agh-toast is-' + (type || 'ok'), role: type === 'error' ? 'alert' : 'status' }, icon(type === 'error' ? 'error' : (type === 'warn' ? 'alert' : 'check')), h('div', null, msg));
+		els.toasts.appendChild(el);
+		setTimeout(function () { el.remove(); }, ms || 4500);
+	}
+	function errToast(err) { toast((err && err.message) || t('err_network'), 'error', 7000); }
+
+	window.AGH_Designer = { open: open, close: close, version: '1.0.0' };
+})();

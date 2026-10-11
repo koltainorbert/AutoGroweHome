@@ -1,0 +1,86 @@
+/*! AutoGroweHome loader – loads the designer bundle on demand. */
+(function () {
+	'use strict';
+	var cfgEl = document.getElementById('agh-loader-cfg');
+	if (!cfgEl) { return; }
+	var cfg;
+	try { cfg = JSON.parse(cfgEl.textContent); } catch (e) { return; }
+	window.AGH_LOADER = cfg;
+	var loading = null;
+
+	function load() {
+		if (window.AGH_Designer) { return Promise.resolve(window.AGH_Designer); }
+		if (loading) { return loading; }
+		loading = new Promise(function (resolve, reject) {
+			var css = document.createElement('link');
+			css.rel = 'stylesheet';
+			css.href = cfg.css;
+			document.head.appendChild(css);
+			var st = document.createElement('style');
+			st.textContent = cfg.vars;
+			document.head.appendChild(st);
+			var s = document.createElement('script');
+			s.src = cfg.js;
+			s.async = true;
+			s.onload = function () { window.AGH_Designer ? resolve(window.AGH_Designer) : reject(new Error('AGH')); };
+			s.onerror = reject;
+			document.head.appendChild(s);
+		});
+		return loading;
+	}
+
+	function open(e) {
+		if (e) { e.preventDefault(); }
+		var btn = e && e.currentTarget;
+		if (btn) { btn.setAttribute('aria-busy', 'true'); }
+		load().then(function (d) { d.open(); }).catch(function () {
+			window.alert('AutoGroweHome: betöltési hiba / loading error');
+		}).then(function () { if (btn) { btn.removeAttribute('aria-busy'); } });
+	}
+
+	function bind() {
+		var nodes = document.querySelectorAll('[data-agh-open]');
+		for (var i = 0; i < nodes.length; i++) {
+			if (!nodes[i].__agh) { nodes[i].__agh = 1; nodes[i].addEventListener('click', open); }
+		}
+		if (cfg.floating && !document.querySelector('.agh-fab')) {
+			var b = document.createElement('button');
+			b.type = 'button';
+			b.className = 'agh-fab';
+			b.setAttribute('data-agh-open', '1');
+			b.innerHTML = '<span class="agh-cta-ico" aria-hidden="true">&#8962;</span><span></span>';
+			b.lastChild.textContent = cfg.label;
+			var st2 = document.createElement('style');
+			st2.textContent = '.agh-fab{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.7);background:linear-gradient(135deg,rgba(255,255,255,.8),rgba(255,255,255,.5));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 12px 34px rgba(30,34,38,.2);color:#1E2226;cursor:pointer;font:600 15px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;position:fixed;right:22px;bottom:22px;z-index:99990}.agh-fab .agh-cta-ico{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#B9824F;color:#fff}@media(max-width:600px){.agh-fab{right:12px;bottom:12px;padding:11px 16px;font-size:14px}}';
+			document.head.appendChild(st2);
+			b.addEventListener('click', open);
+			b.__agh = 1;
+			document.body.appendChild(b);
+		}
+		fromHash();
+	}
+
+	// "#agh-open" in the address bar opens the designer: on page load and on later hash changes.
+	var HASH_RE = /[#&]agh-open\b/;
+	function fromHash() {
+		if (!HASH_RE.test(location.hash)) { return; }
+		// Remove the trigger from the URL so the same link works again after closing.
+		var rest = location.hash.replace(/&?agh-open\b/, '').replace(/^#&/, '#');
+		if (window.history && history.replaceState) { history.replaceState(null, '', location.pathname + location.search + (rest === '#' ? '' : rest)); }
+		open();
+	}
+	// Links to "#agh-open" on the current page (no hashchange fires if the hash is already set).
+	function onDocClick(e) {
+		if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+		var a = e.target && e.target.closest ? e.target.closest('a[href*="agh-open"]') : null;
+		if (!a || !HASH_RE.test(a.hash) || a.hasAttribute('data-agh-open')) { return; }
+		if (a.host !== location.host || a.pathname !== location.pathname || a.search !== location.search) { return; }
+		e.preventDefault();
+		open();
+	}
+
+	if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', bind); } else { bind(); }
+	window.addEventListener('hashchange', fromHash);
+	document.addEventListener('click', onDocClick);
+	window.AGH_open = function () { open(); };
+})();
