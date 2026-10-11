@@ -39,6 +39,7 @@
 	--agh-focus: 0 0 0 3px color-mix(in srgb, var(--agh-primary) 35%, transparent);
 	--agh-primary-soft: color-mix(in srgb, var(--agh-primary) 14%, transparent);
 	--agh-scrim: rgba(28, 25, 22, .42);
+	--agh-scrim-page: rgba(28, 25, 22, .58); /* behind the designer; darker because the page is no longer blurred */
 	--agh-r-s: calc(var(--agh-radius) * .55);
 	--agh-r-m: calc(var(--agh-radius) * .8);
 	--agh-r-l: var(--agh-radius);
@@ -60,6 +61,7 @@
 	--agh-shadow: 0 24px 70px rgba(0, 0, 0, .5), 0 2px 8px rgba(0, 0, 0, .3);
 	--agh-shadow-s: 0 6px 20px rgba(0, 0, 0, .35);
 	--agh-scrim: rgba(5, 6, 8, .62);
+	--agh-scrim-page: rgba(5, 6, 8, .74);
 	color-scheme: dark;
 }
 
@@ -110,8 +112,9 @@
 /* ------------------------------------------------------------------ overlay & shell */
 .agh-overlay {
 	position: fixed; inset: 0; z-index: 100000; display: grid; place-items: center;
-	background: var(--agh-scrim);
-	backdrop-filter: blur(6px) saturate(115%); -webkit-backdrop-filter: blur(6px) saturate(115%);
+	/* Plain scrim, no backdrop-filter: a full-screen backdrop blur was recomputed
+	   on every repaint inside the designer and made it stutter badly. */
+	background: var(--agh-scrim-page);
 	animation: agh-fade .3s var(--agh-ease);
 	padding: 1.2vh 1.2vw;
 }
@@ -137,15 +140,19 @@
 .agh-shell[data-bg="1"]::before {
 	content: ""; position: absolute; inset: -40px; z-index: -1;
 	background-image: var(--agh-bg-img); background-size: cover; background-position: center;
-	filter: blur(28px) saturate(110%); opacity: .45;
+	/* The admin "blur" setting (--agh-blur, default 18px) drives this one-off blur. */
+	filter: blur(calc(var(--agh-blur) + 10px)) saturate(110%); opacity: .45;
 }
 .agh-shell[data-actionbar="top"] { grid-template-rows: auto auto 1fr; }
 .agh-shell[data-actionbar="top"] .agh-actionbar { order: 1; border-top: 0; border-bottom: 1px solid var(--agh-line); }
 .agh-shell[data-actionbar="top"] .agh-body { order: 2; }
 
+/* No backdrop-filter on the panels: what is behind them is the shell's own
+   static background (a smooth gradient or the already blurred image), so a
+   second blur is invisible but was recomputed on every repaint inside a panel,
+   nested inside the overlay's backdrop blur. */
 .agh-glass {
 	background: var(--agh-surface);
-	backdrop-filter: blur(var(--agh-blur)) saturate(140%); -webkit-backdrop-filter: blur(var(--agh-blur)) saturate(140%);
 	border: 1px solid var(--agh-glass-border);
 	border-radius: var(--agh-r-l);
 	box-shadow: var(--agh-shadow-s);

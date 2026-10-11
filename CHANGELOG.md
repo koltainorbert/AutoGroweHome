@@ -23,6 +23,7 @@ Első kiadás.
 
 ### Javítás (2026-10-11, kiadás előtt)
 - Windows: az aktiválás végzetes hibával állt le („Class AutoGroweHome\Support\Logger not found”), mert az autoloader a `DIRECTORY_SEPARATOR`-ral építette az útvonalat, amit a saját ellenőrzése Windowson elutasított. Az útvonal mostantól mindig `/`-rel épül. Regressziós teszt: `php tests/autoloader-test.php`.
+- Teljesítmény: a tervező erősen akadozott. Az ok az egymásba ágyazott `backdrop-filter` volt (teljes képernyős elmosás az oldal fölött + elmosás mindhárom panelen), amit a böngésző a panelek minden újrarajzolásánál újraszámolt. A paneleken az elmosás láthatatlan volt (mögöttük a tervező saját, statikus háttere van), ezért megszűnt; az oldal fölötti elmosás helyét sötétebb fátyol vette át. Az admin „elmosás" beállítása mostantól a tervező háttérképére hat.
 
 ### Ellenőrzés
 - Integrációs tesztsor 147/147, regressziós tesztek 120 + 116 + 71, licencszerver-önteszt 32/32, lint 0 hiba (részletek: `docs/TESZTJELENTES.md`).
