@@ -1,0 +1,13 @@
+* text=auto eol=lf
+*.mo binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.webp binary
+
+# Not part of the installable plugin ZIP (bin/build-zip.sh uses git archive).
+/.gitattributes export-ignore
+/.gitignore     export-ignore
+/bin            export-ignore
+/tests          export-ignore
+/dist           export-ignore

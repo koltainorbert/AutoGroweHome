@@ -21,11 +21,14 @@ final class Autoloader {
 			return;
 		}
 		$relative = substr( $class, strlen( $prefix ) );
-		$relative = str_replace( '\\', DIRECTORY_SEPARATOR, $relative );
-		if ( ! preg_match( '/^[A-Za-z0-9_\/]+$/', $relative ) ) {
+		// Validate the class name itself (namespace separators only), then build
+		// the path with forward slashes. "/" works on every platform including
+		// Windows; DIRECTORY_SEPARATOR must not be used here, because on Windows
+		// it is "\" and sub-namespaced classes would never resolve.
+		if ( ! preg_match( '/^[A-Za-z0-9_]+(?:\\\\[A-Za-z0-9_]+)*$/', $relative ) ) {
 			return;
 		}
-		$file = AGH_DIR . 'includes/' . $relative . '.php';
+		$file = AGH_DIR . 'includes/' . str_replace( '\\', '/', $relative ) . '.php';
 		if ( is_readable( $file ) ) {
 			require_once $file;
 		}
