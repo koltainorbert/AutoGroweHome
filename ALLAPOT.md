@@ -17,7 +17,8 @@
 - Stílusminták: assets/img/options/{mező}/{érték}.webp + thumb/ – a séma automatikusan átadja; bármely opcióhoz (pl. tetőforma, homlokzat) hasonlóan bővíthető.
 - Előnézet: 3D (assets/js/agh-3d.js + agh-3d-tex.js, three.js r170 a vendor/three-ban, procedurális PBR-textúrák, letöltés nélkül); tartalék és változásjelzés: 2D agh-sketch.js. Új látható paraméter: 2D VISUAL + visibleFor, és a 3D is.
 - Tervező: backdrop-filter csak kis elemen; mobil elrendezés ≤820 px és fekvő telefonon; érintési célok 44 px, mezők 16 px.
-- Autoloader: útvonal mindig „/”-rel (Windows). Verzió marad 1.0.0 (kiadás előtt).
+- Autoloader: útvonal mindig „/”-rel (Windows).
+- Minden új ZIP új verzió: bin/bump-version.sh (patch; nagy funkciónál minor); a build-zip.sh nem építi újra a kiadott verziót.
 - Helyi teszt: Local (Windows) – C:\Users\Andi\Local Sites\htombau.
 
 **Nyitott tételek**

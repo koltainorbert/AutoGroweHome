@@ -8,6 +8,7 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 - Közvetlenül a `main` ágra megy (egyszemélyes projekt). Külön ág csak akkor, ha Norbi kéri, vagy a változtatás kísérleti és félkész.
 - Push előtt `git fetch origin main` és szükség esetén rebase; force push soha.
 - Ha a kód változott, a telepíthető ZIP is újraépül és felmegy: commit után `bin/build-zip.sh`, majd a `dist/` külön commitban.
+- **Minden új ZIP új verziószámot kap** (Norbi kérése): a kódváltozás commitja előtt `bin/bump-version.sh` (alap: patch, pl. 1.0.0 → 1.0.1; nagyobb új funkciónál `minor`), és a CHANGELOG.md új szakaszát ki kell tölteni. A `bin/build-zip.sh` megtagadja a már kiadott verzió újraépítését; a `dist/`-ben csak a legújabb ZIP marad.
 - Az ALLAPOT.md a repóban és a Claude-projektben (claude/ALLAPOT.md) ugyanaz; ha az egyik változik, a másik is frissül.
 - A commitüzenet magyar, az első sor azt mondja meg, mi változott és miért.
 
@@ -33,4 +34,4 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 - A célkörnyezetek között Windows is van (Local): útvonalat mindig `/`-rel építs, `DIRECTORY_SEPARATOR` csak `realpath()` eredményével összevetve használható.
 - A 3D előnézet: `assets/js/agh-3d.js` (jelenet) + `agh-3d-tex.js` (procedurális PBR-textúrák) + `assets/js/vendor/three/` (three.js r170, MIT; a `jsm` kiegészítők importja relatív útra írva). Új látható paraméternél a 2D (`agh-sketch.js`) és a 3D is bővül.
 - A `bin/`, `tests/`, `dist/`, `CLAUDE.md`, `ALLAPOT.md` nem része a telepíthető ZIP-nek (`.gitattributes` → `export-ignore`).
-- Verziót emelni három helyen kell: `autogrowehome.php` (fejléc + `AGH_VERSION`), `readme.txt` (Stable tag), `CHANGELOG.md`.
+- A verzió három helyen áll: `autogrowehome.php` (fejléc + `AGH_VERSION`), `readme.txt` (Stable tag + changelog), `CHANGELOG.md` – mindet a `bin/bump-version.sh` emeli, kézzel nem kell.
