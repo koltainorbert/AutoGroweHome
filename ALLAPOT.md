@@ -1,6 +1,6 @@
 # ALLAPOT – AutoGroweHome (frissítve: 2026-10-12)
 
-**Verzió:** 1.0.0 · DB v5 · Repó: github.com/koltainorbert/AutoGroweHome (main) · ZIP: dist/autogrowehome-1.0.0.zip (varázslóval, mobil javításokkal). A htombau oldalon még a varázsló előtti fájlok vannak.
+**Verzió:** 1.0.0 · DB v5 · Repó: github.com/koltainorbert/AutoGroweHome (main) · ZIP: dist/autogrowehome-1.0.0.zip (varázsló, mobil javítások, 16 fotórealisztikus stílusminta). A htombau oldalon még a varázsló előtti fájlok vannak.
 
 **Chat elején:** kösd be a repót (koltainorbert/AutoGroweHome, írási joggal), kövesd a CLAUDE.md-t; tesztkörnyezet: `bin/test-wp.sh`.
 
@@ -14,12 +14,13 @@
 - BRAMAC magastetőnél kötelező, auto-választás; katalógus verified:false.
 - Kivitelezői link: időkorlátos, többször használható, címzetthez kötött, visszavonható. Csomagmátrix csak AGH_OWNER_MODE-ban szerkeszthető.
 - Licenc: Ed25519, 14 nap türelmi idő, frissítés nonce + SHA-256. Eltávolítás alapból megtartja az adatokat.
+- Stílusminták: assets/img/options/{mező}/{érték}.webp + thumb/ – a séma automatikusan átadja; bármely opcióhoz (pl. tetőforma, homlokzat) hasonlóan bővíthető.
 - Tervező: backdrop-filter csak kis elemen; mobil elrendezés ≤820 px és fekvő telefonon; érintési célok 44 px, mezők 16 px.
 - Autoloader: útvonal mindig „/”-rel (Windows). Verzió marad 1.0.0 (kiadás előtt).
 - Helyi teszt: Local (Windows) – C:\Users\Andi\Local Sites\htombau.
 
 **Nyitott tételek**
-- Stílusfotók: 16 stílus × 2 kép elkészült Magnificben (Seedream 5 Pro, 2496×1664; a fiók Personal projektjében, címek: /home/claude/style-img/urls.json – csak ebben a munkamenetben). A konténer nem éri el a letöltési CDN-t: a gép csatlakozásakor letölteni, stílusonként a jobbat kiválasztani, webp (1280 + 480 px) → assets/img/options/arch_style/, commit + ZIP. A kód kész (képek nélkül a vázlat jelenik meg).
+- GitHub-fiók: számlázási zárolás (Actions nem indul); a repó NYILVÁNOS – privátra állítani.
 - Valódi koncepcióképek: Magnific API-kulcs (docs.magnific.com, x-magnific-api-key) az admin AI-szolgáltatók oldalán; utána éles végigteszt.
 - htombau: új ZIP telepítése, majd Firefoxban/telefonon visszaigazolni a varázslót és az akadozás megszűnését.
 - Varázsló 5. lépés: a színminták 28 px-esek (WCAG AA 24 px teljesül, 44 px nem).

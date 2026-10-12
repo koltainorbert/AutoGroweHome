@@ -31,6 +31,7 @@ Első kiadás.
 - Új beállítás: Arculat és elrendezés → Popup elrendezés → **Kezdőnézet** (`layout.start_view`: `wizard` | `designer`, alap: `wizard`).
 - 27 új szöveg mind a 15 fordításban (nyelvenként 1592); `bin/po-tools.py`: függőség nélküli .po → .mo fordító és ellenőrző.
 - Javítás: az élő vázlat égbolt-átmenete egyedi azonosítót kap (két vázlat egyszerre a DOM-ban).
+- **Fotórealisztikus stílusminták** mind a 16 építészeti stílushoz (Magnific / Seedream 5 Pro, WebP 1280 + 480 px, összesen ~2,8 MB): képes stíluskártyák a tervezőben és a varázslóban, az előnézet a stílus fotója az élő vázlattal; „Stílusminta” jelöléssel.
 
 ### Ellenőrzés
 - Integrációs tesztsor 147/147, regressziós tesztek 120 + 116 + 71, licencszerver-önteszt 32/32, lint 0 hiba (részletek: `docs/TESZTJELENTES.md`).
