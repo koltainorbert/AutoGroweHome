@@ -19,6 +19,14 @@
 			var st = document.createElement('style');
 			st.textContent = cfg.vars;
 			document.head.appendChild(st);
+			// Start fetching the 3D module together with the designer, so the 3D view is ready sooner.
+			if (cfg.three && !document.querySelector('link[data-agh-3d]')) {
+				var mp = document.createElement('link');
+				mp.rel = 'modulepreload';
+				mp.href = cfg.three;
+				mp.setAttribute('data-agh-3d', '1');
+				document.head.appendChild(mp);
+			}
 			function script(src, done) {
 				var s = document.createElement('script');
 				s.src = src;

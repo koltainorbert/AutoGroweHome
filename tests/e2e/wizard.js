@@ -24,7 +24,7 @@ const sizes = [['320x568', 320, 568, true], ['390x844', 390, 844, true], ['844x3
       const a = await page.evaluate(() => audit());
       rows.push({ size: label, step, title: info.title, fields: info.fields.join(','), dupIds: info.dup, focusTitle: /agh-wiz-title/.test(info.focus || ''), ...a, console: errors.length });
       if (SHOTS.includes(label)) await page.screenshot({ path: `${OUT}/wiz-${label}-${step}.png` });
-      if (step === 3) { // stílus választása: kártyára kattintás, fókusz és görgetés megmarad?
+      if (step === 1) { // stílus választása (első lépés): kártyára kattintás, fókusz és görgetés megmarad?
         const cards = await page.$$('.agh-wiz-fields .agh-card-opt');
         if (cards.length > 5) { await cards[5].click(); await page.waitForTimeout(300); rows[rows.length - 1].cardKeepsFocus = await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('aria-pressed') === 'true'); }
       }

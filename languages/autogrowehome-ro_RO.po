@@ -6768,3 +6768,79 @@ msgstr "Rotire: trage cu mouse-ul sau cu degetul"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Resetează vizualizarea"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Placare orizontală din lemn"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Placare din scânduri și șipci"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Lemn ars (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Placare cu piatră calcaroasă"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Cărămidă vopsită"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Plăci din fibrociment"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Living, sufragerie și spații deschise; celelalte încăperi pot fi setate separat mai jos."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Parchet în spic francez"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Gresie cu aspect de lemn"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Marmură"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertin"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Pardoseala dormitoarelor"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "La fel ca pardoseala principală"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Mochetă"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Plută"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Pardoseala bucătăriei"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Plăci de ciment cu model"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Pardoseala holului și a coridorului"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Baie, WC, spălătorie, wellness."

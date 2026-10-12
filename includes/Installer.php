@@ -87,6 +87,15 @@ final class Installer {
 				Logger::error( 'core', 'Secrets storage upgrade failed: ' . $e->getMessage() );
 			}
 		}
+		if ( $from > 0 && $from < 6 ) {
+			// DB v6: richer built-in style suggestions (only untouched 1.0.0 entries).
+			try {
+				$n = Catalog::upgrade_style_defaults();
+				Logger::info( 'core', 'Style suggestions updated', array( 'count' => $n ) );
+			} catch ( \Throwable $e ) {
+				Logger::error( 'core', 'Style suggestions upgrade failed: ' . $e->getMessage() );
+			}
+		}
 	}
 
 	public static function tables(): array {

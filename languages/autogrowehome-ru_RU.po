@@ -6768,3 +6768,79 @@ msgstr "Вращение: тяните мышью или пальцем"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Сбросить вид"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Горизонтальная деревянная обшивка"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Обшивка «доска и рейка»"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Обожжённое дерево (шу суги бан)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Облицовка известняком"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Окрашенный кирпич"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Фиброцементные панели"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Гостиная, столовая и открытые пространства; остальные помещения можно задать отдельно ниже."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Французская ёлочка"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Плитка под дерево"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Мрамор"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Травертин"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Пол в спальнях"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Как основной пол"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Ковролин"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Пробка"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Пол на кухне"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Цементная плитка с узором"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Пол в прихожей и коридоре"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Ванная, туалет, прачечная, велнес."

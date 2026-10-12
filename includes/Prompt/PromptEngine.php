@@ -246,6 +246,32 @@ final class PromptEngine {
 	/**
 	 * Phrase for one parameter based on its prompt template / prompt_map.
 	 */
+	/**
+	 * Floor phrase for one room: wet rooms, bedrooms, the kitchen and the hall /
+	 * corridors can each have their own floor ("same" = the main floor).
+	 */
+	public static function room_floor( string $type, array $c ): string {
+		$zones = array(
+			'floor_wet'      => array( 'bathroom', 'wc', 'wellness', 'sauna', 'laundry' ),
+			'floor_bedrooms' => array( 'master', 'bedroom', 'guest', 'kids', 'wardrobe' ),
+			'floor_kitchen'  => array( 'kitchen', 'pantry' ),
+			'floor_entry'    => array( 'hall', 'corridor', 'stairs' ),
+		);
+		foreach ( $zones as $field => $types ) {
+			if ( ! in_array( $type, $types, true ) ) {
+				continue;
+			}
+			$def = Registry::get( $field );
+			$val = (string) ( $c[ $field ] ?? ( $def['default'] ?? '' ) );
+			$txt = $def['prompt_map'][ $val ] ?? '';
+			if ( '' !== $val && 'same' !== $val && '' !== $txt ) {
+				return 'floor: ' . $txt;
+			}
+			break;
+		}
+		return self::phrase( 'floor_main', $c ) . ', ' . self::phrase( 'floor_color', $c );
+	}
+
 	public static function phrase( string $id, array $c ): string {
 		$def = Registry::get( $id );
 		if ( ! $def || ! array_key_exists( $id, $c ) ) {
@@ -388,8 +414,7 @@ final class PromptEngine {
 			$is_def = Definitions::interior_styles();
 			$istyle_p = 'custom' === $istyle ? (string) ( $c['interior_style_custom'] ?? '' ) : ( $is_def[ $istyle ][1] ?? 'contemporary' ) . ' interior design';
 			$details = array();
-			$wet     = in_array( $room['type'], array( 'bathroom', 'wc', 'wellness', 'sauna', 'laundry' ), true );
-			$details[] = ! empty( $room['floor'] ) ? 'floor: ' . $room['floor'] : ( $wet ? 'floor: ' . ( Registry::get( 'floor_wet' )['prompt_map'][ $c['floor_wet'] ?? 'tiles' ] ?? 'tiles' ) : self::phrase( 'floor_main', $c ) . ', ' . self::phrase( 'floor_color', $c ) );
+			$details[] = ! empty( $room['floor'] ) ? 'floor: ' . $room['floor'] : self::room_floor( (string) $room['type'], $c );
 			$details[] = ! empty( $room['wall_color'] ) ? 'walls painted ' . Color::describe( $room['wall_color'] ) : self::phrase( 'wall_color', $c );
 			if ( ! empty( $room['wall'] ) ) {
 				$details[] = 'walls: ' . $room['wall'];

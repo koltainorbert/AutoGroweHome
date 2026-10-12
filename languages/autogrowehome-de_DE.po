@@ -6766,3 +6766,79 @@ msgstr "Drehen: mit Maus oder Finger ziehen"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Ansicht zurücksetzen"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Horizontale Holzverschalung"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Deckleistenschalung"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Verkohltes Holz (Shou Sugi Ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Kalksteinverkleidung"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Gestrichener Ziegel"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Faserzementplatten"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Wohnzimmer, Essbereich und offene Räume; die übrigen Räume können unten separat festgelegt werden."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Französisches Fischgrät"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Fliesen in Holzoptik"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Marmor"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertin"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Bodenbelag Schlafzimmer"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Wie der Hauptboden"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Teppichboden"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Kork"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Bodenbelag Küche"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Gemusterte Zementfliesen"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Bodenbelag Diele und Flur"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Bad, WC, Waschküche, Wellness."

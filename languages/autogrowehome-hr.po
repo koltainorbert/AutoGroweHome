@@ -6768,3 +6768,79 @@ msgstr "Okretanje: povucite mišem ili prstom"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Vrati prikaz"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Vodoravna drvena obloga"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Obloga od dasaka i letvica"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Spaljeno drvo (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Obloga od vapnenca"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Bojana opeka"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Vlaknocementne ploče"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Dnevni boravak, blagovaonica i otvoreni prostori; ostale prostorije možete zasebno postaviti niže."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Francuska riblja kost"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Pločice s izgledom drva"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Mramor"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertin"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Pod spavaćih soba"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Isto kao glavni pod"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Tepison"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Pluto"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Pod kuhinje"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Cementne pločice s uzorkom"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Pod predsoblja i hodnika"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Kupaonica, WC, praonica, wellness."

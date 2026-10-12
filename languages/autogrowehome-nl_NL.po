@@ -6766,3 +6766,79 @@ msgstr "Draaien: sleep met muis of vinger"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Weergave herstellen"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Horizontale houten gevelbekleding"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Plank-en-latbekleding"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Gebrand hout (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Kalksteen gevelbekleding"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Geschilderde baksteen"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Vezelcementplaten"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Woonkamer, eetkamer en open ruimtes; de overige kamers kun je hieronder apart instellen."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Hongaarse punt"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Tegels met houtlook"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Marmer"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertin"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Vloer slaapkamers"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Zoals de hoofdvloer"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Vloerbedekking"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Kurk"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Vloer keuken"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Cementtegels met patroon"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Vloer hal en gang"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Badkamer, toilet, wasruimte, wellness."

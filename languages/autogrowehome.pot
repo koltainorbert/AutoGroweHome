@@ -6738,3 +6738,79 @@ msgstr ""
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr ""

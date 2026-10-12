@@ -6770,3 +6770,79 @@ msgstr "Vrtenje: povlecite z miško ali prstom"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Ponastavi pogled"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Vodoravna lesena obloga"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Obloga iz desk in letvic"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Žgan les (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Obloga iz apnenca"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Barvana opeka"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Vlaknocementne plošče"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Dnevna soba, jedilnica in odprti prostori; ostale prostore lahko spodaj nastavite posebej."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Francoska ribja kost"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Ploščice z videzom lesa"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Marmor"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertin"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Tla v spalnicah"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Enako kot glavna tla"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Talna preproga"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Pluta"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Tla v kuhinji"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Vzorčaste cementne ploščice"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Tla v predsobi in hodniku"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Kopalnica, WC, pralnica, wellness."

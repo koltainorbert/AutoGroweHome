@@ -6766,3 +6766,79 @@ msgstr "Rotate: drag with mouse or finger"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Reset view"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Horizontal timber cladding"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Board-and-batten siding"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Charred timber (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Limestone cladding"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Painted brick"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Fiber-cement panels"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Living, dining and open-plan areas; the other rooms can be set separately below."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Chevron parquet"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Wood-look tiles"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Marble"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertine"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Bedroom flooring"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Same as the main floor"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Carpet"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Cork"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Kitchen flooring"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Patterned cement tiles"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Hall and corridor flooring"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Bathroom, WC, laundry, wellness."

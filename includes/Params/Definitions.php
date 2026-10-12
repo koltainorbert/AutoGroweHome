@@ -285,6 +285,12 @@ final class Definitions {
 					'metal'    => array( __( 'Fém burkolat', 'autogrowehome' ), 'standing-seam metal cladding' ),
 					'concrete' => array( __( 'Betonhatású', 'autogrowehome' ), 'architectural concrete-look panels' ),
 					'panel'    => array( __( 'Dekoratív panel', 'autogrowehome' ), 'large-format decorative facade panels' ),
+					'wood_horizontal' => array( __( 'Vízszintes fa burkolat', 'autogrowehome' ), 'horizontal timber lap siding' ),
+					'board_batten'    => array( __( 'Lécezett deszkaburkolat', 'autogrowehome' ), 'painted board-and-batten siding' ),
+					'charred_wood'    => array( __( 'Égetett fa (shou sugi ban)', 'autogrowehome' ), 'charred timber cladding (shou sugi ban)' ),
+					'limestone'       => array( __( 'Mészkő lapburkolat', 'autogrowehome' ), 'sawn limestone slab cladding' ),
+					'brick_white'     => array( __( 'Festett tégla', 'autogrowehome' ), 'white limewashed brick' ),
+					'fiber_cement'    => array( __( 'Szálcement lap', 'autogrowehome' ), 'large-format fibre-cement panels with visible fixings' ),
 				)
 			)
 		);
@@ -314,7 +320,7 @@ final class Definitions {
 				)
 			)
 		);
-		$f[] = array( 'id' => 'plinth_color', 'category' => 'facade', 'type' => 'color', 'label' => __( 'Lábazat színe', 'autogrowehome' ), 'help' => '', 'default' => '#4A4D50', 'advanced' => true, 'prompt' => '' );
+		$f[] = array( 'id' => 'plinth_color', 'category' => 'facade', 'type' => 'color', 'label' => __( 'Lábazat színe', 'autogrowehome' ), 'help' => '', 'default' => '#4A4D50', 'advanced' => true, 'show_if' => array( 'field' => 'plinth', 'op' => '!=', 'value' => 'flush' ), 'prompt' => '' );
 		$f[] = array_merge(
 			array( 'id' => 'facade_texture', 'category' => 'facade', 'type' => 'select', 'label' => __( 'Faltextúra', 'autogrowehome' ), 'help' => '', 'default' => 'fine', 'advanced' => true, 'prompt' => '{value} wall texture' ),
 			self::opts(
@@ -596,28 +602,84 @@ final class Definitions {
 
 		/* ---------------------------------------------------------------- Burkolatok */
 		$f[] = array_merge(
-			array( 'id' => 'floor_main', 'category' => 'surfaces', 'type' => 'cards', 'label' => __( 'Fő padlóburkolat', 'autogrowehome' ), 'help' => '', 'default' => 'parquet', 'prompt' => '{value} floors in living areas' ),
+			array( 'id' => 'floor_main', 'category' => 'surfaces', 'type' => 'cards', 'label' => __( 'Fő padlóburkolat', 'autogrowehome' ), 'help' => __( 'Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható.', 'autogrowehome' ), 'default' => 'parquet', 'prompt' => '{value} floors in living areas' ),
 			self::opts(
 				array(
 					'parquet'     => array( __( 'Parketta', 'autogrowehome' ), 'wide-plank natural oak parquet' ),
 					'herringbone' => array( __( 'Halszálkás parketta', 'autogrowehome' ), 'herringbone oak parquet' ),
+					'chevron'     => array( __( 'Francia halszálka', 'autogrowehome' ), 'chevron (French herringbone) oak parquet' ),
 					'laminate'    => array( __( 'Laminált', 'autogrowehome' ), 'oak-look laminate' ),
 					'vinyl'       => array( __( 'Vinyl', 'autogrowehome' ), 'wood-look vinyl' ),
+					'wood_tile'   => array( __( 'Fahatású járólap', 'autogrowehome' ), 'wood-look porcelain plank tiles' ),
 					'tiles_large' => array( __( 'Nagyméretű lap', 'autogrowehome' ), 'large-format porcelain tiles' ),
+					'marble'      => array( __( 'Márvány', 'autogrowehome' ), 'polished white marble slabs' ),
 					'stone'       => array( __( 'Természetes kő', 'autogrowehome' ), 'natural limestone' ),
+					'travertine'  => array( __( 'Travertin', 'autogrowehome' ), 'honed travertine' ),
+					'terrazzo'    => array( __( 'Terrazzo', 'autogrowehome' ), 'terrazzo' ),
 					'microcement' => array( __( 'Mikrocement', 'autogrowehome' ), 'microcement' ),
 					'concrete'    => array( __( 'Betonhatású', 'autogrowehome' ), 'polished concrete-look' ),
 				)
 			)
 		);
 		$f[] = array( 'id' => 'floor_color', 'category' => 'surfaces', 'type' => 'color', 'label' => __( 'Padló árnyalata', 'autogrowehome' ), 'help' => '', 'default' => '#C9A57C', 'prompt' => 'floor tone {color}' );
+		/* Floors per room group: "same" keeps the main floor; the prompt picks the right one per room. */
 		$f[] = array_merge(
-			array( 'id' => 'floor_wet', 'category' => 'surfaces', 'type' => 'select', 'label' => __( 'Vizes helyiségek padlója', 'autogrowehome' ), 'help' => '', 'default' => 'tiles', 'advanced' => true, 'prompt' => '' ),
+			array( 'id' => 'floor_bedrooms', 'category' => 'surfaces', 'type' => 'cards', 'label' => __( 'Hálószobák padlója', 'autogrowehome' ), 'help' => '', 'default' => 'same', 'prompt' => '' ),
 			self::opts(
 				array(
-					'tiles'       => array( __( 'Hidegburkolat', 'autogrowehome' ), 'porcelain tiles' ),
-					'microcement' => array( __( 'Mikrocement', 'autogrowehome' ), 'microcement' ),
-					'stone'       => array( __( 'Kő', 'autogrowehome' ), 'stone' ),
+					'same'        => array( __( 'Mint a fő padló', 'autogrowehome' ), '' ),
+					'parquet'     => array( __( 'Parketta', 'autogrowehome' ), 'wide-plank natural oak parquet' ),
+					'herringbone' => array( __( 'Halszálkás parketta', 'autogrowehome' ), 'herringbone oak parquet' ),
+					'chevron'     => array( __( 'Francia halszálka', 'autogrowehome' ), 'chevron oak parquet' ),
+					'laminate'    => array( __( 'Laminált', 'autogrowehome' ), 'oak-look laminate' ),
+					'vinyl'       => array( __( 'Vinyl', 'autogrowehome' ), 'wood-look vinyl' ),
+					'carpet'      => array( __( 'Szőnyegpadló', 'autogrowehome' ), 'soft wall-to-wall wool carpet' ),
+					'cork'        => array( __( 'Parafa', 'autogrowehome' ), 'natural cork flooring' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'floor_kitchen', 'category' => 'surfaces', 'type' => 'cards', 'label' => __( 'Konyha padlója', 'autogrowehome' ), 'help' => '', 'default' => 'same', 'prompt' => '' ),
+			self::opts(
+				array(
+					'same'         => array( __( 'Mint a fő padló', 'autogrowehome' ), '' ),
+					'tiles_large'  => array( __( 'Nagyméretű lap', 'autogrowehome' ), 'large-format porcelain tiles' ),
+					'wood_tile'    => array( __( 'Fahatású járólap', 'autogrowehome' ), 'wood-look porcelain plank tiles' ),
+					'stone'        => array( __( 'Természetes kő', 'autogrowehome' ), 'natural limestone' ),
+					'marble'       => array( __( 'Márvány', 'autogrowehome' ), 'polished marble' ),
+					'terrazzo'     => array( __( 'Terrazzo', 'autogrowehome' ), 'terrazzo' ),
+					'cement_tiles' => array( __( 'Mintás cementlap', 'autogrowehome' ), 'patterned encaustic cement tiles' ),
+					'microcement'  => array( __( 'Mikrocement', 'autogrowehome' ), 'microcement' ),
+					'vinyl'        => array( __( 'Vinyl', 'autogrowehome' ), 'wood-look vinyl' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'floor_entry', 'category' => 'surfaces', 'type' => 'cards', 'label' => __( 'Előtér és közlekedő padlója', 'autogrowehome' ), 'help' => '', 'default' => 'same', 'prompt' => '' ),
+			self::opts(
+				array(
+					'same'         => array( __( 'Mint a fő padló', 'autogrowehome' ), '' ),
+					'tiles_large'  => array( __( 'Nagyméretű lap', 'autogrowehome' ), 'large-format porcelain tiles' ),
+					'wood_tile'    => array( __( 'Fahatású járólap', 'autogrowehome' ), 'wood-look porcelain plank tiles' ),
+					'stone'        => array( __( 'Természetes kő', 'autogrowehome' ), 'natural limestone' ),
+					'marble'       => array( __( 'Márvány', 'autogrowehome' ), 'polished marble' ),
+					'terrazzo'     => array( __( 'Terrazzo', 'autogrowehome' ), 'terrazzo' ),
+					'cement_tiles' => array( __( 'Mintás cementlap', 'autogrowehome' ), 'patterned encaustic cement tiles' ),
+					'microcement'  => array( __( 'Mikrocement', 'autogrowehome' ), 'microcement' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'floor_wet', 'category' => 'surfaces', 'type' => 'cards', 'label' => __( 'Vizes helyiségek padlója', 'autogrowehome' ), 'help' => __( 'Fürdőszoba, WC, mosókonyha, wellness.', 'autogrowehome' ), 'default' => 'tiles', 'prompt' => '' ),
+			self::opts(
+				array(
+					'tiles'        => array( __( 'Hidegburkolat', 'autogrowehome' ), 'porcelain tiles' ),
+					'wood_tile'    => array( __( 'Fahatású járólap', 'autogrowehome' ), 'wood-look porcelain plank tiles' ),
+					'marble'       => array( __( 'Márvány', 'autogrowehome' ), 'marble-look porcelain' ),
+					'terrazzo'     => array( __( 'Terrazzo', 'autogrowehome' ), 'terrazzo' ),
+					'cement_tiles' => array( __( 'Mintás cementlap', 'autogrowehome' ), 'patterned encaustic cement tiles' ),
+					'microcement'  => array( __( 'Mikrocement', 'autogrowehome' ), 'microcement' ),
+					'stone'        => array( __( 'Kő', 'autogrowehome' ), 'stone' ),
 				)
 			)
 		);

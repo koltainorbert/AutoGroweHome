@@ -306,6 +306,87 @@ final class Catalog {
 	}
 
 	/**
+	 * Built-in architectural styles: name, design direction (prompt) and the
+	 * parameters the style suggests. The designer applies the suggestions to
+	 * every parameter the visitor has not set personally, so the live 3D
+	 * model looks like the chosen style (roof, facade, windows, colours,
+	 * garden). Only visual parameters – never size, rooms or levels.
+	 *
+	 * @return array<string, array{0: string, 1: string, 2: array}>
+	 */
+	public static function style_seed(): array {
+		return array(
+			'modern_minimal'   => array( __( 'Modern minimalista', 'autogrowehome' ), 'clean orthogonal volumes, reduced detailing, crisp white render, large glazing, slim dark frames', array( 'roof_type' => 'flat', 'facade_main' => 'render', 'facade_color' => '#F4F2EE', 'facade_texture' => 'smooth', 'facade_accent' => array( 'wood' ), 'window_style' => 'panoramic', 'window_frame_color' => '#2F3235', 'plinth' => 'flush', 'entrance_door' => 'pivot', 'terrace_floor' => 'ceramic', 'garden_style' => 'minimal', 'fence' => 'slats' ) ),
+			'contemporary_lux' => array( __( 'Kortárs luxus', 'autogrowehome' ), 'refined contemporary luxury, generous cantilevers, natural stone and warm timber, frameless glass, premium landscape lighting', array( 'roof_type' => 'flat', 'facade_main' => 'limestone', 'facade_accent' => array( 'wood' ), 'window_style' => 'panoramic', 'window_frame_color' => '#1E1F21', 'plinth' => 'flush', 'entrance_door' => 'pivot', 'terrace_floor' => 'stone', 'garden_style' => 'minimal', 'fence' => 'masonry', 'exterior_lighting' => true ) ),
+			'mediterranean'    => array( __( 'Mediterrán', 'autogrowehome' ), 'whitewashed or warm sand render, terracotta roof, arched or deep-set openings, olive trees and lavender', array( 'roof_type' => 'hip', 'roof_pitch' => 25, 'roof_color' => '#B5532F', 'facade_main' => 'render', 'facade_color' => '#F3E9DA', 'facade_texture' => 'coarse', 'facade_accent' => array( 'stone' ), 'window_style' => 'classic', 'window_frame_color' => '#6B4A33', 'window_frame_material' => 'wood', 'shading' => array( 'spalettas' ), 'plinth' => 'stone', 'entrance_door' => 'wood', 'terrace_floor' => 'stone', 'garden_style' => 'mediterranean', 'fence' => 'masonry' ) ),
+			'scandinavian'     => array( __( 'Skandináv', 'autogrowehome' ), 'simple gabled volumes, light timber cladding, minimal eaves, calm light palette, birch and grasses', array( 'roof_type' => 'gable', 'roof_pitch' => 40, 'roof_color' => '#2B2E31', 'roof_overhang' => 0.2, 'gable_finish' => 'flush', 'facade_main' => 'wood', 'facade_color' => '#E9E6E1', 'facade_accent' => array(), 'window_style' => 'large', 'window_frame_color' => '#F4F4F2', 'window_frame_material' => 'wood', 'plinth' => 'concrete', 'entrance_door' => 'wood', 'terrace_floor' => 'wood', 'garden_style' => 'natural', 'fence' => 'slats' ) ),
+			'bauhaus'          => array( __( 'Bauhaus', 'autogrowehome' ), 'cubic composition, flat roofs, horizontal ribbon windows, white render with dark accents', array( 'roof_type' => 'flat', 'facade_main' => 'render', 'facade_color' => '#F7F7F5', 'facade_texture' => 'smooth', 'facade_accent' => array( 'render_dark' ), 'window_style' => 'large', 'window_frame_color' => '#1E1F21', 'corner_window' => true, 'plinth' => 'concrete', 'entrance_door' => 'glass_strip', 'terrace_floor' => 'ceramic', 'garden_style' => 'minimal', 'fence' => 'mesh' ) ),
+			'japandi'          => array( __( 'Japandi', 'autogrowehome' ), 'calm low-profile massing, charred or natural timber, deep eaves, zen garden elements, muted earthy palette', array( 'roof_type' => 'gable', 'roof_pitch' => 22, 'roof_color' => '#2B2E31', 'roof_overhang' => 1.0, 'facade_main' => 'charred_wood', 'facade_accent' => array( 'wood' ), 'facade_accent_color' => '#3F2E23', 'window_style' => 'panoramic', 'window_frame_color' => '#2B2E31', 'plinth' => 'concrete', 'entrance_door' => 'wood', 'terrace_floor' => 'wood', 'garden_style' => 'minimal', 'fence' => 'slats' ) ),
+			'classic_burgher'  => array( __( 'Klasszikus polgári', 'autogrowehome' ), 'symmetrical facade, vertical proportioned windows, cornices, hipped roof, rendered walls in soft tones', array( 'roof_type' => 'hip', 'roof_pitch' => 40, 'roof_color' => '#8C4A36', 'facade_main' => 'render', 'facade_color' => '#EFE6D6', 'facade_accent' => array(), 'facade_ornaments' => true, 'corner_detail' => 'quoins', 'window_style' => 'vertical', 'window_frame_color' => '#F4F4F2', 'shading' => array( 'shutters' ), 'plinth' => 'stone', 'entrance_door' => 'classic', 'terrace_floor' => 'stone', 'garden_style' => 'formal', 'fence' => 'masonry' ) ),
+			'rustic'           => array( __( 'Vidéki, rusztikus', 'autogrowehome' ), 'natural stone base, timber elements, traditional pitched roof, cottage garden', array( 'roof_type' => 'gable', 'roof_pitch' => 38, 'roof_color' => '#7A3E2C', 'facade_main' => 'stone', 'facade_accent' => array( 'wood' ), 'window_style' => 'classic', 'window_frame_material' => 'wood', 'window_frame_color' => '#6B4A33', 'shading' => array( 'shutters' ), 'exposed_rafters' => true, 'entrance_door' => 'wood', 'terrace_floor' => 'wood', 'garden_style' => 'cottage', 'fence' => 'slats' ) ),
+			'modern_farmhouse' => array( __( 'Modern parasztház', 'autogrowehome' ), 'elongated narrow volume, steep gable roof without overhang, dark roof, white walls, timber accents (Hungarian barnhouse)', array( 'roof_type' => 'gable', 'roof_pitch' => 45, 'gable_finish' => 'flush', 'roof_overhang' => 0, 'roof_color' => '#2B2E31', 'facade_main' => 'render', 'facade_color' => '#F4F2EE', 'facade_accent' => array( 'wood' ), 'window_style' => 'vertical', 'window_frame_color' => '#2B2E31', 'plinth' => 'flush', 'entrance_door' => 'wood', 'terrace_floor' => 'wpc', 'garden_style' => 'natural', 'fence' => 'slats' ) ),
+			'american_farm'    => array( __( 'Amerikai farmhouse', 'autogrowehome' ), 'board-and-batten siding, wraparound porch, black windows, standing-seam metal roof', array( 'roof_type' => 'gable', 'roof_pitch' => 35, 'roof_color' => '#3A3D40', 'facade_main' => 'board_batten', 'facade_color' => '#F4F4F2', 'facade_accent' => array(), 'window_style' => 'vertical', 'window_divided' => true, 'window_frame_color' => '#1E1F21', 'outdoor_covered' => true, 'entrance_door' => 'classic', 'terrace_floor' => 'wood', 'garden_style' => 'cottage', 'fence' => 'slats' ) ),
+			'alpine'           => array( __( 'Alpesi', 'autogrowehome' ), 'wide overhanging gable roof, timber upper floor over stone or rendered base, balconies with timber railings', array( 'roof_type' => 'gable', 'roof_pitch' => 30, 'roof_overhang' => 1.2, 'roof_color' => '#3A3029', 'facade_main' => 'render', 'facade_color' => '#EFE9DF', 'facade_accent' => array( 'wood', 'stone' ), 'balcony' => true, 'window_style' => 'classic', 'window_frame_material' => 'wood', 'window_frame_color' => '#6B4A33', 'shading' => array( 'shutters' ), 'plinth' => 'stone', 'entrance_door' => 'wood', 'terrace_floor' => 'wood', 'garden_style' => 'natural', 'fence' => 'slats' ) ),
+			'industrial'       => array( __( 'Ipari stílus', 'autogrowehome' ), 'exposed brick, black steel frames, factory-style glazing, concrete', array( 'roof_type' => 'flat', 'facade_main' => 'brick', 'facade_accent' => array( 'metal' ), 'window_style' => 'large', 'window_divided' => true, 'window_frame_color' => '#1E1F21', 'plinth' => 'concrete', 'entrance_door' => 'glass_strip', 'terrace_floor' => 'ceramic', 'driveway' => 'asphalt', 'garden_style' => 'minimal', 'fence' => 'mesh' ) ),
+			'organic_modern'   => array( __( 'Organikus modern', 'autogrowehome' ), 'soft curved forms, natural textures, earthy render, integration with landscape', array( 'roof_type' => 'flat', 'roof_surface' => 'green', 'facade_main' => 'render', 'facade_texture' => 'coarse', 'facade_color' => '#E3D6C3', 'facade_accent' => array( 'wood' ), 'window_style' => 'panoramic', 'window_frame_color' => '#4A3B2E', 'window_frame_material' => 'wood_alu', 'entrance_door' => 'wood', 'terrace_floor' => 'wood', 'garden_style' => 'natural', 'fence' => 'none' ) ),
+			'high_tech'        => array( __( 'High-tech', 'autogrowehome' ), 'precise metal and glass, expressed structure, slim profiles, cool palette', array( 'roof_type' => 'flat', 'facade_main' => 'metal', 'facade_accent' => array( 'concrete' ), 'window_style' => 'panoramic', 'window_frame_color' => '#5E6266', 'plinth' => 'flush', 'entrance_door' => 'pivot', 'terrace_floor' => 'ceramic', 'driveway' => 'asphalt', 'garden_style' => 'minimal', 'fence' => 'mesh' ) ),
+			'passive'          => array( __( 'Passzívház', 'autogrowehome' ), 'compact efficient volume, deep window reveals, triple glazing, external shading, solar panels', array( 'footprint' => 'rectangle', 'roof_type' => 'gable', 'roof_pitch' => 35, 'roof_solar' => true, 'facade_main' => 'render', 'facade_color' => '#EDEAE4', 'facade_accent' => array( 'wood' ), 'window_style' => 'large', 'window_frame_material' => 'wood_alu', 'shading' => array( 'blinds' ), 'plinth' => 'flush', 'garden_style' => 'natural' ) ),
+			'custom'           => array( __( 'Egyedi stílus', 'autogrowehome' ), '', array() ),
+		);
+	}
+
+	/** Style suggestions as seeded by version 1.0.0 (compared by the DB v6 upgrade). */
+	private static function style_defaults_v1(): array {
+		return array(
+			'modern_minimal' => array( 'roof_type' => 'flat', 'facade_main' => 'render', 'facade_color' => '#F2EFE9', 'window_style' => 'panoramic', 'window_frame_color' => '#2F3235' ),
+			'contemporary_lux' => array( 'roof_type' => 'flat', 'facade_main' => 'stone', 'facade_accent' => array( 'wood' ), 'window_style' => 'panoramic' ),
+			'mediterranean' => array( 'roof_type' => 'hip', 'roof_pitch' => 25, 'facade_color' => '#F3E9DA', 'garden_style' => 'mediterranean' ),
+			'scandinavian' => array( 'roof_type' => 'gable', 'roof_pitch' => 40, 'facade_main' => 'wood', 'facade_color' => '#E9E6E1' ),
+			'bauhaus' => array( 'roof_type' => 'flat', 'window_style' => 'large', 'facade_color' => '#F7F7F5' ),
+			'japandi' => array( 'roof_type' => 'gable', 'roof_pitch' => 22, 'facade_main' => 'wood', 'facade_accent_color' => '#3F2E23' ),
+			'classic_burgher' => array( 'roof_type' => 'hip', 'window_style' => 'vertical', 'facade_ornaments' => true ),
+			'rustic' => array( 'roof_type' => 'gable', 'facade_main' => 'stone', 'garden_style' => 'cottage' ),
+			'modern_farmhouse' => array( 'roof_type' => 'gable', 'roof_pitch' => 45, 'gable_finish' => 'flush', 'roof_overhang' => 0 ),
+			'american_farm' => array( 'roof_type' => 'gable', 'facade_main' => 'wood', 'facade_color' => '#F4F4F2', 'window_frame_color' => '#1E1F21' ),
+			'alpine' => array( 'roof_type' => 'gable', 'roof_pitch' => 30, 'roof_overhang' => 1.2, 'facade_accent' => array( 'wood', 'stone' ) ),
+			'industrial' => array( 'facade_main' => 'brick', 'window_divided' => true, 'window_frame_color' => '#1E1F21' ),
+			'organic_modern' => array( 'facade_texture' => 'coarse', 'facade_color' => '#E3D6C3' ),
+			'high_tech' => array( 'roof_type' => 'flat', 'facade_main' => 'metal', 'window_style' => 'panoramic' ),
+			'passive' => array( 'footprint' => 'rectangle', 'roof_solar' => true, 'shading' => array( 'blinds' ) ),
+			'custom' => array(),
+		);
+	}
+
+	/**
+	 * DB v6: give the built-in styles their richer suggestions – only where the
+	 * stored suggestions are still exactly the 1.0.0 seed (an admin's own edit
+	 * is never overwritten).
+	 *
+	 * @return int Number of updated styles.
+	 */
+	public static function upgrade_style_defaults(): int {
+		$old = self::style_defaults_v1();
+		$new = self::style_seed();
+		$n   = 0;
+		foreach ( $new as $slug => $s ) {
+			$row = self::get( 'style', $slug );
+			if ( ! $row || ! isset( $old[ $slug ] ) ) {
+				continue;
+			}
+			$stored = (array) ( $row['data']['defaults'] ?? array() );
+			if ( wp_json_encode( self::sanitize_data( 'style', $old[ $slug ] ) ) !== wp_json_encode( self::sanitize_data( 'style', $stored ) ) ) {
+				continue;
+			}
+			$res = self::save( 'style', array( 'slug' => $slug, 'name' => $row['name'], 'sort' => $row['sort'] ?? 0, 'status' => $row['status'] ?? 'published', 'image_id' => (int) ( $row['image_id'] ?? 0 ), 'data' => array( 'defaults' => $s[2] ) ) );
+			if ( ! is_wp_error( $res ) ) {
+				$n++;
+			}
+		}
+		self::flush();
+		return $n;
+	}
+
+	/**
 	 * Seed initial catalogue on activation (idempotent; never overwrites admin edits).
 	 */
 	public static function seed(): void {
@@ -395,24 +476,7 @@ final class Catalog {
 			self::save( 'material', array( 'slug' => sanitize_key( remove_accents( $slug ) ), 'name' => $m[0], 'sort' => $sort++, 'data' => array( 'group' => $m[1], 'hex' => $m[2], 'prompt' => $m[3] ) ) );
 		}
 
-		$styles = array(
-			'modern_minimal'   => array( __( 'Modern minimalista', 'autogrowehome' ), 'clean orthogonal volumes, reduced detailing, crisp white render, large glazing, slim dark frames', array( 'roof_type' => 'flat', 'facade_main' => 'render', 'facade_color' => '#F2EFE9', 'window_style' => 'panoramic', 'window_frame_color' => '#2F3235' ) ),
-			'contemporary_lux' => array( __( 'Kortárs luxus', 'autogrowehome' ), 'refined contemporary luxury, generous cantilevers, natural stone and warm timber, frameless glass, premium landscape lighting', array( 'roof_type' => 'flat', 'facade_main' => 'stone', 'facade_accent' => array( 'wood' ), 'window_style' => 'panoramic' ) ),
-			'mediterranean'    => array( __( 'Mediterrán', 'autogrowehome' ), 'whitewashed or warm sand render, terracotta roof, arched or deep-set openings, olive trees and lavender', array( 'roof_type' => 'hip', 'roof_pitch' => 25, 'facade_color' => '#F3E9DA', 'garden_style' => 'mediterranean' ) ),
-			'scandinavian'     => array( __( 'Skandináv', 'autogrowehome' ), 'simple gabled volumes, light timber cladding, minimal eaves, calm light palette, birch and grasses', array( 'roof_type' => 'gable', 'roof_pitch' => 40, 'facade_main' => 'wood', 'facade_color' => '#E9E6E1' ) ),
-			'bauhaus'          => array( __( 'Bauhaus', 'autogrowehome' ), 'cubic composition, flat roofs, horizontal ribbon windows, white render with dark accents', array( 'roof_type' => 'flat', 'window_style' => 'large', 'facade_color' => '#F7F7F5' ) ),
-			'japandi'          => array( __( 'Japandi', 'autogrowehome' ), 'calm low-profile massing, charred or natural timber, deep eaves, zen garden elements, muted earthy palette', array( 'roof_type' => 'gable', 'roof_pitch' => 22, 'facade_main' => 'wood', 'facade_accent_color' => '#3F2E23' ) ),
-			'classic_burgher'  => array( __( 'Klasszikus polgári', 'autogrowehome' ), 'symmetrical facade, vertical proportioned windows, cornices, hipped roof, rendered walls in soft tones', array( 'roof_type' => 'hip', 'window_style' => 'vertical', 'facade_ornaments' => true ) ),
-			'rustic'           => array( __( 'Vidéki, rusztikus', 'autogrowehome' ), 'natural stone base, timber elements, traditional pitched roof, cottage garden', array( 'roof_type' => 'gable', 'facade_main' => 'stone', 'garden_style' => 'cottage' ) ),
-			'modern_farmhouse' => array( __( 'Modern parasztház', 'autogrowehome' ), 'elongated narrow volume, steep gable roof without overhang, dark roof, white walls, timber accents (Hungarian barnhouse)', array( 'roof_type' => 'gable', 'roof_pitch' => 45, 'gable_finish' => 'flush', 'roof_overhang' => 0 ) ),
-			'american_farm'    => array( __( 'Amerikai farmhouse', 'autogrowehome' ), 'board-and-batten siding, wraparound porch, black windows, standing-seam metal roof', array( 'roof_type' => 'gable', 'facade_main' => 'wood', 'facade_color' => '#F4F4F2', 'window_frame_color' => '#1E1F21' ) ),
-			'alpine'           => array( __( 'Alpesi', 'autogrowehome' ), 'wide overhanging gable roof, timber upper floor over stone or rendered base, balconies with timber railings', array( 'roof_type' => 'gable', 'roof_pitch' => 30, 'roof_overhang' => 1.2, 'facade_accent' => array( 'wood', 'stone' ) ) ),
-			'industrial'       => array( __( 'Ipari stílus', 'autogrowehome' ), 'exposed brick, black steel frames, factory-style glazing, concrete', array( 'facade_main' => 'brick', 'window_divided' => true, 'window_frame_color' => '#1E1F21' ) ),
-			'organic_modern'   => array( __( 'Organikus modern', 'autogrowehome' ), 'soft curved forms, natural textures, earthy render, integration with landscape', array( 'facade_texture' => 'coarse', 'facade_color' => '#E3D6C3' ) ),
-			'high_tech'        => array( __( 'High-tech', 'autogrowehome' ), 'precise metal and glass, expressed structure, slim profiles, cool palette', array( 'roof_type' => 'flat', 'facade_main' => 'metal', 'window_style' => 'panoramic' ) ),
-			'passive'          => array( __( 'Passzívház', 'autogrowehome' ), 'compact efficient volume, deep window reveals, triple glazing, external shading, solar panels', array( 'footprint' => 'rectangle', 'roof_solar' => true, 'shading' => array( 'blinds' ) ) ),
-			'custom'           => array( __( 'Egyedi stílus', 'autogrowehome' ), '', array() ),
-		);
+		$styles = self::style_seed();
 		$sort = 0;
 		foreach ( $styles as $slug => $s ) {
 			self::save( 'style', array( 'slug' => $slug, 'name' => $s[0], 'sort' => $sort++, 'status' => 'custom' === $slug ? 'hidden' : 'published', 'data' => array( 'direction' => $s[1], 'defaults' => $s[2], 'description' => '' ) ) );

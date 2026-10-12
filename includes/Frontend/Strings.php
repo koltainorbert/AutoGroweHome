@@ -114,6 +114,7 @@ final class Strings {
 			'panel_stage'            => __( 'Terv', 'autogrowehome' ),
 			'panel_summary'          => __( 'Összegzés', 'autogrowehome' ),
 			'panels'                 => __( 'Panelek', 'autogrowehome' ),
+			'loading_3d'             => __( 'Betöltés…', 'autogrowehome' ),
 			'preparing_concepts'     => __( 'A koncepciók előkészítése folyamatban…', 'autogrowehome' ),
 			'preset_name'            => __( 'Preset neve', 'autogrowehome' ),
 			'preset_saved'           => __( 'Preset elmentve.', 'autogrowehome' ),

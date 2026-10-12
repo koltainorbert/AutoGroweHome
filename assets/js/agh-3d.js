@@ -79,6 +79,12 @@ function facadeMat(c, m, tint) {
 		case 'concrete': return pbr('concrete', { color: base }, { normal: 1 });
 		case 'panel': return pbr('panel', { color: base }, { normal: 1 });
 		case 'render_dark': return pbr('render', { color: base, texture: 'fine' }, { normal: 0.6 });
+		case 'wood_horizontal': return pbr('woodh', { color: base }, { normal: 1.4 });
+		case 'board_batten': return pbr('batten', { color: base }, { normal: 1.2 });
+		case 'charred_wood': return pbr('charred', { color: base }, { normal: 1.8 });
+		case 'limestone': return pbr('limestone', { color: base }, { normal: 0.9 });
+		case 'brick_white': return pbr('brick', { color: base, kind: 'lime', mortar: '#E4DFD6' }, { normal: 1.3 });
+		case 'fiber_cement': return pbr('fibercement', { color: base }, { normal: 0.8 });
 		default: return pbr('render', { color: col(c.facade_color, '#F2EFE9'), texture: c.facade_texture || 'fine' }, { normal: c.facade_texture === 'coarse' ? 1.2 : 0.6 });
 	}
 }
@@ -834,10 +840,13 @@ House.prototype.site = function () {
 		if (plot.yB !== null) { flat(plot.x0, yB - 0.05, plot.x1, yB + 0.05, 0.03, lm); }
 	}
 	var dpm = SK()._door(c, mainV.x1 - mainV.x0), doorMid = mainV.x0 + dpm.x + dpm.w / 2;
-	if (has(gf, 'paths') || !c.garden_features) { flat(doorMid - 0.6, mainV.y1, doorMid + 0.6, front, 0.02, groundKind(c, 'slabs')); }
+	// Paths and the driveway end at the fence line (the fence has openings for them), never beyond it.
+	var fence = c.fence || 'none', fy = front - 0.4, edge = fence !== 'none' ? fy : front;
+	var pathOn = has(gf, 'paths') || !c.garden_features;
+	if (pathOn) { flat(doorMid - 0.6, mainV.y1, doorMid + 0.6, edge, 0.02, groundKind(c, 'slabs')); }
 	var dk = { gravel: 'gravel', grass: 'grasspavers', asphalt: 'asphalt' }[c.driveway] || 'pavers';
-	if (garage !== 'none') { flat(this.garage.x0, this.garage.y1, this.garage.x1, front, 0.02, groundKind(c, dk)); }
-	else { flat(maxX + 0.8, D * 0.45, maxX + 3.8, front, 0.02, groundKind(c, dk)); }
+	var drive = garage !== 'none' ? [this.garage.x0, this.garage.x1] : [maxX + 0.8, maxX + 3.8];
+	flat(drive[0], garage !== 'none' ? this.garage.y1 : D * 0.45, drive[1], edge, 0.02, groundKind(c, dk));
 	if (gs === 'minimal' || gs === 'mediterranean') { flat(left + 0.8, mainV.y1 + 0.8, Math.max(left + 1.8, doorMid - 1.4), front - 0.8, 0.012, groundKind(c, 'gravel')); }
 	if (has(gf, 'pool')) {
 		var px0 = left + 1.2, py0 = mainV.y1 + 1.5;
@@ -889,12 +898,13 @@ House.prototype.site = function () {
 		var hm = c.season === 'winter' ? pbr('snow', {}, { normal: 0.5 }) : pbr('hedge', { season: season }, { normal: 2.5 });
 		this.add(box(left + 0.4, back + 0.2, 0, right - 0.4, back + 1.1, 1.5, hm), false);
 	}
-	// fence along the front with an optional gate
-	var fence = c.fence || 'none';
+	// fence along the front: openings for the path (with an optional gate) and for the driveway
 	if (fence !== 'none') {
-		var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = left + 0.6, fx1 = right - 0.6, fy = front - 0.4, gx = doorMid - 0.6, gateOn = c.gate !== false;
+		var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = left + 0.6, fx1 = right - 0.6, gx = doorMid - 0.6, gateOn = c.gate !== false;
 		var fm = fence === 'slats' ? (c.arch_style === 'scandinavian' ? pbr('wood', { color: '#9C978E' }, { normal: 1 }) : solid('#3B3E42', 0.45, 0.5)) : null;
-		var segs = gateOn ? [[fx0, gx], [gx + 1.2, fx1]] : [[fx0, fx1]];
+		var gaps = [[drive[0] - 0.15, drive[1] + 0.15]];
+		if (pathOn || gateOn) { gaps.push([gx, gx + 1.2]); }
+		var segs = SK()._fenceSegs(fx0, fx1, gaps);
 		segs.forEach(function (sg) {
 			if (fence === 'slats') {
 				var n = Math.floor((sg[1] - sg[0]) / 0.16), geo = boxGeo(0.11, fz, 0.04), im = new THREE.InstancedMesh(geo, fm, n), mt = new THREE.Matrix4();
@@ -912,8 +922,20 @@ House.prototype.site = function () {
 				self.add(box(sg[0], fy - 0.25, 0, sg[1], fy + 0.25, fz, pbr('stone', { color: '#9C978E' }, { normal: 2.5 })), false);
 			}
 		});
+		var gm = solid('#2E3135', 0.4, 0.6);
+		// driveway opening: two posts; with a gate, a sliding gate parked open behind the fence
+		var dg0 = Math.max(fx0, drive[0] - 0.15), dg1 = Math.min(fx1, drive[1] + 0.15);
+		if (dg1 - dg0 > 0.5) {
+			self.add(box(dg0 - 0.12, fy - 0.08, 0, dg0, fy + 0.08, fz + 0.1, gm), false);
+			self.add(box(dg1, fy - 0.08, 0, dg1 + 0.12, fy + 0.08, fz + 0.1, gm), false);
+			if (gateOn) {
+				var sw = dg1 - dg0, sx0 = dg1 + sw + 0.3 <= fx1 ? dg1 + 0.15 : Math.max(fx0, dg0 - sw - 0.15), sy = fy - 0.16;
+				self.add(box(sx0, sy - 0.03, 0.08, sx0 + sw, sy + 0.03, 0.16, gm), false);
+				self.add(box(sx0, sy - 0.03, fz - 0.16, sx0 + sw, sy + 0.03, fz - 0.08, gm), false);
+				for (var sb = sx0 + 0.06; sb < sx0 + sw - 0.04; sb += 0.13) { self.add(box(sb, sy - 0.015, 0.16, sb + 0.04, sy + 0.015, fz - 0.16, gm), false); }
+			}
+		}
 		if (gateOn) {
-			var gm = solid('#2E3135', 0.4, 0.6);
 			self.add(box(gx - 0.12, fy - 0.06, 0, gx, fy + 0.06, fz + 0.1, gm), false);
 			self.add(box(gx + 1.2, fy - 0.06, 0, gx + 1.32, fy + 0.06, fz + 0.1, gm), false);
 			for (var gb = gx + 0.08; gb < gx + 1.15; gb += 0.15) { self.add(box(gb, fy - 0.015, 0.05, gb + 0.03, fy + 0.015, fz - 0.07, gm), false); }
@@ -1179,7 +1201,8 @@ Viewer.prototype.setSize = function (w, h) {
 	this.renderer.setSize(w, h, !this.thumb);
 	if (this.composer) { this.composer.setSize(w, h); }
 	this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
-	this.fitCamera(true);
+	// A resized box keeps the visitor's view (only the very first fit uses the preset).
+	this.fitCamera(!this.lastDist);
 	this.requestRender();
 };
 Viewer.prototype.update = function (cfg, mode) {
@@ -1247,10 +1270,12 @@ Viewer.prototype.fitCamera = function (reset) {
 	var sc = this.sun.shadow.camera; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 1; sc.far = R * 4; sc.updateProjectionMatrix();
 	this.sun.position.copy(sph.center).addScaledVector(this.sunDir || new THREE.Vector3(0.5, 1, 0.5), R * 1.8);
 	this.sun.target.position.copy(sph.center);
-	if (!reset && this.controls && this.lastR) {
-		// keep the visitor's orbit, follow the new size
-		var off = this.camera.position.clone().sub(this.controls.target).multiplyScalar(sph.radius / this.lastR);
+	if (!reset && this.controls && this.lastDist) {
+		// keep the visitor's orbit direction and zoom; follow the new house size and box aspect
+		var off = this.camera.position.clone().sub(this.controls.target), zoom = clamp(off.length() / this.lastDist, 0.3, 4);
+		off.normalize().multiplyScalar(dist * zoom);
 		this.controls.target.copy(target); this.camera.position.copy(target).add(off);
+		this.controls.minDistance = sph.radius * 0.5; this.controls.maxDistance = sph.radius * 4;
 	} else {
 		var az = preset[0] * D2R, el = preset[1] * D2R;
 		var dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
@@ -1259,7 +1284,7 @@ Viewer.prototype.fitCamera = function (reset) {
 		this.camera.lookAt(target);
 		if (this.controls) { this.controls.target.copy(target); this.controls.minDistance = sph.radius * 0.5; this.controls.maxDistance = sph.radius * 4; }
 	}
-	this.lastR = sph.radius;
+	this.lastR = sph.radius; this.lastDist = dist;
 	if (this.controls) { this.controls.update(); }
 };
 Viewer.prototype.requestRender = function () {
@@ -1278,7 +1303,16 @@ Viewer.prototype.loop = function () {
 		if (self.interacting || performance.now() < (self.settle || 0)) { requestAnimationFrame(tick); } else { self.looping = false; }
 	})();
 };
+// The canvas is stretched to its box by CSS; if the box changed since the last frame (a re-rendered
+// panel, a new step, the summary filling in), the drawing buffer is resized before drawing, so a
+// frame is never shown squashed or stretched while a ResizeObserver callback is still pending.
+Viewer.prototype.syncSize = function () {
+	if (this.thumb || !this.wrap) { return; }
+	var w = this.wrap.clientWidth, h = this.wrap.clientHeight;
+	if (w > 0 && h > 0 && (Math.round(w) !== this.w || Math.round(h) !== this.h)) { this.setSize(w, h); }
+};
 Viewer.prototype.render = function () {
+	this.syncSize();
 	if (!this.w || this.disposed) { return; }
 	if (this.gtao) { this.gtao.enabled = !this.interacting; }
 	if (this.composer) { this.composer.render(); } else { this.renderer.render(this.scene, this.camera); }
@@ -1313,24 +1347,68 @@ function disposeTree(root) { root.traverse(function (o) { if (o.geometry && !o.g
 function isShared(g) { for (var k in FOLIAGE) { if (FOLIAGE[k] === g) { return true; } } return false; }
 
 /* ------------------------------------------------------------------ close-up scenes for option cards */
+// Option card for a facade material: a real house corner (two walls in light and shade) with a window,
+// plinth, eaves and a gravel strip – the material reads as on a building, not as a loose sample board.
 function facadeScene(c) {
 	var hs = new House(c, { mini: true }); hs.pl = SK().plan(c);
-	var g = new THREE.Group(), T = 0.3, m = facadeMat(c, c.facade_main);
-	var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(3.2, 0); s.lineTo(3.2, 2.2); s.lineTo(0, 2.2); s.lineTo(0, 0);
-	var hp = new THREE.Path(); hp.moveTo(1.7, 0.45); hp.lineTo(2.75, 0.45); hp.lineTo(2.75, 1.85); hp.lineTo(1.7, 1.85); hp.lineTo(1.7, 0.45); s.holes.push(hp);
+	var g = new THREE.Group(), T = 0.3, L = 3.4, H = 2.75, D = 2.0, m = facadeMat(c, c.facade_main);
+	var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(L, 0); s.lineTo(L, H); s.lineTo(0, H); s.lineTo(0, 0);
+	var wx0 = 1.25, wx1 = 2.45, wy0 = 0.8, wy1 = 2.2;
+	var hp = new THREE.Path(); hp.moveTo(wx0, wy0); hp.lineTo(wx1, wy0); hp.lineTo(wx1, wy1); hp.lineTo(wx0, wy1); hp.lineTo(wx0, wy0); s.holes.push(hp);
 	var w = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: T, bevelEnabled: false }), m); w.castShadow = true; w.receiveShadow = true; g.add(w);
-	hs.opening(g, { kind: 'win', x: 1.7, y: 0.45, w: 1.05, h: 1.4 }, T, {});
+	// metre UVs on the extruded front come from the shape coordinates; the return wall is a box
+	var side = box(L - T, -D, 0, L, 0, H, m); g.add(side);
+	hs.opening(g, { kind: 'win', x: wx0, y: wy0, w: wx1 - wx0, h: wy1 - wy0 }, T, {});
+	// sill, plinth band, eaves with a dark fascia
+	g.add(box(wx0 - 0.04, T, wy0 - 0.05, wx1 + 0.04, T + 0.07, wy0, solid('#8E8A84', 0.6)));
+	var pm = plinthMat(c);
+	if (pm) { g.add(box(-0.02, T, 0, L + 0.02, T + 0.025, 0.32, pm)); g.add(box(L, -D, 0, L + 0.025, T + 0.025, 0.32, pm)); }
+	var dark = solid('#2F3235', 0.55), soff = solid(c.arch_style === 'japandi' || c.arch_style === 'alpine' || c.arch_style === 'rustic' ? '#8A6446' : '#E6E2DA', 0.85);
+	// the eaves are outside the camera framing (fit): the wall and its material fill the card
+	hs.add(box(-0.3, -D - 0.3, H, L + 0.45, T + 0.45, H + 0.04, soff), false);
+	hs.add(box(-0.3, T + 0.41, H, L + 0.45, T + 0.45, H + 0.22, dark), false); hs.add(box(L + 0.41, -D - 0.3, H, L + 0.45, T + 0.45, H + 0.22, dark), false);
 	hs.fit.add(g);
-	g.position.set(-1.6, 0.0, 0);
+	// ground: gravel strip along the walls, lawn beyond (not framed by the camera)
+	hs.add(box(-0.6, T, -0.01, L + 0.7, T + 0.55, 0.015, groundKind(c, 'gravel')), false);
+	hs.add(box(L, -D, -0.01, L + 0.7, T, 0.015, groundKind(c, 'gravel')), false);
+	hs.plant(c.garden_style === 'mediterranean' ? 'lavender' : 'shrub', 0.45, T + 0.85, 0.75, 5);
 	return hs;
 }
+// Floor materials of the option cards (and of the interior close-up).
+var FLOOR_MATS = {
+	parquet: ['planks', '#B7865A'], herringbone: ['herring', '#B07D52'], chevron: ['chevron', '#BE8D5F'], laminate: ['planks', '#C9A47A', { rl: 1.4, bw: 0.19 }],
+	vinyl: ['planks', '#A79B8C', { rl: 1.2, bw: 0.18 }], wood_tile: ['planks', '#A9825D', { rl: 1.2, bw: 0.2, grout: '#8E8174' }],
+	tiles_large: ['tile', '#D7D3CC', { size: 1.2 }], tiles: ['tile', '#CFCBC4', { size: 0.6 }], marble: ['tile', '#EEECE8', { size: 1.2, vein: 1, grout: '#E2DFDA' }],
+	stone: ['tile', '#CFC3AE', { size: 0.6, pores: 1 }], travertine: ['tile', '#D9C9AE', { size: 0.6, pores: 2 }], terrazzo: ['terrazzo', '#E3DED6'],
+	cement_tiles: ['cement', '#E6E1D8'], carpet: ['carpet', '#BBB2A6'], cork: ['cork', '#B98D5E'], microcement: ['smooth', '#BDB7AE'], concrete: ['smooth', '#9E9B96']
+};
+function floorMat(v) {
+	var fl = FLOOR_MATS[v] || FLOOR_MATS.parquet, o = Object.assign({ pattern: fl[0], color: fl[1] }, fl[2] || {});
+	var polished = v === 'marble' || v === 'terrazzo';
+	return pbr('floor', o, { normal: fl[0] === 'carpet' ? 1.6 : (polished ? 0.4 : 1), roughness: 1, clearcoat: polished ? 0.6 : 0, physical: polished });
+}
+// Option card for a floor: a sunlit room corner (walls, skirting, window light, a rug edge and a plant),
+// so parquet, marble or tiles read at a true scale.
 function floorScene(c) {
-	var hs = new House(c, { mini: true });
-	var fl = { parquet: ['wood', '#B7865A'], herringbone: ['wood', '#B07D52'], laminate: ['wood', '#C9A47A'], vinyl: ['wood', '#A79B8C'], tiles_large: ['slabs', '#D7D3CC'], stone: ['stone', '#CFC3AE'], microcement: ['render', '#BDB7AE'], concrete: ['concrete', '#9E9B96'] }[c.floor_main] || ['wood', '#B7865A'];
-	var fm = pbr(fl[0], fl[0] === 'render' ? { color: fl[1], texture: 'smooth' } : { color: fl[1] }, { normal: 1, roughness: fl[0] === 'wood' ? 0.8 : 1 });
-	var floor = box(-2, -2, -0.05, 2, 2, 0, fm); floor.rotation.y = c.floor_main === 'herringbone' ? Math.PI / 4 : 0;
-	hs.add(floor); hs.add(box(-2, -2.1, 0, 2, -2, 2.4, solid('#EEEAE3', 0.9))); hs.add(box(-2.1, -2, 0, -2, 2, 2.4, solid('#E6E1D9', 0.9)));
-	hs.add(box(-2, -1.99, 0, 2, -1.97, 0.08, solid('#FFFFFF', 0.6)));
+	var hs = new House(c, { mini: true }), fm = floorMat(c.floor_main);
+	var wall = solid('#F1EDE6', 0.92), wall2 = solid('#E8E3DB', 0.92), skirt = solid('#FFFFFF', 0.6), E = 6.5;
+	// the floor runs beyond the picture (no lawn at the edges); only the room corner is framed
+	hs.add(box(-2.6, -2.6, 0, E, E, 0.02, fm), false);
+	var s = new THREE.Shape(); s.moveTo(-2.6, 0); s.lineTo(E, 0); s.lineTo(E, 2.7); s.lineTo(-2.6, 2.7); s.lineTo(-2.6, 0);
+	var hp = new THREE.Path(); hp.moveTo(-0.4, 0.05); hp.lineTo(1.4, 0.05); hp.lineTo(1.4, 2.35); hp.lineTo(-0.4, 2.35); hp.lineTo(-0.4, 0.05); s.holes.push(hp);
+	var bw = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: false }), wall); bw.position.set(0, 0, -2.78); bw.castShadow = true; bw.receiveShadow = true; hs.add(bw, false);
+	var fr = frameMat(c);
+	[[-0.42, 0.05, 1.42, 0.1], [-0.42, 2.33, 1.42, 2.37]].forEach(function (q) { hs.add(box(q[0], -2.62, q[1], q[2], -2.58, q[3], fr), false); });
+	[-0.42, 0.48, 1.38].forEach(function (x) { hs.add(box(x, -2.62, 0.05, x + 0.04, -2.58, 2.37, fr), false); });
+	hs.add(box(-2.78, -2.78, 0, -2.6, E, 2.7, wall2), false);
+	hs.add(box(-2.6, -2.6, 0, E, -2.58, 0.07, skirt), false); hs.add(box(-2.6, -2.6, 0, -2.58, E, 0.07, skirt), false);
+	// a bench and a plant give the scale
+	hs.add(box(-2.5, 0.6, 0.0, -2.0, 2.6, 0.42, solid('#6F6A62', 0.85)), false);
+	var pot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.42, 20), solid('#B8A48C', 0.7)); pot.position.copy(X(-2.15, -2.15, 0.21)); hs.add(pot, false);
+	hs.plant('shrub', -2.15, -2.15, 0.9, 3);
+	// camera framing: the corner with floor in front (an invisible box)
+	var fit = new THREE.Mesh(boxGeo(4.2, 1.2, 4.2), new THREE.MeshBasicMaterial({ visible: false }));
+	fit.position.copy(X(-0.5, -0.5, 0.6)); hs.add(fit);
 	return hs;
 }
 
@@ -1369,11 +1447,12 @@ function attach(container, cfg, opts) {
 		live = new Viewer(opts || {});
 		live.wrap = document.createElement('div'); live.wrap.className = 'agh-3d';
 		live.wrap.appendChild(live.el);
-		if (window.ResizeObserver) { ro = new ResizeObserver(function () { var r = live.wrap.getBoundingClientRect(); if (r.width > 0) { live.setSize(r.width, r.height); } }); ro.observe(live.wrap); }
+		// Resize and redraw in the same frame: a resized canvas is cleared, waiting for the next
+		// animation frame would show one empty or distorted frame.
+		if (window.ResizeObserver) { ro = new ResizeObserver(function () { if (live.wrap.clientWidth > 0) { live.syncSize(); live.render(); } }); ro.observe(live.wrap); }
 	}
 	if (live.wrap.parentNode !== container) { container.insertBefore(live.wrap, container.firstChild); }
-	var r = live.wrap.getBoundingClientRect();
-	if (r.width > 0) { live.setSize(r.width, r.height); }
+	live.syncSize();
 	live.update(cfg);
 	return live;
 }

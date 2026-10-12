@@ -1,5 +1,26 @@
 # Változásnapló
 
+## 1.1.0 – 2026-10-12
+
+### Stílus és varázsló
+- A stílus a varázsló első lépése, és vezeti a modellt: tető, homlokzat, szín, ablak, lábazat, bejárat, terasz, kert és kerítés a stílushoz igazodik (amit a látogató maga állított be, azt nem írja felül; stílusváltáskor az előző stílus javaslatai visszaállnak). Új kezdés már az alapstílus szerint néz ki (modern minimalista = lapostető).
+- Gazdagabb beépített stílusjavaslatok; a DB v6 frissítés csak az érintetlen 1.0.0-s bejegyzéseket cseréli.
+- Kész lépés: nagy élő 3D előnézet az összefoglaló mellett (a kék üres doboz helyett).
+
+### 3D előnézet
+- Nincs nyúlás/összenyomódás opcióválasztáskor: a vászon minden képkocka előtt a dobozához igazodik, átméretezéskor a nézet és a nagyítás megmarad, a varázsló oldalsávja nem épül újra kattintásonként.
+- Betöltéskor semleges töltőkép a 2D vázlat felvillanása helyett (előnézet és kártyák); a 3D modul a tervezővel együtt töltődik.
+- Járda és beálló a kerítésvonalig ér; a kerítésen nyílás van a járdának (kiskapu) és a beállónak (oszlopok, nyitott tolókapu). 2D-ben is.
+
+### Homlokzat és burkolatok
+- 6 új homlokzatanyag: vízszintes fa, lécezett deszka, égetett fa, mészkő, festett tégla, szálcement; új procedurális textúrák; a kártyákon valódi házsarok (lábazat, eresz, ablak).
+- Burkolatok helyiségenként: hálószobák, konyha, előtér/közlekedő és vizes helyiségek külön (alapból „mint a fő padló”); a fő padló 13 anyag (francia halszálka, márvány, travertin, terrazzo, fahatású járólap stb.); a prompt helyiségenként a megfelelőt írja. Kártyákon napfényes szobasarok.
+- A lábazat színe sík lábazatnál rejtve.
+
+### Generálás
+- Generálás közben a Leállítás a koncepciókártyák fölött is látszik; indításkor a gomb jelzi, hogy a kérés úton van.
+- Sikertelen képnél a tulajdonos a kártyán látja a hiba okát.
+
 ## 1.0.1 – 2026-10-12
 
 ### Javítva – beragadó generálás

@@ -6768,3 +6768,79 @@ msgstr "Otáčení: táhněte myší nebo prstem"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Obnovit pohled"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Vodorovné dřevěné obložení"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Obklad z prken a lišt"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Opálené dřevo (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Obklad z vápence"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Natřená cihla"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Vláknocementové desky"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Obývací pokoj, jídelna a otevřené prostory; ostatní místnosti lze nastavit zvlášť níže."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Francouzský stromeček"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Dlažba v imitaci dřeva"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Mramor"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertin"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Podlaha v ložnicích"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Stejná jako hlavní podlaha"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Koberec"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Korek"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Podlaha v kuchyni"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Vzorované cementové dlaždice"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Podlaha v předsíni a chodbě"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Koupelna, WC, prádelna, wellness."

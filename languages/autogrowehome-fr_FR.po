@@ -6766,3 +6766,79 @@ msgstr "Pivoter : faites glisser à la souris ou au doigt"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Réinitialiser la vue"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Bardage bois horizontal"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Bardage à couvre-joints"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Bois brûlé (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Parement en pierre calcaire"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Brique peinte"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Panneaux en fibrociment"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Séjour, salle à manger et espaces ouverts ; les autres pièces peuvent être définies séparément ci-dessous."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Point de Hongrie"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Carrelage imitation bois"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Marbre"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertin"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Sol des chambres"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Comme le sol principal"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Moquette"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Liège"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Sol de la cuisine"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Carreaux de ciment à motifs"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Sol de l’entrée et du couloir"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Salle de bains, WC, buanderie, espace bien-être."

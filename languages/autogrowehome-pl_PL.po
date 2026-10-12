@@ -6768,3 +6768,79 @@ msgstr "Obracanie: przeciągnij myszą lub palcem"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Przywróć widok"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Pozioma okładzina drewniana"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Okładzina z desek i listew"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Opalane drewno (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Okładzina z wapienia"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Malowana cegła"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Płyty włóknocementowe"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Salon, jadalnia i przestrzenie otwarte; pozostałe pomieszczenia można ustawić osobno poniżej."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Jodełka francuska"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Płytki drewnopodobne"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Marmur"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Trawertyn"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Podłoga w sypialniach"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Jak podłoga główna"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Wykładzina dywanowa"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Korek"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Podłoga w kuchni"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Wzorzyste płytki cementowe"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Podłoga w przedpokoju i korytarzu"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Łazienka, WC, pralnia, strefa wellness."

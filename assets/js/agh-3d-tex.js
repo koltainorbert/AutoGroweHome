@@ -64,7 +64,7 @@ var GEN = {
 		} };
 	},
 	brick: function (o) {
-		var base = hex(o.color || '#A4553A'), mortar = hex(o.mortar || '#CFC8BC'), long = o.kind === 'clinker';
+		var base = hex(o.color || '#A4553A'), mortar = hex(o.mortar || '#CFC8BC'), long = o.kind === 'clinker', lime = o.kind === 'lime';
 		var cols = long ? 2 : 4, rows = long ? 20 : 14, bw = 1 / cols, rh = 1 / rows, jw = long ? 0.012 : 0.009, jh = long ? 0.015 : 0.0095;
 		return { tw: long ? 1.04 : 1.04, th: long ? 1.0 : 1.05, w: 512, h: 512, fn: function (u, v) {
 			var row = Math.floor(v / rh), off = (row % 2) * bw * 0.5, x = (u + off) % 1, col = Math.floor(x / bw);
@@ -73,8 +73,9 @@ var GEN = {
 			var inM = lx < jw || ly < jh;
 			var n = fbm(u, v, 64, 3, 2);
 			if (inM) { var mm = 0.9 + n * 0.2; return [mortar[0] * mm, mortar[1] * mm, mortar[2] * mm, 0.05 + n * 0.1, 0.95]; }
-			var c = hueJit(jit(base, long ? 0.35 : 0.42, r), r2, 0.18);
-			var burn = smooth(0.5, 0.95, fbm(u * 3, v, 8, 2, 33 + col)) * 0.25;
+			var c = hueJit(jit(base, lime ? 0.08 : (long ? 0.35 : 0.42), r), r2, lime ? 0.03 : 0.18);
+			var burn = lime ? 0 : smooth(0.5, 0.95, fbm(u * 3, v, 8, 2, 33 + col)) * 0.25;
+			if (lime) { var show = smooth(0.62, 0.9, fbm(u * 2, v * 2, 6, 3, 51)) * 0.35; c = mixc(c, [0.62, 0.36, 0.28], show); }
 			c = mixc(c, [c[0] * 0.55, c[1] * 0.5, c[2] * 0.5], burn);
 			var hgt = 0.75 + smooth(0, 0.012, Math.min(lx - jw, ly - jh)) * 0.2 + n * 0.08;
 			return [c[0] * (0.92 + n * 0.16), c[1] * (0.92 + n * 0.16), c[2] * (0.92 + n * 0.16), hgt, 0.78 + n * 0.15];
@@ -103,6 +104,138 @@ var GEN = {
 			var gap = lx < 0.035 ? 1 : 0;
 			if (gap) { return [c[0] * 0.25, c[1] * 0.22, c[2] * 0.2, 0, 0.9]; }
 			return [c[0] * k, c[1] * k, c[2] * k, 0.75 + ring * 0.1 - smooth(0.9, 1, lx) * 0.2, 0.62 + grain * 0.25];
+		} };
+	},
+	// horizontal lap siding: overlapping boards with a shadow line under each board
+	woodh: function (o) {
+		var base = hex(o.color || '#B07E52'), rows = 12;
+		return { tw: 3.0, th: 1.8, w: 1024, h: 512, fn: function (u, v) {
+			var row = Math.floor(v * rows), ly = v * rows - row, seg = Math.floor((u + hash2(row, 2, 4) * 0.7) * 2.2), r = hash2(seg, row, 5);
+			var grain = fbm(u * 3 + r, v * 0.2 + row * 0.13, 64, 4, 11 + seg);
+			var c = hueJit(jit(base, 0.26, r), hash2(seg, row, 6), 0.1);
+			var k = 0.84 + (Math.sin((grain * 14 + r * 5) * Math.PI) * 0.5 + 0.5) * 0.12 + (grain - 0.5) * 0.12;
+			var lap = smooth(0, 0.16, ly), shadow = 1 - (1 - smooth(0, 0.07, ly)) * 0.55;
+			var butt = Math.abs(((u + hash2(row, 2, 4) * 0.7) * 2.2) % 1) < 0.006 ? 0.45 : 1;
+			k *= shadow * butt;
+			return [c[0] * k, c[1] * k, c[2] * k, 0.35 + lap * 0.5 + ly * 0.15, 0.6 + grain * 0.25];
+		} };
+	},
+	// painted board-and-batten: wide boards, narrow raised battens over the joints
+	batten: function (o) {
+		var base = hex(o.color || '#F4F4F2');
+		return { tw: 1.2, th: 2.4, w: 512, h: 1024, fn: function (u, v) {
+			var lx = (u * 3) % 1, n = fbm(u, v, 24, 3, 7), g = fbm(u * 0.3, v * 3, 32, 3, 9);
+			var bat = smooth(0.84, 0.86, lx) * (1 - smooth(0.98, 1, lx)), edge = Math.exp(-Math.pow((lx - 0.85) / 0.008, 2)) + Math.exp(-Math.pow((lx - 0.99) / 0.008, 2));
+			var k = 0.95 + n * 0.05 + (g - 0.5) * 0.04 - edge * 0.18 + bat * 0.03;
+			return [base[0] * k, base[1] * k, base[2] * k, 0.4 + bat * 0.5 + g * 0.05, 0.72 + n * 0.1];
+		} };
+	},
+	// charred timber (shou sugi ban): near-black boards with a cracked "alligator" surface and silver sheen
+	charred: function (o) {
+		var base = hex(o.color || '#2A2522'), boards = 7;
+		return { tw: 1.05, th: 2.4, w: 512, h: 1024, fn: function (u, v) {
+			var b = Math.floor(u * boards), lx = u * boards - b, r = hash2(b, 0, 13);
+			var w = worley((u * boards % 1) * 0.5 + b * 0.5 % 1, v, 10, 17 + b, 0.95), crack = smooth(0.0, 0.06, w[1] - w[0]);
+			var grain = fbm(u * 0.2 + b * 0.3, v, 40, 4, 5 + b), sheen = smooth(0.55, 0.9, grain) * 0.35;
+			var k = (0.75 + r * 0.25) * (0.55 + crack * 0.45) + sheen;
+			if (lx < 0.03) { return [base[0] * 0.3, base[1] * 0.3, base[2] * 0.3, 0, 0.95]; }
+			return [base[0] * k, base[1] * k, base[2] * k * 1.04, 0.3 + crack * 0.6 + grain * 0.1, 0.55 + (1 - crack) * 0.35];
+		} };
+	},
+	// sawn limestone slabs in running bond, fine fossil speckles and soft veining
+	limestone: function (o) {
+		var base = hex(o.color || '#DCD2C1'), joint = hex('#B9AE9C');
+		return { tw: 2.4, th: 1.6, w: 768, h: 512, fn: function (u, v) {
+			var rows = 4, row = Math.floor(v * rows), ly = v * rows - row, x = (u * 2 + (row % 2) * 0.5) % 1, col = Math.floor(u * 2 + (row % 2) * 0.5);
+			var r = hash2(col, row, 21), n = fbm(u, v, 24, 5, 3), sp = vnoise(u * 420, v * 280, 420, 7) > 0.9 ? 1 : 0;
+			if (x < 0.004 || ly < 0.012) { return [joint[0], joint[1], joint[2], 0.1, 0.95]; }
+			var vein = smooth(0.48, 0.52, fbm(u * 0.8 + r, v * 0.5, 6, 4, 31 + col)) * 0.06;
+			var c = hueJit(jit(base, 0.12, r), hash2(col, row, 22), 0.06);
+			var k = 0.95 + (n - 0.5) * 0.12 - sp * 0.08 - vein;
+			return [c[0] * k, c[1] * k, c[2] * k, 0.7 + n * 0.12 - sp * 0.1, 0.78 + n * 0.12];
+		} };
+	},
+	// large fibre-cement panels with open joints and visible fixings
+	fibercement: function (o) {
+		var base = hex(o.color || '#A7ABAD');
+		return { tw: 2.5, th: 2.0, w: 640, h: 512, fn: function (u, v) {
+			var lx = (u * 2) % 1, ly = (v * 2) % 1, n = fbm(u, v, 32, 4, 41), fib = fbm(u * 4, v * 4, 64, 2, 43);
+			if (lx < 0.006 || ly < 0.008) { return [base[0] * 0.25, base[1] * 0.25, base[2] * 0.25, 0, 0.95]; }
+			var rv = 0; [0.06, 0.94].forEach(function (cx) { [0.07, 0.93].forEach(function (cy) { var dx = (lx - cx) * 1.25, dy = ly - cy; if (dx * dx + dy * dy < 0.00012) { rv = 1; } }); });
+			var k = 0.93 + (n - 0.5) * 0.1 + (fib - 0.5) * 0.04 - rv * 0.3;
+			return [base[0] * k, base[1] * k, base[2] * k, 0.75 + n * 0.05 - rv * 0.2, 0.82 + fib * 0.1];
+		} };
+	},
+	// interior floors (2.4 m tile): planks, herringbone, chevron, tiles (marble veins, travertine pores),
+	// terrazzo, encaustic cement tiles, carpet and cork – all tileable
+	floor: function (o) {
+		var base = hex(o.color || '#B7865A'), pat = o.pattern || 'planks', grout = hex(o.grout || '#B8B1A7'), S = 2.4;
+		var woodPx = function (r, ly, lx, gseed) {
+			var c = hueJit(jit(base, 0.24, r), hash2(Math.floor(r * 999), 3, 3), 0.1);
+			var warp = fbm((lx + r * 3) % 1, (ly * 0.25 + r) % 1, 8, 3, gseed);
+			var ring = Math.sin((ly * 7 + warp * 6 + r * 11) * Math.PI) * 0.5 + 0.5;
+			var k = 0.84 + ring * 0.13 + (warp - 0.5) * 0.12;
+			return [c[0] * k, c[1] * k, c[2] * k, 0.75 + ring * 0.05, 0.5 + warp * 0.3];
+		};
+		return { tw: S, th: S, w: 768, h: 768, fn: function (u, v) {
+			var x = u * S, y = v * S, r, n;
+			if (pat === 'planks') {
+				var bw = o.bw || 0.2, rl = o.rl || 1.2, row = Math.floor(y / bw), ly = y / bw - row, xx = (x + hash2(row % Math.round(S / bw), 1, 3) * rl) % S, b = Math.floor(xx / rl), lx = xx / rl - b;
+				r = hash2(b, row % Math.round(S / bw), 7);
+				var jw = o.grout ? 0.03 : 0.012;
+				if (ly < jw || lx < jw * bw / rl) { return o.grout ? [grout[0], grout[1], grout[2], 0.1, 0.9] : [base[0] * 0.45, base[1] * 0.4, base[2] * 0.36, 0.1, 0.8]; }
+				return woodPx(r, ly, lx, 5);
+			}
+			if (pat === 'herring' || pat === 'chevron') {
+				var cw = 0.4, col = Math.floor(x / cw), cx = x / cw - col, d = col % 2 ? 1 : -1, pw = 0.1;
+				var sft = y + d * cx * cw + (pat === 'herring' && col % 2 ? pw * 0.5 : 0), k = Math.floor(sft / pw), ls = sft / pw - k;
+				r = hash2(k % Math.round(S / pw), col, 9);
+				var endJ = pat === 'chevron' ? cx < 0.012 : (cx < 0.012 && k % 2 === 0) || (cx > 0.988 && k % 2 === 1);
+				if (ls < 0.06 || endJ) { return [base[0] * 0.45, base[1] * 0.4, base[2] * 0.36, 0.1, 0.8]; }
+				return woodPx(r, ls, cx, 7);
+			}
+			if (pat === 'tile') {
+				var ts = o.size || 0.6, gw = 0.003 / ts, tx = x / ts, ty = y / ts, ix = Math.floor(tx), iy = Math.floor(ty), fx = tx - ix, fy = ty - iy;
+				if (fx < gw || fy < gw) { return [grout[0], grout[1], grout[2], 0.05, 0.9]; }
+				r = hash2(ix, iy, 13); n = fbm(u, v, 24, 3, 3);
+				var c = jit(base, 0.06, r), k2 = 0.96 + (n - 0.5) * 0.08, rough = 0.45;
+				if (o.vein) {
+					var vn = fbm(u, v, 3, 4, 61), vline = Math.exp(-Math.pow((vn - 0.5) / 0.012, 2)), vfine = Math.exp(-Math.pow((fbm(u, v, 6, 3, 63) - 0.5) / 0.006, 2));
+					c = mixc(c, [0.62, 0.6, 0.58], vline * 0.55 + vfine * 0.25); rough = 0.12;
+				}
+				if (o.pores) {
+					var pore = vnoise(u * 300, v * 300, 300, 17) > (o.pores > 1 ? 0.86 : 0.93) ? 1 : 0, band = (Math.sin((y * 9 + fbm(u, v, 6, 3, 19) * 5) * Math.PI) * 0.5 + 0.5) * 0.06;
+					k2 *= 1 - pore * 0.18 - band; rough = 0.7;
+				}
+				return [c[0] * k2, c[1] * k2, c[2] * k2, 0.8 - (o.pores ? 0 : 0), rough];
+			}
+			if (pat === 'terrazzo') {
+				var w1 = worley(u, v, 140, 23, 0.95), chip = w1[0] < 0.22 + hash2(w1[2], 4, 5) * 0.18;
+				n = fbm(u, v, 32, 3, 29);
+				if (chip) { var pal = [[0.55, 0.5, 0.46], [0.35, 0.37, 0.4], [0.78, 0.7, 0.6], [0.95, 0.94, 0.92], [0.62, 0.42, 0.36]][Math.floor(hash2(w1[2], 6, 7) * 5)]; return [pal[0], pal[1], pal[2], 0.82, 0.25]; }
+				return [base[0] * (0.97 + n * 0.05), base[1] * (0.97 + n * 0.05), base[2] * (0.97 + n * 0.05), 0.8, 0.3];
+			}
+			if (pat === 'cement') {
+				var cs = 0.2, qx = (x / cs) % 1, qy = (y / cs) % 1, dx = Math.abs(qx - 0.5), dy = Math.abs(qy - 0.5);
+				if (qx < 0.02 || qy < 0.02) { return [grout[0], grout[1], grout[2], 0.1, 0.9]; }
+				var motif = dx + dy < 0.32 && dx + dy > 0.14 ? 1 : (Math.max(dx, dy) > 0.44 ? 2 : 0);
+				n = fbm(u, v, 48, 3, 31);
+				var cc = motif === 1 ? [0.24, 0.35, 0.42] : (motif === 2 ? [0.7, 0.62, 0.52] : base);
+				return [cc[0] * (0.95 + n * 0.08), cc[1] * (0.95 + n * 0.08), cc[2] * (0.95 + n * 0.08), 0.8, 0.75];
+			}
+			if (pat === 'carpet') {
+				n = fbm(u, v, 256, 2, 37); var m2 = fbm(u, v, 12, 3, 39);
+				var kc = 0.9 + n * 0.16 + (m2 - 0.5) * 0.06;
+				return [base[0] * kc, base[1] * kc, base[2] * kc, n, 0.98];
+			}
+			if (pat === 'cork') {
+				var w2 = worley(u, v, 360, 41, 1), g2 = hash2(w2[2], 8, 9);
+				var kk = 0.75 + g2 * 0.4 - smooth(0, 0.15, 0.15 - (w2[1] - w2[0])) * 0.2;
+				return [base[0] * kk, base[1] * kk, base[2] * kk, 0.6 + g2 * 0.2, 0.85];
+			}
+			n = fbm(u, v, 16, 5, 43);
+			var ks = 0.93 + n * 0.12;
+			return [base[0] * ks, base[1] * ks, base[2] * ks, 0.8 + n * 0.05, 0.55];
 		} };
 	},
 	seam: function (o) {

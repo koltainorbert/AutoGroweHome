@@ -268,6 +268,10 @@ final class RestController {
 					continue;
 				}
 				$pub = Repository::public_asset( $a, 'client' !== $audience );
+				if ( 'client' === $audience && 'failed' === $a['status'] && '' !== (string) $a['error'] && Access::is_staff() ) {
+					// The site owner sees why an image failed (e.g. provider key or quota) right on the card.
+					$pub['error'] = (string) $a['error'];
+				}
 				if ( 'done' === $a['status'] && '' !== $a['file_path'] ) {
 					$pub['preview'] = self::asset_url( $a, 'preview' );
 					$can_full       = 'client' !== $audience || ( 'hero' === $a['view'] && $selected === $c['id'] && in_array( Settings::get( 'access.client_download', 'hero' ), array( 'hero', 'all' ), true ) && Features::enabled( 'hero_download' ) ) || ( 'all' === Settings::get( 'access.client_download' ) );

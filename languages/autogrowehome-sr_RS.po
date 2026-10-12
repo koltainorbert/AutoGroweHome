@@ -6768,3 +6768,79 @@ msgstr "Okretanje: prevucite mišem ili prstom"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Vrati prikaz"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Хоризонтална дрвена облога"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Облога од дасака и летвица"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Спаљено дрво (шу суги бан)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Облога од кречњака"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Бојена опека"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Влакноцементне плоче"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Дневна соба, трпезарија и отворени простори; остале просторије можете засебно подесити испод."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Француска рибља кост"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Плочице са изгледом дрвета"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Мермер"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Травертин"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Под спаваћих соба"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Исто као главни под"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Итисон"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Плута"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Под кухиње"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Цементне плочице са шаром"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Под предсобља и ходника"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Купатило, WC, перионица, велнес."

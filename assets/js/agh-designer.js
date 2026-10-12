@@ -236,22 +236,26 @@
 			S.projectId = draft.project || null;
 			S.mode = draft.mode || S.boot.layout.mode;
 			S.autoRoof = draft.autoRoof || '';
+			S.styleApplied = draft.styleApplied || null;
 		} else {
 			S.mode = S.boot.layout.mode;
+			// A fresh start already looks like the default style (e.g. modern minimalist = flat roof).
+			applyStyle(S.config.arch_style, true);
 		}
 	}
 	var persist = debounce(function () {
-		lsSet(LS_KEY, { v: S.boot.version, config: S.config, explicit: S.explicit, project: S.projectId, mode: S.mode, autoRoof: S.autoRoof });
+		lsSet(LS_KEY, { v: S.boot.version, config: S.config, explicit: S.explicit, project: S.projectId, mode: S.mode, autoRoof: S.autoRoof, styleApplied: S.styleApplied || null });
 	}, 300);
 
 	/* ------------------------------------------------------------------ open/close */
 	function open() {
 		if (root && document.body.contains(root)) { return; }
+		// The 3D module loads in parallel with the bootstrap request.
+		load3D();
 		var p = S.boot ? Promise.resolve(S.boot) : loadBoot();
 		p.then(function () {
 			if (!S.config) { initConfig(); }
 			build();
-			load3D();
 			event('popup_open');
 			if (S.projectId) { loadProject(S.projectId, true); }
 			if (!S.wiz && S.boot.layout.tour && !lsGet('agh_tour_done', false)) { setTimeout(showTour, 400); }
@@ -262,18 +266,38 @@
 
 	// The 3D preview (WebGL) is an ES module loaded after the designer opened; until it is ready – or
 	// where WebGL2 is missing – the 2D sketch is shown.
-	var A3 = null;
+	// While the module loads (A3wait), previews and option cards show a neutral placeholder instead of
+	// the 2D sketch, so the visitor never sees the schematic flash up before the real 3D view. The 2D
+	// sketch is the fallback only where 3D is unavailable (no WebGL2, load error, 15 s time limit).
+	var A3 = null, A3wait = false;
+	function webgl2() {
+		try { var cv = document.createElement('canvas'); return !!(window.WebGL2RenderingContext && cv.getContext('webgl2')); } catch (e) { return false; }
+	}
 	function load3D() {
-		if (load3D.p || !LOADER.three || lsGet('agh_3d', true) === false) { return load3D.p; }
+		if (load3D.p || !LOADER.three || lsGet('agh_3d', true) === false || !webgl2()) { return load3D.p; }
+		A3wait = true;
+		var giveUp = setTimeout(function () { if (A3wait) { A3wait = false; fallback2D(); } }, 15000);
 		load3D.p = import(LOADER.three).then(function (m) {
 			var api = (m && m.default) || window.AGH_3D;
-			if (!api || !api.supported()) { return; }
+			clearTimeout(giveUp);
+			A3wait = false;
+			if (!api || !api.supported()) { fallback2D(); return; }
 			A3 = api;
 			renderPreviewOnly();
 			if (S.wiz) { updateWizardSide(); }
 			refreshCardThumbs();
-		}).catch(function () { A3 = null; });
+		}).catch(function () { clearTimeout(giveUp); A3 = null; A3wait = false; fallback2D(); });
 		return load3D.p;
+	}
+	// 3D did not arrive: replace the placeholders with the 2D sketch.
+	function fallback2D() {
+		if (!root) { return; }
+		renderPreviewOnly();
+		if (S.wiz) { updateWizardSide(); }
+		Array.prototype.forEach.call(root.querySelectorAll('.agh-card-vis.is-wait'), function (el) { el.classList.remove('is-wait'); el.innerHTML = el._svg || ''; });
+	}
+	function waitBox() {
+		return h('div', { class: 'agh-3d-wait', role: 'status' }, h('span', null, h('i', { class: 'agh-spinner' }), t('loading_3d')));
 	}
 
 	function close(force) {
@@ -498,7 +522,7 @@
 	}
 
 	function switchLang(code) {
-		lsSet(LS_KEY, { v: S.boot.version, config: S.config, explicit: S.explicit, project: S.projectId, mode: S.mode, autoRoof: S.autoRoof });
+		lsSet(LS_KEY, { v: S.boot.version, config: S.config, explicit: S.explicit, project: S.projectId, mode: S.mode, autoRoof: S.autoRoof, styleApplied: S.styleApplied || null });
 		S.lang = code;
 		loadBoot(code).then(function () {
 			var cfg = S.config;
@@ -599,11 +623,37 @@
 		S.dirty = true;
 		persist();
 		validate();
+		var dependents = S.boot.schema.fields.some(function (f) { return f.show_if && f.show_if.field === id; }) || S.boot.schema.fields.some(function (f) { return f.filter_by === id; });
+		if (id === 'arch_style') { applyStyle(S.config.arch_style); }
 		renderPreviewOnly();
 		renderSummary();
-		updateWizardSide();
-		var dependents = S.boot.schema.fields.some(function (f) { return f.show_if && f.show_if.field === id; }) || S.boot.schema.fields.some(function (f) { return f.filter_by === id; });
+		// One rebuild of the 3D house per change: a re-rendered wizard step refreshes its side itself.
 		if (rerender || dependents) { renderFields(); }
+		if (!(S.wiz && (rerender || dependents))) { updateWizardSide(); }
+	}
+
+	/* The chosen style drives the house: its suggested roof, facade, windows, colours and garden are
+	 * applied to every parameter the visitor has not set personally; the previous style's suggestions
+	 * are taken back first, so switching styles never leaves a mix of two styles behind. */
+	function stylePack(v) {
+		return (S.boot.schema.presets || []).filter(function (p) { return p.slug === 'style-' + v; })[0] || null;
+	}
+	function applyStyle(v, quiet) {
+		var next = stylePack(v), prev = S.styleApplied ? stylePack(S.styleApplied) : null, n = 0;
+		if (prev && S.styleApplied !== v) {
+			Object.keys(prev.values).forEach(function (k) { if (k !== 'arch_style' && !S.explicit[k] && k in S.boot.defaults) { S.config[k] = clone(S.boot.defaults[k]); } });
+		}
+		if (next) {
+			Object.keys(next.values).forEach(function (k) {
+				if (k === 'arch_style' || S.explicit[k] || !S.fields[k]) { return; }
+				if (JSON.stringify(S.config[k]) !== JSON.stringify(next.values[k])) { n++; }
+				S.config[k] = clone(next.values[k]);
+			});
+		}
+		S.styleApplied = v;
+		if (n) { persist(); }
+		if (n && !quiet && next) { toast(tf('wiz_style_applied', next.name), 'ok', 3500); }
+		return n;
 	}
 
 	function fieldMessages(id) {
@@ -637,7 +687,7 @@
 			case 'cards':
 				ctl = h('div', { class: 'agh-cards', role: 'radiogroup', 'aria-label': f.label });
 				(f.options || []).forEach(function (o) {
-					ctl.appendChild(h('button', { type: 'button', class: 'agh-card-opt', role: 'radio', 'aria-pressed': String(v) === o.value ? 'true' : 'false', 'aria-checked': String(v) === o.value ? 'true' : 'false', onclick: function () { setValue(f.id, o.value, true); maybeStylePack(f, o.value); } }, o.thumb ? h('img', { src: o.thumb, alt: '', loading: 'lazy', decoding: 'async' }) : cardVisual(f.id, o.value), h('span', { class: 'agh-card-label', text: o.label })));
+					ctl.appendChild(h('button', { type: 'button', class: 'agh-card-opt', role: 'radio', 'aria-pressed': String(v) === o.value ? 'true' : 'false', 'aria-checked': String(v) === o.value ? 'true' : 'false', onclick: function () { setValue(f.id, o.value, true); } }, o.thumb ? h('img', { src: o.thumb, alt: '', loading: 'lazy', decoding: 'async' }) : cardVisual(f.id, o.value), h('span', { class: 'agh-card-label', text: o.label })));
 					ctl.lastChild.classList.add('agh-card-photo'); ctl.classList.add('has-photos');
 				});
 				break;
@@ -788,26 +838,6 @@
 		}
 	}
 
-	function maybeStylePack(f, value) {
-		if (f.id !== 'arch_style') { return; }
-		var pack = (S.boot.schema.presets || []).filter(function (p) { return p.slug === 'style-' + value; })[0];
-		if (!pack || !Object.keys(pack.values).length) { return; }
-		var keys = Object.keys(pack.values).filter(function (k) { return k !== 'arch_style'; });
-		if (!keys.length) { return; }
-		if (S.wiz) {
-			// Wizard: apply the style's suggested materials and colours right away, but never over a value
-			// the visitor set; they are not marked as the visitor's own, so another style can replace them.
-			var n = 0;
-			keys.forEach(function (k) { if (!S.explicit[k] && (k in S.config || S.fields[k])) { S.config[k] = pack.values[k]; n++; } });
-			if (n) {
-				S.dirty = true; persist(); validate(); renderPreviewOnly(); renderSummary(); updateWizardSide();
-				toast(tf('wiz_style_applied', pack.name), 'ok', 3500);
-			}
-			return;
-		}
-		toast(h('span', null, tf('style_pack_offer', pack.name) + ' ', h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-accent', onclick: function (e) { applyValues(pack.values, true); e.currentTarget.closest('.agh-toast').remove(); } }, t('apply'))), 'ok', 9000);
-	}
-
 	// Visual for an option card: a mini render of the visitor's own house with that option, a material
 	// swatch, an interior palette, a landscape vignette or a kitchen plan – every option looks different.
 	var visSeq = 0;
@@ -824,7 +854,7 @@
 				if (field === 'roof_type' && value === 'flat') { cfg.roof_surface = cfg.roof_surface === 'green' ? 'green' : 'gravel'; }
 				svg = K.render(cfg, { mini: true, id: id, fit: 'xMidYMid meet' });
 			} else if (field === 'facade_main') { svg = K.swatch('facade', value, cfg); }
-			else if (field === 'floor_main') { svg = K.swatch('floor', value, cfg); }
+			else if (/^floor_(main|bedrooms|kitchen|entry|wet)$/.test(field)) { svg = K.swatch('floor', value === 'same' ? cfg.floor_main : value, cfg); }
 			else if (field === 'interior_style') { svg = K.palette(value); }
 			else if (field === 'garden_style') { svg = K.vignette('garden', value, { levels: cfg.levels, roof_type: cfg.roof_type, facade_main: cfg.facade_main, facade_color: cfg.facade_color, roof_color: cfg.roof_color, net_area: cfg.net_area, time_of_day: 'midday', weather: 'clear', season: 'summer' }); }
 			else if (field === 'time_of_day') { svg = K.vignette('time', value, cfg); }
@@ -832,25 +862,35 @@
 		if (!svg && field === 'kitchen_layout') { svg = kitchenPlan(value); }
 		if (!svg) { svg = monogram(field, value); }
 		var el = h('span', { class: 'agh-card-vis', 'aria-hidden': 'true', 'data-field': field, 'data-value': value });
-		el.innerHTML = svg;
+		el._svg = svg;
+		if (A3wait && THUMB_FIELDS[field] && lsGet('agh_3d_thumbs', true) !== false) { el.classList.add('is-wait'); }
+		else { el.innerHTML = svg; }
 		cardThumb(el, field, value);
 		return el;
 	}
 	// Rendered 3D picture for a card (when the 3D preview is available); cached per configuration.
 	var THUMBS = {};
-	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', garden_style: 'full', time_of_day: 'full' };
+	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', floor_bedrooms: 'floor', floor_kitchen: 'floor', floor_entry: 'floor', floor_wet: 'floor', garden_style: 'full', time_of_day: 'full' };
 	function cardThumb(el, field, value) {
 		var mode = THUMB_FIELDS[field];
 		if (!A3 || !mode || lsGet('agh_3d_thumbs', true) === false) { return; }
 		var cfg = clone(S.config);
 		cfg[field] = value;
+		// per-room floors show their material in the same room scene ("same" = the main floor)
+		if (mode === 'floor' && field !== 'floor_main') { cfg.floor_main = value === 'same' ? S.config.floor_main : value; }
 		if (mode === 'mini') { cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; if (field === 'footprint') { cfg.camera = 'elevated'; cfg.property_type = 'detached'; } if (field === 'window_style') { cfg.camera = 'frontal'; } }
 		if (mode === 'facade') { cfg.time_of_day = 'golden'; cfg.weather = 'clear'; cfg.camera = 'three_quarter'; }
 		if (mode === 'floor') { cfg.time_of_day = 'midday'; cfg.camera = 'elevated'; }
 		if (field === 'garden_style') { cfg.garden_features = ['lawn', 'trees', 'paths', 'hedge', 'flowerbeds']; cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; cfg.camera = 'elevated'; }
 		var key = mode + '|' + JSON.stringify(cfg);
-		var put = function (url) { if (url) { el.innerHTML = ''; el.appendChild(h('img', { src: url, alt: '', decoding: 'async' })); } };
+		var put = function (url) {
+			el.classList.remove('is-wait');
+			if (url) { el.innerHTML = ''; el.appendChild(h('img', { src: url, alt: '', decoding: 'async' })); }
+			else if (!el.firstChild) { el.innerHTML = el._svg || ''; }
+		};
 		if (THUMBS[key]) { put(THUMBS[key]); return; }
+		// Placeholder until the rendered picture is ready (no 2D flash before it).
+		if (!el.querySelector('img')) { el.innerHTML = ''; el.classList.add('is-wait'); }
 		A3.thumb(cfg, 360, 240, mode === 'full' ? 'full' : mode).then(function (url) { if (url) { THUMBS[key] = url; } put(url); });
 	}
 	function refreshCardThumbs() {
@@ -1002,6 +1042,8 @@
 	function optLabel(f, v) { var o = (f.options || []).filter(function (x) { return x.value === String(v); })[0]; return o ? o.label : String(v) + (f.unit ? ' ' + f.unit : ''); }
 	function applyValues(vals, markExplicit) {
 		Object.keys(vals).forEach(function (k) { if (k in S.config || S.fields[k]) { S.config[k] = vals[k]; if (markExplicit) { S.explicit[k] = true; } } });
+		// A preset carries its own look; it is not a style suggestion to take back on the next style change.
+		if (vals.arch_style) { S.styleApplied = null; }
 		S.dirty = true; persist(); validate(); renderFields(); renderPreviewOnly(); renderSummary();
 		toast(t('applied'), 'ok');
 	}
@@ -1103,10 +1145,11 @@
 	}
 
 	function renderPreviewOnly() {
-		if (!els.previewBox || !document.body.contains(els.previewBox)) { return; }
+		// In the wizard the designer's (hidden) preview must not take the single live 3D canvas away.
+		if (S.wiz || !els.previewBox || !document.body.contains(els.previewBox)) { return; }
 		var c = S.config;
-		fillPreview(els.previewBox, c);
 		fillKpis(els.kpis, c);
+		fillPreview(els.previewBox, c);
 	}
 	// Photo of the chosen architectural style (bundled sample image), if there is one.
 	function stylePhoto(c) {
@@ -1130,6 +1173,9 @@
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
 			try { A3.attach(box, c); box.classList.add('has-3d'); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); box.innerHTML = svg; }
 			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
+		} else if (A3wait) {
+			clear(box);
+			box.appendChild(waitBox());
 		} else {
 			clear(box);
 			box.innerHTML = svg;
@@ -1182,6 +1228,12 @@
 	function renderConcepts(body) {
 		var grid = h('div', { class: 'agh-concepts' });
 		var list = concepts();
+		if (isRunning(S.project)) {
+			// While the concepts are being made, the stop button sits right above them (not only in the bar).
+			body.appendChild(h('div', { class: 'agh-run-bar', role: 'status' },
+				h('span', { class: 'agh-spinner' }), h('span', { class: 'agh-run-text', text: t('status_generating') }),
+				h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: cancelGeneration }, icon('stop', 'agh-ico-s'), t('cancel_generation'))));
+		}
 		if (!list.length) {
 			if (isStopped(S.project)) {
 				// Cancelled (possibly before any concept) or failed: explain and offer a new generation.
@@ -1199,7 +1251,7 @@
 		list.forEach(function (c) {
 			var img = h('div', { class: 'agh-concept-img' + (c.hero && c.hero.preview ? ' is-ready' : '') });
 			if (c.hero && c.hero.preview) { img.appendChild(h('img', { src: c.hero.preview, alt: c.title, loading: 'lazy' })); }
-			else if (c.hero && c.hero.status === 'failed' || c.status === 'failed') { img.appendChild(h('div', { class: 'agh-state' }, icon('alert'), t('render_failed'))); }
+			else if (c.hero && c.hero.status === 'failed' || c.status === 'failed') { img.appendChild(h('div', { class: 'agh-state' }, icon('alert'), t('render_failed'), c.hero && c.hero.error ? h('small', { class: 'agh-state-err', title: c.hero.error, text: c.hero.error }) : null)); }
 			else if (!isRunning(S.project) && (isStopped(S.project) || !c.hero || c.hero.status === 'cancelled')) { img.appendChild(h('div', { class: 'agh-state' }, icon('stop'), t('render_cancelled'))); }
 			else { img.appendChild(h('div', { class: 'agh-state' }, h('span', { class: 'agh-spinner' }), t('rendering'))); }
 			img.appendChild(h('span', { class: 'agh-concept-letter', text: c.variant }));
@@ -1431,9 +1483,9 @@
 	// S.config as the full designer (same validation, same generation), so the visitor can
 	// switch to the full designer at any point without losing anything.
 	var WIZ = [
+		{ key: 'style', fields: ['arch_style'] },
 		{ key: 'home', fields: ['property_type', 'levels', 'occupants'] },
 		{ key: 'size', fields: ['net_area', 'bedrooms', 'bathrooms'] },
-		{ key: 'style', fields: ['arch_style'] },
 		{ key: 'roof', fields: ['roof_type', 'roof_pitch', 'roof_product'] },
 		{ key: 'look', fields: ['facade_main', 'facade_color', 'window_style'] },
 		{ key: 'outdoor', fields: ['garage', 'terrace_area', 'garden_style'] },
@@ -1544,6 +1596,10 @@
 		}
 		var scrollTop = els.wizScroll ? els.wizScroll.scrollTop : 0;
 		var i = S.wiz.step, st = WIZ[i], last = i === WIZ.length - 1;
+		// The side column (live 3D preview) survives re-renders: rebuilding it on every click moved the
+		// canvas into a fresh, not yet sized box and the house flickered (stretched, then restored).
+		var keepSide = els.wizSide && els.wizSide.parentNode ? els.wizSide : null;
+		if (keepSide) { keepSide.parentNode.removeChild(keepSide); }
 		clear(w);
 		w.classList.toggle('is-last', last);
 
@@ -1577,7 +1633,7 @@
 		}
 		els.wizBody = content;
 		els.wizScroll = h('div', { class: 'agh-wiz-scroll' }, content);
-		els.wizSide = h('aside', { class: 'agh-wiz-side', 'aria-label': t('live_preview') });
+		els.wizSide = keepSide || h('aside', { class: 'agh-wiz-side', 'aria-label': t('live_preview') });
 		w.appendChild(h('div', { class: 'agh-wiz-main' }, els.wizScroll, els.wizSide));
 
 		var nav = h('div', { class: 'agh-wiz-nav' });
@@ -1618,8 +1674,10 @@
 			side.appendChild(els.wizPv);
 			side.appendChild(els.wizKpis);
 		}
-		fillPreview(els.wizPv, c);
+		// Key figures first: the preview box takes the remaining height, so it must be measured last.
 		fillKpis(els.wizKpis, c);
+		// Last step: the large inline preview below takes the live canvas, the side column is hidden.
+		if (!els.wizDone) { fillPreview(els.wizPv, c); }
 		if (els.wizDone) { renderWizardDone(); }
 		if (els.wizGen) {
 			var running = S.project && ['queued', 'planning', 'rendering'].indexOf(S.project.status) !== -1;
@@ -1630,15 +1688,19 @@
 	}
 	function renderWizardDone() {
 		// Phones: the side preview is hidden, so the last step shows the preview inline (element reused).
-		var dpv = els.wizDone.querySelector('.agh-wiz-done-pv') || h('div', { class: 'agh-preview-box agh-wiz-done-pv', 'aria-hidden': 'true' });
+		var dpv = els.wizDone.querySelector('.agh-wiz-done-pv') || h('div', { class: 'agh-preview-box agh-wiz-done-pv' });
 		if (dpv.parentNode) { dpv.parentNode.removeChild(dpv); }
 		var d = clear(els.wizDone);
+		// Large live preview beside (desktop) or above (phone) the summary.
 		d.appendChild(fillPreview(dpv, S.config));
+		var info = h('div', { class: 'agh-wiz-done-info' });
+		d.appendChild(info);
 		if (!S.boot.provider.ready) {
-			d.appendChild(h('div', { class: 'agh-msg is-warning' }, icon('alert'), h('span', { text: t('not_configured_visitor') })));
+			info.appendChild(h('div', { class: 'agh-msg is-warning' }, icon('alert'), h('span', { text: t('not_configured_visitor') })));
 		}
-		d.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_house') }), houseList(S.config)));
-		d.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_checks') }), checkList()));
+		info.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_house') }), houseList(S.config)));
+		info.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_checks') }), checkList()));
+		d = info;
 		var inWizard = {};
 		WIZ.forEach(function (st) { st.fields.forEach(function (id) { inWizard[id] = true; }); });
 		var more = S.boot.schema.fields.filter(function (f) { return !inWizard[f.id] && visible(f); }).length;
@@ -1654,9 +1716,11 @@
 		var lim = S.boot.limits || {};
 		var go = function (force) {
 			S.busy = true;
+			genBusy(true);
 			event('design_start');
 			api('POST', 'generate', { config: payloadConfig(), force: !!force }, 60000).then(function (r) {
 				S.busy = false;
+				genBusy(false);
 				if (r.limits) { S.boot.limits = r.limits; }
 				if (r.reused) { toast(r.message, 'ok', 6000); }
 				// Leave the wizard first: its exit re-renders the stage, which would reset the view.
@@ -1670,6 +1734,7 @@
 				loadProject(r.project);
 			}).catch(function (err) {
 				S.busy = false;
+				genBusy(false);
 				if (err.status === 503 && err.data && err.data.code === 'agh_not_configured') {
 					// No image provider: friendly, translated notice instead of a technical error.
 					S.boot.provider.ready = false;
@@ -1684,6 +1749,15 @@
 		};
 		var msg = lim.limit ? tf('confirm_generate', lim.remaining, lim.limit) : t('confirm_generate_nolimit');
 		confirmDialog(t('generate'), msg, t('generate_go'), function () { go(false); });
+	}
+
+	// The generate buttons show that the request is on its way (wizard and action bar).
+	function genBusy(on) {
+		Array.prototype.forEach.call(root ? root.querySelectorAll('.agh-wiz-next, .agh-actionbar .agh-btn-primary') : [], function (b) {
+			if (!b.querySelector('.agh-ico')) { return; }
+			b.classList.toggle('is-busy', on);
+			if (on) { b.setAttribute('aria-busy', 'true'); } else { b.removeAttribute('aria-busy'); }
+		});
 	}
 
 	function loadProject(id, quiet) {
@@ -1894,7 +1968,7 @@
 		function drawMine() {
 			Array.prototype.slice.call(mineBox.querySelectorAll('.agh-list-item')).forEach(function (x) { x.remove(); });
 			mine.forEach(function (p, i) {
-				mineBox.appendChild(h('div', { class: 'agh-list-item' }, icon('star'), h('div', { class: 'agh-grow' }, h('b', { text: p.name })), h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { S.config = Object.assign(clone(S.boot.defaults), p.values); applyValues({}, false); closeDialogs(); } }, t('apply')), h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('delete'), onclick: function () { mine.splice(i, 1); lsSet(LS_PRESETS, mine); syncPresets(mine); drawMine(); } }, icon('trash', 'agh-ico-s'))));
+				mineBox.appendChild(h('div', { class: 'agh-list-item' }, icon('star'), h('div', { class: 'agh-grow' }, h('b', { text: p.name })), h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { S.config = Object.assign(clone(S.boot.defaults), p.values); S.styleApplied = null; applyValues({}, false); closeDialogs(); } }, t('apply')), h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('delete'), onclick: function () { mine.splice(i, 1); lsSet(LS_PRESETS, mine); syncPresets(mine); drawMine(); } }, icon('trash', 'agh-ico-s'))));
 			});
 		}
 		drawMine();
@@ -1945,7 +2019,7 @@
 			clear(actions);
 			actions.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () {
 				closeDialogs();
-				api('GET', 'projects/' + p.id).then(function (pr) { S.config = Object.assign(clone(S.boot.defaults), pr.config); S.explicit = {}; (pr.config._explicit || []).forEach(function (k) { S.explicit[k] = true; }); delete S.config._explicit; S.dirty = false; return loadProject(p.id); }).then(function () { S.view = 'concepts'; renderParams(); renderStage(); validate(); }).catch(errToast);
+				api('GET', 'projects/' + p.id).then(function (pr) { S.config = Object.assign(clone(S.boot.defaults), pr.config); S.explicit = {}; S.styleApplied = null; (pr.config._explicit || []).forEach(function (k) { S.explicit[k] = true; }); delete S.config._explicit; S.dirty = false; return loadProject(p.id); }).then(function () { S.view = 'concepts'; renderParams(); renderStage(); validate(); }).catch(errToast);
 			} }, t('open')));
 			if (p.has_quote) {
 				// Server refuses it anyway (409); the wrapper carries the tooltip because disabled buttons get no hover events in every browser.
@@ -2054,5 +2128,5 @@
 	}
 	function errToast(err) { toast((err && err.message) || t('err_network'), 'error', 7000); }
 
-	window.AGH_Designer = { open: open, close: close, version: '1.0.1', config: function () { return clone(S.config); } };
+	window.AGH_Designer = { open: open, close: close, version: '1.1.0', config: function () { return clone(S.config); } };
 })();

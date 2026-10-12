@@ -27,16 +27,18 @@ const { chromium } = (() => { try { return require('playwright'); } catch (e) { 
   await p.click('.agh-dialog-foot .agh-btn-primary');
   // The stop button appears while the project is queued/planning/rendering.
   const stop = await p.waitForSelector('.agh-actionbar .agh-btn-ghost', { timeout: 15000 }).catch(() => null);
+  // the stop button also sits above the concept cards while they are being made
+  const runBar = await p.waitForSelector('.agh-run-bar button', { timeout: 15000 }).then(() => true).catch(() => false);
   if (stop) { await stop.click(); }
   await p.waitForTimeout(4000);
   const st = await p.evaluate(() => {
     const gen = document.querySelector('.agh-actionbar .agh-btn-primary');
     return { genEnabled: !!gen && !gen.disabled, spinner: !!document.querySelector('.agh-actionbar .agh-spinner'), status: (document.querySelector('.agh-actionbar-status') || {}).textContent };
   });
-  const out = { stopShown: !!stop, cancelStatus, ...st, console: errs };
+  const out = { stopShown: !!stop, runBar, cancelStatus, ...st, console: errs };
   console.log(JSON.stringify(out));
   await b.close();
   // A failed request logs one browser network error – that one is expected here.
   const realErrs = errs.filter(e => !/Failed to load resource|ERR_FAILED/.test(e));
-  process.exit(out.stopShown && out.genEnabled && !out.spinner && !realErrs.length ? 0 : 1);
+  process.exit(out.stopShown && out.runBar && out.genEnabled && !out.spinner && !realErrs.length ? 0 : 1);
 })();

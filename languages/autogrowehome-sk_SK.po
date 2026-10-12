@@ -6768,3 +6768,79 @@ msgstr "Otáčanie: ťahajte myšou alebo prstom"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Obnoviť pohľad"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Vodorovné drevené obloženie"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Obklad z dosiek a líšt"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Opálené drevo (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Obklad z vápenca"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Natretá tehla"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Vláknocementové dosky"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Obývačka, jedáleň a otvorené priestory; ostatné miestnosti možno nastaviť samostatne nižšie."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Francúzska rybia kosť"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Dlažba s imitáciou dreva"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Mramor"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertín"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Podlaha v spálňach"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Rovnaká ako hlavná podlaha"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Koberec"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Korok"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Podlaha v kuchyni"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Vzorované cementové dlaždice"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Podlaha v predsieni a chodbe"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Kúpeľňa, WC, práčovňa, wellness."

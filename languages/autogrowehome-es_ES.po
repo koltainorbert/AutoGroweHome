@@ -6766,3 +6766,79 @@ msgstr "Girar: arrastra con el ratón o el dedo"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Restablecer vista"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Revestimiento de madera horizontal"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Revestimiento de tablas y listones"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Madera carbonizada (shou sugi ban)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Revestimiento de piedra caliza"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Ladrillo pintado"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Paneles de fibrocemento"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Salón, comedor y espacios abiertos; las demás estancias pueden definirse por separado abajo."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Espiga francesa"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Porcelánico imitación madera"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Mármol"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Travertino"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Suelo de los dormitorios"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Igual que el suelo principal"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Moqueta"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Corcho"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Suelo de la cocina"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Baldosas hidráulicas"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Suelo del recibidor y pasillo"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Baño, aseo, lavadero, wellness."

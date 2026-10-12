@@ -6768,3 +6768,79 @@ msgstr "Обертання: тягніть мишею або пальцем"
 #: includes/Frontend/Strings.php:235
 msgid "Nézet visszaállítása"
 msgstr "Скинути вигляд"
+
+#: includes/Params/Definitions.php
+msgid "Vízszintes fa burkolat"
+msgstr "Горизонтальна дерев’яна обшивка"
+
+#: includes/Params/Definitions.php
+msgid "Lécezett deszkaburkolat"
+msgstr "Обшивка «дошка й рейка»"
+
+#: includes/Params/Definitions.php
+msgid "Égetett fa (shou sugi ban)"
+msgstr "Обпалене дерево (шу суґі бан)"
+
+#: includes/Params/Definitions.php
+msgid "Mészkő lapburkolat"
+msgstr "Облицювання вапняком"
+
+#: includes/Params/Definitions.php
+msgid "Festett tégla"
+msgstr "Пофарбована цегла"
+
+#: includes/Params/Definitions.php
+msgid "Szálcement lap"
+msgstr "Фіброцементні панелі"
+
+#: includes/Params/Definitions.php
+msgid "Nappali, étkező és a nyitott terek; a többi helyiség alább külön is megadható."
+msgstr "Вітальня, їдальня та відкриті простори; інші приміщення можна задати окремо нижче."
+
+#: includes/Params/Definitions.php
+msgid "Francia halszálka"
+msgstr "Французька ялинка"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású járólap"
+msgstr "Плитка під дерево"
+
+#: includes/Params/Definitions.php
+msgid "Márvány"
+msgstr "Мармур"
+
+#: includes/Params/Definitions.php
+msgid "Travertin"
+msgstr "Травертин"
+
+#: includes/Params/Definitions.php
+msgid "Hálószobák padlója"
+msgstr "Підлога в спальнях"
+
+#: includes/Params/Definitions.php
+msgid "Mint a fő padló"
+msgstr "Як основна підлога"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyegpadló"
+msgstr "Ковролін"
+
+#: includes/Params/Definitions.php
+msgid "Parafa"
+msgstr "Корок"
+
+#: includes/Params/Definitions.php
+msgid "Konyha padlója"
+msgstr "Підлога на кухні"
+
+#: includes/Params/Definitions.php
+msgid "Mintás cementlap"
+msgstr "Цементна плитка з візерунком"
+
+#: includes/Params/Definitions.php
+msgid "Előtér és közlekedő padlója"
+msgstr "Підлога в передпокої та коридорі"
+
+#: includes/Params/Definitions.php
+msgid "Fürdőszoba, WC, mosókonyha, wellness."
+msgstr "Ванна, туалет, пральня, велнес."

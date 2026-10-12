@@ -92,6 +92,12 @@
 			case 'concrete': return '#B6B3AD';
 			case 'panel': return shade(col(c.facade_color, '#F2EFE9'), -0.12);
 			case 'render_dark': return '#4A4D50';
+			case 'wood_horizontal': return c.arch_style === 'scandinavian' ? WOOD.scandi : (c.arch_style === 'japandi' ? WOOD.dark : '#B07E52');
+			case 'board_batten': return col(c.facade_color, '#F4F4F2');
+			case 'charred_wood': return '#2A2522';
+			case 'limestone': return '#DCD2C1';
+			case 'brick_white': return '#ECE8E1';
+			case 'fiber_cement': return shade(col(c.facade_color, '#F2EFE9'), -0.2);
 			default: return col(c.facade_color, '#F2EFE9');
 		}
 	}
@@ -118,6 +124,24 @@
 			case 'metal':
 				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.45" height="1"><rect width="0.45" height="1" fill="' + base + '"/>' +
 					'<rect x="0.42" width="0.03" height="1" fill="' + l + '"/><rect x="0.45" width="0.01" height="1" fill="' + d + '"/></pattern>';
+			case 'brick_white':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.495" height="0.37"><rect width="0.495" height="0.37" fill="' + shade(base, -0.06) + '"/>' +
+					'<rect width="0.46" height="0.15" fill="' + base + '"/><rect x="-0.2475" y="0.185" width="0.46" height="0.15" fill="' + shade(base, 0.03) + '"/><rect x="0.2475" y="0.185" width="0.46" height="0.15" fill="' + shade(base, -0.02) + '"/></pattern>';
+			case 'wood_horizontal':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="2.4" height="0.16"><rect width="2.4" height="0.16" fill="' + base + '"/>' +
+					'<rect width="2.4" height="0.018" fill="' + shade(base, -0.38) + '"/><rect y="0.018" width="2.4" height="0.03" fill="' + shade(base, 0.08) + '"/><rect x="1.3" width="0.012" height="0.16" fill="' + shade(base, -0.25) + '"/></pattern>';
+			case 'board_batten':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.4" height="2"><rect width="0.4" height="2" fill="' + base + '"/>' +
+					'<rect x="0.35" width="0.05" height="2" fill="' + shade(base, -0.06) + '"/><rect x="0.345" width="0.006" height="2" fill="' + shade(base, -0.22) + '"/></pattern>';
+			case 'charred_wood':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.15" height="1.2"><rect width="0.15" height="1.2" fill="' + base + '"/>' +
+					'<rect x="0.14" width="0.01" height="1.2" fill="#0F0D0C"/><path d="M0.02 0.1q0.03 0.3 0 0.6M0.08 0.4q0.03 0.3 0 0.7" stroke="' + shade(base, 0.18) + '" stroke-width="0.008" fill="none"/></pattern>';
+			case 'limestone':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="1.2" height="0.8"><rect width="1.2" height="0.8" fill="' + shade(base, -0.12) + '"/>' +
+					'<rect x="0.01" y="0.01" width="1.18" height="0.38" fill="' + base + '"/><rect x="-0.59" y="0.41" width="1.18" height="0.38" fill="' + shade(base, 0.04) + '"/><rect x="0.61" y="0.41" width="1.18" height="0.38" fill="' + shade(base, -0.04) + '"/></pattern>';
+			case 'fiber_cement':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="1.25" height="1.0"><rect width="1.25" height="1.0" fill="' + base + '"/>' +
+					'<path d="M0 0h1.25M0 0v1" stroke="' + d + '" stroke-width="0.014"/><circle cx="0.08" cy="0.08" r="0.01" fill="' + d + '"/><circle cx="1.17" cy="0.08" r="0.01" fill="' + d + '"/><circle cx="0.08" cy="0.92" r="0.01" fill="' + d + '"/><circle cx="1.17" cy="0.92" r="0.01" fill="' + d + '"/></pattern>';
 			case 'concrete':
 				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="1.2" height="0.6"><rect width="1.2" height="0.6" fill="' + base + '"/>' +
 					'<path d="M0 0h1.2M0 0v0.6" stroke="' + d + '" stroke-width="0.012"/><circle cx="0.3" cy="0.15" r="0.012" fill="' + d + '"/><circle cx="0.9" cy="0.15" r="0.012" fill="' + d + '"/>' +
@@ -271,6 +295,16 @@
 		passive: { pv: true, reveal: true }
 	};
 	function styleOf(c) { return STYLES[c.arch_style] || {}; }
+	// Fence runs between x0 and x1 minus the openings (gaps may overlap or stick out): [[a, b], …].
+	function fenceSegs(x0, x1, gaps) {
+		var g = gaps.map(function (q) { return [Math.max(x0, q[0]), Math.min(x1, q[1])]; }).filter(function (q) { return q[1] > q[0]; }).sort(function (a, b) { return a[0] - b[0]; });
+		var out = [], cur = x0;
+		g.forEach(function (q) { if (q[0] > cur + 0.05) { out.push([cur, q[0]]); } cur = Math.max(cur, q[1]); });
+		if (x1 > cur + 0.05) { out.push([cur, x1]); }
+		return out;
+	}
+	// Front edge of paths and driveway: the fence line when there is a fence.
+	function siteEdge(c, front) { return c.fence && c.fence !== 'none' ? front - 0.4 : front; }
 	function doorPos(c, len) {
 		var w = c.entrance_door === 'pivot' ? 1.4 : 1.05;
 		return { x: styleOf(c).sym ? len / 2 - w / 2 : clamp(len * 0.26, 0.8, len - w - 0.8), w: w, h: c.entrance_door === 'pivot' ? 2.6 : 2.3 };
@@ -998,7 +1032,8 @@
 			if (!mini) {
 				var dc2 = { pavers: '#B4ADA2', gravel: '#B9B3A8', grass: '#90A85C', asphalt: '#4A4C4F' }[c.driveway || 'pavers'];
 				var dfill = c.driveway === 'gravel' ? sc.mat('gravel', dc2) : (c.driveway === 'grass' ? sc.mat('pavers', '#8FA85E') : (c.driveway === 'asphalt' ? dc2 : sc.mat('pavers', dc2)));
-				var dvw = sc.plane([gx0, front, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [gW, 0], [gW, front - gy1], [0, front - gy1]], dfill, '', { noShade: true });
+				var dEdge = siteEdge(c, front);
+				var dvw = sc.plane([gx0, dEdge, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [gW, 0], [gW, dEdge - gy1], [0, dEdge - gy1]], dfill, '', { noShade: true });
 				if (dvw) { groundSvg += dvw.svg; }
 			}
 		}
@@ -1007,7 +1042,8 @@
 		if (garage === 'none' && !mini) {
 			var dc3 = { pavers: '#B4ADA2', gravel: '#B9B3A8', grass: '#90A85C', asphalt: '#4A4C4F' }[c.driveway || 'pavers'];
 			var pfill = c.driveway === 'gravel' ? sc.mat('gravel', dc3) : (c.driveway === 'grass' ? sc.mat('pavers', '#8FA85E') : (c.driveway === 'asphalt' ? dc3 : sc.mat('pavers', dc3)));
-			var pad = sc.plane([maxX + 0.8, front, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [3, 0], [3, front - D * 0.45], [0, front - D * 0.45]], pfill, '', { noShade: true });
+			var pEdge = siteEdge(c, front);
+			var pad = sc.plane([maxX + 0.8, pEdge, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [3, 0], [3, pEdge - D * 0.45], [0, pEdge - D * 0.45]], pfill, '', { noShade: true });
 			if (pad) { groundSvg += pad.svg; }
 		}
 		/* building services on the ground: heat pump, EV charger, rainwater tank */
@@ -1030,7 +1066,8 @@
 			var dpm = doorPos(c, mainV.x1 - mainV.x0), doorMid = mainV.x0 + dpm.x + dpm.w / 2;
 			if (has(gf, 'paths') || !c.garden_features) {
 				var pathFill = sc.mat('slabs', season === 'winter' ? '#D5DADD' : '#C9C2B6');
-				var pth = sc.plane([doorMid - 0.6, front, 0.012], [1, 0, 0], [0, -1, 0], [[0, 0], [1.2, 0], [1.2, front - mainV.y1], [0, front - mainV.y1]], pathFill, '', { noShade: true });
+				var wEdge = siteEdge(c, front);
+				var pth = sc.plane([doorMid - 0.6, wEdge, 0.012], [1, 0, 0], [0, -1, 0], [[0, 0], [1.2, 0], [1.2, wEdge - mainV.y1], [0, wEdge - mainV.y1]], pathFill, '', { noShade: true });
 				if (pth) { groundSvg += pth.svg; }
 			}
 			if (has(gf, 'pool')) {
@@ -1101,33 +1138,37 @@
 					sc.push(sc.depth([q[0], q[1], 0]), '<circle cx="' + f(lp[0]) + '" cy="' + f(lp[1] - 0.5) + '" r="0.9" fill="#FFD27A" opacity="0.28"/><rect x="' + f(lp[0] - 0.06) + '" y="' + f(lp[1] - 0.6) + '" width="0.12" height="0.6" fill="#FFE3A3"/>');
 				});
 			}
-			// fence along the front edge
+			// fence along the front edge: openings for the path (optional gate) and the driveway
 			var fence = c.fence || 'none';
 			if (fence !== 'none') {
-				var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = left + 0.6, fx1 = right - 0.6;
-				var gateX = doorMid - 0.6;
+				var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = left + 0.6, fx1 = right - 0.6, fy2 = front - 0.4;
+				var gateX = doorMid - 0.6, gateOn = c.gate !== false, pathOn = has(gf, 'paths') || !c.garden_features;
+				var dr0 = garage === 'none' ? maxX + 0.8 : gx0, dr1 = garage === 'none' ? maxX + 3.8 : gx0 + gW;
 				var fcol = { slats: c.arch_style === 'scandinavian' ? '#9C978E' : '#3B3E42', mesh: '#5B6B5A', masonry: shade(col(c.facade_color, '#F2EFE9'), -0.06), gabion: '#8E8A84' }[fence];
-				var inner2 = '';
-				var lenF = fx1 - fx0;
-				var gateOn = c.gate !== false, g0 = gateX - fx0, g1 = g0 + 1.2;
-				if (fence === 'slats') { for (var sx = 0; sx < lenF; sx += 0.16) { if (gateOn && sx > g0 - 0.1 && sx < g1) { continue; } inner2 += '<rect x="' + f(sx) + '" y="0" width="0.11" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
-				if (fence === 'mesh') { inner2 += '<path d="M0 ' + f(fz) + 'H' + f(lenF) + '" stroke="' + fcol + '" stroke-width="0.05"/>'; for (var mx = 0; mx < lenF; mx += 2.5) { inner2 += '<rect x="' + f(mx) + '" y="0" width="0.06" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
 				var ffill = fence === 'masonry' ? fcol : (fence === 'gabion' ? sc.mat('stone', '#9C978E') : (fence === 'mesh' ? 'rgba(91,107,90,0.25)' : 'none'));
-				var fpoly = [[0, 0], [lenF, 0], [lenF, fz], [0, fz]];
+				var gaps2 = [[dr0 - 0.15, dr1 + 0.15]];
+				if (pathOn || gateOn) { gaps2.push([gateX, gateX + 1.2]); }
+				fenceSegs(fx0, fx1, gaps2).forEach(function (sg) {
+					var lenF = sg[1] - sg[0], inner2 = '';
+					if (fence === 'slats') { for (var sx = 0; sx < lenF - 0.1; sx += 0.16) { inner2 += '<rect x="' + f(sx) + '" y="0" width="0.11" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
+					if (fence === 'mesh') { inner2 += '<path d="M0 ' + f(fz) + 'H' + f(lenF) + '" stroke="' + fcol + '" stroke-width="0.05"/>'; for (var mx = 0; mx < lenF; mx += 2.5) { inner2 += '<rect x="' + f(mx) + '" y="0" width="0.06" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
+					var fe = sc.plane([sg[0], fy2, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [lenF, 0], [lenF, fz], [0, fz]], ffill, inner2, { noShade: true });
+					if (fe) { sc.push(fe.depth + 50, fe.svg); }
+				});
+				var gc = '#2E3135', posts = [];
 				if (gateOn) {
 					// gate leaf: a darker frame with vertical bars, slightly lower than the fence
-					var gc = '#2E3135';
-					inner2 += '<rect x="' + f(g0) + '" y="0.05" width="1.2" height="' + f(fz - 0.12) + '" fill="none" stroke="' + gc + '" stroke-width="0.06"/>';
-					for (var gb = g0 + 0.15; gb < g1 - 0.05; gb += 0.15) { inner2 += '<rect x="' + f(gb) + '" y="0.05" width="0.03" height="' + f(fz - 0.12) + '" fill="' + gc + '"/>'; }
-					inner2 += '<rect x="' + f(g0 - 0.12) + '" y="0" width="0.12" height="' + f(fz + 0.1) + '" fill="' + gc + '"/><rect x="' + f(g1) + '" y="0" width="0.12" height="' + f(fz + 0.1) + '" fill="' + gc + '"/>';
+					var gi = '<rect x="0" y="0.05" width="1.2" height="' + f(fz - 0.12) + '" fill="none" stroke="' + gc + '" stroke-width="0.06"/>';
+					for (var gb = 0.15; gb < 1.15; gb += 0.15) { gi += '<rect x="' + f(gb) + '" y="0.05" width="0.03" height="' + f(fz - 0.12) + '" fill="' + gc + '"/>'; }
+					var gl2 = sc.plane([gateX, fy2, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [1.2, 0], [1.2, fz], [0, fz]], 'none', gi, { noShade: true });
+					if (gl2) { sc.push(gl2.depth + 50, gl2.svg); }
+					posts.push(gateX - 0.12, gateX + 1.2);
 				}
-				if ((fence === 'masonry' || fence === 'gabion') && gateOn) {
-					fpoly = [[0, 0], [gateX - fx0, 0], [gateX - fx0, fz], [0, fz]];
-					var fr2 = sc.plane([gateX + 1.2, front - 0.4, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [fx1 - gateX - 1.2, 0], [fx1 - gateX - 1.2, fz], [0, fz]], ffill, '', { noShade: true });
-					if (fr2) { sc.push(fr2.depth + 50, fr2.svg); }
-				}
-				var fe = sc.plane([fx0, front - 0.4, 0], [1, 0, 0], [0, 0, 1], fpoly, ffill, inner2, { noShade: true });
-				if (fe) { sc.push(fe.depth + 50, fe.svg); }
+				posts.push(Math.max(fx0, dr0 - 0.15) - 0.12, Math.min(fx1, dr1 + 0.15));
+				posts.forEach(function (px) {
+					var pp = sc.plane([px, fy2, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [0.12, 0], [0.12, fz + 0.1], [0, fz + 0.1]], gc, '', { noShade: true });
+					if (pp) { sc.push(pp.depth + 51, pp.svg); }
+				});
 			}
 			// neighbours
 			if (c.neighbors) {
@@ -1206,7 +1247,10 @@
 	var FLOORS = {
 		parquet: { mat: 'planks', c: '#B7865A' }, herringbone: { mat: 'herring', c: '#B07D52' }, laminate: { mat: 'planks', c: '#C9A47A' },
 		vinyl: { mat: 'planks', c: '#A79B8C' }, tiles_large: { mat: 'bigtile', c: '#D7D3CC' }, stone: { mat: 'slabs', c: '#CFC3AE' },
-		microcement: { mat: 'smooth', c: '#BDB7AE' }, concrete: { mat: 'smooth', c: '#9E9B96' }
+		microcement: { mat: 'smooth', c: '#BDB7AE' }, concrete: { mat: 'smooth', c: '#9E9B96' },
+		chevron: { mat: 'herring', c: '#BE8D5F' }, wood_tile: { mat: 'planks', c: '#A9825D' }, marble: { mat: 'bigtile', c: '#EEECE8', vein: true },
+		travertine: { mat: 'slabs', c: '#D9C9AE' }, terrazzo: { mat: 'terrazzo', c: '#E3DED6' }, tiles: { mat: 'bigtile', c: '#CFCBC4' },
+		carpet: { mat: 'smooth', c: '#BBB2A6' }, cork: { mat: 'terrazzo', c: '#B98D5E' }, cement_tiles: { mat: 'cement', c: '#E6E1D8' }
 	};
 	// Material swatch (facade / floor / roof) as a small square SVG.
 	function swatch(kind, value, cfg) {
@@ -1222,7 +1266,9 @@
 			var fl = FLOORS[value] || FLOORS.parquet, d = shade(fl.c, -0.22);
 			if (fl.mat === 'planks') { for (var r = 0; r < 10; r++) { var off = (r % 3) * 0.7; for (var px = -off; px < 3; px += 1.4) { inner += '<rect x="' + f(px) + '" y="' + f(r * 0.2) + '" width="1.4" height="0.2" fill="' + shade(fl.c, (((r * 7 + Math.round(px * 10)) % 5) - 2) * 0.025) + '" stroke="' + d + '" stroke-width="0.012"/>'; } } }
 			else if (fl.mat === 'herring') { for (var hi = 0; hi < 10; hi++) { for (var hy = -0.6; hy < 2.4; hy += 0.14) { var x0 = hi * 0.32, up = hi % 2 === 0; inner += '<polygon points="' + pts(up ? [[x0, hy], [x0 + 0.32, hy + 0.32], [x0 + 0.32, hy + 0.46], [x0, hy + 0.14]] : [[x0, hy + 0.32], [x0 + 0.32, hy], [x0 + 0.32, hy + 0.14], [x0, hy + 0.46]]) + '" fill="' + shade(fl.c, ((Math.round(hy * 50) + hi) % 3 - 1) * 0.035) + '" stroke="' + d + '" stroke-width="0.012"/>'; } } }
-			else if (fl.mat === 'bigtile') { inner = '<rect width="3" height="2" fill="' + fl.c + '"/><path d="M0 1H3M1.5 0V2" stroke="' + d + '" stroke-width="0.02"/><rect width="3" height="2" fill="#FFFFFF" opacity="0.08"/>'; }
+			else if (fl.mat === 'bigtile') { inner = '<rect width="3" height="2" fill="' + fl.c + '"/>' + (fl.vein ? '<path d="M0 0.4C0.8 0.6 1.2 0.2 2 0.7S2.6 1.6 3 1.4M0.3 2C0.9 1.4 1.6 1.7 2.2 1.1" stroke="#B9B6B0" stroke-width="0.025" fill="none" opacity="0.7"/>' : '') + '<path d="M0 1H3M1.5 0V2" stroke="' + d + '" stroke-width="0.02"/><rect width="3" height="2" fill="#FFFFFF" opacity="0.08"/>'; }
+			else if (fl.mat === 'terrazzo') { inner = '<rect width="3" height="2" fill="' + fl.c + '"/>'; for (var ti = 0; ti < 90; ti++) { var tx = (ti * 0.373) % 3, ty = (ti * 0.619) % 2; inner += '<circle cx="' + f(tx) + '" cy="' + f(ty) + '" r="' + f(0.02 + (ti % 4) * 0.012) + '" fill="' + ['#9A8F84', '#6E7378', '#C9B79C', '#FFFFFF'][ti % 4] + '"/>'; } }
+			else if (fl.mat === 'cement') { inner = '<rect width="3" height="2" fill="' + fl.c + '"/>'; for (var ci = 0; ci < 6; ci++) { for (var cj = 0; cj < 4; cj++) { var cx = ci * 0.5 + 0.25, cy = cj * 0.5 + 0.25; inner += '<path d="M' + f(cx) + ' ' + f(cy - 0.2) + 'L' + f(cx + 0.2) + ' ' + f(cy) + 'L' + f(cx) + ' ' + f(cy + 0.2) + 'L' + f(cx - 0.2) + ' ' + f(cy) + 'Z" fill="#3E5A6B"/><circle cx="' + f(cx) + '" cy="' + f(cy) + '" r="0.07" fill="' + fl.c + '"/>'; } } inner += '<path d="M0 0.5H3M0 1H3M0 1.5H3M0.5 0V2M1 0V2M1.5 0V2M2 0V2M2.5 0V2" stroke="' + d + '" stroke-width="0.012"/>'; }
 			else if (fl.mat === 'slabs') { inner = '<rect width="3" height="2" fill="' + fl.c + '"/><path d="M0 0.66H3M0 1.33H3M1 0V0.66M2.2 0.66V1.33M0.7 1.33V2M1.9 1.33V2" stroke="' + d + '" stroke-width="0.02"/>'; }
 			else { inner = '<rect width="3" height="2" fill="' + fl.c + '"/><ellipse cx="1" cy="0.8" rx="1.4" ry="0.6" fill="#FFFFFF" opacity="0.08"/><ellipse cx="2.3" cy="1.5" rx="0.8" ry="0.3" fill="#000000" opacity="0.05"/>'; }
 		}
@@ -1292,7 +1338,7 @@
 
 	var api = { render: render, swatch: swatch, palette: palette, vignette: vignette, visual: VISUAL, visibleFor: visibleFor, plan: plan,
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
-		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _facadeBase: facadeBase, _roof: roofFor };
+		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));
