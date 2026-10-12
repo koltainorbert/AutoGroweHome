@@ -298,7 +298,9 @@
 }
 .agh-chip:hover { border-color: var(--agh-primary); }
 .agh-chip[aria-pressed="true"] { background: var(--agh-primary); color: #fff; border-color: transparent; }
-.agh-range { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; background: linear-gradient(to right, var(--agh-primary) var(--agh-fill, 50%), var(--agh-line-2) var(--agh-fill, 50%)); outline: none; }
+/* 28px tall hit area (touch); the 6px track is drawn as a centred background. */
+.agh-range { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; margin: 0; border-radius: 6px; background: linear-gradient(to right, var(--agh-primary) var(--agh-fill, 50%), var(--agh-line-2) var(--agh-fill, 50%)) center / 100% 6px no-repeat; outline: none; cursor: pointer; }
+.agh-range:focus-visible { box-shadow: var(--agh-focus); }
 .agh-range::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid var(--agh-primary); box-shadow: 0 2px 8px rgba(0,0,0,.18); cursor: pointer; }
 .agh-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid var(--agh-primary); cursor: pointer; }
 .agh-switch { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
@@ -527,15 +529,17 @@
 	.agh-shell.is-tab-summary .agh-body > .agh-panel-summary { display: flex; position: absolute; right: 14px; top: 76px; bottom: 76px; width: 320px; z-index: 30; }
 	.agh-concepts { grid-template-columns: repeat(3, minmax(220px, 1fr)); overflow-x: auto; }
 }
-@media (max-width: 820px) {
+/* Phones in landscape (short + touch) get the mobile layout as well. */
+@media (max-width: 820px), (max-height: 520px) and (pointer: coarse) {
 	.agh-overlay { padding: 0; }
 	.agh-shell { width: 100%; height: 100%; border-radius: 0; grid-template-rows: auto 1fr auto auto; }
 	.agh-header { padding: 10px 12px; gap: 8px; }
 	.agh-brand-sub, .agh-hide-m { display: none !important; }
 	.agh-body { grid-template-columns: minmax(0, 1fr); padding: 10px; }
 	.agh-brand { flex: 1; }
-	.agh-brand-name { font-size: 13px; letter-spacing: .14em; overflow: hidden; text-overflow: ellipsis; }
-	.agh-header-tools .agh-iconbtn { width: 36px; height: 36px; }
+	.agh-brand-name { font-size: 12px; letter-spacing: .06em; overflow: hidden; text-overflow: ellipsis; }
+	.agh-brand { gap: 8px; }
+	.agh-brand-mark, .agh-brand img.agh-brand-icon { width: 32px; height: 32px; }
 	.agh-header-tools { gap: 6px; }
 	.agh-show-m { display: inline-grid !important; }
 	.agh-hmenu {
@@ -547,22 +551,52 @@
 	}
 	.agh-fields-list .agh-input, .agh-fields-list .agh-select { max-width: 100%; }
 	.agh-body > .agh-panel { display: none; }
-	.agh-shell.is-tab-params .agh-panel-params,
-	.agh-shell.is-tab-stage .agh-panel-stage,
-	.agh-shell.is-tab-summary .agh-panel-summary { display: flex; position: static; width: auto; }
+	.agh-shell.is-tab-params .agh-body > .agh-panel-params,
+	.agh-shell.is-tab-stage .agh-body > .agh-panel-stage,
+	.agh-shell.is-tab-summary .agh-body > .agh-panel-summary { display: flex; position: static; width: auto; }
 	.agh-mobile-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--agh-line); }
 	.agh-mobile-tabs button { border: 0; background: transparent; border-radius: 14px; padding: 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--agh-ink-3); cursor: pointer; }
 	.agh-mobile-tabs button[aria-current="true"] { background: var(--agh-primary-soft); color: var(--agh-ink); }
-	.agh-actionbar { padding: 10px 12px; }
-	.agh-actionbar .agh-btn { flex: 1 1 0; min-width: 0; padding: 0 12px; }
-	.agh-actionbar .agh-btn-lg { flex-basis: 100%; }
-	.agh-actionbar-status { flex-basis: 100%; }
-	.agh-actionbar-status span { white-space: normal; }
+	.agh-actionbar { padding: 8px 10px; gap: 8px; }
+	.agh-actionbar-status { flex-basis: 100%; font-size: 12px; }
+	.agh-actionbar .agh-btn { flex: none; width: 44px; min-height: 44px; padding: 0; }
+	.agh-actionbar .agh-btn .agh-btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+	.agh-actionbar .agh-btn-lg { flex: 1 1 auto; width: auto; min-width: 0; padding: 0 16px; font-size: 14.5px; }
+	.agh-mobile-tabs { padding-top: 6px; }
 	.agh-concepts { grid-template-columns: 1fr; overflow: auto; }
 	.agh-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	.agh-form-grid { grid-template-columns: 1fr; }
 	.agh-compare { grid-template-columns: 110px repeat(3, minmax(90px, 1fr)); overflow-x: auto; }
 	.agh-fab { right: 14px; bottom: 14px; padding: 12px 18px; }
+	/* Touch: 16px text in fields (iOS zooms in on smaller), 44px targets. */
+	.agh-input, .agh-select, .agh-textarea, .agh-search input { font-size: 16px; }
+	.agh-input, .agh-select { min-height: 44px; }
+	.agh-chip { min-height: 44px; min-width: 44px; justify-content: center; }
+	.agh-btn, .agh-btn-s { min-height: 44px; }
+	.agh-iconbtn, .agh-header-tools .agh-iconbtn { width: 44px; height: 44px; }
+	.agh-rail button { width: 44px; height: 44px; }
+	.agh-search input { height: 44px; }
+	.agh-search .agh-ico { top: 13px; }
+	.agh-range { height: 44px; }
+	.agh-seg button { min-height: 44px; }
+	.agh-header-spacer { display: none; }
+	.agh-numrow .agh-iconbtn { flex: none; }
+	.agh-numrow .agh-input { width: auto; flex: 0 1 110px; min-width: 64px; }
+	.agh-swatch { width: 28px; height: 28px; }
+}
+
+@media (max-width: 359px) {
+	.agh-brand-name { display: none; }
+}
+/* Phones in landscape: one-row action bar and compact tabs, so the panels keep most of the height. */
+@media (max-height: 520px) and (pointer: coarse) {
+	.agh-header { padding: 6px 12px; }
+	.agh-body { padding: 6px 10px; }
+	.agh-actionbar { flex-wrap: nowrap; padding: 6px 10px; }
+	.agh-actionbar-status { flex: 1 1 0; flex-basis: 0; }
+	.agh-actionbar .agh-btn-lg { flex: 0 1 auto; }
+	.agh-mobile-tabs { padding: 4px 10px calc(4px + env(safe-area-inset-bottom)); }
+	.agh-mobile-tabs button { flex-direction: row; justify-content: center; gap: 8px; min-height: 44px; font-size: 12px; }
 }
 
 /* ------------------------------------------------------------------ portal page */

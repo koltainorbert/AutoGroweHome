@@ -1293,13 +1293,13 @@
 		else { status.appendChild(icon('info')); status.appendChild(h('span', { text: S.dirty && S.project ? t('status_changed') : t('status_ready') })); }
 		a.appendChild(status);
 		if (S.boot.features.save) {
-			a.appendChild(h('button', { type: 'button', class: 'agh-btn', disabled: !S.project ? 'disabled' : null, title: !S.project ? t('save_after_generate') : '', onclick: saveProject }, icon('save', 'agh-ico-s'), t('save')));
+			a.appendChild(h('button', { type: 'button', class: 'agh-btn', disabled: !S.project ? 'disabled' : null, title: !S.project ? t('save_after_generate') : '', onclick: saveProject }, icon('save', 'agh-ico-s'), h('span', { class: 'agh-btn-label', text: t('save') })));
 		}
 		if (running) {
-			a.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-ghost', onclick: cancelGeneration }, icon('stop', 'agh-ico-s'), t('cancel_generation')));
+			a.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-ghost', onclick: cancelGeneration }, icon('stop', 'agh-ico-s'), h('span', { class: 'agh-btn-label', text: t('cancel_generation') })));
 		}
 		var canQuote = S.project && S.selected && S.boot.features.quote && !(S.project.quote);
-		a.appendChild(h('button', { type: 'button', class: 'agh-btn', disabled: canQuote ? null : 'disabled', title: canQuote ? '' : t('quote_hint'), onclick: showQuote }, icon('send', 'agh-ico-s'), t('quote')));
+		a.appendChild(h('button', { type: 'button', class: 'agh-btn', disabled: canQuote ? null : 'disabled', title: canQuote ? '' : t('quote_hint'), onclick: showQuote }, icon('send', 'agh-ico-s'), h('span', { class: 'agh-btn-label', text: t('quote') })));
 		var gen = h('button', { type: 'button', class: 'agh-btn agh-btn-primary agh-btn-lg', disabled: running || (S.check.errors && S.check.errors.length) || !S.boot.provider.ready ? 'disabled' : null, title: !S.boot.provider.ready ? t('not_configured_visitor') : '', onclick: generate }, icon('sparkle', 'agh-ico-s'), S.project ? t('generate_new') : t('generate'));
 		a.appendChild(gen);
 	}
