@@ -22,7 +22,7 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 - `node tests/sketch-test.js` (élő vázlat, WordPress nélkül fut)
 - `find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 php -l`
 - Fordítás változott: `python3 bin/po-tools.py check` (0 hiba), majd `python3 bin/po-tools.py compile` (.mo újragenerálása).
-- Felület változott: `bin/test-wp.sh` (eldobható WordPress + SQLite a 8899-es porton, teszt képszolgáltatóval), majd `node tests/e2e/responsive.js /tmp`, `node tests/e2e/wizard.js /tmp`, `node tests/e2e/gen.js`, `node tests/e2e/sketch.js` (mobil+asztali mérés, varázsló végigléptetése, generálás indítása, minden mező hatása az élő vázlatra; konzolhiba 0). Táblázat: `python3 tests/e2e/table.py <kimenet.json>`.
+- Felület változott: `bin/test-wp.sh` (eldobható WordPress + SQLite a 8899-es porton, teszt képszolgáltatóval), majd `node tests/e2e/responsive.js /tmp`, `node tests/e2e/wizard.js /tmp`, `node tests/e2e/gen.js`, `node tests/e2e/sketch.js` és `AGH_3D=1 node tests/e2e/sketch.js` (3D, SwiftShaderrel lassú, ~5 perc) (mobil+asztali mérés, varázsló végigléptetése, generálás indítása, minden mező hatása az élő vázlatra; konzolhiba 0). Táblázat: `python3 tests/e2e/table.py <kimenet.json>`.
 
 ## Fordítások
 
@@ -31,5 +31,6 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 ## Tudnivalók
 
 - A célkörnyezetek között Windows is van (Local): útvonalat mindig `/`-rel építs, `DIRECTORY_SEPARATOR` csak `realpath()` eredményével összevetve használható.
+- A 3D előnézet: `assets/js/agh-3d.js` (jelenet) + `agh-3d-tex.js` (procedurális PBR-textúrák) + `assets/js/vendor/three/` (three.js r170, MIT; a `jsm` kiegészítők importja relatív útra írva). Új látható paraméternél a 2D (`agh-sketch.js`) és a 3D is bővül.
 - A `bin/`, `tests/`, `dist/`, `CLAUDE.md`, `ALLAPOT.md` nem része a telepíthető ZIP-nek (`.gitattributes` → `export-ignore`).
 - Verziót emelni három helyen kell: `autogrowehome.php` (fejléc + `AGH_VERSION`), `readme.txt` (Stable tag), `CHANGELOG.md`.

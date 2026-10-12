@@ -240,12 +240,29 @@
 		p.then(function () {
 			if (!S.config) { initConfig(); }
 			build();
+			load3D();
 			event('popup_open');
 			if (S.projectId) { loadProject(S.projectId, true); }
 			if (!S.wiz && S.boot.layout.tour && !lsGet('agh_tour_done', false)) { setTimeout(showTour, 400); }
 		}).catch(function () {
 			window.alert(S.boot ? t('err_boot') : (LOADER.errBoot || t('err_boot')));
 		});
+	}
+
+	// The 3D preview (WebGL) is an ES module loaded after the designer opened; until it is ready – or
+	// where WebGL2 is missing – the 2D sketch is shown.
+	var A3 = null;
+	function load3D() {
+		if (load3D.p || !LOADER.three || lsGet('agh_3d', true) === false) { return load3D.p; }
+		load3D.p = import(LOADER.three).then(function (m) {
+			var api = (m && m.default) || window.AGH_3D;
+			if (!api || !api.supported()) { return; }
+			A3 = api;
+			renderPreviewOnly();
+			if (S.wiz) { updateWizardSide(); }
+			refreshCardThumbs();
+		}).catch(function () { A3 = null; });
+		return load3D.p;
 	}
 
 	function close(force) {
@@ -803,9 +820,30 @@
 		}
 		if (!svg && field === 'kitchen_layout') { svg = kitchenPlan(value); }
 		if (!svg) { svg = monogram(field, value); }
-		var el = h('span', { class: 'agh-card-vis', 'aria-hidden': 'true' });
+		var el = h('span', { class: 'agh-card-vis', 'aria-hidden': 'true', 'data-field': field, 'data-value': value });
 		el.innerHTML = svg;
+		cardThumb(el, field, value);
 		return el;
+	}
+	// Rendered 3D picture for a card (when the 3D preview is available); cached per configuration.
+	var THUMBS = {};
+	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', garden_style: 'full', time_of_day: 'full' };
+	function cardThumb(el, field, value) {
+		var mode = THUMB_FIELDS[field];
+		if (!A3 || !mode || lsGet('agh_3d_thumbs', true) === false) { return; }
+		var cfg = clone(S.config);
+		cfg[field] = value;
+		if (mode === 'mini') { cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; if (field === 'footprint') { cfg.camera = 'elevated'; cfg.property_type = 'detached'; } if (field === 'window_style') { cfg.camera = 'frontal'; } }
+		if (mode === 'facade') { cfg.time_of_day = 'golden'; cfg.weather = 'clear'; cfg.camera = 'three_quarter'; }
+		if (mode === 'floor') { cfg.time_of_day = 'midday'; cfg.camera = 'elevated'; }
+		if (field === 'garden_style') { cfg.garden_features = ['lawn', 'trees', 'paths', 'hedge', 'flowerbeds']; cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; cfg.camera = 'elevated'; }
+		var key = mode + '|' + JSON.stringify(cfg);
+		var put = function (url) { if (url) { el.innerHTML = ''; el.appendChild(h('img', { src: url, alt: '', decoding: 'async' })); } };
+		if (THUMBS[key]) { put(THUMBS[key]); return; }
+		A3.thumb(cfg, 360, 240, mode === 'full' ? 'full' : mode).then(function (url) { if (url) { THUMBS[key] = url; } put(url); });
+	}
+	function refreshCardThumbs() {
+		Array.prototype.forEach.call(document.querySelectorAll('.agh-card-vis[data-field]'), function (el) { cardThumb(el, el.getAttribute('data-field'), el.getAttribute('data-value')); });
 	}
 	function kitchenPlan(v) {
 		var wood = '#C9A27A', top = '#F1EEE8', fl = '#E7E1D8', wall = '#4A4D50';
@@ -1068,16 +1106,23 @@
 	// chosen style (if any) is a small inset. Every change of a visible parameter redraws the sketch;
 	// a short note names the change and says when it only shows up in the concept images.
 	function fillPreview(box, c) {
-		var o = stylePhoto(c);
+		var o = stylePhoto(c), fresh = S.lastChange && Date.now() - S.lastChange.at < 1500;
 		var oldFig = box.querySelector('.agh-preview-style');
 		var keep = o && oldFig && oldFig.getAttribute('data-src') === (o.thumb || o.image) ? oldFig : null;
 		if (keep) { keep.parentNode.removeChild(keep); }
-		clear(box);
+		var svg = previewSvg(c);
+		box._aghSk = svg.replace(/agh\d+_/g, '');
 		box.classList.remove('has-photo');
 		box.classList.add('has-sketch');
-		var svg = previewSvg(c);
-		box.innerHTML = svg;
-		box._aghSk = svg.replace(/agh\d+_/g, '');
+		if (A3) {
+			// keep the live 3D canvas, replace everything else
+			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
+			try { A3.attach(box, c); box.classList.add('has-3d'); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); box.innerHTML = svg; }
+			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
+		} else {
+			clear(box);
+			box.innerHTML = svg;
+		}
 		box.appendChild(previewCaption(c));
 		if (o) {
 			box.appendChild(keep || h('figure', { class: 'agh-preview-style', 'data-src': o.thumb || o.image, title: t('style_sample_note') },
@@ -1085,7 +1130,7 @@
 				h('figcaption', { text: t('style_sample') })));
 		}
 		var ch = S.lastChange;
-		if (ch && Date.now() - ch.at < 1500 && S.fields[ch.id]) {
+		if (ch && fresh && S.fields[ch.id]) {
 			var f = S.fields[ch.id], vis = ch.before ? ch.before !== box._aghSk : isVisual(ch.id);
 			var val = f.type === 'toggle' ? (S.config[ch.id] ? t('yes') : t('no')) : (f.options ? optLabel(f, S.config[ch.id]) : (f.type === 'color' ? '' : String(S.config[ch.id] == null ? '' : S.config[ch.id]) + (f.unit ? ' ' + f.unit : '')));
 			box.appendChild(h('div', { class: 'agh-preview-chg' + (vis ? '' : ' is-hidden-param'), role: 'status' },

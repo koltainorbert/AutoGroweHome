@@ -6760,3 +6760,11 @@ msgstr "Ukázka stylu"
 #: includes/Frontend/Strings.php:233
 msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
 msgstr "Ve skice není vidět – objeví se na obrázcích konceptů."
+
+#: includes/Frontend/Strings.php:234
+msgid "Forgasd: húzd egérrel vagy ujjal"
+msgstr "Otáčení: táhněte myší nebo prstem"
+
+#: includes/Frontend/Strings.php:235
+msgid "Nézet visszaállítása"
+msgstr "Obnovit pohled"

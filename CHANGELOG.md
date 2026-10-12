@@ -40,5 +40,11 @@ Első kiadás.
 - **Új kategóriaikonok**: 15 egyedi, kéttónusú ikon, kategóriánként saját színnel.
 - Tesztek: `node tests/sketch-test.js` (1017 rajz, 180 paraméterváltozat, 0 hiba), `node tests/e2e/sketch.js` (a valódi felületen 116 mező: ahol látszania kell, mind változtatja a vázlatot).
 
+### Új (2026-10-12, kiadás előtt) – valódi 3D előnézet
+- Az élő vázlat helyén **valós idejű 3D előnézet** (WebGL, three.js r170, MIT): falak valódi nyílásokkal és káva-mélységgel, keretes ablakok tükröződő üveggel, vastag tetősíkok gerinccel, ereszcsatornával és lefolyóval, a böngészőben generált PBR-anyagok (szín-, normál- és érdességtérkép: tégla, klinker, kő, fa, korcolt lemez, beton, panel, vakolat, cserépprofilok, pala, zsindely, zöldtető, kavics, fű, térkő, burkolólap, deszka, aszfalt, hó), festett égbolt napszak és időjárás szerint, nap- és holdfény lágy árnyékkal, környezeti takarás (asztalon), lombos fák, erdősáv a háttérben, éjszaka világító ablakok és lámpák. Egérrel vagy ujjal körbe forgatható; a „Nézet visszaállítása” gomb visszaállítja.
+- A 3D modul a tervező megnyitása után töltődik be; addig, illetve WebGL2 nélkül a 2D vázlat látszik.
+- Az opciókártyák (tető, szint, ingatlantípus, alaprajz, ablak, garázs, homlokzatanyag, padló, kert, napszak) 3D-ben renderelt képet kapnak a látogató saját házáról.
+- Teszt: `AGH_3D=1 node tests/e2e/sketch.js` – a valódi felületen minden mező után a 3D jelenet ujjlenyomatát is ellenőrzi (58/58 látható paraméter változtatja a 3D jelenetet).
+
 ### Ellenőrzés
 - Integrációs tesztsor 147/147, regressziós tesztek 120 + 116 + 71, licencszerver-önteszt 32/32, lint 0 hiba (részletek: `docs/TESZTJELENTES.md`).

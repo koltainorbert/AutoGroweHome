@@ -41,6 +41,10 @@ A projektek és beállítások megmaradnak; a prémium funkciók kikapcsolnak, a
 
 További kérdések: `docs/GYIK.md`.
 
+== Harmadik féltől származó összetevők ==
+
+* three.js r170 (MIT licenc) – a 3D élő előnézethez: `assets/js/vendor/three/` (licenc: `assets/js/vendor/three/LICENSE`).
+
 == Changelog ==
 
 = 1.0.0 =

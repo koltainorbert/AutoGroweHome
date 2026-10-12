@@ -6758,3 +6758,11 @@ msgstr "Esempio di stile"
 #: includes/Frontend/Strings.php:233
 msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
 msgstr "Non visibile nello schizzo – compare nelle immagini dei concept."
+
+#: includes/Frontend/Strings.php:234
+msgid "Forgasd: húzd egérrel vagy ujjal"
+msgstr "Ruota: trascina con il mouse o con il dito"
+
+#: includes/Frontend/Strings.php:235
+msgid "Nézet visszaállítása"
+msgstr "Ripristina vista"

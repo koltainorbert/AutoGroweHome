@@ -6758,3 +6758,11 @@ msgstr "Exemple de style"
 #: includes/Frontend/Strings.php:233
 msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
 msgstr "Non visible sur l’esquisse – apparaît dans les images de concept."
+
+#: includes/Frontend/Strings.php:234
+msgid "Forgasd: húzd egérrel vagy ujjal"
+msgstr "Pivoter : faites glisser à la souris ou au doigt"
+
+#: includes/Frontend/Strings.php:235
+msgid "Nézet visszaállítása"
+msgstr "Réinitialiser la vue"

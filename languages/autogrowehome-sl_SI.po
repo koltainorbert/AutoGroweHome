@@ -6762,3 +6762,11 @@ msgstr "Primer sloga"
 #: includes/Frontend/Strings.php:233
 msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
 msgstr "Na skici ni vidno – prikaže se na slikah konceptov."
+
+#: includes/Frontend/Strings.php:234
+msgid "Forgasd: húzd egérrel vagy ujjal"
+msgstr "Vrtenje: povlecite z miško ali prstom"
+
+#: includes/Frontend/Strings.php:235
+msgid "Nézet visszaállítása"
+msgstr "Ponastavi pogled"

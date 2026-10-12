@@ -6758,3 +6758,11 @@ msgstr "Stijlvoorbeeld"
 #: includes/Frontend/Strings.php:233
 msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
 msgstr "Niet zichtbaar in de schets – wel in de conceptbeelden."
+
+#: includes/Frontend/Strings.php:234
+msgid "Forgasd: húzd egérrel vagy ujjal"
+msgstr "Draaien: sleep met muis of vinger"
+
+#: includes/Frontend/Strings.php:235
+msgid "Nézet visszaállítása"
+msgstr "Weergave herstellen"

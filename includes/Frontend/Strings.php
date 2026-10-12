@@ -231,6 +231,8 @@ final class Strings {
 			'style_sample'           => __( 'Stílusminta', 'autogrowehome' ),
 			'style_sample_note'      => __( 'Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek.', 'autogrowehome' ),
 			'sketch_not_visual'      => __( 'A vázlaton nem látszik – a koncepcióképeken megjelenik.', 'autogrowehome' ),
+			'sketch_orbit_hint'      => __( 'Forgasd: húzd egérrel vagy ujjal', 'autogrowehome' ),
+			'sketch_reset_view'      => __( 'Nézet visszaállítása', 'autogrowehome' ),
 			'style_pack_offer'       => __( 'A(z) „%1$s” stílushoz javasolt beállításcsomag is tartozik.', 'autogrowehome' ),
 			'sum_checks'             => __( 'Ellenőrzés', 'autogrowehome' ),
 			'sum_house'              => __( 'Ház', 'autogrowehome' ),

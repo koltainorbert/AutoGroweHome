@@ -6760,3 +6760,11 @@ msgstr "Exemplu de stil"
 #: includes/Frontend/Strings.php:233
 msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
 msgstr "Nu se vede în schiță – apare în imaginile conceptelor."
+
+#: includes/Frontend/Strings.php:234
+msgid "Forgasd: húzd egérrel vagy ujjal"
+msgstr "Rotire: trage cu mouse-ul sau cu degetul"
+
+#: includes/Frontend/Strings.php:235
+msgid "Nézet visszaállítása"
+msgstr "Resetează vizualizarea"

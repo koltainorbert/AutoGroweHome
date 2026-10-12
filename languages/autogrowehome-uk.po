@@ -6760,3 +6760,11 @@ msgstr "Приклад стилю"
 #: includes/Frontend/Strings.php:233
 msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
 msgstr "На ескізі не видно – з’явиться на зображеннях концепцій."
+
+#: includes/Frontend/Strings.php:234
+msgid "Forgasd: húzd egérrel vagy ujjal"
+msgstr "Обертання: тягніть мишею або пальцем"
+
+#: includes/Frontend/Strings.php:235
+msgid "Nézet visszaállítása"
+msgstr "Скинути вигляд"

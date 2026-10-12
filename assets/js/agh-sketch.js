@@ -1290,7 +1290,9 @@
 		}
 	}
 
-	var api = { render: render, swatch: swatch, palette: palette, vignette: vignette, visual: VISUAL, visibleFor: visibleFor, plan: plan };
+	var api = { render: render, swatch: swatch, palette: palette, vignette: vignette, visual: VISUAL, visibleFor: visibleFor, plan: plan,
+		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
+		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _facadeBase: facadeBase, _roof: roofFor };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));

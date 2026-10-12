@@ -1,10 +1,10 @@
 # ALLAPOT – AutoGroweHome (frissítve: 2026-10-12)
 
-**Verzió:** 1.0.0 · DB v5 · Repó: github.com/koltainorbert/AutoGroweHome (main) · ZIP: dist/autogrowehome-1.0.0.zip (varázsló, mobil javítások, 16 stílusminta, új 3D élő vázlat, képes opciókártyák, új ikonok). A htombau oldalon még a varázsló előtti fájlok vannak.
+**Verzió:** 1.0.0 · DB v5 · Repó: github.com/koltainorbert/AutoGroweHome (main) · ZIP: dist/autogrowehome-1.0.0.zip (varázsló, mobil javítások, 16 stílusminta, valós idejű 3D előnézet WebGL-lel, 3D-s opciókártyák, új ikonok). A htombau oldalon még a varázsló előtti fájlok vannak.
 
 **Chat elején:** kösd be a repót (koltainorbert/AutoGroweHome, írási joggal), kövesd a CLAUDE.md-t; tesztkörnyezet: `bin/test-wp.sh`.
 
-**Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 1595 szöveg, 0 hiba · vázlat-önteszt 1017 rajz/180 változat, 0 hiba · felületi vázlat-lefedettség 116 mező, 0 hiba · E2E (Playwright): tervező 7 mobil/tablet méret × 3 fül – túllógás 0, 44 px alatti cél 0, ráközelítő mező 0, konzolhiba 0; varázsló 6 méret × 7 lépés – túllógás 0, dupla id 0, konzolhiba 0; generálás a varázslóból 202 → Koncepciók fül. Régi, nem a repóban lévő tesztsor: integráció 147/147 · regresszió 120/116/71 · licencszerver 32/32.
+**Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 1595 szöveg, 0 hiba · vázlat-önteszt 1017 rajz/180 változat, 0 hiba · felületi lefedettség 116 mező (2D és 3D), 0 hiba · E2E (Playwright): tervező 7 mobil/tablet méret × 3 fül – túllógás 0, 44 px alatti cél 0, ráközelítő mező 0, konzolhiba 0; varázsló 6 méret × 7 lépés – túllógás 0, dupla id 0, konzolhiba 0; generálás a varázslóból 202 → Koncepciók fül. Régi, nem a repóban lévő tesztsor: integráció 147/147 · regresszió 120/116/71 · licencszerver 32/32.
 
 **Döntések**
 - Minden változtatás automatikusan a repóba megy (teszt → commit → push main, ZIP újraépítés); ez a fájl a repóban és a projektben azonos.
@@ -15,7 +15,7 @@
 - Kivitelezői link: időkorlátos, többször használható, címzetthez kötött, visszavonható. Csomagmátrix csak AGH_OWNER_MODE-ban szerkeszthető.
 - Licenc: Ed25519, 14 nap türelmi idő, frissítés nonce + SHA-256. Eltávolítás alapból megtartja az adatokat.
 - Stílusminták: assets/img/options/{mező}/{érték}.webp + thumb/ – a séma automatikusan átadja; bármely opcióhoz (pl. tetőforma, homlokzat) hasonlóan bővíthető.
-- Élő vázlat: assets/js/agh-sketch.js (AGH_Sketch, a loader tölti a tervező előtt); a „vázlaton nem látszik” jelzés a rajz összehasonlításából jön; új látható paraméternél a VISUAL listát és a visibleFor-t is bővíteni kell.
+- Előnézet: 3D (assets/js/agh-3d.js + agh-3d-tex.js, three.js r170 a vendor/three-ban, procedurális PBR-textúrák, letöltés nélkül); tartalék és változásjelzés: 2D agh-sketch.js. Új látható paraméter: 2D VISUAL + visibleFor, és a 3D is.
 - Tervező: backdrop-filter csak kis elemen; mobil elrendezés ≤820 px és fekvő telefonon; érintési célok 44 px, mezők 16 px.
 - Autoloader: útvonal mindig „/”-rel (Windows). Verzió marad 1.0.0 (kiadás előtt).
 - Helyi teszt: Local (Windows) – C:\Users\Andi\Local Sites\htombau.
