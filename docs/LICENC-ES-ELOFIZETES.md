@@ -13,7 +13,7 @@ Ez a dokumentum a csomagokat, a licencaktiválás protokollját, a frissítések
 | Fizetési bővítési pont | `includes/License/Payments.php`, `PaymentGatewayInterface.php`, `ExternalCheckoutGateway.php` |
 | Nyilvános árlap | `templates/pricing.php` (`[autogrowehome_pricing]`) |
 | Admin felület | **Admin → Licenc** (`includes/Admin/Pages.php`, `page_license()`) |
-| Referencia-licencszerver | `tools/license-server/` ([README](../tools/license-server/README.md)) |
+| Központi licencszerver | `license-hub/` – **AGH Licencközpont** WordPress-plugin (a forgalmazó saját oldalára; [readme](../license-hub/readme.txt)) |
 
 ---
 
@@ -221,17 +221,14 @@ A shortcode a `templates/pricing.php` sablont jeleníti meg (`Frontend::sc_prici
 
 Használat (a forgalmazó tulajdonosi módú oldalán): hozz létre egy oldalt (pl. „Árak”), tedd bele a `[autogrowehome_pricing]` shortcode-ot, majd töltsd ki az árakat és a fizetési linkeket az **Admin → Licenc → Csomagok** táblázatban. A sablon a weboldal saját, érvényes csomagbeállításait mutatja (vásárlói oldalon a beépített mátrixot, ár nélkül), ezért a forgalmazó saját értékesítési oldalára való, nem a vásárlók oldalaira.
 
-## 9. Referencia-licencszerver
+## 9. Központi licencszerver: AGH Licencközpont
 
-Részletes telepítési és üzemeltetési leírás: **[tools/license-server/README.md](../tools/license-server/README.md)**. Röviden:
+A licencszerver egy külön WordPress-plugin a repó `license-hub/` mappájában (külön ZIP: `bin/build-hub-zip.sh` → `dist/agh-license-hub-<verzió>.zip`). **Csak a forgalmazó saját, HTTPS-es oldalára** telepítendő, az ügyfelekhez nem. A korábbi parancssoros referencia-szerver (`tools/license-server`) helyett ez az érvényes.
 
-- Keretrendszer nélküli PHP 8.0+ alkalmazás (PDO + sodium), amelyet a forgalmazó a saját HTTPS-domainjén futtat – **nem a pluginba telepítendő**. Csak a `public/` mappa legyen webről elérhető.
-- Végpontok: `POST /v1/license/activate`, `/check`, `/deactivate`, `POST /v1/update/check` (az aláírt válaszban a nonce és a csomag `sha256`-ja), `GET /v1/update/package/{verzió}.zip` (kulcs csak fejlécben). Olyan kiadást, amelynek fájlja hiányzik, nem kínál fel.
-- Beállítás: a mintában szereplő `CHANGE-ME…` „pepper” értékkel a szerver nem indul el – saját, legalább 32 karakteres véletlen értéket kell megadni.
-- Kulcspár: `php bin/manage.php keygen`; a titkos kulcs a `storage/` alá kerül – erről rendszeres mentés kell, mert elvesztése után minden telepítésben cserélni kell a nyilvános kulcsot.
-- A licenckulcsokat és IP-címeket HMAC-SHA256 hash-ként tárolja (szerveroldali „pepper”); a kulcs csak létrehozáskor látható. IP-alapú percenkénti korlát.
-- Napi műveletek CLI-ből: `create`, `list`, `activations`, `extend`, `plan`, `free-site`, `revoke`, `release`.
-- Fizetési integráció mintája: a szolgáltató aláírt webhookja → `create()` / `extend()` / `set_status()`. Webhook-végpontot a referencia-szerver nem tartalmaz.
-- Adatbázis: SQLite-ra készült; MySQL-hez a README szerinti átírás kell (nem tesztelt).
-
-**Ellenőrzöttség** (a fejlesztői jegyzet szerinti mérés a 3. javítási kör után; a dokumentáció készítésekor nem futtattuk újra): licencszerver-önteszt 32/32 (köztük a párhuzamos aktiválás); a plugin integrációs tesztsora (147/147) végponttól végpontig lefuttatja az aktiválást, a manipulált választ, a weboldal-limitet, az elérhetetlen szervert türelmi idővel, a frissítés felkínálását, a fejléces csomagletöltést és a deaktiválást; a `tests/regression-y1.php` (116/116) a frissítés nonce-/frissesség-ellenőrzését és a csomag SHA-256-ellenőrzését is. **Nem ellenőrzött:** éles licencszerver-telepítés, valódi fizetési szolgáltató, MySQL.
+- **Admin → AGH Licencek:** új licenc egy kattintással (ügyfél, e-mail, csomag, havi / éves / örökös, lejárat, weboldal-limit, frissítési jogosultság); a kulcs (AGH-XXXXX-XXXXX-XXXXX-XXXXX) bármikor megjeleníthető, másolható, e-mailben elküldhető az aktiválási lépésekkel; aktivált weboldalak listája, hely felszabadítása; hosszabbítás egy időszakkal; visszavonás / újraengedélyezés; törlés.
+- **Kiadások:** az ügyfélplugin ZIP-jének feltöltése (a verziót a csomagból olvassa); a jogosult, aktivált oldalak a WordPress-frissítések között kapják meg, SHA-256-tal ellenőrizve. A fájlok csak az API-n át, érvényes licenccel tölthetők le.
+- **Beállítás:** a Szerver URL (pl. `https://infostudio.hu/wp-json/aghls`) és a nyilvános kulcs – ezt a kettőt kell az ügyfélpluginnak megadni (Licenc → Licencszerver, vagy `AGH_LICENSE_SERVER` / `AGH_LICENSE_PUBKEY`). Kulcscsere csak kiszivárgás esetén.
+- **Végpontok** (WordPress REST, `aghls/v1`): `POST /v1/license/activate|check|deactivate`, `POST /v1/update/check`, `GET /v1/update/package/{verzió}.zip` (kulcs csak fejlécben), `GET /v1/ping`. Ismeretlen vagy visszavont kulcsra aláírt `invalid` választ ad (nem türelmi idő).
+- **Biztonság:** a kulcsokat HMAC-kivonattal keresi és titkosítva tárolja; az aláíró titkos kulcs titkosítva az adatbázisban (vagy `AGHLS_SECRET_KEY`, `AGHLS_PEPPER` a wp-config.php-ban); IP-alapú percenkénti korlát; napló IP-kivonattal, 180 napig; a weboldal-limitet licencenkénti zár védi párhuzamos aktiválásnál.
+- **Teszt:** `php tests/license-hub-test.php` – a valódi ügyfél-`LicenseManager` hívásait a központ REST API-jára irányítja: aktiválás, weboldal-limit, ismeretlen kulcs, visszavonás, lejárat és hosszabbítás, aláírás-ellenőrzés, kiadás és csomagletöltés, deaktiválás, örökös licenc, hibás kérés, IP-korlát, admin oldalak, e-mail – 40/40.
+- **Nincs még:** fizetési szolgáltató webhookja (fizetés → automatikus kulcskiadás).

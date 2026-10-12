@@ -21,9 +21,16 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 
 - `php tests/autoloader-test.php` (WordPress nélkül fut)
 - `node tests/sketch-test.js` (élő vázlat, WordPress nélkül fut)
+- Licencközpont változott: `php tests/license-hub-test.php` (a tesztoldalon, a valódi ügyfél-LicenseManagerrel; 40/40).
 - `find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 php -l`
 - Fordítás változott: `python3 bin/po-tools.py check` (0 hiba), majd `python3 bin/po-tools.py compile` (.mo újragenerálása).
 - Felület változott: `bin/test-wp.sh` (eldobható WordPress + SQLite a 8899-es porton, teszt képszolgáltatóval), majd `node tests/e2e/responsive.js /tmp`, `node tests/e2e/wizard.js /tmp`, `node tests/e2e/gen.js`, `node tests/e2e/sketch.js` és `AGH_3D=1 node tests/e2e/sketch.js` (3D, SwiftShaderrel lassú, ~5 perc) (mobil+asztali mérés, varázsló végigléptetése, generálás indítása, minden mező hatása az élő vázlatra; konzolhiba 0). Táblázat: `python3 tests/e2e/table.py <kimenet.json>`.
+
+## Két plugin egy repóban
+
+- A repó gyökere az **ügyfélplugin** (AutoGroweHome) – ez kerül a vásárlók oldalára.
+- A `license-hub/` a **központi licencszerver** (AGH Licencközpont), csak Norbi saját HTTPS-oldalára. Külön ZIP: `bin/build-hub-zip.sh` → `dist/agh-license-hub-<verzió>.zip`; saját verzió: `bin/bump-hub-version.sh` (ugyanaz a szabály: minden új ZIP új verzió). Az ügyfél-ZIP-ből kimarad (`.gitattributes`).
+- Az API-szerződés az ügyfél `includes/License/LicenseManager.php`-ja: `{szerver}/v1/license/{activate|check|deactivate}`, `/v1/update/check`, `/v1/update/package/{v}.zip`; válasz `{data, signature}`, Ed25519 a kanonikus JSON-on. A kettőt együtt kell változtatni.
 
 ## Fordítások
 
