@@ -93,6 +93,35 @@
 		star: '<path d="M12 3l2.7 5.6 6.1.8-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1L3.2 9.4l6.1-.8z"/>',
 		more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>'
 	};
+	// Category rail: duotone icons, one distinct drawing and colour per category (".d" = tinted fill layer).
+	var CAT_ICONS = {
+		home: ['#4F7CAC', '<path class="d" d="M5 10.5L12 5l7 5.5V20H5z"/><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v10h14V10"/><rect x="10" y="14" width="4" height="6" rx=".6"/><path d="M15.5 8.2V5h2v4.8"/>'],
+		sparkle: ['#A26BB0', '<path class="d" d="M5 7h10v2H5z"/><path d="M4 7l6-3 6 3"/><path d="M5 9h10M6.5 9v9M10 9v9M13.5 9v9M4 20h12M5 18h10"/><path d="M19.5 3.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>'],
+		cube: ['#5B8C85', '<path class="d" d="M3 9l6-3 6 3v6l-6 3-6-3z"/><path d="M3 9l6-3 6 3-6 3zM3 9v6l6 3M15 9v6l-6 3M9 12v6"/><path d="M15 12l4-2 3 1.5V17l-7 3.5"/><path d="M19 10v7.5"/>'],
+		roof: ['#B5523B', '<path class="d" d="M2.5 12L12 4.5l9.5 7.5z"/><path d="M1.5 12.5L12 4l10.5 8.5"/><path d="M6 9.4l12 0M8.5 7.3h7"/><path d="M5 12v8h14v-8"/><path d="M16 6.5V3.5h2.2v4.8"/>'],
+		wall: ['#C08A4A', '<path class="d" d="M3 4h18v16H3z"/><path d="M3 4h18v16H3zM3 8h7M3 12h7M3 16h7M6.5 4v4M6.5 12v4M3 20h18"/><rect x="12" y="7" width="6.5" height="8" rx=".6"/><path d="M15.25 7v8M12 11h6.5"/>'],
+		window: ['#3E8EB8', '<path class="d" d="M5 4h14v15H5z"/><rect x="4" y="3" width="16" height="17" rx="1.2"/><path d="M12 3v17M4 11h16M2.5 20h19"/><path d="M7 6l2.5-1.5M14.5 6L17 4.5" opacity=".6"/>'],
+		plan: ['#6E7FA8', '<path class="d" d="M3 3h10v9H3z"/><rect x="3" y="3" width="18" height="18" rx="1.2"/><path d="M13 3v6M13 12v9M3 12h6M16 12h5"/><path d="M9 12a4 4 0 014-4" stroke-dasharray="1.6 1.4"/>'],
+		sofa: ['#B07A5C', '<path class="d" d="M5 12h14v4H5z"/><path d="M5 12V9a2 2 0 012-2h10a2 2 0 012 2v3"/><path d="M3 12.5a1.8 1.8 0 013.5 0V15h11v-2.5a1.8 1.8 0 013.5 0V18H3z"/><path d="M5 18v2M19 18v2"/><path d="M12 7V4M10 4h4" opacity=".7"/>'],
+		kitchen: ['#C46D52', '<path class="d" d="M3 13h18v8H3z"/><path d="M7 3h10l2 5H5z"/><path d="M12 8v2"/><rect x="3" y="13" width="18" height="8" rx="1"/><path d="M3 16h18"/><circle cx="8" cy="14.5" r=".2"/><path d="M6.5 11.2a1.5 1.5 0 013 0M14.5 11.2a1.5 1.5 0 013 0"/>'],
+		bath: ['#3AA0A8', '<path class="d" d="M3.5 12h17l-1 4.5a4 4 0 01-4 3h-7a4 4 0 01-4-3z"/><path d="M2.5 12h19"/><path d="M3.5 12l1 4.5a4 4 0 004 3h7a4 4 0 004-3l1-4.5"/><path d="M6 12V5.5a2 2 0 013.8-.8"/><path d="M9 7.5l1.5-1.5"/><path d="M15 6.5v.01M17 8.5v.01M13.5 9v.01"/><path d="M7 19.5l-1 2M17 19.5l1 2"/>'],
+		tiles: ['#8C7B62', '<path class="d" d="M3 3h9v9H3zM12 12h9v9h-9z"/><rect x="3" y="3" width="18" height="18" rx="1.2"/><path d="M3 12h18M12 3v18"/><path d="M3 7.5l4.5-4.5M3 12l9-9M7.5 12L12 7.5M12 16.5l4.5-4.5M12 21l9-9M16.5 21l4.5-4.5"/>'],
+		tree: ['#5E9A4B', '<path class="d" d="M9 4a5 5 0 015 5 4 4 0 01-1 7H6a4 4 0 01-1-7.8A5 5 0 019 4z"/><path d="M9 4a5 5 0 015 5 4 4 0 01-1 7H6a4 4 0 01-1-7.8A5 5 0 019 4z"/><path d="M9 21v-9M9 15l-2-2M9 13l2-2"/><path d="M18 21v-5M18 16l-2.5-1M18 7l3.5 9h-7z"/><path d="M2 21h20"/>'],
+		bolt: ['#D3A12C', '<path class="d" d="M3 13l4-6h14l-4 6z"/><path d="M3 13l4-6h14l-4 6zM8.4 13l2.6-6M13.6 13L16.4 7M5 10h14"/><path d="M10 13v4M8 21l2-4 2 4"/><path d="M19 15.5l-2.2 3h2.2l-2.2 3"/>'],
+		camera: ['#7A6BC4', '<path class="d" d="M3 8h18v12H3z"/><path d="M3 8h4l1.6-2.5h6.8L17 8h4v12H3z"/><circle cx="12" cy="14" r="3.6"/><path d="M12 10.4V8.8M15.6 14h1.6"/><circle cx="18.5" cy="10.5" r=".2"/>'],
+		pen: ['#8A8F96', '<path class="d" d="M4 20l1-4L16.5 4.5l3 3L8 19z"/><path d="M4 20l1-4L16.5 4.5l3 3L8 19z"/><path d="M14.5 6.5l3 3M5 16l3 3"/><path d="M12 20h8" stroke-dasharray="1.6 1.6"/>']
+	};
+	function catIcon(name) {
+		var d = CAT_ICONS[name];
+		if (!d) { return icon(name); }
+		var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		s.setAttribute('viewBox', '0 0 24 24');
+		s.setAttribute('class', 'agh-ico agh-cat-ico');
+		s.setAttribute('aria-hidden', 'true');
+		s.innerHTML = d[1];
+		return s;
+	}
+	function catColor(name) { return CAT_ICONS[name] ? CAT_ICONS[name][0] : ''; }
 	function icon(name, cls) {
 		var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 		s.setAttribute('viewBox', '0 0 24 24');
@@ -484,7 +513,7 @@
 		S.boot.schema.categories.forEach(function (c) {
 			var hasFields = S.boot.schema.fields.some(function (f) { return f.category === c.id; });
 			if (!hasFields) { return; }
-			var btn = h('button', { type: 'button', title: c.label, 'aria-label': c.label, 'aria-current': S.cat === c.id && !S.search ? 'true' : 'false', 'data-cat': c.id, onclick: function () { S.cat = c.id; S.search = ''; if (els.searchInput) { els.searchInput.value = ''; } updateRail(); renderFields(); } }, icon(c.icon));
+			var btn = h('button', { type: 'button', title: c.label, 'aria-label': c.label, 'aria-current': S.cat === c.id && !S.search ? 'true' : 'false', 'data-cat': c.id, style: catColor(c.icon) ? '--agh-cat:' + catColor(c.icon) : null, onclick: function () { S.cat = c.id; S.search = ''; if (els.searchInput) { els.searchInput.value = ''; } updateRail(); renderFields(); } }, catIcon(c.icon));
 			rail.appendChild(btn);
 		});
 		els.rail = rail;
@@ -527,8 +556,16 @@
 		updateRail();
 	}
 
+	// Remembers which parameter changed and how the sketch looked before, so the preview can tell
+	// whether the change is visible on the sketch (compared drawing, not a fixed list).
+	function markChange(id) {
+		var box = (S.wiz && els.wizPv) || els.previewBox;
+		var prev = S.lastChange && S.lastChange.id === id && Date.now() - S.lastChange.at < 1500 ? S.lastChange.before : null;
+		S.lastChange = { id: id, at: Date.now(), before: prev || (box && box._aghSk) || null };
+	}
 	function setValue(id, value, rerender) {
 		if (id === 'roof_product') { S.autoRoof = ''; }
+		markChange(id);
 		S.config[id] = value;
 		S.explicit[id] = true;
 		S.dirty = true;
@@ -572,8 +609,8 @@
 			case 'cards':
 				ctl = h('div', { class: 'agh-cards', role: 'radiogroup', 'aria-label': f.label });
 				(f.options || []).forEach(function (o) {
-					ctl.appendChild(h('button', { type: 'button', class: 'agh-card-opt', role: 'radio', 'aria-pressed': String(v) === o.value ? 'true' : 'false', 'aria-checked': String(v) === o.value ? 'true' : 'false', onclick: function () { setValue(f.id, o.value, true); maybeStylePack(f, o.value); } }, o.thumb ? h('img', { src: o.thumb, alt: '', loading: 'lazy', decoding: 'async' }) : glyph(f.id, o.value), h('span', { class: 'agh-card-label', text: o.label })));
-					if (o.thumb) { ctl.lastChild.classList.add('agh-card-photo'); ctl.classList.add('has-photos'); }
+					ctl.appendChild(h('button', { type: 'button', class: 'agh-card-opt', role: 'radio', 'aria-pressed': String(v) === o.value ? 'true' : 'false', 'aria-checked': String(v) === o.value ? 'true' : 'false', onclick: function () { setValue(f.id, o.value, true); maybeStylePack(f, o.value); } }, o.thumb ? h('img', { src: o.thumb, alt: '', loading: 'lazy', decoding: 'async' }) : cardVisual(f.id, o.value), h('span', { class: 'agh-card-label', text: o.label })));
+					ctl.lastChild.classList.add('agh-card-photo'); ctl.classList.add('has-photos');
 				});
 				break;
 			case 'multiselect':
@@ -651,7 +688,7 @@
 		}
 		return box;
 	}
-	var setValueQuiet = debounce(function (id, v) { S.config[id] = v; S.explicit[id] = true; S.dirty = true; renderPreviewOnly(); renderSummary(); updateWizardSide(); }, 60);
+	var setValueQuiet = debounce(function (id, v) { markChange(id); S.config[id] = v; S.explicit[id] = true; S.dirty = true; renderPreviewOnly(); renderSummary(); updateWizardSide(); }, 60);
 
 	function renderColor(f, v) {
 		var box = h('div', { class: 'agh-color' });
@@ -743,50 +780,53 @@
 		toast(h('span', null, tf('style_pack_offer', pack.name) + ' ', h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-accent', onclick: function (e) { applyValues(pack.values, true); e.currentTarget.closest('.agh-toast').remove(); } }, t('apply'))), 'ok', 9000);
 	}
 
-	function glyph(field, value) {
-		var g = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-		g.setAttribute('viewBox', '0 0 40 30');
-		g.setAttribute('class', 'agh-card-glyph');
-		g.setAttribute('aria-hidden', 'true');
-		var p = '';
-		if (field === 'roof_type') {
-			var roofs = {
-				gable: '<path d="M4 16L20 5l16 11"/><rect x="8" y="16" width="24" height="11"/>',
-				hip: '<path d="M4 16l8-9h16l8 9z"/><rect x="8" y="16" width="24" height="11"/>',
-				half_hip: '<path d="M4 16l6-6 4-4h12l4 4 6 6z"/><rect x="8" y="16" width="24" height="11"/>',
-				shed: '<path d="M4 18L36 8v10z"/><rect x="8" y="18" width="24" height="9"/>',
-				pyramid: '<path d="M4 16L20 4l16 12z"/><rect x="8" y="16" width="24" height="11"/>',
-				flat: '<rect x="6" y="11" width="28" height="3"/><rect x="8" y="14" width="24" height="13"/>',
-				multi: '<path d="M2 17l10-8 8 6 8-8 10 10"/><rect x="6" y="17" width="28" height="10"/>',
-				complex: '<path d="M2 17l9-9 9 9M18 15l9-9 11 11"/><rect x="6" y="17" width="28" height="10"/>'
-			};
-			p = roofs[value] || roofs.gable;
-		} else if (field === 'footprint') {
-			var fp = { rectangle: '<rect x="6" y="7" width="28" height="16"/>', l_shape: '<path d="M6 6h28v10H18v9H6z"/>', u_shape: '<path d="M6 6h28v19h-9v-9H15v9H6z"/>', staggered: '<path d="M4 9h16v14H4zM18 5h18v13H18z"/>' };
-			p = fp[value] || fp.rectangle;
-		} else if (field === 'kitchen_layout') {
-			var kl = { straight: '<path d="M6 8h28"/>', l: '<path d="M6 8h28M6 8v16"/>', u: '<path d="M6 24V8h28v16"/>', island: '<path d="M6 8h28"/><rect x="13" y="16" width="14" height="6"/>', galley: '<path d="M6 8h28M6 22h28"/>' };
-			p = '<rect x="4" y="4" width="32" height="22" rx="2" opacity=".35"/>' + (kl[value] || kl.straight);
-		} else if (field === 'time_of_day') {
-			var tod = { morning: '<circle cx="12" cy="18" r="5"/><path d="M2 24h36"/>', midday: '<circle cx="20" cy="10" r="6"/><path d="M2 24h36"/>', golden: '<circle cx="28" cy="18" r="6"/><path d="M2 24h36"/>', blue: '<path d="M26 8a7 7 0 108 9 6 6 0 01-8-9z"/><path d="M2 24h36"/>', night: '<path d="M24 6a8 8 0 109 11 7 7 0 01-9-11z"/><circle cx="10" cy="8" r=".8"/><path d="M2 24h36"/>' };
-			p = tod[value] || tod.midday;
-		} else if (field === 'window_style') {
-			var ws = { classic: '<rect x="8" y="8" width="8" height="10"/><rect x="24" y="8" width="8" height="10"/>', large: '<rect x="6" y="8" width="13" height="14"/><rect x="22" y="8" width="13" height="14"/>', panoramic: '<rect x="4" y="6" width="32" height="19"/><path d="M15 6v19M26 6v19"/>', vertical: '<rect x="8" y="5" width="5" height="20"/><rect x="18" y="5" width="5" height="20"/><rect x="28" y="5" width="5" height="20"/>' };
-			p = ws[value] || ws.classic;
-		} else if (field === 'levels') {
-			var lv = { single: '<path d="M4 15L20 6l16 9"/><rect x="8" y="15" width="24" height="11"/>', attic: '<path d="M4 17L20 4l16 13"/><rect x="8" y="17" width="24" height="9"/><rect x="17" y="10" width="6" height="4"/>', two: '<path d="M6 10L20 3l14 7"/><rect x="9" y="10" width="22" height="8"/><rect x="9" y="18" width="22" height="8"/>', three: '<path d="M8 7L20 2l12 5"/><rect x="11" y="7" width="18" height="6"/><rect x="11" y="13" width="18" height="6"/><rect x="11" y="19" width="18" height="7"/>' };
-			p = lv[value] || lv.single;
-		} else if (field === 'property_type') {
-			var pt = { detached: '<path d="M8 14L20 5l12 9"/><rect x="11" y="14" width="18" height="12"/>', semi_detached: '<path d="M3 14L12 6l8 7 8-7 9 8"/><rect x="5" y="14" width="30" height="12"/><path d="M20 14v12"/>', row: '<path d="M2 15l6-6 6 6 6-6 6 6 6-6 6 6"/><rect x="3" y="15" width="34" height="11"/><path d="M14 15v11M26 15v11"/>', holiday: '<path d="M6 16L15 8l9 8"/><rect x="8" y="16" width="14" height="10"/><circle cx="31" cy="14" r="5"/><path d="M31 19v7"/>', villa: '<path d="M2 15l9-7h18l9 7"/><rect x="5" y="15" width="30" height="11"/><rect x="17" y="19" width="6" height="7"/>', small: '<path d="M13 17l7-6 7 6"/><rect x="15" y="17" width="10" height="9"/>' };
-			p = pt[value] || pt.detached;
-		} else if (field === 'garage') {
-			var ga = { none: '<path d="M8 26h24"/><path d="M14 15l12 0" opacity=".4"/>', carport: '<path d="M5 9h30M8 9v17M32 9v17"/><rect x="12" y="18" width="16" height="6" rx="2"/>', garage_1: '<path d="M6 12l14-7 14 7"/><rect x="8" y="12" width="24" height="14"/><path d="M13 26v-9h14v9M13 20h14"/>', garage_2: '<path d="M3 12l17-7 17 7"/><rect x="5" y="12" width="30" height="14"/><path d="M8 26v-9h11v9M21 26v-9h11v9"/>', separate: '<path d="M3 15l8-7 8 7"/><rect x="5" y="15" width="12" height="11"/><rect x="23" y="13" width="14" height="13"/><path d="M26 26v-8h8v8"/>' };
-			p = ga[value] || ga.carport;
-		} else {
-			p = '<path d="M6 16L20 6l14 10"/><rect x="10" y="16" width="20" height="10"/>';
+	// Visual for an option card: a mini render of the visitor's own house with that option, a material
+	// swatch, an interior palette, a landscape vignette or a kitchen plan – every option looks different.
+	var visSeq = 0;
+	function cardVisual(field, value) {
+		var K = window.AGH_Sketch, svg = '', id = 'cv' + (++visSeq) + '_';
+		if (K) {
+			var cfg = {};
+			Object.keys(S.config).forEach(function (k) { cfg[k] = S.config[k]; });
+			if (['roof_type', 'levels', 'property_type', 'garage', 'footprint', 'window_style'].indexOf(field) !== -1) {
+				cfg[field] = value;
+				cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer';
+				if (field === 'footprint') { cfg.camera = 'elevated'; cfg.property_type = 'detached'; }
+				if (field === 'window_style') { cfg.camera = 'frontal'; }
+				if (field === 'roof_type' && value === 'flat') { cfg.roof_surface = cfg.roof_surface === 'green' ? 'green' : 'gravel'; }
+				svg = K.render(cfg, { mini: true, id: id, fit: 'xMidYMid meet' });
+			} else if (field === 'facade_main') { svg = K.swatch('facade', value, cfg); }
+			else if (field === 'floor_main') { svg = K.swatch('floor', value, cfg); }
+			else if (field === 'interior_style') { svg = K.palette(value); }
+			else if (field === 'garden_style') { svg = K.vignette('garden', value, { levels: cfg.levels, roof_type: cfg.roof_type, facade_main: cfg.facade_main, facade_color: cfg.facade_color, roof_color: cfg.roof_color, net_area: cfg.net_area, time_of_day: 'midday', weather: 'clear', season: 'summer' }); }
+			else if (field === 'time_of_day') { svg = K.vignette('time', value, cfg); }
 		}
-		g.innerHTML = '<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">' + p + '</g>';
-		return g;
+		if (!svg && field === 'kitchen_layout') { svg = kitchenPlan(value); }
+		if (!svg) { svg = monogram(field, value); }
+		var el = h('span', { class: 'agh-card-vis', 'aria-hidden': 'true' });
+		el.innerHTML = svg;
+		return el;
+	}
+	function kitchenPlan(v) {
+		var wood = '#C9A27A', top = '#F1EEE8', fl = '#E7E1D8', wall = '#4A4D50';
+		var runs = {
+			straight: [[14, 14, 92, 14]], l: [[14, 14, 92, 14], [14, 28, 14, 46]], u: [[14, 14, 92, 14], [14, 28, 14, 46], [92, 28, 14, 46]],
+			island: [[14, 14, 92, 14], [34, 44, 52, 16]], galley: [[14, 14, 92, 14], [14, 52, 92, 14]]
+		}[v] || [[14, 14, 92, 14]];
+		var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice"><rect width="120" height="80" fill="' + fl + '"/>';
+		for (var x = 0; x < 120; x += 12) { s += '<path d="M' + x + ' 0V80" stroke="#D9D2C6" stroke-width=".6"/>'; }
+		s += '<rect x="6" y="6" width="108" height="68" fill="none" stroke="' + wall + '" stroke-width="4"/>';
+		runs.forEach(function (r) { s += '<rect x="' + r[0] + '" y="' + r[1] + '" width="' + r[2] + '" height="' + r[3] + '" rx="2" fill="' + wood + '"/><rect x="' + (r[0] + 2) + '" y="' + (r[1] + 2) + '" width="' + (r[2] - 4) + '" height="' + (r[3] - 4) + '" rx="1.5" fill="' + top + '"/>'; });
+		s += '<circle cx="34" cy="21" r="3.2" fill="none" stroke="#7C8186" stroke-width="1.2"/><circle cx="42" cy="21" r="3.2" fill="none" stroke="#7C8186" stroke-width="1.2"/><rect x="62" y="17" width="12" height="8" rx="2" fill="#B9C3CA"/>';
+		if (v === 'island') { [40, 56, 72].forEach(function (cx) { s += '<circle cx="' + cx + '" cy="66" r="3.4" fill="#5A4636"/>'; }); }
+		return s + '</svg>';
+	}
+	// Fallback for admin-defined card options: a coloured tile with the option's initial.
+	function monogram(field, value) {
+		var hsh = 0, k = field + ':' + value;
+		for (var i = 0; i < k.length; i++) { hsh = (hsh * 31 + k.charCodeAt(i)) >>> 0; }
+		var hue = hsh % 360, ch = String(value || '?').charAt(0).toUpperCase().replace(/[^A-Z0-9]/, '•');
+		return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="mg' + hsh + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(' + hue + ',45%,62%)"/><stop offset="1" stop-color="hsl(' + ((hue + 40) % 360) + ',45%,42%)"/></linearGradient></defs><rect width="120" height="80" fill="url(#mg' + hsh + ')"/><text x="60" y="52" text-anchor="middle" font-family="system-ui,sans-serif" font-size="34" font-weight="700" fill="#fff" fill-opacity=".9">' + ch + '</text></svg>';
 	}
 
 	/* ------------------------------------------------------------------ rooms editor */
@@ -1024,30 +1064,39 @@
 		var o = S.fields.arch_style ? optByValue(S.fields.arch_style, c.arch_style) : null;
 		return o && o.image ? o : null;
 	}
-	// The preview: a photorealistic style sample with the live, parameter-driven sketch as an inset,
-	// or only the sketch when the style has no sample photo. The photo element is reused across
-	// updates (no reload/flicker while sliders move).
+	// The preview: the live, parameter-driven 3D sketch fills the box; the photorealistic sample of the
+	// chosen style (if any) is a small inset. Every change of a visible parameter redraws the sketch;
+	// a short note names the change and says when it only shows up in the concept images.
 	function fillPreview(box, c) {
 		var o = stylePhoto(c);
-		var old = box.querySelector('.agh-preview-photo');
-		var keep = o && old && old.getAttribute('src') === o.image ? old : null;
+		var oldFig = box.querySelector('.agh-preview-style');
+		var keep = o && oldFig && oldFig.getAttribute('data-src') === (o.thumb || o.image) ? oldFig : null;
+		if (keep) { keep.parentNode.removeChild(keep); }
 		clear(box);
-		box.classList.toggle('has-photo', !!o);
-		if (!o) {
-			box.innerHTML = previewSvg(c);
-			box.appendChild(previewCaption(c));
-			return box;
+		box.classList.remove('has-photo');
+		box.classList.add('has-sketch');
+		var svg = previewSvg(c);
+		box.innerHTML = svg;
+		box._aghSk = svg.replace(/agh\d+_/g, '');
+		box.appendChild(previewCaption(c));
+		if (o) {
+			box.appendChild(keep || h('figure', { class: 'agh-preview-style', 'data-src': o.thumb || o.image, title: t('style_sample_note') },
+				h('img', { src: o.thumb || o.image, alt: '', decoding: 'async' }),
+				h('figcaption', { text: t('style_sample') })));
 		}
-		box.appendChild(keep || h('img', { class: 'agh-preview-photo', src: o.image, alt: '', decoding: 'async' }));
-		var inset = h('div', { class: 'agh-preview-inset', title: t('live_preview'), 'aria-hidden': 'true' });
-		inset.innerHTML = previewSvg(c);
-		inset.appendChild(h('span', { text: t('live_preview') }));
-		box.appendChild(inset);
-		box.appendChild(h('div', { class: 'agh-preview-cap' },
-			h('div', null, h('div', { class: 'agh-h', text: (c.house_name || o.label) })),
-			h('span', { class: 'agh-badge', title: t('style_sample_note'), text: t('style_sample') })));
-		box.appendChild(h('p', { class: 'agh-preview-note', text: t('style_sample_note') }));
+		var ch = S.lastChange;
+		if (ch && Date.now() - ch.at < 1500 && S.fields[ch.id]) {
+			var f = S.fields[ch.id], vis = ch.before ? ch.before !== box._aghSk : isVisual(ch.id);
+			var val = f.type === 'toggle' ? (S.config[ch.id] ? t('yes') : t('no')) : (f.options ? optLabel(f, S.config[ch.id]) : (f.type === 'color' ? '' : String(S.config[ch.id] == null ? '' : S.config[ch.id]) + (f.unit ? ' ' + f.unit : '')));
+			box.appendChild(h('div', { class: 'agh-preview-chg' + (vis ? '' : ' is-hidden-param'), role: 'status' },
+				h('b', { text: f.label + (val ? ': ' + val : '') }),
+				vis ? null : h('span', { text: t('sketch_not_visual') })));
+		}
 		return box;
+	}
+	function isVisual(id) {
+		var K = window.AGH_Sketch;
+		return !!(K && K.visual.indexOf(id) !== -1);
 	}
 	function fillKpis(box, c) {
 		clear(box);
@@ -1064,72 +1113,8 @@
 
 	var svgSeq = 0;
 	function previewSvg(c) {
-		// Unique gradient id: several sketches can be in the DOM at once (designer + wizard), and a
-		// reference to an id inside a hidden (display:none) copy would leave the sky unpainted.
-		var sky_id = 'aghsky' + (++svgSeq);
-		var esc = function (s) { return String(s).replace(/[^#0-9A-Fa-f]/g, ''); };
-		var facade = esc(c.facade_color || '#F2EFE9'), roofc = esc(c.roof_color || '#3A3D40'), frame = esc(c.window_frame_color || '#2F3235'), accent = esc(c.facade_accent_color || '#B9824F');
-		var levels = levelCount(); var attic = c.levels === 'attic';
-		var W = 520, x0 = 140, ground = 330;
-		var storey = 62, wallH = attic ? storey + 18 : storey * levels;
-		var top = ground - wallH;
-		var pitch = Math.max(5, Math.min(60, Number(c.roof_pitch || 35)));
-		var rise = c.roof_type === 'flat' ? 10 : Math.tan(pitch * Math.PI / 180) * (c.roof_type === 'shed' ? 120 : 60) + 10;
-		rise = Math.min(rise, 170);
-		var sky = { morning: ['#CFE1F2', '#F7EBDD'], midday: ['#BFD8EE', '#EEF3F7'], golden: ['#F2C99A', '#FBEAD6'], blue: ['#27375E', '#6E7FA8'], night: ['#0F1730', '#2C3A5E'] }[c.time_of_day] || ['#BFD8EE', '#EEF3F7'];
-		var night = c.time_of_day === 'night' || c.time_of_day === 'blue';
-		var glass = night ? '#FFCF85' : '#9DB6C8';
-		var s = '<svg viewBox="0 -150 800 560" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="preview">';
-		s += '<defs><linearGradient id="' + sky_id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sky[0] + '"/><stop offset="1" stop-color="' + sky[1] + '"/></linearGradient></defs>';
-		s += '<rect y="-400" width="800" height="1200" fill="url(#' + sky_id + ')"/>';
-		if (c.time_of_day === 'golden') { s += '<circle cx="660" cy="250" r="46" fill="#FFD9A0" opacity=".8"/>'; }
-		if (c.time_of_day === 'midday' || c.time_of_day === 'morning') { s += '<circle cx="' + (c.time_of_day === 'morning' ? 120 : 640) + '" cy="80" r="26" fill="#FFF5D6" opacity=".9"/>'; }
-		s += '<rect x="-400" y="' + ground + '" width="1600" height="400" fill="' + (night ? '#2E3A2E' : '#7FA36A') + '"/>';
-		// garage
-		var gW = { none: 0, carport: 90, garage_1: 100, garage_2: 160, separate: 150 }[c.garage] || 0;
-		if (gW) {
-			var gx = x0 - gW - (c.garage === 'separate' ? 30 : 0);
-			s += '<rect x="' + gx + '" y="' + (ground - 58) + '" width="' + gW + '" height="58" fill="' + (c.garage === 'carport' ? 'none' : facade) + '" stroke="#2B2E31" stroke-width="2"/>';
-			s += '<rect x="' + (gx - 6) + '" y="' + (ground - 64) + '" width="' + (gW + 12) + '" height="8" fill="' + roofc + '"/>';
-			if (c.garage !== 'carport') { s += '<rect x="' + (gx + 12) + '" y="' + (ground - 44) + '" width="' + (gW - 24) + '" height="44" fill="#6B7075" opacity=".7"/>'; }
-		}
-		// walls
-		s += '<rect x="' + x0 + '" y="' + top + '" width="' + W + '" height="' + wallH + '" fill="#' + facade.replace('#', '') + '" stroke="#2B2E31" stroke-width="2"/>';
-		var acc = c.facade_accent || [];
-		if (acc.indexOf('wood') !== -1) { s += '<rect x="' + (x0 + W * 0.58) + '" y="' + top + '" width="' + (W * 0.16) + '" height="' + wallH + '" fill="' + accent + '" opacity=".95"/>'; for (var k = 0; k < 14; k++) { s += '<line x1="' + (x0 + W * 0.58 + k * W * 0.0115) + '" y1="' + top + '" x2="' + (x0 + W * 0.58 + k * W * 0.0115) + '" y2="' + ground + '" stroke="#000" stroke-opacity=".12"/>'; } }
-		if (acc.indexOf('stone') !== -1) { s += '<rect x="' + (x0 + W * 0.05) + '" y="' + top + '" width="' + (W * 0.12) + '" height="' + wallH + '" fill="#9D9A93"/>'; }
-		s += '<rect x="' + x0 + '" y="' + (ground - 10) + '" width="' + W + '" height="10" fill="' + esc(c.plinth_color || '#4A4D50') + '"/>';
-		// roof
-		var o = 18;
-		if (c.roof_type === 'flat') { s += '<rect x="' + (x0 - 8) + '" y="' + (top - 14) + '" width="' + (W + 16) + '" height="14" fill="' + roofc + '"/>'; }
-		else if (c.roof_type === 'shed') { s += '<polygon points="' + (x0 - o) + ',' + top + ' ' + (x0 + W + o) + ',' + top + ' ' + (x0 + W + o) + ',' + (top - 14) + ' ' + (x0 - o) + ',' + (top - rise) + '" fill="' + roofc + '"/>'; }
-		else if (c.roof_type === 'gable' || c.roof_type === 'complex' || c.roof_type === 'multi') { s += '<polygon points="' + (x0 - o) + ',' + top + ' ' + (x0 + W + o) + ',' + top + ' ' + (x0 + W + o) + ',' + (top - rise) + ' ' + (x0 - o) + ',' + (top - rise) + '" fill="' + roofc + '"/><line x1="' + (x0 - o) + '" y1="' + (top - rise) + '" x2="' + (x0 + W + o) + '" y2="' + (top - rise) + '" stroke="#000" stroke-opacity=".25" stroke-width="3"/>'; }
-		else { var ins = c.roof_type === 'pyramid' ? W / 2 : (c.roof_type === 'half_hip' ? 70 : 130); s += '<polygon points="' + (x0 - o) + ',' + top + ' ' + (x0 + W + o) + ',' + top + ' ' + (x0 + W - ins + o) + ',' + (top - rise) + ' ' + (x0 + ins - o) + ',' + (top - rise) + '" fill="' + roofc + '"/>'; }
-		if (c.roof_solar && c.roof_type !== 'flat') { for (var p = 0; p < 6; p++) { s += '<rect x="' + (x0 + 70 + p * 34) + '" y="' + (top - rise * 0.75) + '" width="30" height="' + (rise * 0.45) + '" fill="#1F2A36" stroke="#8FA3B5" stroke-width="1"/>'; } }
-		if (c.chimney) { s += '<rect x="' + (x0 + W * 0.7) + '" y="' + (top - rise - 18) + '" width="18" height="' + (rise * 0.5 + 18) + '" fill="#9D9A93" stroke="#2B2E31"/>'; }
-		// windows
-		var style = c.window_style;
-		for (var l = 0; l < levels; l++) {
-			var base = ground - 10 - l * storey;
-			if (attic && l > 0) { base = ground - storey - 6; }
-			var n = style === 'vertical' ? 6 : (style === 'panoramic' ? 3 : 4);
-			for (var i = 0; i < n; i++) {
-				var cx = x0 + 40 + i * ((W - 80) / (n - 1 || 1));
-				var ww = style === 'panoramic' ? 110 : (style === 'large' ? 62 : (style === 'vertical' ? 22 : 40));
-				var wh = style === 'panoramic' && l === 0 ? 50 : (style === 'vertical' ? 46 : 32);
-				if (attic && l > 0) { wh = 18; ww = Math.min(ww, 40); }
-				var wy = base - (style === 'panoramic' && l === 0 ? 50 : 42);
-				if (l === 0 && i === 1 && style !== 'panoramic') { s += '<rect x="' + (cx - 16) + '" y="' + (base - 50) + '" width="32" height="50" fill="' + esc(c.entrance_door_color || '#2B2E31') + '" stroke="' + frame + '" stroke-width="3"/>'; continue; }
-				s += '<rect x="' + (cx - ww / 2) + '" y="' + wy + '" width="' + ww + '" height="' + wh + '" fill="' + glass + '" stroke="' + frame + '" stroke-width="3"/>';
-				if (c.window_divided) { s += '<line x1="' + cx + '" y1="' + wy + '" x2="' + cx + '" y2="' + (wy + wh) + '" stroke="' + frame + '" stroke-width="2"/>'; }
-			}
-		}
-		// terrace
-		if (Number(c.terrace_area) > 0) { s += '<polygon points="' + (x0 + 30) + ',' + ground + ' ' + (x0 + W - 30) + ',' + ground + ' ' + (x0 + W - 10) + ',' + (ground + 22) + ' ' + (x0 + 10) + ',' + (ground + 22) + '" fill="#C8A57E"/>'; }
-		// trees
-		[[60, 0.9], [720, 1.1], [770, 0.7]].forEach(function (tr) { s += '<rect x="' + (tr[0] - 3) + '" y="' + (ground - 40 * tr[1]) + '" width="6" height="' + (40 * tr[1]) + '" fill="#5B4636"/><circle cx="' + tr[0] + '" cy="' + (ground - 60 * tr[1]) + '" r="' + (30 * tr[1]) + '" fill="' + (night ? '#2C4430' : '#6E9460') + '"/>'; });
-		s += '</svg>';
-		return s;
+		// Unique id prefix: several sketches can be in the DOM at once (designer, wizard, cards).
+		return window.AGH_Sketch ? window.AGH_Sketch.render(c, { id: 'agh' + (++svgSeq) + '_' }) : '';
 	}
 
 	function concepts() { return (S.project && S.project.concepts) || []; }
@@ -2002,5 +1987,5 @@
 	}
 	function errToast(err) { toast((err && err.message) || t('err_network'), 'error', 7000); }
 
-	window.AGH_Designer = { open: open, close: close, version: '1.0.0' };
+	window.AGH_Designer = { open: open, close: close, version: '1.0.0', config: function () { return clone(S.config); } };
 })();

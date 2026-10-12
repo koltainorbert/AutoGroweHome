@@ -112,6 +112,7 @@ final class Frontend {
 		return array(
 			'css'      => AGH_URL . 'assets/css/agh-designer.css?ver=' . rawurlencode( self::asset_ver( 'assets/css/agh-designer.css' ) ),
 			'js'       => AGH_URL . 'assets/js/agh-designer.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-designer.js' ) ),
+			'sketch'   => AGH_URL . 'assets/js/agh-sketch.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-sketch.js' ) ),
 			'rest'     => wp_make_link_relative( esc_url_raw( rest_url( AGH_REST_NS . '/' ) ) ),
 			'wpNonce'  => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
 			'floating' => $floating,

@@ -19,12 +19,17 @@
 			var st = document.createElement('style');
 			st.textContent = cfg.vars;
 			document.head.appendChild(st);
-			var s = document.createElement('script');
-			s.src = cfg.js;
-			s.async = true;
-			s.onload = function () { window.AGH_Designer ? resolve(window.AGH_Designer) : reject(new Error('AGH')); };
-			s.onerror = reject;
-			document.head.appendChild(s);
+			function script(src, done) {
+				var s = document.createElement('script');
+				s.src = src;
+				s.async = true;
+				s.onload = done;
+				s.onerror = reject;
+				document.head.appendChild(s);
+			}
+			// The live sketch renderer first, then the designer that uses it.
+			function designer() { script(cfg.js, function () { window.AGH_Designer ? resolve(window.AGH_Designer) : reject(new Error('AGH')); }); }
+			if (cfg.sketch && !window.AGH_Sketch) { script(cfg.sketch, designer); } else { designer(); }
 		});
 		return loading;
 	}

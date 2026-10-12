@@ -33,5 +33,12 @@ Első kiadás.
 - Javítás: az élő vázlat égbolt-átmenete egyedi azonosítót kap (két vázlat egyszerre a DOM-ban).
 - **Fotórealisztikus stílusminták** mind a 16 építészeti stílushoz (Magnific / Seedream 5 Pro, WebP 1280 + 480 px, összesen ~2,8 MB): képes stíluskártyák a tervezőben és a varázslóban, az előnézet a stílus fotója az élő vázlattal; „Stílusminta” jelöléssel.
 
+### Új (2026-10-12, kiadás előtt) – élő vázlat és ikonok
+- **Új élő 3D vázlat** (`assets/js/agh-sketch.js`, önálló modul): axonometrikus, anyagmintás (tégla, klinker, kő, fa, fém, beton, panel, vakolatstruktúra, cserépprofilok BRAMAC-családonként, korcolt lemez, zöldtető), valódi tetőgeometria (nyereg, konty, csonkakonty, félnyereg, sátor, lapos, összetett) hajlásszöggel, eresszel, oromzattal; szintek, alaprajzi forma, garázs/beálló, terasz, pergola, erkély, tornác, lépcső/rámpa, kémény, napelem, tetőablak, tetőfelépítmény, kerítés kapuval, telekhatár, kert stílusonként, gépészet (hőszivattyú, klíma, töltő, akkumulátor, esővíztartály), napszak, évszak, időjárás, kamera, árnyékok. A stílusminta-fotó kis betétkép lett, a vázlat tölti ki az előnézetet.
+- Minden változtatásnál felirat jelzi, mi változott; ha a paraméter a vázlaton nem látszik (konyha, fürdő, burkolatok…), ezt kiírja – a rajz összehasonlításából, nem becslésből.
+- **Opciókártyák saját képpel**: a tetőforma, szintszám, alaprajz, ablak, garázs kártyáin a látogató saját háza az adott opcióval; homlokzat- és padlóanyag-minták, belsőstílus-paletták, kert- és napszak-tájképek, konyha-alaprajzok; egyedi (admin) opcióknál színes monogram.
+- **Új kategóriaikonok**: 15 egyedi, kéttónusú ikon, kategóriánként saját színnel.
+- Tesztek: `node tests/sketch-test.js` (1017 rajz, 180 paraméterváltozat, 0 hiba), `node tests/e2e/sketch.js` (a valódi felületen 116 mező: ahol látszania kell, mind változtatja a vázlatot).
+
 ### Ellenőrzés
 - Integrációs tesztsor 147/147, regressziós tesztek 120 + 116 + 71, licencszerver-önteszt 32/32, lint 0 hiba (részletek: `docs/TESZTJELENTES.md`).

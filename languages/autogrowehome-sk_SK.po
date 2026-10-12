@@ -6756,3 +6756,7 @@ msgstr "Ilustrácia štýlu – fotorealistické obrázky vášho domu vzniknú 
 #: includes/Frontend/Strings.php:231
 msgid "Stílusminta"
 msgstr "Ukážka štýlu"
+
+#: includes/Frontend/Strings.php:233
+msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
+msgstr "V náčrte nie je vidieť – zobrazí sa na obrázkoch konceptov."

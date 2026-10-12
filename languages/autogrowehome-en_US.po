@@ -6754,3 +6754,7 @@ msgstr "Illustration of the style – photorealistic images of your own house ar
 #: includes/Frontend/Strings.php:231
 msgid "Stílusminta"
 msgstr "Style sample"
+
+#: includes/Frontend/Strings.php:233
+msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
+msgstr "Not visible in the sketch – it appears in the concept images."

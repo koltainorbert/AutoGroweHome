@@ -1,0 +1,1296 @@
+/*!
+ * AutoGroweHome – élő vázlat (live sketch)
+ * Koltai Norbert – Infostudio
+ *
+ * Pure function: house configuration → SVG markup. A small 3D scene in
+ * meters (x: along the front facade, y: towards the viewer, z: up) is
+ * projected with an oblique/axonometric camera. Every planar face is drawn in
+ * its own local 2D coordinates inside an affine transform, so materials
+ * (brick, stone, timber, standing seam, roof tiles…) follow the face.
+ *
+ * Used by the designer (live preview, option cards) and by the tests in Node
+ * (module.exports). No DOM access, deterministic output (seeded randomness).
+ */
+(function (root) {
+	'use strict';
+
+	var D2R = Math.PI / 180;
+
+	/* ------------------------------------------------------------------ helpers */
+	function num(v, d) { v = Number(v); return isFinite(v) ? v : d; }
+	function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+	function col(c, d) { return /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? String(c).toUpperCase() : d; }
+	function rgb(c) { c = col(c, '#888888'); return [parseInt(c.substr(1, 2), 16), parseInt(c.substr(3, 2), 16), parseInt(c.substr(5, 2), 16)]; }
+	function toHex(a) { return '#' + a.map(function (v) { v = clamp(Math.round(v), 0, 255); return (v < 16 ? '0' : '') + v.toString(16); }).join('').toUpperCase(); }
+	function mix(a, b, t) { var x = rgb(a), y = rgb(b); return toHex([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]); }
+	function shade(c, k) { return k < 0 ? mix(c, '#000000', -k) : mix(c, '#FFFFFF', k); }
+	function lum(c) { var x = rgb(c); return (0.299 * x[0] + 0.587 * x[1] + 0.114 * x[2]) / 255; }
+	function f(n) { return (Math.round(n * 1000) / 1000).toString(); }
+	function has(arr, v) { return Array.isArray(arr) && arr.indexOf(v) !== -1; }
+	function rng(seed) {
+		var s = (seed >>> 0) || 1;
+		return function () { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return (s % 100000) / 100000; };
+	}
+	function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+	function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+	function mul(a, k) { return [a[0] * k, a[1] * k, a[2] * k]; }
+	function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+	function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+	function norm(a) { var l = Math.sqrt(dot(a, a)) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+	function pts(list) { return list.map(function (p) { return f(p[0]) + ',' + f(p[1]); }).join(' '); }
+
+	/* ------------------------------------------------------------------ scene setup */
+	function camera(c) {
+		var cam = c.camera || 'three_quarter';
+		var a = 17, b = 38, k = 0.6, zk = 1;
+		if (cam === 'frontal') { a = 5; b = 52; k = 0.34; }
+		else if (cam === 'low') { a = 13; b = 30; k = 0.42; zk = 1.08; }
+		else if (cam === 'elevated') { a = 24; b = 44; k = 0.86; zk = 0.88; }
+		var ca = Math.cos(a * D2R), sa = Math.sin(a * D2R), cb = Math.cos(b * D2R) * k, sb = Math.sin(b * D2R) * k;
+		var P = function (p) { return [p[0] * ca - p[1] * cb, p[0] * sa + p[1] * sb - p[2] * zk]; };
+		// Direction towards the viewer: it projects to a single point; faces whose outward normal points along it are visible.
+		var t = norm([cb / ca, 1, (cb * sa / ca + sb) / zk]);
+		return { P: P, t: t };
+	}
+
+	var SKY = {
+		morning: ['#86BCEB', '#FBE6CC', '#FFF1D6'],
+		midday: ['#4A90DA', '#D3E9F8', '#FFFFFF'],
+		golden: ['#6A8DC6', '#FFD1A0', '#FFD9A6'],
+		blue: ['#1B2D55', '#7E80A8', '#A6A0B8'],
+		night: ['#060A18', '#1E2848', '#2B3355']
+	};
+	function lightFor(c) {
+		var tod = SKY[c.time_of_day] ? c.time_of_day : 'golden';
+		var overcast = c.weather === 'overcast';
+		// sun azimuth (deg, 0 = from the viewer's left) and elevation per time of day
+		var az = { morning: 35, midday: 80, golden: 150, blue: 160, night: 160 }[tod];
+		var el = { morning: 25, midday: 60, golden: 18, blue: 6, night: 30 }[tod];
+		var orient = { south: 0, south_west: 25, south_east: -25, west: 50, east: -50, north: 90 }[c.orientation] || 0;
+		az += orient * 0.5;
+		var L = norm([Math.cos(az * D2R), Math.sin(az * D2R) * 0.6 + 0.4, Math.tan(el * D2R) + 0.2]);
+		return {
+			tod: tod, L: L, overcast: overcast,
+			dark: tod === 'night' ? 0.62 : (tod === 'blue' ? 0.42 : 0),
+			tint: { morning: '#FFE9C7', midday: '#FFFFFF', golden: '#FFB866', blue: '#3A4A7A', night: '#0B1230' }[tod],
+			tintA: { morning: 0.05, midday: 0, golden: 0.08, blue: 0.22, night: 0.36 }[tod],
+			shadow: overcast || tod === 'night' ? 0 : (tod === 'blue' ? 0.08 : 0.22),
+			sunDir: [-Math.cos(az * D2R), -(Math.sin(az * D2R) * 0.6 + 0.4)], sunTan: 1 / Math.tan(Math.max(10, el) * D2R),
+			glow: tod === 'blue' || tod === 'night'
+		};
+	}
+
+	/* ------------------------------------------------------------------ materials */
+	var WOOD = { wood: '#A8744A', scandi: '#B9B4AA', dark: '#3A2E26' };
+	function facadeBase(c, mat) {
+		switch (mat) {
+			case 'brick': return '#A4553A';
+			case 'clinker': return '#5A4036';
+			case 'stone': return '#BDAE97';
+			case 'wood': return c.arch_style === 'scandinavian' ? WOOD.scandi : (c.arch_style === 'japandi' ? WOOD.dark : WOOD.wood);
+			case 'metal': return '#5E6266';
+			case 'concrete': return '#B6B3AD';
+			case 'panel': return shade(col(c.facade_color, '#F2EFE9'), -0.12);
+			case 'render_dark': return '#4A4D50';
+			default: return col(c.facade_color, '#F2EFE9');
+		}
+	}
+	// Pattern markup in local face units (meters, v = up). Returns '' for plain fills.
+	function patternDef(id, mat, base) {
+		var d = shade(base, -0.18), l = shade(base, 0.12);
+		switch (mat) {
+			case 'brick':
+			case 'clinker':
+				var bw = mat === 'clinker' ? 0.62 : 0.46, bh = mat === 'clinker' ? 0.1 : 0.15, j = 0.035, H = (bh + j) * 2;
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="' + f(bw + j) + '" height="' + f(H) + '">' +
+					'<rect width="' + f(bw + j) + '" height="' + f(H) + '" fill="' + (mat === 'clinker' ? '#3A2D28' : '#D9D2C7') + '"/>' +
+					'<rect x="0" y="0" width="' + f(bw) + '" height="' + f(bh) + '" fill="' + base + '"/>' +
+					'<rect x="' + f(-(bw + j) / 2) + '" y="' + f(bh + j) + '" width="' + f(bw) + '" height="' + f(bh) + '" fill="' + shade(base, -0.08) + '"/>' +
+					'<rect x="' + f((bw + j) / 2) + '" y="' + f(bh + j) + '" width="' + f(bw) + '" height="' + f(bh) + '" fill="' + shade(base, 0.06) + '"/></pattern>';
+			case 'stone':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="1.2" height="0.6"><rect width="1.2" height="0.6" fill="' + d + '"/>' +
+					'<path d="M0.02 0.02h0.36l0.04 0.2-0.4 0.03z" fill="' + base + '"/><path d="M0.42 0.02h0.42l-0.02 0.24h-0.42z" fill="' + l + '"/>' +
+					'<path d="M0.86 0.02h0.32v0.26h-0.34z" fill="' + shade(base, -0.06) + '"/><path d="M0.02 0.28l0.32-0.02 0.06 0.3h-0.38z" fill="' + shade(base, 0.05) + '"/>' +
+					'<path d="M0.42 0.3h0.5l0.02 0.28h-0.5z" fill="' + base + '"/><path d="M0.96 0.32h0.22v0.26h-0.24z" fill="' + l + '"/></pattern>';
+			case 'wood':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.22" height="2"><rect width="0.22" height="2" fill="' + base + '"/>' +
+					'<rect x="0.2" width="0.02" height="2" fill="' + shade(base, -0.38) + '"/><rect x="0.06" width="0.05" height="2" fill="' + shade(base, 0.06) + '"/></pattern>';
+			case 'metal':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.45" height="1"><rect width="0.45" height="1" fill="' + base + '"/>' +
+					'<rect x="0.42" width="0.03" height="1" fill="' + l + '"/><rect x="0.45" width="0.01" height="1" fill="' + d + '"/></pattern>';
+			case 'concrete':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="1.2" height="0.6"><rect width="1.2" height="0.6" fill="' + base + '"/>' +
+					'<path d="M0 0h1.2M0 0v0.6" stroke="' + d + '" stroke-width="0.012"/><circle cx="0.3" cy="0.15" r="0.012" fill="' + d + '"/><circle cx="0.9" cy="0.15" r="0.012" fill="' + d + '"/>' +
+					'<circle cx="0.3" cy="0.45" r="0.012" fill="' + d + '"/><circle cx="0.9" cy="0.45" r="0.012" fill="' + d + '"/></pattern>';
+			case 'panel':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="1.5" height="0.75"><rect width="1.5" height="0.75" fill="' + base + '"/>' +
+					'<path d="M0 0h1.5M0 0v0.75" stroke="' + d + '" stroke-width="0.02"/></pattern>';
+			case 'tiles':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.3" height="0.34"><rect width="0.3" height="0.34" fill="' + base + '"/>' +
+					'<rect y="0" width="0.3" height="0.06" fill="' + shade(base, -0.28) + '"/><rect x="0.148" y="0.06" width="0.008" height="0.28" fill="' + shade(base, -0.16) + '"/>' +
+					'<rect y="0.06" width="0.3" height="0.04" fill="' + shade(base, 0.08) + '"/></pattern>';
+			case 'flattile':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.42" height="0.3"><rect width="0.42" height="0.3" fill="' + base + '"/>' +
+					'<rect width="0.42" height="0.025" fill="' + shade(base, -0.3) + '"/><rect x="0.205" y="0.025" width="0.01" height="0.275" fill="' + shade(base, -0.15) + '"/></pattern>';
+			case 'roman':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.3" height="0.38"><rect width="0.3" height="0.38" fill="' + base + '"/>' +
+					'<path d="M0 0.38V0.06Q0.075 -0.02 0.15 0.06T0.3 0.06V0.38" fill="' + shade(base, 0.08) + '"/><path d="M0.15 0.06V0.38" stroke="' + shade(base, -0.25) + '" stroke-width="0.03"/>' +
+					'<rect width="0.3" height="0.035" fill="' + shade(base, -0.32) + '"/></pattern>';
+			case 'shingle':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.34" height="0.28"><rect width="0.34" height="0.28" fill="' + base + '"/>' +
+					'<path d="M0 0H0.34M0 0.14H0.34M0.17 0V0.14M0 0.14V0.28M0.34 0.14V0.28" stroke="' + shade(base, -0.28) + '" stroke-width="0.012"/><circle cx="0.06" cy="0.05" r="0.012" fill="' + l + '"/><circle cx="0.24" cy="0.2" r="0.012" fill="' + l + '"/><circle cx="0.12" cy="0.22" r="0.01" fill="' + d + '"/></pattern>';
+			case 'renderfine':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.5" height="0.5"><rect width="0.5" height="0.5" fill="' + base + '"/>' +
+					'<circle cx="0.1" cy="0.12" r="0.012" fill="' + d + '" opacity="0.35"/><circle cx="0.36" cy="0.3" r="0.012" fill="' + d + '" opacity="0.35"/><circle cx="0.22" cy="0.42" r="0.01" fill="' + l + '"/></pattern>';
+			case 'rendercoarse':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.4" height="0.4"><rect width="0.4" height="0.4" fill="' + base + '"/>' +
+					'<circle cx="0.06" cy="0.08" r="0.03" fill="' + d + '" opacity="0.45"/><circle cx="0.26" cy="0.18" r="0.035" fill="' + d + '" opacity="0.4"/><circle cx="0.14" cy="0.32" r="0.028" fill="' + l + '"/><circle cx="0.34" cy="0.36" r="0.025" fill="' + d + '" opacity="0.4"/></pattern>';
+			case 'flattile2':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.33" height="0.36"><rect width="0.33" height="0.36" fill="' + base + '"/>' +
+					'<rect width="0.33" height="0.04" fill="' + shade(base, -0.32) + '"/><rect x="0.16" y="0.04" width="0.014" height="0.32" fill="' + shade(base, -0.2) + '"/><rect y="0.04" width="0.33" height="0.05" fill="' + shade(base, 0.1) + '"/></pattern>';
+			case 'slate':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.6" height="0.4"><rect width="0.6" height="0.4" fill="' + base + '"/>' +
+					'<path d="M0 0H0.6M0 0.2H0.6M0.15 0V0.2M0.45 0.2V0.4" stroke="' + shade(base, -0.3) + '" stroke-width="0.016"/><rect x="0.16" y="0.02" width="0.28" height="0.16" fill="' + shade(base, 0.06) + '"/></pattern>';
+			case 'seam':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.5" height="1"><rect width="0.5" height="1" fill="' + base + '"/>' +
+					'<rect x="0.47" width="0.03" height="1" fill="' + shade(base, 0.22) + '"/></pattern>';
+			case 'green':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.6" height="0.4"><rect width="0.6" height="0.4" fill="#6E8F45"/>' +
+					'<circle cx="0.12" cy="0.1" r="0.08" fill="#86A657"/><circle cx="0.42" cy="0.28" r="0.1" fill="#5E7E3A"/><circle cx="0.5" cy="0.06" r="0.05" fill="#A3B86A"/></pattern>';
+			case 'gravel':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.3" height="0.3"><rect width="0.3" height="0.3" fill="#A9A49B"/>' +
+					'<circle cx="0.06" cy="0.08" r="0.025" fill="#8E897F"/><circle cx="0.2" cy="0.2" r="0.03" fill="#BDB8AE"/><circle cx="0.24" cy="0.06" r="0.02" fill="#7F7A71"/></pattern>';
+			case 'deck':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="2" height="0.145"><rect width="2" height="0.145" fill="' + base + '"/>' +
+					'<rect y="0.135" width="2" height="0.01" fill="' + shade(base, -0.35) + '"/></pattern>';
+			case 'pavers':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.4" height="0.2"><rect width="0.4" height="0.2" fill="' + base + '"/>' +
+					'<path d="M0 0h0.4M0 0.1h0.4M0 0v0.1M0.2 0.1v0.1" stroke="' + shade(base, -0.25) + '" stroke-width="0.012"/></pattern>';
+			case 'slabs':
+				return '<pattern id="' + id + '" patternUnits="userSpaceOnUse" width="0.8" height="0.4"><rect width="0.8" height="0.4" fill="' + base + '"/>' +
+					'<path d="M0 0h0.8M0 0v0.4" stroke="' + shade(base, -0.2) + '" stroke-width="0.015"/></pattern>';
+			default:
+				return '';
+		}
+	}
+
+	/* ------------------------------------------------------------------ renderer */
+	function Scene(c, opts) {
+		this.c = c;
+		this.o = opts || {};
+		this.cam = camera(c);
+		this.light = lightFor(c);
+		this.id = (opts && opts.id) || 'k';
+		this.defs = [];
+		this.defIds = {};
+		this.items = [];   // { depth, svg }
+		this.minX = Infinity; this.minY = Infinity; this.maxX = -Infinity; this.maxY = -Infinity;
+		this.rnd = rng(77);
+	}
+	Scene.prototype.track = function (p3) { var p = this.cam.P(p3); if (p[0] < this.minX) { this.minX = p[0]; } if (p[0] > this.maxX) { this.maxX = p[0]; } if (p[1] < this.minY) { this.minY = p[1]; } if (p[1] > this.maxY) { this.maxY = p[1]; } return p; };
+	Scene.prototype.depth = function (p3) { return dot(p3, this.cam.t); };
+	Scene.prototype.def = function (key, markup) { if (!this.defIds[key]) { this.defIds[key] = 1; this.defs.push(markup); } return this.id + key; };
+	Scene.prototype.mat = function (mat, base) {
+		var key = 'm' + mat + base.substr(1);
+		var p = patternDef(this.id + key, mat, base);
+		if (!p) { return base; }
+		this.def(key, p);
+		return 'url(#' + this.id + key + ')';
+	};
+	// Affine transform for a plane: local (u, v) → screen; o: origin, du/dv: unit directions (v = "up" on the face).
+	Scene.prototype.frame = function (o, du, dv) {
+		var P = this.cam.P, O = P(o), A = P(add(o, du)), B = P(add(o, dv));
+		return 'matrix(' + [A[0] - O[0], A[1] - O[1], B[0] - O[0], B[1] - O[1], O[0], O[1]].map(f).join(' ') + ')';
+	};
+	Scene.prototype.visible = function (du, dv) { return dot(cross(dv, du), this.cam.t) > 0.01; };
+	Scene.prototype.lit = function (du, dv) {
+		var n = norm(cross(dv, du)), L = this.light.L;
+		var k = clamp(0.5 + 0.5 * dot(n, L), 0, 1);
+		if (this.light.overcast) { k = 0.62 + (k - 0.5) * 0.25; }
+		return clamp((1 - k) * 0.55, 0, 0.5); // shadow overlay opacity
+	};
+	// A planar polygon given in local 2D coordinates on the plane (o, du, dv); inner: extra local markup (windows…).
+	Scene.prototype.plane = function (o, du, dv, poly, fill, inner, opts) {
+		opts = opts || {};
+		if (!opts.both && !this.visible(du, dv)) { return null; }
+		var self = this, pts3 = poly.map(function (q) { return add(add(o, mul(du, q[0])), mul(dv, q[1])); });
+		pts3.forEach(function (p) { self.track(p); });
+		var shadowA = opts.noShade ? 0 : this.lit(du, dv);
+		var s = '<g transform="' + this.frame(o, du, dv) + '">' +
+			'<polygon points="' + pts(poly) + '" fill="' + fill + '"/>' +
+			(inner || '') +
+			(shadowA > 0.005 ? '<polygon points="' + pts(poly) + '" fill="#1B2230" opacity="' + f(shadowA) + '"/>' : '') +
+			(opts.after || '') +
+			(opts.edge === false ? '' : '<polygon points="' + pts(poly) + '" fill="none" stroke="' + (opts.stroke || '#141A22') + '" stroke-opacity="' + (opts.stroke ? 1 : 0.28) + '" stroke-width="' + (opts.sw || 0.7) + '" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>') +
+			'</g>' + (opts.screen || '');
+		var cen = pts3.reduce(function (a, p) { return add(a, p); }, [0, 0, 0]);
+		return { svg: s, depth: this.depth(mul(cen, 1 / pts3.length)) };
+	};
+	// Planar polygon given by 3D points; local frame derived from the plane (v = up the slope).
+	// opts.normal: outward normal (default: the one pointing up). inner/after may be functions of the local polygon.
+	Scene.prototype.poly3 = function (p3, fill, inner, opts) {
+		opts = opts || {};
+		var n = [0, 0, 0];
+		for (var i = 1; i + 1 < p3.length && dot(n, n) < 1e-8; i++) { n = cross(sub(p3[i], p3[0]), sub(p3[i + 1], p3[0])); }
+		if (dot(n, n) < 1e-8) { return null; }
+		n = norm(n);
+		var want = opts.normal || [0, 0, 1];
+		if (dot(n, want) < 0) { n = mul(n, -1); }
+		var dv = sub([0, 0, 1], mul(n, n[2]));
+		if (dot(dv, dv) < 1e-6) { dv = sub([0, -1, 0], mul(n, -n[1])); }
+		dv = norm(dv);
+		var du = cross(n, dv), o = p3[0];
+		var loc = p3.map(function (p) { var q = sub(p, o); return [dot(q, du), dot(q, dv)]; });
+		var o2 = Object.assign({}, opts);
+		if (typeof o2.after === 'function') { o2.after = o2.after(loc); }
+		return this.plane(o, du, dv, loc, fill, typeof inner === 'function' ? inner(loc) : (inner || ''), o2);
+	};
+	Scene.prototype.line = function (a, b, color, width) {
+		var A = this.track(a), B = this.track(b);
+		return '<path d="M' + f(A[0]) + ' ' + f(A[1]) + 'L' + f(B[0]) + ' ' + f(B[1]) + '" stroke="' + color + '" stroke-width="' + f(width) + '" stroke-linecap="round"/>';
+	};
+	Scene.prototype.push = function (depth, svg) { if (svg) { this.items.push({ d: depth, s: svg }); } };
+
+	/* ------------------------------------------------------------------ building geometry */
+	// Signature details per architectural style (all optional): symmetric entrance, window trims,
+	// lintels, arched windows, porch, timber slats, fins, entrance portal, cornice, deep eaves, metal roof.
+	var STYLES = {
+		contemporary_lux: { portal: '#2B2E31' },
+		mediterranean: { sym: true, arches: true, trim: '#FFFFFF' },
+		scandinavian: { seam: true, trim: '#FFFFFF' },
+		bauhaus: { band: true },
+		japandi: { slats: '#5C4632', over: 0.9 },
+		classic_burgher: { sym: true, cornice: true, trim: 'light' },
+		rustic: { lintel: '#5A4030', quoins: true },
+		modern_farmhouse: { seam: true, porch: '#2B2E31' },
+		american_farm: { sym: true, porch: '#F4F1EA', trim: '#FFFFFF' },
+		alpine: { over: 1.2, woodGable: true },
+		industrial: { seam: true, lintel: '#1E1F21', grid: true },
+		organic_modern: { fins: '#8A6A4C' },
+		high_tech: { fins: '#9DA1A4', portal: '#5E6266' },
+		passive: { pv: true, reveal: true }
+	};
+	function styleOf(c) { return STYLES[c.arch_style] || {}; }
+	function doorPos(c, len) {
+		var w = c.entrance_door === 'pivot' ? 1.4 : 1.05;
+		return { x: styleOf(c).sym ? len / 2 - w / 2 : clamp(len * 0.26, 0.8, len - w - 0.8), w: w, h: c.entrance_door === 'pivot' ? 2.6 : 2.3 };
+	}
+	function plan(c) {
+		var levels = c.levels || 'single';
+		var floors = { single: 1, attic: 1, two: 2, three: 3 }[levels] || 1;
+		var eq = { single: 1, attic: 1.55, two: 2, three: 3 }[levels] || 1;
+		var area = clamp(num(c.net_area, 120), 25, 800);
+		var units = { semi_detached: 2, row: 3 }[c.property_type] || 1;
+		var fpArea = area * 1.18 / eq;
+		var bw = num(c.building_width, 0), bl = num(c.building_length, 0);
+		var W, D;
+		D = clamp(Math.sqrt(fpArea / 1.65), 5.5, 14); W = clamp(fpArea / D, 6, 40);
+		if (c.property_type === 'villa') { W = clamp(W * 1.25, 6, 40); D = clamp(D * 1.1, 5.5, 16); }
+		if (c.property_type === 'holiday') { W = clamp(W * 0.85, 6, 40); }
+		// explicit building dimensions win (each one on its own); the longer side is the street front
+		if (bw > 3 && bl > 3) { W = Math.max(bw, bl); D = Math.min(bw, bl); }
+		else if (bw > 3) { W = clamp(bw, 4, 60); D = clamp(fpArea / W, 4, 20); }
+		else if (bl > 3) { D = clamp(bl, 4, 20); W = clamp(fpArea / D, 4, 60); }
+		if (c.property_type === 'small') { W = Math.min(W, 7); D = Math.min(D, 5); }
+		if (units > 1) { W = clamp(W, 5.5, 13); }
+		var FH = clamp(num(c.ceiling_height, 2.8), 2.4, 4) + 0.32;
+		var pitch = c.roof_type === 'flat' ? 0 : clamp(num(c.roof_pitch, 35), c.roof_type === 'shed' ? 5 : 12, c.roof_type === 'shed' ? 22 : 60);
+		if (levels === 'attic' && c.roof_type !== 'flat' && c.roof_type !== 'shed') { pitch = Math.max(pitch, 38); }
+		var plinth = c.basement ? 0.7 : 0.25, h0 = plinth + floors * FH + (levels === 'attic' ? 0.9 : 0), rh = num(c.ridge_height, 0);
+		// an explicit ridge height sets the pitch (pitched roofs with a ridge)
+		if (rh > h0 + 0.8 && ['gable', 'hip', 'half_hip', 'multi', 'complex'].indexOf(c.roof_type || 'gable') !== -1) { pitch = clamp(Math.atan((rh - h0) / (D / 2)) / D2R, 8, 65); }
+		var over = Math.max(clamp(num(c.roof_overhang, 0.4), 0, 1.5), styleOf(c).over || 0);
+		var ed = num(c.eaves_depth, 0);
+		return { floors: floors, attic: levels === 'attic', W: W * units, unitW: W, units: units, D: D, FH: FH, pitch: pitch,
+			plinth: plinth, h0: h0, over: over, eave: ed > 0 ? Math.max(clamp(ed, 0.05, 2.5), styleOf(c).over || 0) : over };
+	}
+	// Building volumes (axis-aligned boxes) for the footprint shape.
+	function volumes(c, pl) {
+		var W = pl.W, D = pl.D, h = pl.plinth + pl.floors * pl.FH + (pl.attic ? 0.9 : 0), v = [];
+		var fp = pl.units > 1 ? 'rectangle' : (c.footprint || 'rectangle');
+		if (c.roof_type === 'multi' || c.roof_type === 'complex') { fp = fp === 'rectangle' ? 'l_shape' : fp; }
+		if (fp === 'l_shape') {
+			var w2 = clamp(W * 0.38, 3.5, 7), d2 = clamp(D * 0.6, 3, 7);
+			v.push({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true, ridge: 'x' });
+			v.push({ x0: W - w2, x1: W, y0: D, y1: D + d2, h: c.roof_type === 'complex' ? h - pl.FH * 0.35 : h, ridge: 'y', wing: true });
+		} else if (fp === 'u_shape') {
+			var w3 = clamp(W * 0.26, 3, 6), d3 = clamp(D * 0.55, 3, 6);
+			v.push({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true, ridge: 'x' });
+			v.push({ x0: 0, x1: w3, y0: D, y1: D + d3, h: h, ridge: 'y', wing: true });
+			v.push({ x0: W - w3, x1: W, y0: D, y1: D + d3, h: h, ridge: 'y', wing: true });
+		} else if (fp === 'staggered') {
+			var s = W * 0.55;
+			v.push({ x0: 0, x1: s + 0.4, y0: 0, y1: D, h: h, main: true, ridge: 'x' });
+			v.push({ x0: s, x1: W + 1.2, y0: 1.6, y1: D + 1.6, h: Math.max(pl.plinth + pl.FH + 0.4, h - pl.FH), ridge: 'x', second: true });
+		} else {
+			v.push({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true, ridge: 'x' });
+		}
+		return v;
+	}
+
+	/* ------------------------------------------------------------------ facade details (local coords) */
+	function windowSpec(c) {
+		switch (c.window_style) {
+			case 'classic': return { w: 1.15, h: 1.45, sill: 0.95, gap: 1.3 };
+			case 'panoramic': return { w: 2.4, h: 2.45, sill: 0.05, gap: 0.5 };
+			case 'vertical': return { w: 0.75, h: 2.1, sill: 0.35, gap: 0.9 };
+			default: return { w: 1.9, h: 1.65, sill: 0.6, gap: 1.0 };
+		}
+	}
+	function glass(sc) {
+		var c = sc.c, L = sc.light;
+		if (L.glow && c.night_lighting !== false) {
+			return 'url(#' + sc.def('glow', '<linearGradient id="' + sc.id + 'glow" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FFE3A3"/><stop offset="1" stop-color="#F6B85C"/></linearGradient>') + ')';
+		}
+		var sky = SKY[L.tod];
+		var tintG = c.glazing === 'tinted' ? 0.35 : 0;
+		var top = mix(sky[0], '#26313D', 0.35 + tintG), bot = mix(sky[1], '#5B6B78', 0.45 + tintG);
+		if (c.glazing === 'frosted') { top = '#C9D3DA'; bot = '#AEB9C1'; }
+		var key = 'gl' + top.substr(1) + bot.substr(1);
+		return 'url(#' + sc.def(key, '<linearGradient id="' + sc.id + key + '" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="' + top + '"/><stop offset="0.55" stop-color="' + bot + '"/><stop offset="0.56" stop-color="' + mix(bot, '#FFFFFF', 0.25) + '"/><stop offset="1" stop-color="' + top + '"/></linearGradient>') + ')';
+	}
+	// One window in local coordinates (x = left edge, y = sill height above the face origin).
+	function windowSvg(sc, x, y, w, h, opt) {
+		var c = sc.c, st = styleOf(c), fc = col(c.window_frame_color, '#2F3235');
+		var mat = c.window_frame_material || 'aluminium';
+		var fr = { pvc: 0.09, aluminium: 0.045, wood: 0.075, wood_alu: 0.06 }[mat] || 0.05;
+		var s = '';
+		if (st.trim) { var tc = st.trim === 'light' ? shade(col(c.facade_color, '#F2EFE9'), 0.35) : st.trim; s += '<rect x="' + f(x - 0.11) + '" y="' + f(y - 0.11) + '" width="' + f(w + 0.22) + '" height="' + f(h + 0.22) + '" fill="' + tc + '"/>'; }
+		if (st.lintel) { s += '<rect x="' + f(x - 0.16) + '" y="' + f(y + h + 0.02) + '" width="' + f(w + 0.32) + '" height="0.2" fill="' + st.lintel + '"/>'; }
+		if (st.arches && !(opt && opt.noArch)) { s += '<path d="M' + f(x) + ' ' + f(y + h - 0.01) + 'A' + f(w / 2) + ' ' + f(Math.min(w / 2, 0.55)) + ' 0 0 0 ' + f(x + w) + ' ' + f(y + h - 0.01) + 'Z" fill="' + fc + '"/><path d="M' + f(x + fr) + ' ' + f(y + h) + 'A' + f(w / 2 - fr) + ' ' + f(Math.min(w / 2, 0.55) - fr) + ' 0 0 0 ' + f(x + w - fr) + ' ' + f(y + h) + 'Z" fill="' + glass(sc) + '"/>'; }
+		s += '<rect x="' + f(x) + '" y="' + f(y) + '" width="' + f(w) + '" height="' + f(h) + '" fill="' + fc + '"/>' +
+			'<rect x="' + f(x + fr) + '" y="' + f(y + fr) + '" width="' + f(w - 2 * fr) + '" height="' + f(h - 2 * fr) + '" fill="' + glass(sc) + '"/>';
+		if (mat === 'wood' || mat === 'wood_alu') { s += '<rect x="' + f(x + fr * 0.55) + '" y="' + f(y + fr * 0.55) + '" width="' + f(w - fr * 1.1) + '" height="' + f(h - fr * 1.1) + '" fill="none" stroke="#A8744A" stroke-width="' + f(fr * 0.45) + '"/>'; }
+		if (st.reveal) { s += '<path d="M' + f(x + fr) + ' ' + f(y + fr) + 'V' + f(y + h - fr) + 'H' + f(x + w - fr) + '" fill="none" stroke="#1B2230" stroke-opacity="0.35" stroke-width="0.1"/>'; }
+		var mull = Math.max(1, Math.round(w / (c.window_style === 'panoramic' ? 1.3 : 1.1)));
+		for (var i = 1; i < mull; i++) { s += '<rect x="' + f(x + w * i / mull - 0.025) + '" y="' + f(y) + '" width="0.05" height="' + f(h) + '" fill="' + fc + '"/>'; }
+		if (c.window_divided || st.grid) {
+			// glazing bars: a grid of small panes
+			var gx = Math.max(2, Math.round(w / 0.42)), gy = Math.max(2, Math.round(h / 0.5));
+			for (var a = 1; a < gx; a++) { s += '<rect x="' + f(x + w * a / gx - 0.012) + '" y="' + f(y) + '" width="0.024" height="' + f(h) + '" fill="' + fc + '"/>'; }
+			for (var b2 = 1; b2 < gy; b2++) { s += '<rect x="' + f(x) + '" y="' + f(y + h * b2 / gy - 0.012) + '" width="' + f(w) + '" height="0.024" fill="' + fc + '"/>'; }
+		} else if (c.window_style === 'classic') {
+			s += '<rect x="' + f(x) + '" y="' + f(y + h * 0.62) + '" width="' + f(w) + '" height="0.04" fill="' + fc + '"/>';
+		}
+		// sill
+		s += '<rect x="' + f(x - 0.05) + '" y="' + f(y - 0.05) + '" width="' + f(w + 0.1) + '" height="0.05" fill="' + shade(fc, 0.35) + '"/>';
+		var sh = c.shading || [];
+		if (opt && opt.shutters) {
+			var scol = opt.shutters;
+			s += '<rect x="' + f(x - w * 0.5 - 0.04) + '" y="' + f(y) + '" width="' + f(w * 0.5) + '" height="' + f(h) + '" fill="' + scol + '"/>' +
+				'<rect x="' + f(x + w + 0.04) + '" y="' + f(y) + '" width="' + f(w * 0.5) + '" height="' + f(h) + '" fill="' + shade(scol, -0.08) + '"/>';
+			for (var k = 1; k < 6; k++) { s += '<path d="M' + f(x - w * 0.5) + ' ' + f(y + h * k / 6) + 'h' + f(w * 0.45) + 'M' + f(x + w + 0.08) + ' ' + f(y + h * k / 6) + 'h' + f(w * 0.45) + '" stroke="' + shade(scol, -0.25) + '" stroke-width="0.015"/>'; }
+		}
+		if (has(sh, 'blinds')) {
+			s += '<rect x="' + f(x - 0.04) + '" y="' + f(y + h) + '" width="' + f(w + 0.08) + '" height="0.16" fill="' + shade(fc, 0.15) + '"/>';
+			if (opt && opt.blindsDown) {
+				var bd = h * 0.38;
+				s += '<rect x="' + f(x + fr) + '" y="' + f(y + h - bd) + '" width="' + f(w - 2 * fr) + '" height="' + f(bd) + '" fill="' + shade(fc, 0.3) + '"/>';
+				for (var b = 0.06; b < bd; b += 0.07) { s += '<rect x="' + f(x + fr) + '" y="' + f(y + h - b) + '" width="' + f(w - 2 * fr) + '" height="0.012" fill="' + shade(fc, 0.05) + '"/>'; }
+			}
+		}
+		return s;
+	}
+	function doorSvg(sc, x, w, h) {
+		var c = sc.c, dc = col(c.entrance_door_color, '#2B2E31'), fc = col(c.window_frame_color, '#2F3235'), t = c.entrance_door || 'solid_modern';
+		var s = '<rect x="' + f(x - 0.06) + '" y="0" width="' + f(w + 0.12) + '" height="' + f(h + 0.06) + '" fill="' + fc + '"/>';
+		if (t === 'wood') { s += '<rect x="' + f(x) + '" y="0" width="' + f(w) + '" height="' + f(h) + '" fill="' + sc.mat('wood', '#8A5A36') + '"/>'; }
+		else { s += '<rect x="' + f(x) + '" y="0" width="' + f(w) + '" height="' + f(h) + '" fill="' + dc + '"/>'; }
+		if (t === 'glass_strip') { s += '<rect x="' + f(x + w * 0.68) + '" y="0.15" width="' + f(w * 0.16) + '" height="' + f(h - 0.3) + '" fill="' + glass(sc) + '"/>'; }
+		if (t === 'classic') {
+			s += '<rect x="' + f(x + 0.12) + '" y="0.2" width="' + f(w - 0.24) + '" height="' + f(h * 0.38) + '" fill="none" stroke="' + shade(dc, 0.18) + '" stroke-width="0.03"/>' +
+				'<rect x="' + f(x + 0.12) + '" y="' + f(h * 0.5) + '" width="' + f(w - 0.24) + '" height="' + f(h * 0.38) + '" fill="none" stroke="' + shade(dc, 0.18) + '" stroke-width="0.03"/>' +
+				'<rect x="' + f(x) + '" y="' + f(h + 0.06) + '" width="' + f(w) + '" height="0.35" fill="' + glass(sc) + '"/>';
+		}
+		s += '<rect x="' + f(x + w * 0.12) + '" y="' + f(h * 0.38) + '" width="0.035" height="' + f(t === 'pivot' ? h * 0.5 : 0.45) + '" fill="#C9CCCF"/>';
+		return s;
+	}
+	function shutterColor(c) {
+		var sh = c.shading || [];
+		if (has(sh, 'spalettas')) { return '#8A5A36'; }
+		if (!has(sh, 'shutters')) { return null; }
+		if (c.arch_style === 'mediterranean' || c.arch_style === 'rustic') { return '#6B7A55'; }
+		if (c.arch_style === 'classic_burgher' || c.arch_style === 'american_farm') { return c.arch_style === 'american_farm' ? '#24282B' : '#ECE7DC'; }
+		return '#3E4245';
+	}
+
+	/* ------------------------------------------------------------------ walls */
+	function wallFill(sc, v, face) {
+		var c = sc.c, mat = c.facade_main || 'render';
+		var acc = c.facade_accent || [];
+		// Accent material on the secondary volume (wing / garage side) or on the gable.
+		if (acc.length && (v.wing || v.second) && face === 'front') { mat = acc[0]; }
+		if (acc.length && mat === acc[0] && mat !== c.facade_main) { return accentFill(sc, mat); }
+		if (mat === 'render') { return sc.mat({ fine: 'renderfine', coarse: 'rendercoarse' }[c.facade_texture || 'fine'] || 'render', col(c.facade_color, '#F2EFE9')); }
+		return sc.mat(mat, facadeBase(c, mat));
+	}
+	// Accent material; the accent colour tints the materials that come in a colour (wood, metal, dark render).
+	function accentFill(sc, mat) {
+		var c = sc.c, tint = c.facade_accent_color && (mat === 'wood' || mat === 'metal' || mat === 'render_dark');
+		return sc.mat(mat, tint ? col(c.facade_accent_color, facadeBase(c, mat)) : facadeBase(c, mat));
+	}
+	var VISUAL_ENERGY = ['heat_pump', 'ac', 'solar', 'battery', 'ev_charger', 'mvhr', 'rainwater'];
+	function plinthFill(c) {
+		switch (c.plinth) {
+			case 'stone': return '#8D8576';
+			case 'concrete': return '#9D9A94';
+			case 'flush': return null;
+			default: return col(c.plinth_color, '#4A4D50');
+		}
+	}
+	// Building services on the side wall: air-conditioning unit, home battery, ventilation grille.
+	function wallTech(sc, len, pl) {
+		var c = sc.c, e = c.energy || [], s = '';
+		if (has(e, 'ac')) { s += '<rect x="' + f(len * 0.55) + '" y="' + f(pl.plinth + 2.1) + '" width="0.85" height="0.55" fill="#E9EBEC" stroke="#9DA1A4" stroke-width="0.03"/><circle cx="' + f(len * 0.55 + 0.42) + '" cy="' + f(pl.plinth + 2.37) + '" r="0.19" fill="#C3C7CA"/>'; }
+		if (has(e, 'battery')) { s += '<rect x="' + f(len * 0.2) + '" y="' + f(pl.plinth + 0.5) + '" width="0.6" height="0.95" rx="0.06" fill="#F4F5F6" stroke="#8C9196" stroke-width="0.03"/><rect x="' + f(len * 0.2 + 0.25) + '" y="' + f(pl.plinth + 1.2) + '" width="0.1" height="0.1" fill="#4CAF7A"/>'; }
+		if (has(e, 'mvhr')) { s += '<rect x="' + f(len * 0.8) + '" y="' + f(pl.plinth + 2.5) + '" width="0.45" height="0.45" fill="#B9BDC1"/><path d="M' + f(len * 0.8) + ' ' + f(pl.plinth + 2.6) + 'h0.45M' + f(len * 0.8) + ' ' + f(pl.plinth + 2.72) + 'h0.45M' + f(len * 0.8) + ' ' + f(pl.plinth + 2.84) + 'h0.45" stroke="#6E7378" stroke-width="0.03"/>'; }
+		return s;
+	}
+	// Front (y = y1) and right (x = x1) walls with windows/doors; gable triangles when the roof needs them.
+	function walls(sc, v, pl, roof, isEntrance) {
+		var c = sc.c, out = [];
+		var faces = [
+			{ name: 'front', o: [v.x0, v.y1, 0], du: [1, 0, 0], len: v.x1 - v.x0 },
+			{ name: 'right', o: [v.x1, v.y1, 0], du: [0, -1, 0], len: v.y1 - v.y0 }
+		];
+		faces.forEach(function (F) {
+			var dv = [0, 0, 1];
+			if (!sc.visible(F.du, dv)) { return; }
+			var poly = [[0, 0], [F.len, 0]];
+			var top = roof.wallTop ? roof.wallTop(F.name) : null;
+			if (top) { top.forEach(function (p) { poly.push(p); }); } else { poly.push([F.len, v.h], [0, v.h]); }
+			if (!top) { poly = [[0, 0], [F.len, 0], [F.len, v.h], [0, v.h]]; }
+			var inner = '', st = styleOf(c), acc = c.facade_accent || [], main = v.main;
+			var fcol = col(c.facade_color, '#F2EFE9');
+			// accent zones: 1st = entrance bay, 2nd = gable (or the front part of the side wall), 3rd = side wall ground floor
+			if (main && F.name === 'front' && acc[0] && isEntrance) {
+				var dp = doorPos(c, F.len);
+				inner += '<rect x="' + f(Math.max(0, dp.x - 0.75)) + '" y="0" width="' + f(Math.min(F.len, dp.w + 1.5)) + '" height="' + f(v.h) + '" fill="' + accentFill(sc, acc[0]) + '"/>';
+			}
+			if (main && acc[1]) {
+				if (top && F.name === roof.gableFace) { inner += '<polygon points="' + pts([[0, v.h], [F.len, v.h]].concat(top)) + '" fill="' + accentFill(sc, acc[1]) + '"/>'; }
+				else if (F.name === 'right' && !roof.gableFace) { inner += '<rect x="0" y="0" width="' + f(F.len * 0.42) + '" height="' + f(v.h) + '" fill="' + accentFill(sc, acc[1]) + '"/>'; }
+			}
+			if (main && acc[2] && F.name === 'right') { inner += '<rect x="' + f(F.len * 0.42) + '" y="0" width="' + f(F.len * 0.58) + '" height="' + f(Math.min(v.h, pl.plinth + pl.FH)) + '" fill="' + accentFill(sc, acc[2]) + '"/>'; }
+			if (main && st.woodGable && top && F.name === roof.gableFace) { inner += '<polygon points="' + pts([[0, v.h], [F.len, v.h]].concat(top)) + '" fill="' + sc.mat('wood', '#9C6B44') + '"/>'; }
+			if (main && c.gable_finish === 'glass' && top && F.name === roof.gableFace) { inner += '<polygon points="' + pts([[0.35, v.h + 0.1], [F.len - 0.35, v.h + 0.1]].concat(top.map(function (q) { return [clamp(q[0], 0.35, F.len - 0.35), Math.max(v.h + 0.1, q[1] - 0.3)]; }))) + '" fill="' + glass(sc) + '" stroke="' + col(c.window_frame_color, '#2F3235') + '" stroke-width="0.06"/>'; }
+			if (main && st.slats && F.name === 'front') { for (var sl = 0.15; sl < F.len * 0.3; sl += 0.24) { inner += '<rect x="' + f(F.len - 0.2 - sl) + '" y="' + f(pl.plinth) + '" width="0.12" height="' + f(v.h - pl.plinth - 0.1) + '" fill="' + st.slats + '"/>'; } }
+			var pf = plinthFill(c);
+			if (pf) { inner += '<rect x="0" y="0" width="' + f(F.len) + '" height="' + f(pl.plinth) + '" fill="' + (c.plinth === 'stone' ? sc.mat('stone', pf) : pf) + '"/>'; }
+			if (st.cornice || c.facade_ornaments) {
+				// cornice and floor band
+				inner += '<rect x="0" y="' + f(v.h - 0.32) + '" width="' + f(F.len) + '" height="0.32" fill="' + shade(fcol, c.facade_ornaments && st.cornice ? 0.3 : 0.16) + '"/><rect x="0" y="' + f(v.h - 0.36) + '" width="' + f(F.len) + '" height="0.05" fill="' + shade(fcol, -0.12) + '"/>';
+				inner += '<rect x="0" y="' + f(pl.plinth + Math.min(pl.FH, v.h - pl.plinth) - 0.12) + '" width="' + f(F.len) + '" height="0.14" fill="' + shade(fcol, 0.16) + '"/>';
+			}
+			if (c.corner_detail === 'glass' && F.name === 'front' && main) { inner += '<rect x="' + f(F.len - 0.9) + '" y="' + f(pl.plinth + 0.1) + '" width="0.9" height="' + f(v.h - pl.plinth - 0.5) + '" fill="' + glass(sc) + '"/>'; }
+			if (st.fins && main && F.name === 'front') { for (var fi = 0; fi < 7; fi++) { inner += '<rect x="' + f(F.len * 0.62 + fi * F.len * 0.055) + '" y="' + f(pl.plinth) + '" width="0.1" height="' + f(v.h - pl.plinth) + '" fill="' + st.fins + '"/>'; } }
+			if (main && F.name === 'right') { inner += wallTech(sc, F.len, pl); }
+			if (c.corner_detail === 'quoins' || st.quoins) {
+				for (var q = pl.plinth; q < v.h - 0.3; q += 0.5) {
+					var qw = (Math.round(q * 2) % 2) ? 0.35 : 0.5;
+					inner += '<rect x="' + f(F.len - qw) + '" y="' + f(q) + '" width="' + f(qw) + '" height="0.42" fill="' + (st.quoins && c.corner_detail !== 'quoins' ? '#9C927F' : shade(fcol, -0.1)) + '"/>';
+				}
+			}
+			inner += openings(sc, v, pl, F, isEntrance && F.name === 'front', roof);
+			var r = sc.plane(F.o, F.du, dv, poly, wallFill(sc, v, F.name), inner);
+			if (r) { out.push(r); }
+		});
+		return out;
+	}
+	function openings(sc, v, pl, F, entrance, roof) {
+		var c = sc.c, ws = windowSpec(c), s = '', len = F.len, shut = shutterColor(c);
+		var styleBand = !!styleOf(c).band;
+		var reserved = [];
+		var dp = doorPos(c, len), doorW = dp.w, doorH = dp.h;
+		var doorX = null, tdoorX = null, tdoorW = 0;
+		if (entrance) {
+			doorX = dp.x;
+			reserved.push([doorX - 0.5, doorX + doorW + 0.5]);
+			if (num(c.terrace_area, 0) > 0 && len > 7) {
+				tdoorW = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
+				tdoorX = clamp(len * 0.62, doorX + doorW + 1.2, len - tdoorW - 0.6);
+				reserved.push([tdoorX - 0.4, tdoorX + tdoorW + 0.4]);
+			}
+		}
+		for (var fl = 0; fl < pl.floors; fl++) {
+			var z0 = pl.plinth + fl * pl.FH;
+			if (z0 + 1 > v.h) { break; }
+			var w = ws.w, h = Math.min(ws.h, pl.FH - 0.6), sill = ws.sill;
+			if (c.window_style === 'panoramic' && fl > 0) { w = 1.9; h = 1.7; sill = 0.6; }
+			if (styleBand) { w = Math.min(len - 1.2, 4.4); h = 1.0; sill = 1.0; }
+			var n = Math.max(1, Math.floor((len - 0.8) / (w + ws.gap)));
+			if (F.name === 'right') { n = Math.max(1, Math.min(n, Math.floor((len - 1) / (w + 1.4)))); }
+			var step = len / n;
+			for (var i = 0; i < n; i++) {
+				var x = step * i + (step - w) / 2;
+				if (fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
+				s += windowSvg(sc, x, z0 + sill, w, h, { shutters: shut, blindsDown: (i + fl) % 3 === 1 });
+				if (has(c.shading, 'louvres') && fl > 0) {
+					for (var lv = 0; lv <= 4; lv++) { s += '<rect x="' + f(x - 0.1 + lv * (w + 0.2) / 4 - 0.03) + '" y="' + f(z0 + sill - 0.2) + '" width="0.06" height="' + f(h + 0.4) + '" fill="#9DA1A4"/>'; }
+				}
+			}
+			if (c.exterior_lighting && fl === 0 && entrance) {
+				var lc = sc.light.glow ? '#FFE2A0' : '#3A3D40';
+				s += '<rect x="' + f(doorX - 0.35) + '" y="2.05" width="0.12" height="0.22" fill="' + lc + '"/>';
+				if (sc.light.glow) { s += '<circle cx="' + f(doorX - 0.29) + '" cy="1.9" r="0.6" fill="#FFD27A" opacity="0.25"/>'; }
+			}
+		}
+		if (doorX !== null) {
+			if (styleOf(c).portal) { s += '<path d="M' + f(doorX - 0.5) + ' 0V' + f(doorH + 0.45) + 'H' + f(doorX + doorW + 0.5) + 'V0" fill="none" stroke="' + styleOf(c).portal + '" stroke-width="0.22"/>'; }
+			s += doorSvg(sc, doorX, doorW, doorH);
+			if (c.house_number) { s += '<rect x="' + f(doorX + doorW + 0.2) + '" y="1.7" width="0.3" height="0.22" fill="#2B2E31"/>'; }
+		}
+		if (tdoorX !== null) {
+			var fc = col(c.window_frame_color, '#2F3235'), panes = c.terrace_door === 'folding' ? 4 : 2;
+			s += '<rect x="' + f(tdoorX) + '" y="' + f(pl.plinth) + '" width="' + f(tdoorW) + '" height="2.35" fill="' + fc + '"/>' +
+				'<rect x="' + f(tdoorX + 0.06) + '" y="' + f(pl.plinth + 0.06) + '" width="' + f(tdoorW - 0.12) + '" height="2.23" fill="' + glass(sc) + '"/>';
+			for (var pn = 1; pn < panes; pn++) { s += '<rect x="' + f(tdoorX + tdoorW * pn / panes - 0.03) + '" y="' + f(pl.plinth) + '" width="0.06" height="2.35" fill="' + fc + '"/>'; }
+			if (c.terrace_door === 'sliding' || c.terrace_door === 'lift_slide') { s += '<rect x="' + f(tdoorX) + '" y="' + f(pl.plinth + 2.35) + '" width="' + f(tdoorW) + '" height="0.12" fill="' + shade(fc, 0.2) + '"/>'; }
+			if (c.terrace_door === 'lift_slide') { s += '<rect x="' + f(tdoorX + tdoorW / 2 - 0.16) + '" y="' + f(pl.plinth + 0.9) + '" width="0.05" height="0.5" fill="#C9CCCF"/>'; }
+			if (c.terrace_door === 'french') { s += '<rect x="' + f(tdoorX) + '" y="' + f(pl.plinth + 1.5) + '" width="' + f(tdoorW) + '" height="0.05" fill="' + fc + '"/>'; }
+		}
+		// attic: gable window
+		if (roof.gableFace === F.name && (pl.attic || roof.rise > 2.2)) {
+			var gw = Math.min(1.6, len * 0.22);
+			s += windowSvg(sc, len / 2 - gw / 2, v.h + 0.35, gw, Math.min(1.3, roof.rise - 0.9), {});
+		}
+		if (c.corner_window && F.name === 'front' && entrance) {
+			s += windowSvg(sc, len - 1.6, pl.plinth + 0.5, 1.6, 1.8, {});
+		}
+		return s;
+	}
+
+	/* ------------------------------------------------------------------ roofs */
+	function roofMaterial(sc) {
+		var c = sc.c, base = col(c.roof_color, '#3A3D40');
+		if (c.roof_type === 'flat') { return c.roof_surface === 'green' ? sc.mat('green', '#6E8F45') : sc.mat('gravel', '#A9A49B'); }
+		if (c.roof_surface === 'green') { return sc.mat('green', '#6E8F45'); }
+		if (c.roof_surface === 'gravel') { return sc.mat('shingle', base); }
+		var p = String(c.roof_product || '');
+		if (p) {
+			// BRAMAC families: Római = profiled tile, Reviva / Tectura = flat tiles of two sizes, Tegalit = slate-like
+			if (p.indexOf('tectura') !== -1) { return sc.mat('flattile', base); }
+			if (p.indexOf('reviva') !== -1) { return sc.mat('flattile2', base); }
+			if (p.indexOf('tegalit') !== -1) { return sc.mat('slate', base); }
+			return sc.mat('roman', base);
+		}
+		return sc.mat(styleOf(c).seam ? 'seam' : 'tiles', base);
+	}
+	function roofSheen(sc) {
+		var s = sc.c.roof_surface;
+		if (s !== 'glazed' && s !== 'satin') { return ''; }
+		var key = 'sheen' + s;
+		sc.def(key, '<linearGradient id="' + sc.id + key + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="' + (s === 'glazed' ? 0.28 : 0.14) + '"/><stop offset="0.6" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>');
+		return 'url(#' + sc.id + key + ')';
+	}
+	// Builds roof planes for a volume from 3D points. Returns { planes, wallTop(face), rise, gableFace, flatTop }.
+	function roofFor(sc, v, pl, type) {
+		var c = sc.c, o = pl.eave, h = v.h, P = [], out = { planes: P, rise: 0, gableFace: null, under: '' };
+		var X0 = v.x0, X1 = v.x1, Y0 = v.y0, Y1 = v.y1;
+		var mat = roofMaterial(sc), sheen = roofSheen(sc), snow = c.season === 'winter';
+		var gutter = { anthracite: '#3A3D40', black: '#1E1F21', white: '#F1F1EE', copper: '#B87333', hidden: null }[c.gutters || 'anthracite'];
+		function extra(loc) {
+			var s = '';
+			if (sheen) { s += '<polygon points="' + pts(loc) + '" fill="' + sheen + '"/>'; }
+			if (snow) { s += '<polygon points="' + pts(loc) + '" fill="#F4F7FA" opacity="0.8"/>'; }
+			return s;
+		}
+		function addP(p3, eave) {
+			var r = sc.poly3(p3, mat, '', { after: extra, screen: eave && gutter ? sc.line(p3[0], p3[1], gutter, 0.17) : '' });
+			if (r) { P.push(r); }
+			return r;
+		}
+		if (type === 'flat') {
+			var pz = h + 0.35, fasc = shade(col(c.facade_color, '#F2EFE9'), c.arch_style === 'high_tech' ? -0.05 : 0.05);
+			var top = sc.plane([X0 - 0.1, Y1 + 0.1, pz], [1, 0, 0], [0, -1, 0], [[0, 0], [X1 - X0 + 0.2, 0], [X1 - X0 + 0.2, Y1 - Y0 + 0.2], [0, Y1 - Y0 + 0.2]], fasc,
+				'<rect x="0.3" y="0.3" width="' + f(X1 - X0 - 0.4) + '" height="' + f(Y1 - Y0 - 0.4) + '" fill="' + mat + '"/>' + (snow ? '<rect width="' + f(X1 - X0 + 0.2) + '" height="' + f(Y1 - Y0 + 0.2) + '" fill="#F4F7FA" opacity="0.85"/>' : ''), { noShade: true });
+			if (top) { P.push(top); }
+			var fr = sc.plane([X0 - 0.1, Y1 + 0.1, h - 0.05], [1, 0, 0], [0, 0, 1], [[0, 0], [X1 - X0 + 0.2, 0], [X1 - X0 + 0.2, 0.4], [0, 0.4]], fasc);
+			var rr = sc.plane([X1 + 0.1, Y1 + 0.1, h - 0.05], [0, -1, 0], [0, 0, 1], [[0, 0], [Y1 - Y0 + 0.2, 0], [Y1 - Y0 + 0.2, 0.4], [0, 0.4]], fasc);
+			if (fr) { P.push(fr); } if (rr) { P.push(rr); }
+			out.flatTop = pz;
+			return out;
+		}
+		var alongX = v.ridge !== 'y';
+		var A0 = alongX ? X0 : Y0, A1 = alongX ? X1 : Y1, B0 = alongX ? Y0 : X0, B1 = alongX ? Y1 : X1;
+		var W3 = function (a, b, z) { return alongX ? [a, b, z] : [b, a, z]; };
+		var S = B1 - B0, L = A1 - A0, tp = Math.tan(pl.pitch * D2R), Bc = (B0 + B1) / 2, Ac = (A0 + A1) / 2;
+		var rise = (type === 'shed' ? S : S / 2) * tp, eZ = h - o * tp, zR = h + rise;
+		var og = type === 'hip' || type === 'pyramid' ? o : (c.gable_finish === 'flush' ? 0.05 : pl.over);
+		var a0 = A0 - og, a1 = A1 + og, b0 = B0 - o, b1 = B1 + o;
+		out.rise = rise;
+		out.gableFace = alongX ? 'right' : 'front';
+		var barge = { wood: '#8A5A36', metal: '#3E4245' }[c.gable_finish];
+		if (type === 'shed') {
+			var zB = zR + o * tp;
+			addP([W3(a0, b1, eZ), W3(a1, b1, eZ), W3(a1, b0, zB), W3(a0, b0, zB)], true);
+			if (barge) { P.push({ depth: 1e3, svg: sc.line(W3(a1, b1, eZ), W3(a1, b0, zB), barge, 0.2) }); }
+			// right face (ridge along x): u = 0 at the front (low) … u = S at the back (high); front face (ridge along y): u = 0 is the high side.
+			out.wallTop = function (face) { return face !== out.gableFace ? null : (alongX ? [[S, h + rise], [0, h]] : [[S, h], [0, h + rise]]); };
+		} else if (type === 'hip' || type === 'pyramid') {
+			out.gableFace = null;
+			if (type === 'pyramid' || L <= S) {
+				var apex = W3(Ac, Bc, h + Math.min(L, S) / 2 * tp);
+				out.rise = Math.min(L, S) / 2 * tp;
+				addP([W3(a0, b1, eZ), W3(a1, b1, eZ), apex], true);
+				addP([W3(a1, b1, eZ), W3(a1, b0, eZ), apex], true);
+				addP([W3(a1, b0, eZ), W3(a0, b0, eZ), apex], true);
+				addP([W3(a0, b0, eZ), W3(a0, b1, eZ), apex], true);
+			} else {
+				var r0 = W3(A0 + S / 2, Bc, zR), r1 = W3(A1 - S / 2, Bc, zR);
+				addP([W3(a0, b1, eZ), W3(a1, b1, eZ), r1, r0], true);
+				addP([W3(a1, b0, eZ), W3(a0, b0, eZ), r0, r1], true);
+				addP([W3(a1, b1, eZ), W3(a1, b0, eZ), r1], true);
+				addP([W3(a0, b0, eZ), W3(a0, b1, eZ), r0], true);
+			}
+		} else {
+			// gable / half-hip (also the parts of multi / complex roofs)
+			var hh = type === 'half_hip' ? 0.42 : 0, bh = hh * S / 2, zH = h + rise * (1 - hh);
+			if (!hh) {
+				addP([W3(a0, b1, eZ), W3(a1, b1, eZ), W3(a1, Bc, zR), W3(a0, Bc, zR)], true);
+				addP([W3(a1, b0, eZ), W3(a0, b0, eZ), W3(a0, Bc, zR), W3(a1, Bc, zR)], true);
+				out.wallTop = function (face) { return face !== out.gableFace ? null : [[S, h], [S / 2, h + rise], [0, h]]; };
+				if (barge) { P.push({ depth: 1e3, svg: sc.line(W3(a1, b1, eZ), W3(a1, Bc, zR), barge, 0.22) + sc.line(W3(a1, Bc, zR), W3(a1, b0, eZ), barge, 0.22) }); }
+			} else {
+				addP([W3(a0, b1, eZ), W3(a1, b1, eZ), W3(a1, Bc + bh, zH), W3(A1 - bh, Bc, zR), W3(A0 + bh, Bc, zR), W3(a0, Bc + bh, zH)], true);
+				addP([W3(a1, b0, eZ), W3(a0, b0, eZ), W3(a0, Bc - bh, zH), W3(A0 + bh, Bc, zR), W3(A1 - bh, Bc, zR), W3(a1, Bc - bh, zH)], true);
+				addP([W3(a1, Bc + bh, zH), W3(a1, Bc - bh, zH), W3(A1 - bh, Bc, zR)], false);
+				addP([W3(a0, Bc - bh, zH), W3(a0, Bc + bh, zH), W3(A0 + bh, Bc, zR)], false);
+				out.wallTop = function (face) { return face !== out.gableFace ? null : [[S, h], [S / 2 + bh, zH], [S / 2 - bh, zH], [0, h]]; };
+			}
+		}
+		// exposed rafter tails under the front eave, snow guards above it, ridge vents
+		if (c.exposed_rafters && o > 0.15) {
+			for (var ra = A0 + 0.25; ra < A1; ra += 0.6) { out.under += sc.line(W3(ra, B1, h - 0.14), W3(ra, b1 - 0.04, eZ - 0.14), '#5A4030', 0.1); }
+		}
+		var guards = '';
+		if (c.snow_guards && type !== 'shed') { guards += sc.line(W3(a0 + 0.7, b1 - 0.55, eZ + 0.55 * tp + 0.06), W3(a1 - 0.7, b1 - 0.55, eZ + 0.55 * tp + 0.06), '#C9CDD0', 0.07); }
+		if (c.roof_ventilation && type !== 'shed' && type !== 'pyramid') {
+			[Ac - L / 4, Ac + L / 4].forEach(function (a) { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.4), '#3A3D40', 0.22) + sc.line(W3(a - 0.16, Bc, zR + 0.42), W3(a + 0.16, Bc, zR + 0.42), '#3A3D40', 0.12); });
+		}
+		if (guards) { P.push({ depth: 1e3, svg: guards }); }
+		out.frontZ = function (y) { return h + (Y1 - y) * tp; };
+		out.tp = tp;
+		return out;
+	}
+	// Roof-mounted items: solar panels, roof windows, dormers (front plane of a ridge-along-x roof), chimney.
+	function roofItems(sc, v, pl, roof) {
+		var c = sc.c, items = [];
+		var solar = c.roof_solar || has(c.energy, 'solar') || !!styleOf(c).pv;
+		var W = v.x1 - v.x0, D = v.y1 - v.y0;
+		function chimneyBox(zBase) {
+			var cx = v.x0 + W * 0.7, cy = (v.y0 + v.y1) / 2 + 0.3, cw = 0.75, zt = (roof.flatTop || v.h + roof.rise) + 1.0;
+			var cc = c.arch_style === 'classic_burgher' || c.arch_style === 'rustic' || c.facade_main === 'brick' ? '#9A4E35' : '#4A4D50';
+			var zf = zBase(cy + cw), zr0 = zBase(cy + cw), zr1 = zBase(cy);
+			var cfill = cc === '#9A4E35' ? sc.mat('brick', cc) : cc;
+			var fr = sc.plane([cx, cy + cw, 0], [1, 0, 0], [0, 0, 1], [[0, zf], [cw, zf], [cw, zt], [0, zt]], cfill);
+			var rs = sc.plane([cx + cw, cy + cw, 0], [0, -1, 0], [0, 0, 1], [[0, zr0], [cw, zr1], [cw, zt], [0, zt]], cfill);
+			var tpz = sc.plane([cx - 0.06, cy + cw + 0.06, zt], [1, 0, 0], [0, -1, 0], [[0, 0], [cw + 0.12, 0], [cw + 0.12, cw + 0.12], [0, cw + 0.12]], '#2E3033', '', { noShade: true });
+			[fr, rs, tpz].forEach(function (r) { if (r) { r.depth += 50; items.push(r); } });
+		}
+		if (roof.flatTop) {
+			if (solar) {
+				var n = Math.max(1, Math.min(6, Math.floor((W - 1.2) / 2.1)));
+				for (var i = 0; i < n; i++) {
+					var r = sc.plane([v.x0 + 0.8 + i * 2.1, v.y0 + 1 + D * 0.3, roof.flatTop + 0.15], [1, 0, 0], norm([0, -0.85, 0.5]), [[0, 0], [1.7, 0], [1.7, 1.1], [0, 1.1]], '#1E2A3A', '<path d="M0.57 0v1.1M1.13 0v1.1M0 0.55h1.7" stroke="#5A6C82" stroke-width="0.03"/>');
+					if (r) { r.depth += 40; items.push(r); }
+				}
+			}
+			if (c.chimney) { chimneyBox(function () { return roof.flatTop; }); }
+			return items;
+		}
+		if (v.ridge === 'y') { return items; }
+		var tp = roof.tp, cosP = Math.cos(pl.pitch * D2R), sinP = Math.sin(pl.pitch * D2R);
+		var up = [0, -cosP, sinP];
+		var slopeL = (c.roof_type === 'shed' ? D : D / 2) / cosP;
+		function onRoof(u, s, w, hh, fill, inner) {
+			var o3 = add(add([v.x0 + u, v.y1, v.h], mul(up, s)), [0, 0.05 * sinP, 0.05 * cosP]);
+			var r = sc.plane(o3, [1, 0, 0], up, [[0, 0], [w, 0], [w, hh], [0, hh]], fill, inner || '', { noShade: true });
+			if (r) { r.depth += 40; items.push(r); }
+		}
+		var hipIn = c.roof_type === 'hip' || c.roof_type === 'pyramid' ? D / 2 : 0;
+		if (solar) {
+			var rows = Math.max(1, Math.min(3, Math.floor((slopeL - 0.8) / 1.8)));
+			var cols = Math.max(2, Math.floor((W - 2 * hipIn - 1.2) * 0.7 / 1.12));
+			var pw = cols * 1.12, x0 = clamp(W * 0.42 - pw / 2, hipIn + 0.6, W - pw - 0.5 - hipIn);
+			var inner = '';
+			for (var a = 1; a < cols; a++) { inner += '<path d="M' + f(a * 1.12) + ' 0V' + f(rows * 1.75) + '" stroke="#566A84" stroke-width="0.04"/>'; }
+			for (var b = 1; b < rows; b++) { inner += '<path d="M0 ' + f(b * 1.75) + 'H' + f(pw) + '" stroke="#566A84" stroke-width="0.04"/>'; }
+			onRoof(x0, 0.6, pw, rows * 1.75, '#1B2636', inner + '<polygon points="0,0 ' + f(pw * 0.4) + ',0 0,' + f(rows * 1.75) + '" fill="#9FB4CC" opacity="0.14"/>');
+		}
+		var nw = clamp(num(c.roof_windows, 0) + (pl.attic && !num(c.roof_windows, 0) && !num(c.dormers, 0) ? 2 : 0), 0, 6);
+		for (var k = 0; k < nw; k++) {
+			var ux = hipIn + 0.4 + (W - 2 * hipIn - 1.6) * (nw === 1 ? 0.5 : k / (nw - 1));
+			if (solar) { ux = k % 2 ? W - hipIn - 1.4 : hipIn + 0.5; }
+			onRoof(ux, slopeL * 0.42, 0.78, 1.2, '#2A2D30', '<rect x="0.07" y="0.07" width="0.64" height="1.06" fill="' + glass(sc) + '"/>');
+		}
+		var nd = clamp(num(c.dormers, 0), 0, 4);
+		for (var dd = 0; dd < nd; dd++) {
+			var dw = 1.8, dx = v.x0 + hipIn + (W - 2 * hipIn) * (dd + 0.5) / nd - dw / 2, yd = v.y1 - 1.0, z0 = roof.frontZ(yd), hw = 1.35, yb = yd - hw / tp;
+			var wall = col(c.facade_color, '#F2EFE9'), mat = roofMaterial(sc), parts = [];
+			[sc.plane([dx, yd, z0], [1, 0, 0], [0, 0, 1], [[0, 0], [dw, 0], [dw, hw], [dw / 2, hw + 0.75], [0, hw]], wall, windowSvg(sc, 0.42, 0.18, 0.96, 1.0, {})),
+				sc.poly3([[dx + dw, yd, z0], [dx + dw, yb, z0 + hw], [dx + dw, yd, z0 + hw]], wall, '', { normal: [1, 0, 0] }),
+				sc.poly3([[dx + dw + 0.12, yd + 0.15, z0 + hw - 0.05], [dx + dw / 2, yd + 0.15, z0 + hw + 0.78], [dx + dw / 2, yb, z0 + hw + 0.78], [dx + dw + 0.12, yb, z0 + hw - 0.05]], mat),
+				sc.poly3([[dx - 0.12, yd + 0.15, z0 + hw - 0.05], [dx + dw / 2, yd + 0.15, z0 + hw + 0.78], [dx + dw / 2, yb, z0 + hw + 0.78], [dx - 0.12, yb, z0 + hw - 0.05]], mat)
+			].forEach(function (r) { if (r) { parts.push(r.svg); } });
+			items.push({ depth: sc.depth([dx, yd, z0]) + 45 + dd * 0.01, svg: parts.join('') });
+		}
+		if (c.chimney) { chimneyBox(c.roof_type === 'shed' || c.roof_type === 'gable' || c.roof_type === 'half_hip' || c.roof_type === 'hip' ? function (y) { return roof.frontZ(Math.max(y, (v.y0 + v.y1) / 2)); } : function () { return v.h; }); }
+		return items;
+	}
+
+	/* ------------------------------------------------------------------ boxes (garage, terrace, balcony) */
+	function box(sc, x0, y0, z0, x1, y1, z1, fills, inner) {
+		var out = [];
+		var tp = sc.plane([x0, y1, z1], [1, 0, 0], [0, -1, 0], [[0, 0], [x1 - x0, 0], [x1 - x0, y1 - y0], [0, y1 - y0]], fills.top, (inner && inner.top) || '', { noShade: true });
+		var fr = sc.plane([x0, y1, z0], [1, 0, 0], [0, 0, 1], [[0, 0], [x1 - x0, 0], [x1 - x0, z1 - z0], [0, z1 - z0]], fills.front, (inner && inner.front) || '');
+		var rt = sc.plane([x1, y1, z0], [0, -1, 0], [0, 0, 1], [[0, 0], [y1 - y0, 0], [y1 - y0, z1 - z0], [0, z1 - z0]], fills.side || fills.front, (inner && inner.side) || '');
+		[fr, rt, tp].forEach(function (r) { if (r) { out.push(r); } });
+		return out;
+	}
+	function group(list, bias) {
+		if (!list.length) { return null; }
+		var d = list.reduce(function (a, r) { return a + r.depth; }, 0) / list.length;
+		return { depth: d + (bias || 0), svg: list.map(function (r) { return r.svg; }).join('') };
+	}
+
+	/* ------------------------------------------------------------------ garden sprites (screen-space billboards) */
+	function treeSvg(sc, x, y, kind, size, seed) {
+		var c = sc.c, P = sc.cam.P, b = sc.track([x, y, 0]), r = rng(seed);
+		var season = c.season || 'summer';
+		size *= sc.o.plantScale || 1;
+		var hgt = size * (0.85 + r() * 0.3);
+		sc.track([x, y, hgt]);
+		var greens = { spring: ['#7FB24F', '#9CCB6B', '#5E9440'], summer: ['#4F7F37', '#6C9A47', '#3B6A2C'], autumn: ['#C9762E', '#D89A3A', '#A4532A'], winter: ['#6F6A63', '#857F77', '#5A554F'] }[season];
+		var trunk = '#5B4636', s = '', bx = b[0], by = b[1], k = 1;
+		var top = P([x, y, hgt]);
+		var H = by - top[1];
+		if (kind === 'cypress') {
+			s += '<path d="M' + f(bx) + ' ' + f(by) + 'c' + f(-H * 0.12) + ' ' + f(-H * 0.3) + ' ' + f(-H * 0.1) + ' ' + f(-H * 0.75) + ' 0 ' + f(-H) + 'c' + f(H * 0.1) + ' ' + f(H * 0.25) + ' ' + f(H * 0.12) + ' ' + f(H * 0.7) + ' 0 ' + f(H) + 'z" fill="' + (season === 'winter' ? '#3F5A3A' : '#2F5530') + '"/>';
+			return s;
+		}
+		if (kind === 'conifer') {
+			var cg = season === 'winter' ? '#3C5A43' : '#2E5235';
+			s += '<rect x="' + f(bx - H * 0.02) + '" y="' + f(by - H * 0.15) + '" width="' + f(H * 0.04) + '" height="' + f(H * 0.15) + '" fill="' + trunk + '"/>';
+			for (var t = 0; t < 3; t++) { var yy = by - H * (0.12 + t * 0.26), ww = H * (0.32 - t * 0.08); s += '<path d="M' + f(bx - ww) + ' ' + f(yy) + 'L' + f(bx) + ' ' + f(yy - H * 0.42) + 'L' + f(bx + ww) + ' ' + f(yy) + 'z" fill="' + shade(cg, t * 0.06) + '"/>'; }
+			if (season === 'winter') { s += '<path d="M' + f(bx - H * 0.1) + ' ' + f(by - H * 0.72) + 'L' + f(bx) + ' ' + f(by - H) + 'L' + f(bx + H * 0.1) + ' ' + f(by - H * 0.72) + 'z" fill="#F4F7FA"/>'; }
+			return s;
+		}
+		if (kind === 'grass') {
+			for (var g = 0; g < 7; g++) { var gx = bx + (g - 3) * H * 0.07; s += '<path d="M' + f(gx) + ' ' + f(by) + 'q' + f((g - 3) * H * 0.05) + ' ' + f(-H * 0.5) + ' ' + f((g - 3) * H * 0.12) + ' ' + f(-H * (0.8 + r() * 0.2)) + '" stroke="' + (season === 'winter' ? '#B5A98F' : (season === 'autumn' ? '#C2A35E' : '#9AAE62')) + '" stroke-width="' + f(H * 0.025) + '" fill="none"/>'; }
+			return s;
+		}
+		if (kind === 'shrub' || kind === 'topiary' || kind === 'lavender') {
+			var sw = H * (kind === 'lavender' ? 0.9 : 0.75);
+			var sc1 = kind === 'lavender' ? (season === 'summer' ? '#8C7BB8' : '#7E8F6A') : greens[0];
+			s += '<ellipse cx="' + f(bx) + '" cy="' + f(by - H * 0.42) + '" rx="' + f(sw / 2) + '" ry="' + f(H * 0.46) + '" fill="' + sc1 + '"/>' +
+				'<ellipse cx="' + f(bx - sw * 0.12) + '" cy="' + f(by - H * 0.55) + '" rx="' + f(sw * 0.28) + '" ry="' + f(H * 0.26) + '" fill="' + shade(sc1, 0.12) + '"/>';
+			if (kind === 'shrub' && (c.garden_style === 'cottage') && season !== 'winter') { for (var fl = 0; fl < 5; fl++) { s += '<circle cx="' + f(bx + (r() - 0.5) * sw * 0.8) + '" cy="' + f(by - H * (0.2 + r() * 0.6)) + '" r="' + f(H * 0.05) + '" fill="' + ['#E26D8A', '#F2C14E', '#FFFFFF', '#C06FD1'][fl % 4] + '"/>'; } }
+			return s;
+		}
+		if (kind === 'olive') {
+			s += '<path d="M' + f(bx) + ' ' + f(by) + 'c' + f(H * 0.06) + ' ' + f(-H * 0.2) + ' ' + f(-H * 0.08) + ' ' + f(-H * 0.32) + ' ' + f(H * 0.02) + ' ' + f(-H * 0.5) + '" stroke="#6A5A48" stroke-width="' + f(H * 0.06) + '" fill="none"/>';
+			var oc = season === 'winter' ? '#7D8A6E' : '#8A9A6B';
+			[[-0.18, 0.62, 0.26], [0.14, 0.66, 0.24], [0, 0.82, 0.22], [-0.05, 0.55, 0.2]].forEach(function (q, i) { s += '<ellipse cx="' + f(bx + q[0] * H) + '" cy="' + f(by - q[1] * H) + '" rx="' + f(q[2] * H) + '" ry="' + f(q[2] * H * 0.62) + '" fill="' + shade(oc, i * 0.05) + '"/>'; });
+			return s;
+		}
+		// deciduous / multistem / fruit
+		var stems = kind === 'multistem' ? 3 : 1;
+		for (var st = 0; st < stems; st++) { var off = (st - (stems - 1) / 2) * H * 0.05; s += '<path d="M' + f(bx + off) + ' ' + f(by) + 'L' + f(bx + off * 2.5) + ' ' + f(by - H * 0.5) + '" stroke="' + trunk + '" stroke-width="' + f(H * (stems > 1 ? 0.025 : 0.045)) + '"/>'; }
+		if (season === 'winter') {
+			for (var br = 0; br < 6; br++) { var a = -Math.PI / 2 + (br - 2.5) * 0.4; s += '<path d="M' + f(bx) + ' ' + f(by - H * 0.45) + 'l' + f(Math.cos(a) * H * 0.35) + ' ' + f(Math.sin(a) * H * 0.45) + '" stroke="' + trunk + '" stroke-width="' + f(H * 0.015) + '"/>'; }
+			return s;
+		}
+		var R = H * (kind === 'multistem' ? 0.3 : 0.36);
+		var cy = by - H + R;
+		s += '<circle cx="' + f(bx) + '" cy="' + f(cy + R * 0.15) + '" r="' + f(R) + '" fill="' + greens[2] + '"/>' +
+			'<circle cx="' + f(bx - R * 0.35) + '" cy="' + f(cy) + '" r="' + f(R * 0.72) + '" fill="' + greens[0] + '"/>' +
+			'<circle cx="' + f(bx + R * 0.38) + '" cy="' + f(cy + R * 0.1) + '" r="' + f(R * 0.66) + '" fill="' + greens[1] + '"/>' +
+			'<circle cx="' + f(bx - R * 0.1) + '" cy="' + f(cy - R * 0.38) + '" r="' + f(R * 0.5) + '" fill="' + shade(greens[1], 0.12) + '"/>';
+		if (kind === 'fruit' || (season === 'spring' && r() > 0.4)) { for (var fr2 = 0; fr2 < 7; fr2++) { s += '<circle cx="' + f(bx + (r() - 0.5) * R * 1.4) + '" cy="' + f(cy + (r() - 0.5) * R * 1.2) + '" r="' + f(R * 0.07) + '" fill="' + (season === 'spring' ? '#F7D3E0' : '#D9472B') + '"/>'; } }
+		void k;
+		return s;
+	}
+
+	/* ------------------------------------------------------------------ main render */
+	function render(cfg, opts) {
+		opts = opts || {};
+		var c = cfg || {};
+		var sc = new Scene(c, opts);
+		var pl = plan(c);
+		var vols = volumes(c, pl);
+		var L = sc.light;
+		var mini = !!opts.mini;
+		var mainV = vols[0];
+		var W = pl.W, D = pl.D, maxY = Math.max.apply(null, vols.map(function (v) { return v.y1; }));
+		var maxX = Math.max.apply(null, vols.map(function (v) { return v.x1; }));
+		var tight = !!opts.tight, front = maxY + (mini ? 2.5 : (tight ? 5.5 : 6.5)), back = -(mini ? 2 : (tight ? 2.5 : 6)), left = mini ? -2 : (tight ? -3.5 : -6.5);
+		var garage = c.garage || 'none';
+		var gx0 = maxX + 0.4, gW = garage === 'garage_2' ? 6.2 : 3.4, gD = 6.2;
+		if (garage === 'separate') { gx0 = maxX + 2.2; }
+		var right = (garage !== 'none' ? gx0 + gW : maxX) + (mini ? 2 : (tight ? 3.5 : 6));
+		// the plot: house centred on the plot width, 5 m front setback; the plot outline is drawn when it fits
+		var plot = null, pw = num(c.plot_width, 0), plen = num(c.plot_length, 0);
+		if (!mini && !tight && pw > 0 && pw <= 60) {
+			plot = { x0: W / 2 - pw / 2, x1: W / 2 + pw / 2, yF: maxY + 5, yB: plen > 0 && plen < maxY + 20 ? maxY + 5 - plen : null };
+			left = Math.min(left, plot.x0 - 1.2); right = Math.max(right, plot.x1 + 1.2); front = Math.max(front, plot.yF + 1.2);
+			if (plot.yB !== null) { back = Math.min(back, plot.yB - 1.2); }
+		}
+		var season = c.season || 'summer';
+		var groundC = { spring: '#8FBF5C', summer: '#7DA64C', autumn: '#A3A055', winter: '#E8EEF2' }[season];
+		if (!has(c.garden_features, 'lawn') && !mini && c.garden_features) { groundC = { natural: '#9B9A6A', formal: '#8DAA5A', minimal: '#B9B2A2', cottage: '#8EA65A', mediterranean: '#C4B48E' }[c.garden_style] || '#A8A07A'; if (season === 'winter') { groundC = '#E8EEF2'; } }
+		if (L.dark) { groundC = mix(groundC, '#1B2440', L.dark * 0.8); }
+
+		/* ground */
+		var g = sc.plane([left, front, 0], [1, 0, 0], [0, -1, 0], [[0, 0], [right - left, 0], [right - left, front - back], [0, front - back]], groundC, '', { noShade: true, edge: false });
+		var groundSvg = g ? g.svg : '';
+		// diorama slab: soil edges at the front and the right, a grass lip on top
+		var slabT = mini ? 0.5 : 0.9, soil = L.dark ? mix('#6B5240', '#10162A', L.dark) : '#6B5240';
+		var slab = '';
+		[[[left, front, 0], [1, 0, 0], right - left], [[right, front, 0], [0, -1, 0], front - back]].forEach(function (e, i) {
+			var r = sc.plane([e[0][0], e[0][1], -slabT], e[1], [0, 0, 1], [[0, 0], [e[2], 0], [e[2], slabT], [0, slabT]], shade(soil, i ? -0.18 : 0), '<rect y="' + f(slabT - 0.14) + '" width="' + f(e[2]) + '" height="0.14" fill="' + shade(groundC, -0.12) + '"/><path d="M0 ' + f(slabT * 0.45) + 'H' + f(e[2]) + '" stroke="' + shade(soil, 0.08) + '" stroke-width="0.05" stroke-dasharray="0.4 0.7"/>', { noShade: true, edge: false });
+			if (r) { slab += r.svg; }
+		});
+		var gpoly = [[left, front], [right, front], [right, back], [left, back]].map(function (q) { return sc.cam.P([q[0], q[1], 0]); });
+		if (plot) {
+			var pyB = plot.yB !== null ? plot.yB : back + 0.4, pc4 = [[plot.x0, pyB], [plot.x0, plot.yF], [plot.x1, plot.yF], [plot.x1, pyB]];
+			if (plot.yB !== null) { pc4.push([plot.x0, pyB]); }
+			groundSvg += '<path d="' + pc4.map(function (q, i) { var p2 = sc.cam.P([q[0], q[1], 0.02]); return (i ? 'L' : 'M') + f(p2[0]) + ' ' + f(p2[1]); }).join('') + '" fill="none" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="0.09" stroke-dasharray="0.5 0.35"/>';
+		}
+		var clipId = sc.def('gclip', '<clipPath id="' + sc.id + 'gclip"><polygon points="' + pts(gpoly) + '"/></clipPath>');
+		var horizon = '';
+
+		/* shadow of the building(s) on the ground (clipped to the plot) */
+		var shadowSvg = '';
+		if (L.shadow > 0) {
+			vols.forEach(function (v) {
+				var hh = v.h + (c.roof_type === 'flat' ? 0.3 : Math.min(v.y1 - v.y0, v.x1 - v.x0) * Math.tan(pl.pitch * D2R) * 0.35);
+				var k = Math.min(L.sunTan, 1.8) * 0.55;
+				var ox = L.sunDir[0] * hh * k, oy = L.sunDir[1] * hh * k;
+				var foot = [[v.x0, v.y0], [v.x1, v.y0], [v.x1, v.y1], [v.x0, v.y1]];
+				var all = foot.concat(foot.map(function (q) { return [q[0] + ox, q[1] + oy]; })).map(function (q) { return sc.cam.P([q[0], q[1], 0]); });
+				shadowSvg += '<polygon points="' + pts(hull(all)) + '" fill="#1B2230" opacity="' + f(L.shadow) + '"/>';
+			});
+			// contact shadow (ambient occlusion) around the footprint
+			vols.forEach(function (v) {
+				var e = 0.6, q = [[v.x0 - e, v.y1 + e], [v.x1 + e, v.y1 + e], [v.x1 + e, v.y0 - e], [v.x0 - e, v.y0 - e]].map(function (p) { return sc.cam.P([p[0], p[1], 0]); });
+				shadowSvg += '<polygon points="' + pts(q) + '" fill="#1B2230" opacity="0.12"/>';
+			});
+			shadowSvg = '<g clip-path="url(#' + clipId + ')">' + shadowSvg + '</g>';
+		}
+
+		/* buildings */
+		var roofType = c.roof_type || 'gable';
+		var units = pl.units;
+		vols.forEach(function (v, idx) {
+			var type = roofType;
+			if (v.wing) { type = roofType === 'flat' ? 'flat' : (roofType === 'complex' ? 'gable' : (roofType === 'multi' ? 'gable' : roofType)); }
+			if (v.second && roofType !== 'flat') { type = roofType === 'hip' || roofType === 'pyramid' ? 'hip' : roofType; }
+			if (type === 'multi' || type === 'complex') { type = roofType === 'complex' ? 'hip' : 'gable'; }
+			var roof = roofFor(sc, v, pl, type);
+			var ws = walls(sc, v, pl, roof, idx === 0 || (v.wing && vols.length === 2 && false));
+			// units (semi-detached / row): party walls and extra doors
+			if (v.main && units > 1) {
+				var extra = '';
+				for (var u = 1; u < units; u++) {
+					var ux = pl.unitW * u;
+					var pw = sc.plane([v.x0 + ux - 0.15, v.y1 + 0.02, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [0.3, 0], [0.3, v.h + 0.2], [0, v.h + 0.2]], shade(col(c.facade_color, '#F2EFE9'), -0.18), '', { noShade: true });
+					var dr = sc.plane([v.x0 + ux + pl.unitW * 0.26, v.y1 + 0.03, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [1.05, 0], [1.05, 2.3], [0, 2.3]], 'none', doorSvg(sc, 0, 1.05, 2.3), { noShade: true });
+					if (pw) { extra += pw.svg; } if (dr) { extra += dr.svg; }
+				}
+				ws.push({ svg: extra, depth: 0 });
+			}
+			var ri = roofItems(sc, v, pl, roof);
+			var parts = ws.concat(roof.under ? [{ svg: roof.under, depth: 0 }] : []).concat(roof.planes.sort(function (a, b) { return a.depth - b.depth; })).concat(ri);
+			// canopy over the entrance
+			if (v.main && c.entrance_canopy) {
+				var dpc = doorPos(c, v.x1 - v.x0), dx = v.x0 + dpc.x + dpc.w / 2 - 0.95;
+				box(sc, dx, v.y1, pl.plinth + 2.55, dx + 1.9, v.y1 + 1.2, pl.plinth + 2.72, { top: shade(col(c.facade_color, '#F2EFE9'), -0.08), front: shade(col(c.facade_color, '#F2EFE9'), -0.15) }).forEach(function (r) { parts.push(r); });
+			}
+			// entrance steps (raised plinth / basement) or an accessible ramp
+			if (v.main && (c.exterior_steps || c.basement || c.accessible)) {
+				var dpe = doorPos(c, v.x1 - v.x0), ex0 = v.x0 + dpe.x - 0.35, ex1 = ex0 + dpe.w + 0.7, stc = '#B9B4AA';
+				if (c.accessible) {
+					var rz = pl.plinth, rl2 = Math.max(1.2, rz * 12);
+					var ramp = sc.poly3([[ex1, v.y1 + 1.3, 0.02], [ex1 + rl2, v.y1 + 1.3, 0.02], [ex1, v.y1 + 1.3, rz]].concat([]), stc);
+					var rampTop = sc.poly3([[ex0, v.y1 + 1.3, rz], [ex1 + rl2, v.y1 + 1.3, 0.02], [ex1 + rl2, v.y1, 0.02], [ex0, v.y1, rz]], sc.mat('slabs', '#C9C2B6'));
+					box(sc, ex0, v.y1, 0, ex1, v.y1 + 1.3, rz, { top: sc.mat('slabs', '#C9C2B6'), front: stc }).forEach(function (r) { parts.push(r); });
+					[ramp, rampTop].forEach(function (r) { if (r) { parts.push(r); } });
+					parts.push({ depth: 0, svg: sc.line([ex1, v.y1 + 1.3, rz + 0.9], [ex1 + rl2, v.y1 + 1.3, 0.9], '#5E6266', 0.06) });
+				} else {
+					var nst = Math.max(2, Math.round(pl.plinth / 0.17)), sh = pl.plinth / nst;
+					for (var si = 0; si < nst; si++) { box(sc, ex0, v.y1, si * sh, ex1, v.y1 + 0.3 * (nst - si), (si + 1) * sh, { top: '#CFCAC0', front: stc }).forEach(function (r) { parts.push(r); }); }
+				}
+			}
+			// porch along the front (farmhouse styles)
+			if (v.main && styleOf(c).porch) {
+				var pcol = styleOf(c).porch, px0 = v.x0 + 0.3, px1 = v.x1 - 0.3, pd = 2.2, pz = pl.plinth + 2.7;
+				box(sc, px0, v.y1, 0, px1, v.y1 + pd, pl.plinth, { top: sc.mat('deck', '#A97B52'), front: '#6B5240' }).forEach(function (r) { parts.push(r); });
+				for (var pp = 0; pp <= Math.floor((px1 - px0) / 2.6); pp++) {
+					var ppx = Math.min(px1 - 0.18, px0 + pp * 2.6);
+					box(sc, ppx, v.y1 + pd - 0.18, pl.plinth, ppx + 0.16, v.y1 + pd - 0.02, pz, { top: pcol, front: pcol, side: shade(pcol, -0.15) }).forEach(function (r) { parts.push(r); });
+				}
+				var proof = sc.poly3([[px0 - 0.2, v.y1 + pd + 0.3, pz], [px1 + 0.2, v.y1 + pd + 0.3, pz], [px1 + 0.2, v.y1, pz + 0.75], [px0 - 0.2, v.y1, pz + 0.75]], roofMaterial(sc));
+				if (proof) { parts.push(proof); }
+			}
+			// balcony on the first upper floor
+			if (v.main && c.balcony && pl.floors > 1) {
+				var bz = pl.plinth + pl.FH, bx0 = v.x0 + (v.x1 - v.x0) * 0.5, bx1 = Math.min(v.x1 - 0.5, bx0 + 4.5);
+				var rail = c.arch_style === 'alpine' ? '#9C6B44' : null;
+				box(sc, bx0, v.y1, bz - 0.22, bx1, v.y1 + 1.4, bz, { top: '#D8D4CC', front: '#E9E6E0' }).forEach(function (r) { parts.push(r); });
+				var rl = sc.plane([bx0, v.y1 + 1.4, bz], [1, 0, 0], [0, 0, 1], [[0, 0], [bx1 - bx0, 0], [bx1 - bx0, 1.0], [0, 1.0]], rail || 'rgba(200,225,235,0.35)', rail ? '' : '<path d="M0 1H' + f(bx1 - bx0) + '" stroke="#5A6066" stroke-width="0.05"/>', { noShade: true, stroke: rail ? null : '#C7D4DA', sw: 0.02 });
+				if (rl) { parts.push(rl); }
+			}
+			var gr = group(parts, 0);
+			// volumes are ordered by their footprint (ground) position, not by the height of their parts
+			if (gr) { sc.push(sc.depth([(v.x0 + v.x1) / 2, (v.y0 + v.y1) / 2, 0]) + idx * 0.001, gr.svg); }
+		});
+
+		/* terrace (+ pergola / covered) */
+		var ta = clamp(num(c.terrace_area, 0), 0, 200);
+		if (ta > 0) {
+			var td = clamp(ta / 6, 2.4, 5), tw = clamp(ta / td, 3, W);
+			var tx0 = clamp(W * 0.62, 0, Math.max(0, W - tw)), ty1 = mainV.y1 + td;
+			var tfc = { wpc: '#7A6E64', wood: '#A97B52', stone: '#CFC6B6', ceramic: '#BEB8AE' }[c.terrace_floor || 'wpc'];
+			var tfill = c.terrace_floor === 'stone' || c.terrace_floor === 'ceramic' ? sc.mat('slabs', tfc) : sc.mat('deck', tfc);
+			var tparts = box(sc, tx0, mainV.y1, 0, tx0 + tw, ty1, 0.18, { top: tfill, front: shade(tfc, -0.25) });
+			if (has(c.shading, 'pergola') || has(c.garden_features, 'pergola') || c.outdoor_covered) {
+				var ph = pl.plinth + 2.6, pc = c.arch_style === 'high_tech' || c.arch_style === 'industrial' ? '#2E3135' : '#8A6A4C';
+				[[tx0 + 0.1, ty1 - 0.2], [tx0 + tw - 0.25, ty1 - 0.2]].forEach(function (q) { box(sc, q[0], q[1] - 0.15, 0, q[0] + 0.15, q[1], ph, { top: pc, front: pc, side: shade(pc, -0.2) }).forEach(function (r) { tparts.push(r); }); });
+				var roofTop = c.outdoor_covered ? shade(col(c.facade_color, '#F2EFE9'), -0.1) : 'none';
+				var beams = '';
+				if (!c.outdoor_covered) { for (var bb = 0; bb < tw; bb += 0.55) { beams += '<rect x="' + f(bb) + '" y="0" width="0.1" height="' + f(td) + '" fill="' + pc + '"/>'; } }
+				var top = sc.plane([tx0, ty1, ph], [1, 0, 0], [0, -1, 0], [[0, 0], [tw, 0], [tw, td], [0, td]], roofTop, beams + '<rect width="' + f(tw) + '" height="0.16" fill="' + pc + '"/>', { noShade: true });
+				if (top) { top.depth += 1; tparts.push(top); }
+			}
+			if (has(c.garden_features, 'garden_furniture') || has(c.garden_features, 'outdoor_kitchen')) {
+				box(sc, tx0 + tw * 0.4, mainV.y1 + td * 0.35, 0.18, tx0 + tw * 0.4 + 1.6, mainV.y1 + td * 0.35 + 0.9, 0.92, { top: '#E7E1D6', front: '#6B5E52' }).forEach(function (r) { tparts.push(r); });
+			}
+			var tg = group(tparts, -0.5);
+			if (tg) { sc.push(sc.depth([tx0 + tw / 2, mainV.y1 + td / 2, 0]), tg.svg); }
+		}
+
+		/* garage / carport */
+		if (garage !== 'none') {
+			var gy1 = garage === 'separate' ? D * 0.8 : Math.min(D, gD), gy0 = gy1 - gD;
+			var gh = 2.9, gfac = (c.facade_accent || []).length ? wallFill(sc, { wing: true }, 'front') : wallFill(sc, mainV, 'front');
+			var gparts = [];
+			if (garage === 'carport') {
+				var pc2 = '#3A3D40';
+				[[gx0, gy1], [gx0 + gW - 0.15, gy1]].forEach(function (q) { box(sc, q[0], q[1] - 0.15, 0, q[0] + 0.15, q[1], gh, { top: pc2, front: pc2 }).forEach(function (r) { gparts.push(r); }); });
+				box(sc, gx0 - 0.1, gy0, gh, gx0 + gW + 0.1, gy1 + 0.2, gh + 0.25, { top: c.roof_surface === 'green' ? sc.mat('green', '#6E8F45') : '#5A5E62', front: '#3A3D40' }).forEach(function (r) { gparts.push(r); });
+				// parked car
+				var carC = '#2C4A6B';
+				box(sc, gx0 + 0.5, gy1 - 4.8, 0.25, gx0 + gW - 0.5, gy1 - 0.4, 0.95, { top: shade(carC, 0.1), front: carC }).forEach(function (r) { gparts.push(r); });
+				box(sc, gx0 + 0.75, gy1 - 3.8, 0.95, gx0 + gW - 0.75, gy1 - 1.6, 1.45, { top: shade(carC, 0.15), front: '#5D7A94' }).forEach(function (r) { gparts.push(r); });
+			} else {
+				var doors = garage === 'garage_2' ? 2 : 1, dw = garage === 'garage_2' ? 2.5 : 2.6, inner = '';
+				for (var gd = 0; gd < doors; gd++) {
+					var gxx = gd * (gW / doors) + (gW / doors - dw) / 2, dc = col(c.window_frame_color, '#2F3235');
+					inner += '<rect x="' + f(gxx) + '" y="0" width="' + f(dw) + '" height="2.25" fill="' + shade(dc, 0.12) + '"/>';
+					for (var gl = 0.45; gl < 2.25; gl += 0.45) { inner += '<rect x="' + f(gxx) + '" y="' + f(gl) + '" width="' + f(dw) + '" height="0.025" fill="' + shade(dc, -0.2) + '"/>'; }
+				}
+				gparts = box(sc, gx0, gy0, 0, gx0 + gW, gy1, gh, { top: c.roof_type === 'flat' || garage !== 'separate' ? (c.roof_surface === 'green' ? sc.mat('green', '#6E8F45') : sc.mat('gravel', '#A9A49B')) : sc.mat('gravel', '#A9A49B'), front: gfac, side: gfac }, { front: inner });
+			}
+			var gg = group(gparts, 0);
+			if (gg) { sc.push(sc.depth([gx0 + gW / 2, gy1 - 1, 0]), gg.svg); }
+			// driveway
+			if (!mini) {
+				var dc2 = { pavers: '#B4ADA2', gravel: '#B9B3A8', grass: '#90A85C', asphalt: '#4A4C4F' }[c.driveway || 'pavers'];
+				var dfill = c.driveway === 'gravel' ? sc.mat('gravel', dc2) : (c.driveway === 'grass' ? sc.mat('pavers', '#8FA85E') : (c.driveway === 'asphalt' ? dc2 : sc.mat('pavers', dc2)));
+				var dvw = sc.plane([gx0, front, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [gW, 0], [gW, front - gy1], [0, front - gy1]], dfill, '', { noShade: true });
+				if (dvw) { groundSvg += dvw.svg; }
+			}
+		}
+
+		/* parking pad when there is no garage */
+		if (garage === 'none' && !mini) {
+			var dc3 = { pavers: '#B4ADA2', gravel: '#B9B3A8', grass: '#90A85C', asphalt: '#4A4C4F' }[c.driveway || 'pavers'];
+			var pfill = c.driveway === 'gravel' ? sc.mat('gravel', dc3) : (c.driveway === 'grass' ? sc.mat('pavers', '#8FA85E') : (c.driveway === 'asphalt' ? dc3 : sc.mat('pavers', dc3)));
+			var pad = sc.plane([maxX + 0.8, front, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [3, 0], [3, front - D * 0.45], [0, front - D * 0.45]], pfill, '', { noShade: true });
+			if (pad) { groundSvg += pad.svg; }
+		}
+		/* building services on the ground: heat pump, EV charger, rainwater tank */
+		var en = c.energy || [];
+		if (has(en, 'heat_pump')) {
+			box(sc, mainV.x1 + 0.25, D * 0.35, 0, mainV.x1 + 0.75, D * 0.35 + 1.1, 0.85, { top: '#D9DCDE', front: '#EDEFF0', side: '#C9CDD0' }, { side: '<circle cx="0.55" cy="0.45" r="0.3" fill="#9EA4A9"/><circle cx="0.55" cy="0.45" r="0.08" fill="#5E6266"/>' }).forEach(function (r) { sc.push(r.depth, r.svg); });
+		}
+		if (has(en, 'ev_charger')) {
+			var evx = garage === 'none' ? maxX + 0.5 : gx0 - 0.25, evy = garage === 'none' ? D + 0.4 : Math.min(D, gD) + 0.3;
+			box(sc, evx, evy, 0, evx + 0.22, evy + 0.18, 1.3, { top: '#2B2E31', front: '#3A3D40', side: '#2B2E31' }, { front: '<rect x="0.04" y="0.95" width="0.14" height="0.2" fill="#4CAF7A"/>' }).forEach(function (r) { sc.push(r.depth + 0.5, r.svg); });
+		}
+		if (has(en, 'rainwater') || has(c.garden_features, 'rainwater')) {
+			var rw = sc.track([mainV.x1 + 0.45, mainV.y1 - 0.5, 0]);
+			sc.push(sc.depth([mainV.x1 + 0.45, mainV.y1 - 0.5, 0]) + 0.5, '<rect x="' + f(rw[0] - 0.32) + '" y="' + f(rw[1] - 1.15) + '" width="0.64" height="1.15" rx="0.14" fill="#5C6B5A"/><rect x="' + f(rw[0] - 0.32) + '" y="' + f(rw[1] - 0.9) + '" width="0.64" height="0.06" fill="#4A5748"/>');
+		}
+
+		/* garden: path, pool, trees, hedges, fence */
+		if (!mini) {
+			var gf = c.garden_features || [];
+			var dpm = doorPos(c, mainV.x1 - mainV.x0), doorMid = mainV.x0 + dpm.x + dpm.w / 2;
+			if (has(gf, 'paths') || !c.garden_features) {
+				var pathFill = sc.mat('slabs', season === 'winter' ? '#D5DADD' : '#C9C2B6');
+				var pth = sc.plane([doorMid - 0.6, front, 0.012], [1, 0, 0], [0, -1, 0], [[0, 0], [1.2, 0], [1.2, front - mainV.y1], [0, front - mainV.y1]], pathFill, '', { noShade: true });
+				if (pth) { groundSvg += pth.svg; }
+			}
+			if (has(gf, 'pool')) {
+				var px0 = left + 1.2, py0 = mainV.y1 + 1.5, pw2 = 3.4, pd = 6.5;
+				var pool = sc.plane([px0, py0 + pd, 0.02], [1, 0, 0], [0, -1, 0], [[0, 0], [pw2, 0], [pw2, pd], [0, pd]], '#E9E4DA', '<rect x="0.25" y="0.25" width="' + f(pw2 - 0.5) + '" height="' + f(pd - 0.5) + '" fill="' + (L.dark ? '#1E5C7A' : '#5FB2CF') + '"/><rect x="0.25" y="' + f(pd * 0.55) + '" width="' + f(pw2 - 0.5) + '" height="' + f(pd * 0.1) + '" fill="#9FDBEA" opacity="0.5"/>', { noShade: true });
+				if (pool) { groundSvg += pool.svg; }
+			}
+			if (has(gf, 'flowerbeds') && season !== 'winter') {
+				var fb = sc.plane([0.2, mainV.y1 + 1.0, 0.015], [1, 0, 0], [0, -1, 0], [[0, 0], [Math.min(3, doorMid - 1), 0], [Math.min(3, doorMid - 1), 0.8], [0, 0.8]], '#6B4F3A', '<circle cx="0.4" cy="0.4" r="0.18" fill="#E26D8A"/><circle cx="1.1" cy="0.35" r="0.18" fill="#F2C14E"/><circle cx="1.8" cy="0.45" r="0.18" fill="#C06FD1"/><circle cx="2.5" cy="0.4" r="0.18" fill="#FFFFFF"/>', { noShade: true });
+				if (fb) { groundSvg += fb.svg; }
+			}
+			// trees by garden style
+			var gs = c.garden_style || 'natural';
+			var kinds = { natural: ['deciduous', 'deciduous', 'conifer', 'multistem', 'shrub'], formal: ['topiary', 'topiary', 'cypress', 'deciduous', 'topiary'], minimal: ['multistem', 'grass', 'grass', 'multistem', 'grass'], cottage: ['fruit', 'deciduous', 'shrub', 'fruit', 'shrub'], mediterranean: ['olive', 'cypress', 'cypress', 'olive', 'lavender'] }[gs] || ['deciduous'];
+			// style-specific planting along the front path and the plot edge
+			var rowKind = { formal: 'topiary', mediterranean: 'lavender', cottage: 'shrub', minimal: 'grass', natural: 'shrub' }[gs] || 'shrub';
+			if (gs === 'minimal' || gs === 'mediterranean') {
+				var gp = sc.plane([left + 0.8, front - 0.8, 0.008], [1, 0, 0], [0, -1, 0], [[0, 0], [Math.max(1, doorMid - 1.4 - left - 0.8), 0], [Math.max(1, doorMid - 1.4 - left - 0.8), front - mainV.y1 - 1.6], [0, front - mainV.y1 - 1.6]], sc.mat('gravel', '#A9A49B'), '', { noShade: true, edge: false });
+				if (gp) { groundSvg += gp.svg; }
+			}
+			if (gs !== 'natural' || has(gf, 'flowerbeds')) {
+				var rr2 = rng(31), step = gs === 'formal' ? 1.3 : (gs === 'minimal' ? 1.8 : 0.95);
+				for (var py = mainV.y1 + 1.6; py < front - 0.9; py += step) {
+					[-1.15, 1.15].forEach(function (dx) {
+						if (gs === 'natural' && rr2() < 0.4) { return; }
+						var k = rowKind, sz = gs === 'formal' ? 1.15 : (gs === 'minimal' ? 1.2 : 0.95);
+						sc.push(sc.depth([doorMid + dx, py, 0]), treeSvg(sc, doorMid + dx, py, k, sz, 101 + Math.round(py * 13 + dx * 7)));
+					});
+				}
+			}
+			if (gs === 'mediterranean') { [[left + 1.2, mainV.y1 + 0.8], [left + 2.6, mainV.y1 + 0.8]].forEach(function (q) { sc.push(sc.depth([q[0], q[1], 0]), treeSvg(sc, q[0], q[1], 'cypress', 4.5, 7)); }); }
+			if (gs === 'formal') { [[left + 1.4, mainV.y1 + 1], [right - 1.4, mainV.y1 + 1]].forEach(function (q) { sc.push(sc.depth([q[0], q[1], 0]), treeSvg(sc, q[0], q[1], 'cypress', 3.6, 9)); }); }
+			var spots = [[left + 2.2, back + 2.5, 7.5], [right - 2.5, back + 3, 8], [left + 1.6, front - 2.2, 6], [right - 1.8, front - 1.6, 5.5], [doorMid - 2.2, mainV.y1 + 1.4, 1.1]];
+			if (has(gf, 'trees') || !c.garden_features) {
+				spots.forEach(function (sp, i) {
+					var k = kinds[i % kinds.length];
+					var sz = k === 'grass' || k === 'lavender' || k === 'shrub' || k === 'topiary' ? (i === 4 ? 1.0 : 1.6) : sp[2];
+					sc.push(sc.depth([sp[0], sp[1], 0]), treeSvg(sc, sp[0], sp[1], k, sz, 11 + i * 7));
+				});
+			}
+			if (has(gf, 'hedge')) {
+				for (var hx = left + 0.5; hx < right - 0.5; hx += 1.1) { sc.push(sc.depth([hx, back + 0.6, 0]), treeSvg(sc, hx, back + 0.6, 'topiary', 1.4, 3 + Math.round(hx * 10))); }
+			}
+			if (has(gf, 'shed')) {
+				box(sc, right - 3.4, back + 1.2, 0, right - 1.2, back + 3, 2.3, { top: '#5A4636', front: sc.mat('wood', '#9A7048') }).forEach(function (r) { sc.push(r.depth, r.svg); });
+			}
+			if (has(gf, 'playground') && season !== 'winter') {
+				var pg = sc.plane([right - 3.5, back + 6, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [2.5, 0], [2.5, 2.5], [0, 2.5]], '#D9C79E', '', { noShade: true });
+				if (pg) { groundSvg += pg.svg; }
+			}
+			if (has(gf, 'firepit')) {
+				var fp = sc.track([left + 3.5, mainV.y1 + 3.5, 0]);
+				sc.push(sc.depth([left + 3.5, mainV.y1 + 3.5, 0]), '<ellipse cx="' + f(fp[0]) + '" cy="' + f(fp[1]) + '" rx="0.7" ry="0.3" fill="#5A5550"/><ellipse cx="' + f(fp[0]) + '" cy="' + f(fp[1] - 0.2) + '" rx="0.35" ry="0.3" fill="#F28C38" opacity="' + (L.glow ? 0.95 : 0.7) + '"/>');
+			}
+			if (ta <= 0 && (has(gf, 'pergola') || has(c.shading, 'pergola'))) {
+				var pgx = left + 1.4, pgy = mainV.y1 + 2.2, pgc = '#8A6A4C';
+				[[pgx, pgy], [pgx + 2.8, pgy], [pgx, pgy + 2.4], [pgx + 2.8, pgy + 2.4]].forEach(function (q) { box(sc, q[0], q[1], 0, q[0] + 0.14, q[1] + 0.14, 2.5, { top: pgc, front: pgc, side: shade(pgc, -0.2) }).forEach(function (r) { sc.push(r.depth, r.svg); }); });
+				var pgb = ''; for (var pb = 0; pb < 3; pb += 0.45) { pgb += '<rect x="' + f(pb) + '" y="0" width="0.08" height="2.6" fill="' + pgc + '"/>'; }
+				var pgt = sc.plane([pgx, pgy + 2.55, 2.5], [1, 0, 0], [0, -1, 0], [[0, 0], [2.95, 0], [2.95, 2.6], [0, 2.6]], 'none', pgb, { noShade: true, edge: false });
+				if (pgt) { sc.push(sc.depth([pgx + 1.4, pgy + 1.2, 0]) + 1, pgt.svg); }
+			}
+			if (ta <= 0 && (has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen'))) {
+				box(sc, left + 2, mainV.y1 + 2.8, 0, left + 3.6, mainV.y1 + 3.7, 0.75, { top: has(gf, 'outdoor_kitchen') ? '#BFC3C6' : '#E7E1D6', front: '#6B5E52' }).forEach(function (r) { sc.push(r.depth, r.svg); });
+			}
+			if (has(gf, 'garden_lights') && L.glow) {
+				[[doorMid - 1.2, front - 1.5], [doorMid + 1.2, front - 3.5], [left + 3, mainV.y1 + 2]].forEach(function (q) {
+					var lp = sc.track([q[0], q[1], 0]);
+					sc.push(sc.depth([q[0], q[1], 0]), '<circle cx="' + f(lp[0]) + '" cy="' + f(lp[1] - 0.5) + '" r="0.9" fill="#FFD27A" opacity="0.28"/><rect x="' + f(lp[0] - 0.06) + '" y="' + f(lp[1] - 0.6) + '" width="0.12" height="0.6" fill="#FFE3A3"/>');
+				});
+			}
+			// fence along the front edge
+			var fence = c.fence || 'none';
+			if (fence !== 'none') {
+				var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = left + 0.6, fx1 = right - 0.6;
+				var gateX = doorMid - 0.6;
+				var fcol = { slats: c.arch_style === 'scandinavian' ? '#9C978E' : '#3B3E42', mesh: '#5B6B5A', masonry: shade(col(c.facade_color, '#F2EFE9'), -0.06), gabion: '#8E8A84' }[fence];
+				var inner2 = '';
+				var lenF = fx1 - fx0;
+				var gateOn = c.gate !== false, g0 = gateX - fx0, g1 = g0 + 1.2;
+				if (fence === 'slats') { for (var sx = 0; sx < lenF; sx += 0.16) { if (gateOn && sx > g0 - 0.1 && sx < g1) { continue; } inner2 += '<rect x="' + f(sx) + '" y="0" width="0.11" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
+				if (fence === 'mesh') { inner2 += '<path d="M0 ' + f(fz) + 'H' + f(lenF) + '" stroke="' + fcol + '" stroke-width="0.05"/>'; for (var mx = 0; mx < lenF; mx += 2.5) { inner2 += '<rect x="' + f(mx) + '" y="0" width="0.06" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
+				var ffill = fence === 'masonry' ? fcol : (fence === 'gabion' ? sc.mat('stone', '#9C978E') : (fence === 'mesh' ? 'rgba(91,107,90,0.25)' : 'none'));
+				var fpoly = [[0, 0], [lenF, 0], [lenF, fz], [0, fz]];
+				if (gateOn) {
+					// gate leaf: a darker frame with vertical bars, slightly lower than the fence
+					var gc = '#2E3135';
+					inner2 += '<rect x="' + f(g0) + '" y="0.05" width="1.2" height="' + f(fz - 0.12) + '" fill="none" stroke="' + gc + '" stroke-width="0.06"/>';
+					for (var gb = g0 + 0.15; gb < g1 - 0.05; gb += 0.15) { inner2 += '<rect x="' + f(gb) + '" y="0.05" width="0.03" height="' + f(fz - 0.12) + '" fill="' + gc + '"/>'; }
+					inner2 += '<rect x="' + f(g0 - 0.12) + '" y="0" width="0.12" height="' + f(fz + 0.1) + '" fill="' + gc + '"/><rect x="' + f(g1) + '" y="0" width="0.12" height="' + f(fz + 0.1) + '" fill="' + gc + '"/>';
+				}
+				if ((fence === 'masonry' || fence === 'gabion') && gateOn) {
+					fpoly = [[0, 0], [gateX - fx0, 0], [gateX - fx0, fz], [0, fz]];
+					var fr2 = sc.plane([gateX + 1.2, front - 0.4, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [fx1 - gateX - 1.2, 0], [fx1 - gateX - 1.2, fz], [0, fz]], ffill, '', { noShade: true });
+					if (fr2) { sc.push(fr2.depth + 50, fr2.svg); }
+				}
+				var fe = sc.plane([fx0, front - 0.4, 0], [1, 0, 0], [0, 0, 1], fpoly, ffill, inner2, { noShade: true });
+				if (fe) { sc.push(fe.depth + 50, fe.svg); }
+			}
+			// neighbours
+			if (c.neighbors) {
+				[[left - 9, back + 2], [right + 2, back + 3]].forEach(function (q) {
+					var nv = { x0: q[0], x1: q[0] + 8, y0: q[1] - 7, y1: q[1], h: 5.6, ridge: 'x' };
+					var npl = { plinth: 0.2, floors: 1, FH: 2.9, pitch: 38, over: 0.4, attic: false };
+					var nsc = sc;
+					var parts = [];
+					var nf = nsc.plane([nv.x0, nv.y1, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [8, 0], [8, 5.6], [0, 5.6]], '#D8D3CB', '');
+					if (nf) { parts.push(nf); }
+					var nr = nsc.plane([nv.x0 - 0.4, nv.y1 + 0.4, 5.3], [1, 0, 0], norm([0, -0.78, 0.62]), [[0, 0], [8.8, 0], [8.8, 4.9], [0, 4.9]], '#8C5A48');
+					if (nr) { parts.push(nr); }
+					var ng = group(parts, 0);
+					if (ng) { sc.push(ng.depth - 40, '<g opacity="0.55">' + ng.svg + '</g>'); }
+					void npl;
+				});
+			}
+		}
+
+		/* compose */
+		sc.items.sort(function (a, b) { return a.d - b.d; });
+		var pad = mini ? 0.6 : { '24mm': 2.6, '35mm': 1.4, '50mm': 0.5 }[c.lens || '35mm'] || 1.4;
+		var vbx = sc.minX - pad, vby = sc.minY - pad * 1.6, vbw = sc.maxX - sc.minX + pad * 2, vbh = sc.maxY - sc.minY + pad * 2.6;
+		if (!isFinite(vbx)) { vbx = 0; vby = 0; vbw = 10; vbh = 6; }
+		// sky
+		var sky = SKY[L.tod];
+		var skyTop = c.weather === 'overcast' ? mix(sky[0], '#9AA3AD', 0.65) : sky[0];
+		var skyBot = c.weather === 'overcast' ? mix(sky[1], '#C9CED3', 0.6) : sky[1];
+		var skyId = sc.def('sky', '<linearGradient id="' + sc.id + 'sky" gradientUnits="userSpaceOnUse" x1="0" y1="' + f(vby) + '" x2="0" y2="' + f(vby + vbh * 0.85) + '"><stop offset="0" stop-color="' + skyTop + '"/><stop offset="1" stop-color="' + skyBot + '"/></linearGradient>');
+		var bg = '<rect x="' + f(vbx - vbw) + '" y="' + f(vby - vbh) + '" width="' + f(vbw * 3) + '" height="' + f(vbh * 3) + '" fill="url(#' + skyId + ')"/>';
+		if (!mini) {
+			if (L.tod === 'night') { var rr = rng(5); for (var st = 0; st < 40; st++) { bg += '<circle cx="' + f(vbx + rr() * vbw) + '" cy="' + f(vby + rr() * vbh * 0.35) + '" r="' + f(0.03 + rr() * 0.05) + '" fill="#FFFFFF" opacity="' + f(0.4 + rr() * 0.6) + '"/>'; } bg += '<circle cx="' + f(vbx + vbw * 0.82) + '" cy="' + f(vby + vbh * 0.14) + '" r="' + f(vbh * 0.04) + '" fill="#F4F1E3"/>'; }
+			else if (c.weather !== 'overcast' && (L.tod === 'golden' || L.tod === 'morning')) {
+				var sxp = L.tod === 'golden' ? vbx + vbw * 0.86 : vbx + vbw * 0.1, syp = vby + vbh * 0.3;
+				var sunId = sc.def('sun', '<radialGradient id="' + sc.id + 'sun"><stop offset="0" stop-color="#FFF6E0" stop-opacity="0.95"/><stop offset="0.18" stop-color="#FFE7BD" stop-opacity="0.7"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient>');
+					bg += '<circle cx="' + f(sxp) + '" cy="' + f(syp) + '" r="' + f(vbh * 0.22) + '" fill="url(#' + sunId + ')"/>';
+			}
+			var nc = { clear: 0, few_clouds: 3, overcast: 7 }[c.weather || 'few_clouds'];
+			var cr = rng(9);
+			for (var cl = 0; cl < nc; cl++) {
+				var cx = vbx + cr() * vbw, cy = vby + vbh * (0.05 + cr() * 0.22), cw = vbw * (0.08 + cr() * 0.1);
+				var cc = c.weather === 'overcast' ? '#C4C9CF' : (L.dark ? '#3A4466' : '#FFFFFF');
+				bg += '<g opacity="' + (c.weather === 'overcast' ? 0.85 : 0.75) + '"><ellipse cx="' + f(cx) + '" cy="' + f(cy) + '" rx="' + f(cw) + '" ry="' + f(cw * 0.22) + '" fill="' + cc + '"/><ellipse cx="' + f(cx - cw * 0.3) + '" cy="' + f(cy - cw * 0.12) + '" rx="' + f(cw * 0.45) + '" ry="' + f(cw * 0.22) + '" fill="' + cc + '"/><ellipse cx="' + f(cx + cw * 0.25) + '" cy="' + f(cy - cw * 0.16) + '" rx="' + f(cw * 0.38) + '" ry="' + f(cw * 0.24) + '" fill="' + cc + '"/></g>';
+			}
+		}
+		var body = slab + groundSvg + horizon + shadowSvg + sc.items.map(function (it) { return it.s; }).join('');
+		var tint = L.tintA > 0 ? '<rect x="' + f(vbx - vbw) + '" y="' + f(vby - vbh) + '" width="' + f(vbw * 3) + '" height="' + f(vbh * 3) + '" fill="' + L.tint + '" opacity="' + f(L.tintA * (mini ? 0.5 : 1)) + '" style="mix-blend-mode:multiply"/>' : '';
+		if (L.glow && c.night_lighting !== false) {
+			// glowing windows above the night tint: re-draw only the glow halo cheaply
+			tint += '';
+		}
+		return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + [vbx, vby, vbw, vbh].map(f).join(' ') + '" preserveAspectRatio="' + (opts.fit || 'xMidYMid meet') + '" role="img" aria-hidden="true">' +
+			'<defs>' + sc.defs.join('') + '</defs>' + bg + body + tint + '</svg>';
+	}
+	// Convex hull (monotone chain) of 2D points.
+	function hull(p) {
+		p = p.slice().sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+		if (p.length < 3) { return p; }
+		var cr = function (o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); };
+		var lo = [], up = [];
+		p.forEach(function (q) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) { lo.pop(); } lo.push(q); });
+		for (var i = p.length - 1; i >= 0; i--) { var q = p[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) { up.pop(); } up.push(q); }
+		up.pop(); lo.pop();
+		return lo.concat(up);
+	}
+
+	/* ------------------------------------------------------------------ swatches for option cards */
+	var INTERIOR = {
+		modern_minimal: ['#F4F3F0', '#D9D6D0', '#2B2B2B', '#B9A48A'], luxury: ['#1F1D1B', '#C8A96A', '#EDE6DA', '#6B4E3D'],
+		scandinavian: ['#FAFAF7', '#E3DED4', '#C9A97E', '#9DB0A8'], japandi: ['#EDE6DA', '#B8A48A', '#5C4A3A', '#2F2C29'],
+		classic: ['#F3EBDD', '#C9B28A', '#7A5C3E', '#3E4A5C'], mediterranean: ['#F5EFE3', '#D9A066', '#2F6F8F', '#8A9A5B'],
+		industrial: ['#3A3A3A', '#8C5A3C', '#B9B6B0', '#1E1E1E'], wood_stone: ['#D8CFC2', '#9C7B57', '#7D7A73', '#4B4036'],
+		warm_neutral: ['#F2EBE1', '#D7C3A8', '#A88464', '#6E5A4A'], monochrome: ['#FFFFFF', '#BDBDBD', '#5A5A5A', '#121212'],
+		custom: ['#E8D9C5', '#9FB4A8', '#C98B6B', '#4F5D75']
+	};
+	var FLOORS = {
+		parquet: { mat: 'planks', c: '#B7865A' }, herringbone: { mat: 'herring', c: '#B07D52' }, laminate: { mat: 'planks', c: '#C9A47A' },
+		vinyl: { mat: 'planks', c: '#A79B8C' }, tiles_large: { mat: 'bigtile', c: '#D7D3CC' }, stone: { mat: 'slabs', c: '#CFC3AE' },
+		microcement: { mat: 'smooth', c: '#BDB7AE' }, concrete: { mat: 'smooth', c: '#9E9B96' }
+	};
+	// Material swatch (facade / floor / roof) as a small square SVG.
+	function swatch(kind, value, cfg) {
+		var sc = new Scene(cfg || {}, { id: 's' + kind + value });
+		var inner = '', w = 3, h = 2;
+		if (kind === 'facade') {
+			var base = facadeBase(cfg || {}, value);
+			var fill = sc.mat(value === 'render' ? 'render' : value, base);
+			inner = '<rect width="' + w + '" height="' + h + '" fill="' + fill + '"/>' +
+				'<rect x="1.7" y="0.35" width="0.95" height="1.3" fill="#2F3235"/><rect x="1.75" y="0.4" width="0.85" height="1.2" fill="#9EB6C8"/><rect x="1.75" y="0.4" width="0.85" height="0.5" fill="#C9DAE5"/>' +
+				'<rect width="' + w + '" height="' + h + '" fill="url(#' + sc.def('vig', '<linearGradient id="' + sc.id + 'vig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18"/><stop offset="1" stop-color="#000000" stop-opacity="0.18"/></linearGradient>') + ')"/>';
+		} else if (kind === 'floor') {
+			var fl = FLOORS[value] || FLOORS.parquet, d = shade(fl.c, -0.22);
+			if (fl.mat === 'planks') { for (var r = 0; r < 10; r++) { var off = (r % 3) * 0.7; for (var px = -off; px < 3; px += 1.4) { inner += '<rect x="' + f(px) + '" y="' + f(r * 0.2) + '" width="1.4" height="0.2" fill="' + shade(fl.c, (((r * 7 + Math.round(px * 10)) % 5) - 2) * 0.025) + '" stroke="' + d + '" stroke-width="0.012"/>'; } } }
+			else if (fl.mat === 'herring') { for (var hi = 0; hi < 10; hi++) { for (var hy = -0.6; hy < 2.4; hy += 0.14) { var x0 = hi * 0.32, up = hi % 2 === 0; inner += '<polygon points="' + pts(up ? [[x0, hy], [x0 + 0.32, hy + 0.32], [x0 + 0.32, hy + 0.46], [x0, hy + 0.14]] : [[x0, hy + 0.32], [x0 + 0.32, hy], [x0 + 0.32, hy + 0.14], [x0, hy + 0.46]]) + '" fill="' + shade(fl.c, ((Math.round(hy * 50) + hi) % 3 - 1) * 0.035) + '" stroke="' + d + '" stroke-width="0.012"/>'; } } }
+			else if (fl.mat === 'bigtile') { inner = '<rect width="3" height="2" fill="' + fl.c + '"/><path d="M0 1H3M1.5 0V2" stroke="' + d + '" stroke-width="0.02"/><rect width="3" height="2" fill="#FFFFFF" opacity="0.08"/>'; }
+			else if (fl.mat === 'slabs') { inner = '<rect width="3" height="2" fill="' + fl.c + '"/><path d="M0 0.66H3M0 1.33H3M1 0V0.66M2.2 0.66V1.33M0.7 1.33V2M1.9 1.33V2" stroke="' + d + '" stroke-width="0.02"/>'; }
+			else { inner = '<rect width="3" height="2" fill="' + fl.c + '"/><ellipse cx="1" cy="0.8" rx="1.4" ry="0.6" fill="#FFFFFF" opacity="0.08"/><ellipse cx="2.3" cy="1.5" rx="0.8" ry="0.3" fill="#000000" opacity="0.05"/>'; }
+		}
+		return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>' + sc.defs.join('') + '</defs><g transform="matrix(1 0 0 -1 0 2)">' + inner + '</g></svg>';
+	}
+	function palette(value) {
+		var p = INTERIOR[value] || INTERIOR.custom;
+		var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+			'<rect width="120" height="80" fill="' + p[0] + '"/><rect y="52" width="120" height="28" fill="' + p[1] + '"/>' +
+			'<rect x="16" y="34" width="54" height="16" rx="5" fill="' + p[2] + '"/><rect x="12" y="44" width="62" height="10" rx="4" fill="' + shade(p[2], -0.1) + '"/>' +
+			'<rect x="84" y="18" width="2.5" height="34" fill="' + p[3] + '"/><path d="M76 18h18l-5-10h-8z" fill="' + p[3] + '"/>' +
+			'<rect x="80" y="54" width="22" height="3" fill="' + p[3] + '"/><circle cx="34" cy="20" r="9" fill="none" stroke="' + p[3] + '" stroke-width="2"/>';
+		p.forEach(function (cc, i) { s += '<rect x="' + (6 + i * 12) + '" y="64" width="10" height="10" rx="2" fill="' + cc + '" stroke="#FFFFFF" stroke-width="1"/>'; });
+		if (value === 'custom') { s += '<text x="104" y="74" font-size="12" font-family="sans-serif" fill="' + p[3] + '">?</text>'; }
+		return s + '</svg>';
+	}
+	// Small landscape vignette for garden styles / time of day.
+	function vignette(kind, value, cfg) {
+		var c = {};
+		Object.keys(cfg || {}).forEach(function (k) { c[k] = cfg[k]; });
+		if (kind === 'garden') { c.garden_style = value; c.garden_features = ['lawn', 'trees', 'paths', 'hedge', 'flowerbeds']; c.fence = 'none'; c.neighbors = false; c.garage = 'none'; c.terrace_area = 0; c.levels = 'single'; c.net_area = 70; c.footprint = 'rectangle'; c.camera = 'elevated'; }
+		if (kind === 'time') { c.time_of_day = value; c.weather = 'few_clouds'; }
+		c.lens = '24mm';
+		return render(c, { id: 'v' + kind + value, mini: false, fit: 'xMidYMid slice', tight: true, plantScale: kind === 'garden' ? 1.7 : 1.2 });
+	}
+
+	var VISUAL = ['plot_width', 'plot_length', 'exterior_steps', 'accessible', 'ridge_height', 'eaves_depth', 'snow_guards', 'roof_ventilation', 'exposed_rafters', 'facade_texture', 'property_type', 'levels', 'net_area', 'building_width', 'building_length', 'orientation', 'arch_style', 'footprint', 'garage', 'terrace_area', 'balcony', 'entrance_canopy', 'outdoor_covered', 'basement', 'chimney', 'ceiling_height',
+		'roof_type', 'roof_pitch', 'roof_overhang', 'gable_finish', 'roof_windows', 'dormers', 'roof_solar', 'gutters', 'roof_product', 'roof_color', 'roof_surface',
+		'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'plinth_color', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number',
+		'window_style', 'window_frame_color', 'window_frame_material', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading',
+		'garden_style', 'garden_features', 'terrace_floor', 'driveway', 'fence', 'gate', 'neighbors', 'time_of_day', 'season', 'weather', 'camera', 'lens', 'night_lighting', 'energy'];
+
+	// Whether changing a parameter shows on the sketch for this configuration (value: the multiselect item
+	// that was switched). Used by the tests; the designer itself compares the drawings before and after.
+	function visibleFor(id, c, value) {
+		if (VISUAL.indexOf(id) === -1) { return false; }
+		var pitched = c.roof_type !== 'flat', ta = num(c.terrace_area, 0) > 0, acc = c.facade_accent || [];
+		switch (id) {
+			case 'balcony': return c.levels === 'two' || c.levels === 'three';
+			case 'footprint': return c.property_type !== 'semi_detached' && c.property_type !== 'row';
+			case 'plot_width': return num(c.plot_width, 0) > 0 && num(c.plot_width, 0) <= 60;
+			case 'plot_length':
+				var pv = volumes(c, plan(c)), my = Math.max.apply(null, pv.map(function (q) { return q.y1; }));
+				return num(c.plot_width, 0) > 0 && num(c.plot_width, 0) <= 60 && num(c.plot_length, 0) > 0 && num(c.plot_length, 0) < my + 20;
+			case 'ridge_height': return ['gable', 'hip', 'half_hip', 'multi', 'complex'].indexOf(c.roof_type || 'gable') !== -1 && num(c.ridge_height, 0) > plan(c).h0 + 0.8;
+			case 'eaves_depth': case 'snow_guards': case 'exposed_rafters': return pitched && (id !== 'snow_guards' || c.roof_type !== 'shed');
+			case 'roof_ventilation': return pitched && c.roof_type !== 'shed' && c.roof_type !== 'pyramid';
+			case 'facade_texture': return (c.facade_main || 'render') === 'render';
+			case 'roof_pitch': case 'roof_windows': case 'dormers': case 'gutters': return pitched;
+			case 'roof_overhang': return pitched && (num(c.eaves_depth, 0) <= 0 || (['hip', 'pyramid'].indexOf(c.roof_type) === -1 && c.gable_finish !== 'flush'));
+			case 'exterior_steps': return !c.basement && !c.accessible;
+			case 'roof_color': case 'roof_product': return pitched;
+			case 'gable_finish': return ['gable', 'half_hip', 'shed', 'multi', 'complex'].indexOf(c.roof_type) !== -1;
+			case 'plinth_color': return !c.plinth || c.plinth === 'dark_render';
+			case 'facade_accent_color': return acc.some(function (m) { return m === 'wood' || m === 'metal' || m === 'render_dark'; });
+			case 'gate': return !!c.fence && c.fence !== 'none';
+			case 'night_lighting': return c.time_of_day === 'night' || c.time_of_day === 'blue';
+			case 'terrace_door': case 'terrace_floor': case 'outdoor_covered': return ta;
+			case 'arch_style': return c.arch_style !== 'custom' && c.arch_style !== 'modern_minimal';
+			case 'energy': return VISUAL_ENERGY.indexOf(value) !== -1;
+			case 'garden_features': return ['robot_mower', 'outdoor_shower', 'irrigation'].indexOf(value) === -1 && !(value === 'garden_lights' && !lightFor(c).glow);
+			case 'shading': return value !== 'louvres' || c.levels === 'two' || c.levels === 'three';
+			case 'orientation': return c.weather !== 'overcast' && c.time_of_day !== 'night';
+			default: return true;
+		}
+	}
+
+	var api = { render: render, swatch: swatch, palette: palette, vignette: vignette, visual: VISUAL, visibleFor: visibleFor, plan: plan };
+	root.AGH_Sketch = api;
+	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
+}(typeof window !== 'undefined' ? window : this));

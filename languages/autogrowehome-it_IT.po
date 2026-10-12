@@ -6754,3 +6754,7 @@ msgstr "Illustrazione dello stile: le immagini fotorealistiche della tua casa ve
 #: includes/Frontend/Strings.php:231
 msgid "Stílusminta"
 msgstr "Esempio di stile"
+
+#: includes/Frontend/Strings.php:233
+msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
+msgstr "Non visibile nello schizzo – compare nelle immagini dei concept."

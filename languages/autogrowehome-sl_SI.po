@@ -6758,3 +6758,7 @@ msgstr "Ponazoritev sloga – fotorealistične slike vaše hiše nastanejo po ge
 #: includes/Frontend/Strings.php:231
 msgid "Stílusminta"
 msgstr "Primer sloga"
+
+#: includes/Frontend/Strings.php:233
+msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
+msgstr "Na skici ni vidno – prikaže se na slikah konceptov."

@@ -6756,3 +6756,7 @@ msgstr "Илустрација стила – фотореалистичне с�
 #: includes/Frontend/Strings.php:231
 msgid "Stílusminta"
 msgstr "Пример стила"
+
+#: includes/Frontend/Strings.php:233
+msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
+msgstr "Ne vidi se na skici – pojavljuje se na slikama koncepata."

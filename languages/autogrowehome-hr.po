@@ -6756,3 +6756,7 @@ msgstr "Ilustracija stila – fotorealistične slike vaše kuće nastaju nakon g
 #: includes/Frontend/Strings.php:231
 msgid "Stílusminta"
 msgstr "Primjer stila"
+
+#: includes/Frontend/Strings.php:233
+msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
+msgstr "Ne vidi se na skici – pojavljuje se na slikama koncepata."

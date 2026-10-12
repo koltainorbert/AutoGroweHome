@@ -6754,3 +6754,7 @@ msgstr "Illustratie van de stijl – fotorealistische beelden van je eigen huis 
 #: includes/Frontend/Strings.php:231
 msgid "Stílusminta"
 msgstr "Stijlvoorbeeld"
+
+#: includes/Frontend/Strings.php:233
+msgid "A vázlaton nem látszik – a koncepcióképeken megjelenik."
+msgstr "Niet zichtbaar in de schets – wel in de conceptbeelden."
