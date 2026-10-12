@@ -283,6 +283,7 @@ final class Admin {
 					array( 'left_width', 'number', __( 'Paraméterpanel szélessége', 'autogrowehome' ), '', array( 'min' => 260, 'max' => 480, 'unit' => 'px' ) ),
 					array( 'right_width', 'number', __( 'Összegző panel szélessége', 'autogrowehome' ), '', array( 'min' => 240, 'max' => 440, 'unit' => 'px' ) ),
 					array( 'action_bar', 'select', __( 'Műveleti sáv helye', 'autogrowehome' ), '', array( 'options' => array( 'bottom' => __( 'Lent', 'autogrowehome' ), 'top' => __( 'Fent', 'autogrowehome' ) ) ) ),
+					array( 'start_view', 'select', __( 'Kezdőnézet', 'autogrowehome' ), __( 'Mivel nyíljon meg a tervező. A látogató bármikor átválthat, a választását a böngészője megjegyzi.', 'autogrowehome' ), array( 'options' => array( 'wizard' => __( 'Gyors varázsló', 'autogrowehome' ), 'designer' => __( 'Teljes tervező', 'autogrowehome' ) ) ) ),
 					array( 'show_tour', 'bool', __( 'Gyorsbemutató első megnyitáskor', 'autogrowehome' ) ),
 				),
 			),

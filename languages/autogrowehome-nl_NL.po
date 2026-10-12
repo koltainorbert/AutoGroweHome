@@ -6632,3 +6632,117 @@ msgstr "Wacht op controle door fabrikant"
 #: includes/Params/Definitions.php:260
 msgid "A katalógusban rögzített termékek közül. A gyári tételek színmintái tájékoztató jellegűek, gyártói ellenőrzésre várnak."
 msgstr "Uit de producten die in de catalogus zijn vastgelegd. De kleurstalen van de vooraf geladen items zijn indicatief en wachten op controle door de fabrikant."
+
+#: includes/Frontend/Strings.php:262
+msgid "A fő homlokzatanyag, a színe és az ablakok jellege határozza meg, milyennek látszik a ház kívülről."
+msgstr "Het hoofdmateriaal van de gevel, de kleur en het type ramen bepalen hoe het huis er van buiten uitziet."
+
+#. translators: 1: number of further settings.
+#: includes/Frontend/Strings.php:265
+#, php-format
+msgid "A részletes tervezőben további %1$s beállítással finomíthatod a házat: anyagok, belső terek, konyha, fürdő, kert, fény és kamera."
+msgstr "In de volledige ontwerper kun je het huis verfijnen met nog %1$s instellingen: materialen, interieur, keuken, badkamer, tuin, licht en camera."
+
+#: includes/Frontend/Strings.php:283
+msgid "A stílus adja a ház karakterét: a tömeget, a nyílászárókat és az anyaghasználatot."
+msgstr "De stijl geeft het huis zijn karakter: de bouwmassa, de ramen en de materiaalkeuze."
+
+#: includes/Frontend/Strings.php:256
+msgid "A továbblépés előtt javítsd a megjelölt mezőt."
+msgstr "Corrigeer het gemarkeerde veld voordat je verdergaat."
+
+#: includes/Frontend/Strings.php:271
+msgid "A varázsló lépései"
+msgstr "Stappen van de wizard"
+
+#. translators: 1: architectural style name.
+#: includes/Frontend/Strings.php:282
+#, php-format
+msgid "A(z) „%1$s” stílushoz illő anyagokat és színeket beállítottuk; a következő lépésekben módosíthatod őket."
+msgstr "Materialen en kleuren die bij de stijl ‘%1$s’ passen zijn ingesteld; je kunt ze in de volgende stappen wijzigen."
+
+#: includes/Frontend/Strings.php:258
+msgid "Alapok"
+msgstr "Basis"
+
+#: includes/Frontend/Strings.php:276
+msgid "Az alapterület és a szobák száma adja a ház léptékét. Az arányokat mi ellenőrizzük."
+msgstr "De woonoppervlakte en het aantal kamers bepalen de schaal van het huis. De verhoudingen controleren wij."
+
+#: includes/Frontend/Strings.php:285
+msgid "Finomhangolás a részletes tervezőben"
+msgstr "Verfijnen in de volledige ontwerper"
+
+#: includes/Frontend/Strings.php:269
+msgid "Garázs, terasz és a kert hangulata – ezek teszik teljessé a látványt."
+msgstr "Garage, terras en de sfeer van de tuin – daarmee is het plaatje compleet."
+
+#: includes/Frontend/Strings.php:267 includes/Admin/Admin.php:286
+msgid "Gyors varázsló"
+msgstr "Snelle wizard"
+
+#: includes/Frontend/Strings.php:263
+msgid "Homlokzat és ablakok"
+msgstr "Gevel en ramen"
+
+#: includes/Frontend/Strings.php:254
+msgid "Indíthatod a generálást – három eltérő házkoncepciót kapsz –, vagy a részletes tervezőben tovább finomíthatod a házat."
+msgstr "Je kunt de generatie starten – je krijgt drie verschillende huisconcepten – of het huis verder verfijnen in de volledige ontwerper."
+
+#: includes/Frontend/Strings.php:268
+msgid "Kert"
+msgstr "Tuin"
+
+#: includes/Frontend/Strings.php:270
+msgid "Kert és kiegészítők"
+msgstr "Tuin en extra’s"
+
+#: includes/Frontend/Strings.php:259
+msgid "Kezdjük az alapokkal: az épület típusa, a szintek száma és hogy hányan fogtok benne lakni."
+msgstr "We beginnen met de basis: het type gebouw, het aantal verdiepingen en met hoeveel mensen je er gaat wonen."
+
+#: includes/Admin/Admin.php:286
+msgid "Kezdőnézet"
+msgstr "Startweergave"
+
+#: includes/Frontend/Strings.php:253
+msgid "Kész"
+msgstr "Klaar"
+
+#: includes/Frontend/Strings.php:255
+msgid "Kész is! Nézd át az összefoglalót"
+msgstr "Klaar! Bekijk de samenvatting"
+
+#. translators: 1: current step, 2: number of steps.
+#: includes/Frontend/Strings.php:279
+#, php-format
+msgid "Lépés: %1$s / %2$s"
+msgstr "Stap %1$s van %2$s"
+
+#: includes/Frontend/Strings.php:273
+msgid "Magastetőhöz a tetőfedést a BRAMAC kínálatából választjuk; ha nem választasz, egy illő terméket ajánlunk."
+msgstr "Bij een hellend dak kiezen we de dakbedekking uit het BRAMAC-assortiment; kies je er geen, dan stellen we een passend product voor."
+
+#: includes/Frontend/Strings.php:277
+msgid "Mekkora legyen a ház?"
+msgstr "Hoe groot moet het huis worden?"
+
+#: includes/Frontend/Strings.php:284
+msgid "Melyik stílus áll hozzád közel?"
+msgstr "Welke stijl spreekt je aan?"
+
+#: includes/Frontend/Strings.php:260
+msgid "Milyen házat tervezel?"
+msgstr "Wat voor huis ben je aan het plannen?"
+
+#: includes/Frontend/Strings.php:274
+msgid "Milyen legyen a tető?"
+msgstr "Wat voor dak wil je?"
+
+#: includes/Admin/Admin.php:286
+msgid "Mivel nyíljon meg a tervező. A látogató bármikor átválthat, a választását a böngészője megjegyzi."
+msgstr "Waarmee de ontwerper opent. Bezoekers kunnen altijd wisselen; hun browser onthoudt de keuze."
+
+#: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
+msgid "Teljes tervező"
+msgstr "Volledige ontwerper"

@@ -11,6 +11,7 @@
 	var LS_KEY = 'agh_draft_v1';
 	var LS_THEME = 'agh_theme';
 	var LS_PRESETS = 'agh_presets';
+	var LS_UI = 'agh_ui'; // 'wizard' | 'designer': the view the visitor last chose
 	// WordPress REST nonce of a logged-in visitor (empty for guests): sent as X-WP-Nonce so the REST layer sees the user.
 	var WP_NONCE = LOADER.wpNonce || '';
 
@@ -212,7 +213,7 @@
 			build();
 			event('popup_open');
 			if (S.projectId) { loadProject(S.projectId, true); }
-			if (S.boot.layout.tour && !lsGet('agh_tour_done', false)) { setTimeout(showTour, 400); }
+			if (!S.wiz && S.boot.layout.tour && !lsGet('agh_tour_done', false)) { setTimeout(showTour, 400); }
 		}).catch(function () {
 			window.alert(S.boot ? t('err_boot') : (LOADER.errBoot || t('err_boot')));
 		});
@@ -308,7 +309,8 @@
 		renderSummary();
 		renderActionbar();
 		validate();
-		setTimeout(function () { var f = shell.querySelector('.agh-rail button'); if (f) { f.focus(); } }, 50);
+		if (startInWizard()) { enterWizard(0); }
+		setTimeout(function () { if (S.wiz) { return; } var f = shell.querySelector('.agh-rail button'); if (f) { f.focus(); } }, 50);
 	}
 
 	function buildHeader() {
@@ -328,6 +330,9 @@
 		);
 		els.modeSeg = mode;
 		var tools = h('div', { class: 'agh-header-tools' });
+		// Quick wizard <-> full designer (label set by updateWizardToggles()).
+		els.wizBtn = h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-accent agh-hide-m agh-wiz-toggle', onclick: toggleWizard });
+		tools.appendChild(els.wizBtn);
 		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', onclick: showPresets }, icon('layers', 'agh-ico-s'), t('presets')));
 		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', onclick: showProjects }, icon('folder', 'agh-ico-s'), t('my_projects')));
 		if (S.boot.languages && S.boot.languages.length > 1) {
@@ -343,6 +348,7 @@
 		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn agh-hide-m', 'aria-label': t('help'), title: t('help'), onclick: showTour }, icon('help')));
 		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), title: t('close'), onclick: function () { close(false); } }, icon('close')));
 		var header = h('header', { class: 'agh-header' }, brand, h('div', { class: 'agh-header-spacer' }), mode, tools, buildMenu());
+		updateWizardToggles();
 		setTimeout(function () { setTheme(S.theme); }, 0);
 		return header;
 	}
@@ -360,6 +366,8 @@
 		function item(ico, label, fn) {
 			return h('button', { type: 'button', class: 'agh-hmenu-item', onclick: function () { closeMenu(false); fn(); } }, icon(ico, 'agh-ico-s'), label);
 		}
+		els.wizItem = h('button', { type: 'button', class: 'agh-hmenu-item', onclick: function () { closeMenu(false); toggleWizard(); } });
+		m.appendChild(els.wizItem);
 		m.appendChild(item('layers', t('presets'), showPresets));
 		m.appendChild(item('folder', t('my_projects'), showProjects));
 		m.appendChild(item('help', t('help'), showTour));
@@ -503,6 +511,7 @@
 	}
 
 	function renderFields() {
+		if (S.wiz) { renderWizardStep(false); return; }
 		var cat = S.boot.schema.categories.filter(function (c) { return c.id === S.cat; })[0] || S.boot.schema.categories[0];
 		clear(els.fieldsHead).appendChild(h('h3', { class: 'agh-h', text: S.search ? t('search_results') : cat.label }));
 		els.fieldsHead.appendChild(h('div', { class: 'agh-search' }, icon('search'), els.searchInput));
@@ -527,6 +536,7 @@
 		validate();
 		renderPreviewOnly();
 		renderSummary();
+		updateWizardSide();
 		var dependents = S.boot.schema.fields.some(function (f) { return f.show_if && f.show_if.field === id; }) || S.boot.schema.fields.some(function (f) { return f.filter_by === id; });
 		if (rerender || dependents) { renderFields(); }
 	}
@@ -640,7 +650,7 @@
 		}
 		return box;
 	}
-	var setValueQuiet = debounce(function (id, v) { S.config[id] = v; S.explicit[id] = true; S.dirty = true; renderPreviewOnly(); renderSummary(); }, 60);
+	var setValueQuiet = debounce(function (id, v) { S.config[id] = v; S.explicit[id] = true; S.dirty = true; renderPreviewOnly(); renderSummary(); updateWizardSide(); }, 60);
 
 	function renderColor(f, v) {
 		var box = h('div', { class: 'agh-color' });
@@ -718,6 +728,17 @@
 		if (!pack || !Object.keys(pack.values).length) { return; }
 		var keys = Object.keys(pack.values).filter(function (k) { return k !== 'arch_style'; });
 		if (!keys.length) { return; }
+		if (S.wiz) {
+			// Wizard: apply the style's suggested materials and colours right away, but never over a value
+			// the visitor set; they are not marked as the visitor's own, so another style can replace them.
+			var n = 0;
+			keys.forEach(function (k) { if (!S.explicit[k] && (k in S.config || S.fields[k])) { S.config[k] = pack.values[k]; n++; } });
+			if (n) {
+				S.dirty = true; persist(); validate(); renderPreviewOnly(); renderSummary(); updateWizardSide();
+				toast(tf('wiz_style_applied', pack.name), 'ok', 3500);
+			}
+			return;
+		}
 		toast(h('span', null, tf('style_pack_offer', pack.name) + ' ', h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-accent', onclick: function (e) { applyValues(pack.values, true); e.currentTarget.closest('.agh-toast').remove(); } }, t('apply'))), 'ok', 9000);
 	}
 
@@ -751,6 +772,15 @@
 		} else if (field === 'window_style') {
 			var ws = { classic: '<rect x="8" y="8" width="8" height="10"/><rect x="24" y="8" width="8" height="10"/>', large: '<rect x="6" y="8" width="13" height="14"/><rect x="22" y="8" width="13" height="14"/>', panoramic: '<rect x="4" y="6" width="32" height="19"/><path d="M15 6v19M26 6v19"/>', vertical: '<rect x="8" y="5" width="5" height="20"/><rect x="18" y="5" width="5" height="20"/><rect x="28" y="5" width="5" height="20"/>' };
 			p = ws[value] || ws.classic;
+		} else if (field === 'levels') {
+			var lv = { single: '<path d="M4 15L20 6l16 9"/><rect x="8" y="15" width="24" height="11"/>', attic: '<path d="M4 17L20 4l16 13"/><rect x="8" y="17" width="24" height="9"/><rect x="17" y="10" width="6" height="4"/>', two: '<path d="M6 10L20 3l14 7"/><rect x="9" y="10" width="22" height="8"/><rect x="9" y="18" width="22" height="8"/>', three: '<path d="M8 7L20 2l12 5"/><rect x="11" y="7" width="18" height="6"/><rect x="11" y="13" width="18" height="6"/><rect x="11" y="19" width="18" height="7"/>' };
+			p = lv[value] || lv.single;
+		} else if (field === 'property_type') {
+			var pt = { detached: '<path d="M8 14L20 5l12 9"/><rect x="11" y="14" width="18" height="12"/>', semi_detached: '<path d="M3 14L12 6l8 7 8-7 9 8"/><rect x="5" y="14" width="30" height="12"/><path d="M20 14v12"/>', row: '<path d="M2 15l6-6 6 6 6-6 6 6 6-6 6 6"/><rect x="3" y="15" width="34" height="11"/><path d="M14 15v11M26 15v11"/>', holiday: '<path d="M6 16L15 8l9 8"/><rect x="8" y="16" width="14" height="10"/><circle cx="31" cy="14" r="5"/><path d="M31 19v7"/>', villa: '<path d="M2 15l9-7h18l9 7"/><rect x="5" y="15" width="30" height="11"/><rect x="17" y="19" width="6" height="7"/>', small: '<path d="M13 17l7-6 7 6"/><rect x="15" y="17" width="10" height="9"/>' };
+			p = pt[value] || pt.detached;
+		} else if (field === 'garage') {
+			var ga = { none: '<path d="M8 26h24"/><path d="M14 15l12 0" opacity=".4"/>', carport: '<path d="M5 9h30M8 9v17M32 9v17"/><rect x="12" y="18" width="16" height="6" rx="2"/>', garage_1: '<path d="M6 12l14-7 14 7"/><rect x="8" y="12" width="24" height="14"/><path d="M13 26v-9h14v9M13 20h14"/>', garage_2: '<path d="M3 12l17-7 17 7"/><rect x="5" y="12" width="30" height="14"/><path d="M8 26v-9h11v9M21 26v-9h11v9"/>', separate: '<path d="M3 15l8-7 8 7"/><rect x="5" y="15" width="12" height="11"/><rect x="23" y="13" width="14" height="13"/><path d="M26 26v-8h8v8"/>' };
+			p = ga[value] || ga.carport;
 		} else {
 			p = '<path d="M6 16L20 6l14 10"/><rect x="10" y="16" width="20" height="10"/>';
 		}
@@ -903,6 +933,7 @@
 			renderSummary();
 			refreshFieldMessages();
 			renderActionbar();
+			updateWizardSide();
 		}).catch(function () {});
 	}, 450);
 	/**
@@ -929,12 +960,15 @@
 		return h('span', { class: 'agh-unv', title: t('unverified_product') }, h('span', { class: 'agh-sr', text: ' (' + t('unverified_product') + ')' }));
 	}
 	function refreshFieldMessages() {
-		Array.prototype.forEach.call(els.fieldsList.querySelectorAll('.agh-field[data-field]'), function (w) {
+		var scope = S.wiz ? els.wizBody : els.fieldsList;
+		if (!scope) { return; }
+		Array.prototype.forEach.call(scope.querySelectorAll('.agh-field[data-field]'), function (w) {
 			Array.prototype.forEach.call(w.querySelectorAll(':scope > .agh-field-msg'), function (m) { m.remove(); });
 			fieldMessages(w.getAttribute('data-field')).forEach(function (m) { w.appendChild(h('div', { class: 'agh-field-msg is-' + m.type, text: m.text })); });
 		});
 	}
 	function focusField(id) {
+		if (S.wiz) { wizardFocusField(id); return; }
 		var f = S.fields[id];
 		if (!f) { return; }
 		S.search = '';
@@ -982,19 +1016,27 @@
 		if (!els.previewBox || !document.body.contains(els.previewBox)) { return; }
 		var c = S.config;
 		els.previewBox.innerHTML = previewSvg(c);
-		var styleF = S.fields.arch_style;
-		var cap = h('div', { class: 'agh-preview-cap' },
-			h('div', null, h('div', { class: 'agh-eyebrow', text: t('live_preview') }), h('div', { class: 'agh-h', text: (c.house_name || optLabel(styleF || {}, c.arch_style)) })),
-			h('span', { class: 'agh-badge', text: t('schematic') }));
-		els.previewBox.appendChild(cap);
-		clear(els.kpis);
-		var beds = c.bedrooms, baths = c.bathrooms;
-		[['area', fmt(c.net_area, 0) + ' m²', t('kpi_area')], ['bed', beds, t('kpi_bedrooms')], ['bath', baths, t('kpi_bathrooms')], ['roof', optLabel(S.fields.roof_type || {}, c.roof_type), t('kpi_roof')]].forEach(function (k) {
-			els.kpis.appendChild(h('div', { class: 'agh-kpi' }, icon(k[0]), h('div', null, h('b', { text: String(k[1]) }), h('span', { text: k[2] }))));
+		els.previewBox.appendChild(previewCaption(c));
+		fillKpis(els.kpis, c);
+	}
+	function fillKpis(box, c) {
+		clear(box);
+		[['area', fmt(c.net_area, 0) + ' m²', t('kpi_area')], ['bed', c.bedrooms, t('kpi_bedrooms')], ['bath', c.bathrooms, t('kpi_bathrooms')], ['roof', optLabel(S.fields.roof_type || {}, c.roof_type), t('kpi_roof')]].forEach(function (k) {
+			box.appendChild(h('div', { class: 'agh-kpi' }, icon(k[0]), h('div', null, h('b', { text: String(k[1]) }), h('span', { text: k[2] }))));
 		});
+		return box;
+	}
+	function previewCaption(c) {
+		return h('div', { class: 'agh-preview-cap' },
+			h('div', null, h('div', { class: 'agh-eyebrow', text: t('live_preview') }), h('div', { class: 'agh-h', text: (c.house_name || optLabel(S.fields.arch_style || {}, c.arch_style)) })),
+			h('span', { class: 'agh-badge', text: t('schematic') }));
 	}
 
+	var svgSeq = 0;
 	function previewSvg(c) {
+		// Unique gradient id: several sketches can be in the DOM at once (designer + wizard), and a
+		// reference to an id inside a hidden (display:none) copy would leave the sky unpainted.
+		var sky_id = 'aghsky' + (++svgSeq);
 		var esc = function (s) { return String(s).replace(/[^#0-9A-Fa-f]/g, ''); };
 		var facade = esc(c.facade_color || '#F2EFE9'), roofc = esc(c.roof_color || '#3A3D40'), frame = esc(c.window_frame_color || '#2F3235'), accent = esc(c.facade_accent_color || '#B9824F');
 		var levels = levelCount(); var attic = c.levels === 'attic';
@@ -1008,8 +1050,8 @@
 		var night = c.time_of_day === 'night' || c.time_of_day === 'blue';
 		var glass = night ? '#FFCF85' : '#9DB6C8';
 		var s = '<svg viewBox="0 -150 800 560" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="preview">';
-		s += '<defs><linearGradient id="aghsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sky[0] + '"/><stop offset="1" stop-color="' + sky[1] + '"/></linearGradient></defs>';
-		s += '<rect y="-400" width="800" height="1200" fill="url(#aghsky)"/>';
+		s += '<defs><linearGradient id="' + sky_id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sky[0] + '"/><stop offset="1" stop-color="' + sky[1] + '"/></linearGradient></defs>';
+		s += '<rect y="-400" width="800" height="1200" fill="url(#' + sky_id + ')"/>';
 		if (c.time_of_day === 'golden') { s += '<circle cx="660" cy="250" r="46" fill="#FFD9A0" opacity=".8"/>'; }
 		if (c.time_of_day === 'midday' || c.time_of_day === 'morning') { s += '<circle cx="' + (c.time_of_day === 'morning' ? 120 : 640) + '" cy="80" r="26" fill="#FFF5D6" opacity=".9"/>'; }
 		s += '<rect x="-400" y="' + ground + '" width="1600" height="400" fill="' + (night ? '#2E3A2E' : '#7FA36A') + '"/>';
@@ -1216,6 +1258,23 @@
 		if (isRunning(S.project) || (S.project && S.project.status === 'cancelled') || (S.project && S.project.stage !== 'done' && ['ready', 'partial'].indexOf(S.project.status) !== -1)) {
 			box.appendChild(renderProgress());
 		}
+		box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_house') }), houseList(c)));
+
+		box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_checks') }), checkList()));
+
+		var lim = S.boot.limits || {};
+		if (lim.limit) {
+			var dots = h('div', { class: 'agh-limit-dots' });
+			for (var i = 0; i < Math.min(lim.limit, 12); i++) { dots.appendChild(h('i', { class: i < lim.used ? 'is-used' : '' })); }
+			box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_limit') }), h('div', { class: 'agh-limit' }, dots, h('span', { text: tf('limit_text', lim.remaining, lim.limit) }))));
+		}
+		if (S.boot.provider.test) { box.appendChild(h('div', { class: 'agh-disclaimer', text: t('test_mode_help') })); }
+		box.appendChild(h('div', { class: 'agh-disclaimer', text: t('disclaimer') }));
+		p.appendChild(h('div', { class: 'agh-scroll' }, box));
+	}
+
+	// The house summary (definition list) – used by the summary panel and the wizard's last step.
+	function houseList(c) {
 		var dl = h('dl', { class: 'agh-sum-list' });
 		function row(k, v) { dl.appendChild(h('dt', { text: k })); dl.appendChild(h('dd', { text: v })); }
 		row(t('kpi_style'), optLabel(S.fields.arch_style || {}, c.arch_style));
@@ -1234,25 +1293,17 @@
 		row(t('kpi_facade'), optLabel(S.fields.facade_main || {}, c.facade_main));
 		if (Number(c.terrace_area) > 0) { row(t('kpi_terrace'), fmt(c.terrace_area, 0) + ' m²'); }
 		row(t('kpi_garage'), optLabel(S.fields.garage || {}, c.garage));
-		box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_house') }), dl));
-
+		return dl;
+	}
+	// Validation messages; a click jumps to the field.
+	function checkList() {
 		var msgs = h('div', { class: 'agh-msgs' });
 		var any = false;
 		[['errors', 'error', 'error'], ['warnings', 'warning', 'alert'], ['info', 'info', 'info']].forEach(function (k) {
 			(S.check[k[0]] || []).forEach(function (m) { any = true; msgs.appendChild(h('div', { class: 'agh-msg is-' + k[1], role: 'button', tabindex: '0', onclick: function () { focusField(m.field); } }, icon(k[2]), h('span', { text: m.message }))); });
 		});
 		if (!any) { msgs.appendChild(h('div', { class: 'agh-msg is-info' }, icon('check'), h('span', { text: t('all_consistent') }))); }
-		box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_checks') }), msgs));
-
-		var lim = S.boot.limits || {};
-		if (lim.limit) {
-			var dots = h('div', { class: 'agh-limit-dots' });
-			for (var i = 0; i < Math.min(lim.limit, 12); i++) { dots.appendChild(h('i', { class: i < lim.used ? 'is-used' : '' })); }
-			box.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_limit') }), h('div', { class: 'agh-limit' }, dots, h('span', { text: tf('limit_text', lim.remaining, lim.limit) }))));
-		}
-		if (S.boot.provider.test) { box.appendChild(h('div', { class: 'agh-disclaimer', text: t('test_mode_help') })); }
-		box.appendChild(h('div', { class: 'agh-disclaimer', text: t('disclaimer') }));
-		p.appendChild(h('div', { class: 'agh-scroll' }, box));
+		return msgs;
 	}
 
 	function renderProgress() {
@@ -1304,6 +1355,221 @@
 		a.appendChild(gen);
 	}
 
+	/* ------------------------------------------------------------------ quick wizard */
+	// A short, step-by-step path through the most important parameters. It edits the same
+	// S.config as the full designer (same validation, same generation), so the visitor can
+	// switch to the full designer at any point without losing anything.
+	var WIZ = [
+		{ key: 'home', fields: ['property_type', 'levels', 'occupants'] },
+		{ key: 'size', fields: ['net_area', 'bedrooms', 'bathrooms'] },
+		{ key: 'style', fields: ['arch_style'] },
+		{ key: 'roof', fields: ['roof_type', 'roof_pitch', 'roof_product'] },
+		{ key: 'look', fields: ['facade_main', 'facade_color', 'window_style'] },
+		{ key: 'outdoor', fields: ['garage', 'terrace_area', 'garden_style'] },
+		{ key: 'done', fields: [] }
+	];
+	function wizFields(st) {
+		return st.fields.map(function (id) { return S.fields[id]; }).filter(function (f) { return f && visible(f); });
+	}
+	// Short selects become big tappable cards in the wizard (same field id, same values).
+	function wizView(f) {
+		if (f.type === 'select' && !f.filter_by && (f.options || []).length && f.options.length <= 6) {
+			var c = {};
+			Object.keys(f).forEach(function (k) { c[k] = f[k]; });
+			c.type = 'cards';
+			return c;
+		}
+		return f;
+	}
+	function startInWizard() {
+		if (S.projectId) { return false; }
+		var ui = lsGet(LS_UI, null);
+		if (ui === 'wizard' || ui === 'designer') { return ui === 'wizard'; }
+		return S.boot.layout.start !== 'designer';
+	}
+	function toggleWizard() {
+		if (S.wiz) { exitWizard(false); } else { enterWizard(0); }
+	}
+	function updateWizardToggles() {
+		var on = !!S.wiz;
+		[els.wizBtn, els.wizItem].forEach(function (b) {
+			if (!b) { return; }
+			clear(b);
+			b.appendChild(icon(on ? 'sliders' : 'sparkle', 'agh-ico-s'));
+			b.appendChild(document.createTextNode(on ? t('wiz_full') : t('wiz_open')));
+		});
+	}
+	function enterWizard(step) {
+		S.wiz = { step: Math.max(0, Math.min(WIZ.length - 1, step || 0)) };
+		lsSet(LS_UI, 'wizard');
+		closeMenu(false);
+		// The wizard renders the same fields: the hidden parameter panel must not keep duplicate element ids.
+		clear(els.paramsPanel);
+		shell.classList.add('is-wizard');
+		if (!els.wizard) {
+			els.wizard = h('section', { class: 'agh-wizard', 'aria-label': t('wiz_open') });
+			shell.insertBefore(els.wizard, els.actionbar);
+		}
+		els.wizard.hidden = false;
+		updateWizardToggles();
+		renderWizardStep(true);
+	}
+	function exitWizard(silent) {
+		if (!S.wiz) { return; }
+		S.wiz = null;
+		lsSet(LS_UI, 'designer');
+		shell.classList.remove('is-wizard');
+		if (els.wizard) { els.wizard.hidden = true; clear(els.wizard); }
+		els.wizBody = els.wizSide = els.wizScroll = els.wizGen = els.wizDone = null;
+		updateWizardToggles();
+		renderParams();
+		renderStage();
+		renderSummary();
+		renderActionbar();
+		if (!silent) {
+			setTimeout(function () { var f = shell.querySelector('.agh-rail button'); if (f) { f.focus(); } }, 30);
+			if (S.boot.layout.tour && !lsGet('agh_tour_done', false)) { setTimeout(showTour, 300); }
+		}
+	}
+	function wizardGo(k) {
+		if (!S.wiz) { return; }
+		S.wiz.step = Math.max(0, Math.min(WIZ.length - 1, k));
+		renderWizardStep(true);
+	}
+	function wizardNext() {
+		var ids = wizFields(WIZ[S.wiz.step]).map(function (f) { return f.id; });
+		var errs = (S.check.errors || []).filter(function (m) { return ids.indexOf(m.field) !== -1; });
+		if (errs.length) {
+			toast(t('wiz_fix_errors'), 'warn');
+			var fw = els.wizBody && els.wizBody.querySelector('[data-field="' + errs[0].field + '"]');
+			var c = fw && fw.querySelector('input, select, textarea, button');
+			if (c) { c.focus(); }
+			return;
+		}
+		wizardGo(S.wiz.step + 1);
+	}
+	function wizardFocusField(id) {
+		var k = -1;
+		WIZ.forEach(function (st, i) { if (k === -1 && st.fields.indexOf(id) !== -1) { k = i; } });
+		if (k === -1) { exitWizard(true); focusField(id); return; }
+		wizardGo(k);
+		setTimeout(function () {
+			var fw = els.wizBody && els.wizBody.querySelector('[data-field="' + id + '"]');
+			if (!fw) { return; }
+			fw.scrollIntoView({ block: 'center' });
+			var c = fw.querySelector('input, select, textarea, button');
+			if (c) { c.focus({ preventScroll: true }); }
+		}, 30);
+	}
+
+	function renderWizardStep(focusTitle) {
+		var w = els.wizard;
+		if (!w || !S.wiz) { return; }
+		// A value change re-renders the step: keep the keyboard position and the scroll offset.
+		var act = document.activeElement, keep = null;
+		if (!focusTitle && act && w.contains(act) && act.closest('[data-field]')) {
+			var fw = act.closest('[data-field]');
+			keep = { field: fw.getAttribute('data-field'), idx: Array.prototype.indexOf.call(fw.querySelectorAll('button, input, select, textarea'), act) };
+		}
+		var scrollTop = els.wizScroll ? els.wizScroll.scrollTop : 0;
+		var i = S.wiz.step, st = WIZ[i], last = i === WIZ.length - 1;
+		clear(w);
+		w.classList.toggle('is-last', last);
+
+		var steps = h('ol', { class: 'agh-wiz-steps' });
+		WIZ.forEach(function (s, k) {
+			steps.appendChild(h('li', null, h('button', {
+				type: 'button',
+				class: 'agh-wiz-step' + (k === i ? ' is-current' : '') + (k < i ? ' is-done' : ''),
+				'aria-current': k === i ? 'step' : null,
+				onclick: function () { wizardGo(k); }
+			}, h('span', { class: 'agh-wiz-num', 'aria-hidden': 'true' }, k < i ? icon('check', 'agh-ico-s') : String(k + 1)), h('span', { class: 'agh-wiz-steplabel', text: t('wiz_' + s.key) }))));
+		});
+		var pct = Math.round((i + 1) / WIZ.length * 100);
+		w.appendChild(h('div', { class: 'agh-wiz-top' },
+			h('nav', { 'aria-label': t('wiz_progress') }, steps),
+			h('div', { class: 'agh-wiz-bar', 'aria-hidden': 'true' }, h('i', { style: { width: pct + '%' } }))));
+
+		var content = h('div', { class: 'agh-wiz-content' });
+		var title = h('h2', { class: 'agh-wiz-title', tabindex: '-1', text: t('wiz_' + st.key + '_title') });
+		content.appendChild(h('div', { class: 'agh-eyebrow', text: tf('wiz_step_of', i + 1, WIZ.length) }));
+		content.appendChild(title);
+		content.appendChild(h('p', { class: 'agh-wiz-lead', text: t('wiz_' + st.key + '_lead') }));
+		els.wizDone = null;
+		if (last) {
+			els.wizDone = h('div', { class: 'agh-wiz-done' });
+			content.appendChild(els.wizDone);
+		} else {
+			var list = h('div', { class: 'agh-wiz-fields' });
+			wizFields(st).forEach(function (f) { list.appendChild(renderField(wizView(f))); });
+			content.appendChild(list);
+		}
+		els.wizBody = content;
+		els.wizScroll = h('div', { class: 'agh-wiz-scroll' }, content);
+		els.wizSide = h('aside', { class: 'agh-wiz-side', 'aria-label': t('live_preview') });
+		w.appendChild(h('div', { class: 'agh-wiz-main' }, els.wizScroll, els.wizSide));
+
+		var nav = h('div', { class: 'agh-wiz-nav' });
+		nav.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-ghost agh-wiz-back', disabled: i === 0 ? 'disabled' : null, title: t('back'), onclick: function () { wizardGo(i - 1); } }, icon('left', 'agh-ico-s'), h('span', { class: 'agh-btn-label', text: t('back') })));
+		nav.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-ghost agh-wiz-full', title: t('wiz_full'), onclick: function () { exitWizard(false); } }, icon('sliders', 'agh-ico-s'), h('span', { class: 'agh-btn-label', text: t('wiz_full') })));
+		nav.appendChild(h('div', { class: 'agh-wiz-spacer' }));
+		if (last) {
+			els.wizGen = h('button', { type: 'button', class: 'agh-btn agh-btn-primary agh-btn-lg agh-wiz-next', onclick: generate }, icon('sparkle', 'agh-ico-s'), S.project ? t('generate_new') : t('generate'));
+			nav.appendChild(els.wizGen);
+		} else {
+			els.wizGen = null;
+			nav.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-primary agh-btn-lg agh-wiz-next', onclick: wizardNext }, t('wiz_next'), icon('chev', 'agh-ico-s')));
+		}
+		w.appendChild(nav);
+		updateWizardSide();
+
+		if (focusTitle) {
+			els.wizScroll.scrollTop = 0;
+			title.focus({ preventScroll: true });
+		} else {
+			els.wizScroll.scrollTop = scrollTop;
+			if (keep) {
+				var fw2 = els.wizBody.querySelector('[data-field="' + keep.field + '"]');
+				var c2 = fw2 && fw2.querySelectorAll('button, input, select, textarea')[keep.idx];
+				if (c2) { c2.focus({ preventScroll: true }); }
+			}
+		}
+	}
+
+	// Live preview + key figures beside the steps (on phones: only on the last step) and the last step's summary.
+	function updateWizardSide() {
+		if (!S.wiz || !els.wizSide) { return; }
+		var c = S.config, side = clear(els.wizSide);
+		var pv = h('div', { class: 'agh-preview-box agh-wiz-preview' });
+		pv.innerHTML = previewSvg(c);
+		pv.appendChild(previewCaption(c));
+		side.appendChild(pv);
+		side.appendChild(fillKpis(h('div', { class: 'agh-kpis agh-wiz-kpis' }), c));
+		if (els.wizDone) { renderWizardDone(); }
+		if (els.wizGen) {
+			var running = S.project && ['queued', 'planning', 'rendering'].indexOf(S.project.status) !== -1;
+			var blocked = running || (S.check.errors && S.check.errors.length) || !S.boot.provider.ready;
+			els.wizGen.disabled = !!blocked;
+			els.wizGen.title = !S.boot.provider.ready ? t('not_configured_visitor') : '';
+		}
+	}
+	function renderWizardDone() {
+		var d = clear(els.wizDone);
+		// Phones: the side preview is hidden, so the last step shows the sketch inline.
+		d.appendChild(h('div', { class: 'agh-preview-box agh-wiz-done-pv', 'aria-hidden': 'true', html: previewSvg(S.config) }));
+		if (!S.boot.provider.ready) {
+			d.appendChild(h('div', { class: 'agh-msg is-warning' }, icon('alert'), h('span', { text: t('not_configured_visitor') })));
+		}
+		d.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_house') }), houseList(S.config)));
+		d.appendChild(h('div', { class: 'agh-sum-group' }, h('h5', { text: t('sum_checks') }), checkList()));
+		var inWizard = {};
+		WIZ.forEach(function (st) { st.fields.forEach(function (id) { inWizard[id] = true; }); });
+		var more = S.boot.schema.fields.filter(function (f) { return !inWizard[f.id] && visible(f); }).length;
+		d.appendChild(h('div', { class: 'agh-wiz-more' },
+			h('p', { text: tf('wiz_more', more) }),
+			h('button', { type: 'button', class: 'agh-btn', onclick: function () { exitWizard(false); } }, icon('sliders', 'agh-ico-s'), t('wiz_to_designer'))));
+	}
+
 	/* ------------------------------------------------------------------ generation */
 	function generate() {
 		if (S.busy) { return; }
@@ -1315,6 +1581,8 @@
 				S.busy = false;
 				if (r.limits) { S.boot.limits = r.limits; }
 				if (r.reused) { toast(r.message, 'ok', 6000); }
+				// Leave the wizard first: its exit re-renders the stage, which would reset the view.
+				if (S.wiz) { exitWizard(true); }
 				S.projectId = r.project;
 				S.selected = null;
 				S.view = 'concepts';

@@ -6604,3 +6604,117 @@ msgstr ""
 #: templates/pricing.php:61
 msgid "A generált tervvázlatok koncepcionálisak, nem engedélyezési vagy kiviteli dokumentációk."
 msgstr ""
+
+#: includes/Frontend/Strings.php:262
+msgid "A fő homlokzatanyag, a színe és az ablakok jellege határozza meg, milyennek látszik a ház kívülről."
+msgstr ""
+
+#. translators: 1: number of further settings.
+#: includes/Frontend/Strings.php:265
+#, php-format
+msgid "A részletes tervezőben további %1$s beállítással finomíthatod a házat: anyagok, belső terek, konyha, fürdő, kert, fény és kamera."
+msgstr ""
+
+#: includes/Frontend/Strings.php:283
+msgid "A stílus adja a ház karakterét: a tömeget, a nyílászárókat és az anyaghasználatot."
+msgstr ""
+
+#: includes/Frontend/Strings.php:256
+msgid "A továbblépés előtt javítsd a megjelölt mezőt."
+msgstr ""
+
+#: includes/Frontend/Strings.php:271
+msgid "A varázsló lépései"
+msgstr ""
+
+#. translators: 1: architectural style name.
+#: includes/Frontend/Strings.php:282
+#, php-format
+msgid "A(z) „%1$s” stílushoz illő anyagokat és színeket beállítottuk; a következő lépésekben módosíthatod őket."
+msgstr ""
+
+#: includes/Frontend/Strings.php:258
+msgid "Alapok"
+msgstr ""
+
+#: includes/Frontend/Strings.php:276
+msgid "Az alapterület és a szobák száma adja a ház léptékét. Az arányokat mi ellenőrizzük."
+msgstr ""
+
+#: includes/Frontend/Strings.php:285
+msgid "Finomhangolás a részletes tervezőben"
+msgstr ""
+
+#: includes/Frontend/Strings.php:269
+msgid "Garázs, terasz és a kert hangulata – ezek teszik teljessé a látványt."
+msgstr ""
+
+#: includes/Frontend/Strings.php:267 includes/Admin/Admin.php:286
+msgid "Gyors varázsló"
+msgstr ""
+
+#: includes/Frontend/Strings.php:263
+msgid "Homlokzat és ablakok"
+msgstr ""
+
+#: includes/Frontend/Strings.php:254
+msgid "Indíthatod a generálást – három eltérő házkoncepciót kapsz –, vagy a részletes tervezőben tovább finomíthatod a házat."
+msgstr ""
+
+#: includes/Frontend/Strings.php:268
+msgid "Kert"
+msgstr ""
+
+#: includes/Frontend/Strings.php:270
+msgid "Kert és kiegészítők"
+msgstr ""
+
+#: includes/Frontend/Strings.php:259
+msgid "Kezdjük az alapokkal: az épület típusa, a szintek száma és hogy hányan fogtok benne lakni."
+msgstr ""
+
+#: includes/Admin/Admin.php:286
+msgid "Kezdőnézet"
+msgstr ""
+
+#: includes/Frontend/Strings.php:253
+msgid "Kész"
+msgstr ""
+
+#: includes/Frontend/Strings.php:255
+msgid "Kész is! Nézd át az összefoglalót"
+msgstr ""
+
+#. translators: 1: current step, 2: number of steps.
+#: includes/Frontend/Strings.php:279
+#, php-format
+msgid "Lépés: %1$s / %2$s"
+msgstr ""
+
+#: includes/Frontend/Strings.php:273
+msgid "Magastetőhöz a tetőfedést a BRAMAC kínálatából választjuk; ha nem választasz, egy illő terméket ajánlunk."
+msgstr ""
+
+#: includes/Frontend/Strings.php:277
+msgid "Mekkora legyen a ház?"
+msgstr ""
+
+#: includes/Frontend/Strings.php:284
+msgid "Melyik stílus áll hozzád közel?"
+msgstr ""
+
+#: includes/Frontend/Strings.php:260
+msgid "Milyen házat tervezel?"
+msgstr ""
+
+#: includes/Frontend/Strings.php:274
+msgid "Milyen legyen a tető?"
+msgstr ""
+
+#: includes/Admin/Admin.php:286
+msgid "Mivel nyíljon meg a tervező. A látogató bármikor átválthat, a választását a böngészője megjegyzi."
+msgstr ""
+
+#: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
+msgid "Teljes tervező"
+msgstr ""

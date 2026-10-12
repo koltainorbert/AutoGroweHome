@@ -242,6 +242,7 @@ final class Frontend {
 				'action_bar' => 'top' === Settings::get( 'layout.action_bar' ) ? 'top' : 'bottom',
 				'mode'       => 'detailed' === Settings::get( 'general.default_mode' ) ? 'detailed' : 'simple',
 				'tour'       => (bool) Settings::get( 'layout.show_tour', true ),
+				'start'      => 'designer' === Settings::get( 'layout.start_view', 'wizard' ) ? 'designer' : 'wizard',
 			),
 			'features'  => array(
 				'save'        => Features::enabled( 'project_save' ),

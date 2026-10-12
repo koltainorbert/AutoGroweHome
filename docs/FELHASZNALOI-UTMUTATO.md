@@ -15,7 +15,9 @@ A gombok és feliratok neve az alábbiakban pontosan úgy szerepel, ahogy a magy
 - Kattints a **„Tervezd meg álmaid otthonát”** gombra (ez az alapfelirat, az üzemeltető megváltoztathatja). A gomb lehet az oldal tartalmában, vagy lebegő gombként a képernyő jobb alsó sarkában.
 - Ha a webcím végén `#agh-open` szerepel, vagy az oldalon egy `#agh-open` hivatkozásra kattintasz, a tervező megnyílik (`assets/js/agh-loader.js`). Ez azokon az oldalakon működik, ahol a tervező betöltője jelen van: lebegő gomb esetén minden oldalon, egyébként a tervezőgombot tartalmazó oldalakon.
 - A tervező felugró ablakban (popup) nyílik meg; az első kattintáskor töltődik be, ez néhány másodperc lehet.
-- Első megnyitáskor egy rövid **Gyorsbemutató** indul (6 lépés). Átlépheted a **„Kihagyás”** gombbal, később a fejléc súgó ikonjával („Gyorsbemutató”) újranézheted.
+- Alapbeállítás szerint a **Gyors varázsló** nyílik meg (az üzemeltető a teljes tervezőt is beállíthatja kezdőnézetnek). Hét lépés: **Alapok** (épülettípus, szintek, lakók), **Méret** (alapterület, háló- és fürdőszobák), **Stílus**, **Tető** (magastetőnél BRAMAC tetőfedés), **Homlokzat** (anyag, szín, ablakok), **Kert** (garázs, terasz, kertstílus), **Kész** (összefoglaló, ellenőrzés, generálás). Stílusválasztáskor a varázsló a stílushoz illő anyagokat és színeket is beállítja, de amit te állítottál be, azt nem írja felül.
+- A varázsló ugyanazokat a beállításokat szerkeszti, mint a teljes tervező: a **Teljes tervező** gombbal (mobilon a csúszka ikonnal vagy a „⋯” menüből) bármikor átléphetsz, és semmi nem vész el; visszafelé a fejléc **Gyors varázsló** gombjával. A választásodat a böngésző megjegyzi, a következő megnyitáskor azzal a nézettel indul. Ha a hiba egy lépés mezőjében van, a **Tovább** gomb jelzi és a mezőre ugrik. Generálás után a tervező a teljes nézetben, a **Koncepciók** fülön folytatódik.
+- Első megnyitáskor a teljes tervezőben egy rövid **Gyorsbemutató** indul (6 lépés). Átlépheted a **„Kihagyás”** gombbal, később a fejléc súgó ikonjával („Gyorsbemutató”) újranézheted. A varázsló nem indítja el.
 - Bezárás: a fejléc **×** gombja vagy az **Esc** billentyű. Ha nem mentett módosításod van, a tervező rákérdez („Biztosan bezárod?”). A beállításaid ebben a böngészőben ekkor is megmaradnak.
 
 ## 2. A felület felépítése
@@ -30,7 +32,7 @@ A gombok és feliratok neve az alábbiakban pontosan úgy szerepel, ahogy a magy
 
 Az üzemeltető a panelek sorrendjét és a műveleti sáv helyét (fent/lent) megváltoztathatja.
 
-**Mobilon** (820 px-nél keskenyebb kijelzőn) a három panel helyett alul három fül van: **Paraméterek**, **Terv**, **Összegzés**. A fejlécben ilyenkor a módváltó, a **Presetek**, a **Projektjeim**, a Gyorsbemutató és a nyelvválasztó a **„⋯” (További lehetőségek)** menübe kerül; a sötét/világos mód és a Bezárás gomb a fejlécben marad. A menü billentyűzettel is kezelhető (nyílbillentyűk, Esc).
+**Mobilon** (820 px-nél keskenyebb kijelzőn, valamint fekvő telefonon) a három panel helyett alul három fül van: **Paraméterek**, **Terv**, **Összegzés**. A fejlécben ilyenkor a módváltó, a **Presetek**, a **Projektjeim**, a Gyorsbemutató és a nyelvválasztó a **„⋯” (További lehetőségek)** menübe kerül; a sötét/világos mód és a Bezárás gomb a fejlécben marad. A menü billentyűzettel is kezelhető (nyílbillentyűk, Esc).
 
 ## 3. Egyszerű és Részletes mód
 

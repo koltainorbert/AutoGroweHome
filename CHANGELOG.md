@@ -24,6 +24,13 @@ Első kiadás.
 ### Javítás (2026-10-11, kiadás előtt)
 - Windows: az aktiválás végzetes hibával állt le („Class AutoGroweHome\Support\Logger not found”), mert az autoloader a `DIRECTORY_SEPARATOR`-ral építette az útvonalat, amit a saját ellenőrzése Windowson elutasított. Az útvonal mostantól mindig `/`-rel épül. Regressziós teszt: `php tests/autoloader-test.php`.
 - Teljesítmény: a tervező erősen akadozott. Az ok az egymásba ágyazott `backdrop-filter` volt (teljes képernyős elmosás az oldal fölött + elmosás mindhárom panelen), amit a böngésző a panelek minden újrarajzolásánál újraszámolt. A paneleken az elmosás láthatatlan volt (mögöttük a tervező saját, statikus háttere van), ezért megszűnt; az oldal fölötti elmosás helyét sötétebb fátyol vette át. Az admin „elmosás" beállítása mostantól a tervező háttérképére hat.
+- Mobilnézet: az Összegzés fül nem csúszik rá az alsó gombokra; fekvő telefonon is mobil elrendezés; kompakt alsó sáv; 44 px-es érintési célok; 16 px-es beviteli mezők (iOS nem nagyít rá).
+
+### Új (2026-10-12, kiadás előtt)
+- **Gyors varázsló** hét lépésben (Alapok, Méret, Stílus, Tető, Homlokzat, Kert, Kész) asztalon és mobilon. Ugyanazt a konfigurációt, ellenőrzést és generálást használja, mint a teljes tervező; bármikor át lehet váltani. Stílusválasztáskor a stílushoz illő anyagok és színek beállnak (felhasználói értéket nem ír felül).
+- Új beállítás: Arculat és elrendezés → Popup elrendezés → **Kezdőnézet** (`layout.start_view`: `wizard` | `designer`, alap: `wizard`).
+- 27 új szöveg mind a 15 fordításban (nyelvenként 1592); `bin/po-tools.py`: függőség nélküli .po → .mo fordító és ellenőrző.
+- Javítás: az élő vázlat égbolt-átmenete egyedi azonosítót kap (két vázlat egyszerre a DOM-ban).
 
 ### Ellenőrzés
 - Integrációs tesztsor 147/147, regressziós tesztek 120 + 116 + 71, licencszerver-önteszt 32/32, lint 0 hiba (részletek: `docs/TESZTJELENTES.md`).

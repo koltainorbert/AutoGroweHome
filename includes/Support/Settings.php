@@ -171,6 +171,7 @@ final class Settings {
 				'action_bar'   => 'bottom',
 				'panel_order'  => 'params,stage,summary',
 				'show_tour'    => true,
+				'start_view'   => 'wizard',
 			),
 			'emails'     => array(
 				'contractor_subject' => '',

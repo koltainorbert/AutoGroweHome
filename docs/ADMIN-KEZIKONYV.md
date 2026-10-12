@@ -259,7 +259,7 @@ A JSON-mezőkben érvénytelen JSON **üres** értékként mentődik – mentés
 ### 3.9 Arculat és elrendezés
 
 - `branding_advanced` funkció nélkül tájékoztató: „Starter csomagban a logó, a név és a fő szín módosítható; a haladó arculati beállítások a Professional csomagtól érvényesülnek.” Ez a kódban is így működik: enélkül a tervezőben csak a logó, a név, a fő szín és az elrendezés érvényesül (`docs/KONFIGURACIO.md`, 5.11).
-- **Űrlap:** Termék és megjelenés (név, készítő, indítógomb, lebegő gomb, alapértelmezett mód, alapnyelv, választható nyelvek), Arculat (logó, ikon, háttérkép, szövegek, 7 szín, betűtípusok, lekerekítés, üveghatás, árnyék, animáció, téma), Popup elrendezés (panelsorrend, szélességek, műveleti sáv, gyorsbemutató).
+- **Űrlap:** Termék és megjelenés (név, készítő, indítógomb, lebegő gomb, alapértelmezett mód, alapnyelv, választható nyelvek), Arculat (logó, ikon, háttérkép, szövegek, 7 szín, betűtípusok, lekerekítés, üveghatás, árnyék, animáció, téma), Popup elrendezés (panelsorrend, szélességek, műveleti sáv, **kezdőnézet**: Gyors varázsló / Teljes tervező – alapból a varázsló; a látogató átválthat, a böngészője megjegyzi –, gyorsbemutató).
 - **Élő előnézet:** mintakártya gombokkal és állapotszínekkel.
 - **Korábbi designverziók:** minden mentés előtt az előző állapot ide kerül (utolsó 10); **Visszaállítás** (megerősítéssel) – a visszaállítás előtti állapot is mentődik.
 

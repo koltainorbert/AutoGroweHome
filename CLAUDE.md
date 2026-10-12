@@ -20,6 +20,12 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 
 - `php tests/autoloader-test.php` (WordPress nélkül fut)
 - `find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 php -l`
+- Fordítás változott: `python3 bin/po-tools.py check` (0 hiba), majd `python3 bin/po-tools.py compile` (.mo újragenerálása).
+- Felület változott: `bin/test-wp.sh` (eldobható WordPress + SQLite a 8899-es porton, teszt képszolgáltatóval), majd `node tests/e2e/responsive.js /tmp`, `node tests/e2e/wizard.js /tmp`, `node tests/e2e/gen.js` (mobil+asztali mérés, varázsló végigléptetése, generálás indítása; konzolhiba 0). Táblázat: `python3 tests/e2e/table.py <kimenet.json>`.
+
+## Fordítások
+
+- A forrásnyelv magyar; új szövegnél a `.pot` és mind a 15 `.po` bővül (nyelvenként ugyanannyi szöveg), utána `.mo` fordítás a `bin/po-tools.py`-jal. A JS-szövegek a `includes/Frontend/Strings.php`-ból jönnek.
 
 ## Tudnivalók
 

@@ -6634,3 +6634,117 @@ msgstr "Очікує перевірки виробником"
 #: includes/Params/Definitions.php:260
 msgid "A katalógusban rögzített termékek közül. A gyári tételek színmintái tájékoztató jellegűek, gyártói ellenőrzésre várnak."
 msgstr "З продуктів, внесених до каталогу. Зразки кольорів попередньо завантажених позицій мають довідковий характер і очікують перевірки виробником."
+
+#: includes/Frontend/Strings.php:262
+msgid "A fő homlokzatanyag, a színe és az ablakok jellege határozza meg, milyennek látszik a ház kívülről."
+msgstr "Основний матеріал фасаду, його колір і тип вікон визначають, який вигляд має будинок ззовні."
+
+#. translators: 1: number of further settings.
+#: includes/Frontend/Strings.php:265
+#, php-format
+msgid "A részletes tervezőben további %1$s beállítással finomíthatod a házat: anyagok, belső terek, konyha, fürdő, kert, fény és kamera."
+msgstr "У детальному конструкторі ви можете доопрацювати будинок ще %1$s налаштуваннями: матеріали, інтер’єри, кухня, ванна, сад, світло й камера."
+
+#: includes/Frontend/Strings.php:283
+msgid "A stílus adja a ház karakterét: a tömeget, a nyílászárókat és az anyaghasználatot."
+msgstr "Стиль надає будинку характеру: об’єми, вікна та вибір матеріалів."
+
+#: includes/Frontend/Strings.php:256
+msgid "A továbblépés előtt javítsd a megjelölt mezőt."
+msgstr "Перш ніж продовжити, виправте позначене поле."
+
+#: includes/Frontend/Strings.php:271
+msgid "A varázsló lépései"
+msgstr "Кроки майстра"
+
+#. translators: 1: architectural style name.
+#: includes/Frontend/Strings.php:282
+#, php-format
+msgid "A(z) „%1$s” stílushoz illő anyagokat és színeket beállítottuk; a következő lépésekben módosíthatod őket."
+msgstr "Ми встановили матеріали й кольори, що пасують до стилю «%1$s»; ви можете змінити їх на наступних кроках."
+
+#: includes/Frontend/Strings.php:258
+msgid "Alapok"
+msgstr "Основне"
+
+#: includes/Frontend/Strings.php:276
+msgid "Az alapterület és a szobák száma adja a ház léptékét. Az arányokat mi ellenőrizzük."
+msgstr "Площа й кількість кімнат задають масштаб будинку. Пропорції ми перевіримо самі."
+
+#: includes/Frontend/Strings.php:285
+msgid "Finomhangolás a részletes tervezőben"
+msgstr "Доопрацювати в детальному конструкторі"
+
+#: includes/Frontend/Strings.php:269
+msgid "Garázs, terasz és a kert hangulata – ezek teszik teljessé a látványt."
+msgstr "Гараж, тераса й настрій саду – вони довершують картину."
+
+#: includes/Frontend/Strings.php:267 includes/Admin/Admin.php:286
+msgid "Gyors varázsló"
+msgstr "Швидкий майстер"
+
+#: includes/Frontend/Strings.php:263
+msgid "Homlokzat és ablakok"
+msgstr "Фасад і вікна"
+
+#: includes/Frontend/Strings.php:254
+msgid "Indíthatod a generálást – három eltérő házkoncepciót kapsz –, vagy a részletes tervezőben tovább finomíthatod a házat."
+msgstr "Ви можете запустити генерацію – отримаєте три різні концепції будинку – або доопрацювати будинок у детальному конструкторі."
+
+#: includes/Frontend/Strings.php:268
+msgid "Kert"
+msgstr "Сад"
+
+#: includes/Frontend/Strings.php:270
+msgid "Kert és kiegészítők"
+msgstr "Сад і доповнення"
+
+#: includes/Frontend/Strings.php:259
+msgid "Kezdjük az alapokkal: az épület típusa, a szintek száma és hogy hányan fogtok benne lakni."
+msgstr "Почнімо з основного: тип будівлі, кількість поверхів і скільки людей у ньому житиме."
+
+#: includes/Admin/Admin.php:286
+msgid "Kezdőnézet"
+msgstr "Початковий вигляд"
+
+#: includes/Frontend/Strings.php:253
+msgid "Kész"
+msgstr "Готово"
+
+#: includes/Frontend/Strings.php:255
+msgid "Kész is! Nézd át az összefoglalót"
+msgstr "Готово! Перегляньте підсумок"
+
+#. translators: 1: current step, 2: number of steps.
+#: includes/Frontend/Strings.php:279
+#, php-format
+msgid "Lépés: %1$s / %2$s"
+msgstr "Крок %1$s з %2$s"
+
+#: includes/Frontend/Strings.php:273
+msgid "Magastetőhöz a tetőfedést a BRAMAC kínálatából választjuk; ha nem választasz, egy illő terméket ajánlunk."
+msgstr "Для скатного даху покрівлю добираємо з асортименту BRAMAC; якщо ви нічого не оберете, ми запропонуємо відповідний продукт."
+
+#: includes/Frontend/Strings.php:277
+msgid "Mekkora legyen a ház?"
+msgstr "Якого розміру буде будинок?"
+
+#: includes/Frontend/Strings.php:284
+msgid "Melyik stílus áll hozzád közel?"
+msgstr "Який стиль вам до душі?"
+
+#: includes/Frontend/Strings.php:260
+msgid "Milyen házat tervezel?"
+msgstr "Який будинок ви плануєте?"
+
+#: includes/Frontend/Strings.php:274
+msgid "Milyen legyen a tető?"
+msgstr "Яким буде дах?"
+
+#: includes/Admin/Admin.php:286
+msgid "Mivel nyíljon meg a tervező. A látogató bármikor átválthat, a választását a böngészője megjegyzi."
+msgstr "З чого відкривається конструктор. Відвідувач може будь-коли перемкнутися; браузер запам’ятає вибір."
+
+#: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
+msgid "Teljes tervező"
+msgstr "Детальний конструктор"
