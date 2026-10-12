@@ -1,0 +1,41 @@
+# One-off helper: downloads the generated style photos (signed Magnific CDN links in
+# incoming/style-urls.json, valid for a few days), converts them to WebP and commits them
+# to incoming/style-photos/ for review. The development sandbox cannot reach the CDN.
+name: fetch-style-photos
+on:
+  push:
+    paths:
+      - incoming/style-urls.json
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and convert
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          import json, os, urllib.request
+          from PIL import Image
+          urls = json.load(open('incoming/style-urls.json'))
+          os.makedirs('incoming/style-photos/thumb', exist_ok=True)
+          for name, url in urls.items():
+              raw = f'/tmp/{name}.png'
+              urllib.request.urlretrieve(url, raw)
+              im = Image.open(raw).convert('RGB')
+              w = 1280
+              big = im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
+              big.save(f'incoming/style-photos/{name}.webp', 'WEBP', quality=80, method=6)
+              t = 480
+              im.resize((t, round(im.height * t / im.width)), Image.LANCZOS).save(f'incoming/style-photos/thumb/{name}.webp', 'WEBP', quality=76, method=6)
+              print(name, im.size, os.path.getsize(f'incoming/style-photos/{name}.webp'))
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add incoming/style-photos
+          git commit -m "Stílusfotók letöltve és WebP-re alakítva (incoming/style-photos)"
+          git push
