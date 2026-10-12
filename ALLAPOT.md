@@ -1,33 +1,29 @@
-# ALLAPOT – AutoGroweHome (frissítve: 2026-10-11)
+# ALLAPOT – AutoGroweHome (frissítve: 2026-10-12)
 
-**Verzió:** 1.0.0 · DB v5 · Repó: github.com/koltainorbert/AutoGroweHome (main) · ZIP: dist/autogrowehome-1.0.0.zip (autoloader-javítással). A Letöltések mappában lévő régi ZIP hibás.
+**Verzió:** 1.0.0 · DB v5 · Repó: github.com/koltainorbert/AutoGroweHome (main) · ZIP: dist/autogrowehome-1.0.0.zip (varázslóval, mobil javításokkal). A htombau oldalon még a varázsló előtti fájlok vannak.
 
-**Chat elején:** kösd be a repót (koltainorbert/AutoGroweHome, írási joggal), és kövesd a benne lévő CLAUDE.md-t.
+**Chat elején:** kösd be a repót (koltainorbert/AutoGroweHome, írási joggal), kövesd a CLAUDE.md-t; tesztkörnyezet: `bin/test-wp.sh`.
 
-**Mérve:** autoloader-teszt 119/119 (55 osztály) · lint 0 · ZIP 121 fájl. Korábbi, csak Linuxon mért számok (a tesztsor nincs a repóban): integráció 147/147 · regresszió 120/116/71 · licencszerver 32/32 · 15 nyelv × 1565 szöveg · E2E 0 konzolhiba.
+**Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 1592 szöveg, 0 hiba · E2E (Playwright): tervező 7 mobil/tablet méret × 3 fül – túllógás 0, 44 px alatti cél 0, ráközelítő mező 0, konzolhiba 0; varázsló 6 méret × 7 lépés – túllógás 0, dupla id 0, konzolhiba 0; generálás a varázslóból 202 → Koncepciók fül. Régi, nem a repóban lévő tesztsor: integráció 147/147 · regresszió 120/116/71 · licencszerver 32/32.
 
 **Döntések**
-- Minden változtatás automatikusan a repóba megy: teszt → commit → push a main-re, kérdés nélkül; kódváltozásnál a ZIP is újraépül. Ez a fájl a repóban (ALLAPOT.md) és a projektben azonos.
-- Forrásnyelv magyar; 16 nyelv. Teszt mód NEM automatikus tartalék (kulcs nélkül „nem érhető el”).
-- 1 kérés = 3 koncepció = 1 egység; újragenerálás külön napi keretből (gallery_rebuilds_per_day).
+- Minden változtatás automatikusan a repóba megy (teszt → commit → push main, ZIP újraépítés); ez a fájl a repóban és a projektben azonos.
+- Gyors varázsló a kezdőnézet (layout.start_view, alap: wizard); 7 lépés, ugyanaz a konfiguráció/ellenőrzés/generálás; a látogató választását a böngésző megjegyzi; stílusválasztáskor a stíluscsomag a nem saját értékekre beáll.
+- Forrásnyelv magyar; 16 nyelv; .mo fordítás: bin/po-tools.py. Teszt mód NEM automatikus tartalék.
+- 1 kérés = 3 koncepció = 1 egység; újragenerálás külön napi keretből.
 - BRAMAC magastetőnél kötelező, auto-választás; katalógus verified:false.
-- Kivitelezői link: időkorlátos, többször használható, címzetthez kötött, visszavonható.
-- Csomagmátrix csak AGH_OWNER_MODE-ban szerkeszthető; ügyféloldalon fix.
-- Licenc: Ed25519, 14 nap türelmi idő, frissítés nonce + SHA-256; referencia-szerver: tools/license-server.
-- Eltávolítás alapból megtartja az adatokat (delete_on_uninstall kapcsoló).
-- Tervező: backdrop-filter csak kis elemen (indítógomb); a paneleken és a teljes képernyős fátylon tilos, mert akadozást okozott (szoftveres Chromium-mérés: 2 → 26–29 képkocka/mp). Az elmosás-beállítás a háttérképre hat.
-- Autoloader: útvonal mindig „/”-rel, DIRECTORY_SEPARATOR tilos (Windowson aktiváláskor fatal volt).
-- Repó gyökere = a plugin; ZIP: bin/build-zip.sh. Verzió maradt 1.0.0 (kiadás előtti javítás).
-- Helyi teszt: Local (Windows, nginx, MySQL) – C:\Users\Andi\Local Sites\htombau.
+- Kivitelezői link: időkorlátos, többször használható, címzetthez kötött, visszavonható. Csomagmátrix csak AGH_OWNER_MODE-ban szerkeszthető.
+- Licenc: Ed25519, 14 nap türelmi idő, frissítés nonce + SHA-256. Eltávolítás alapból megtartja az adatokat.
+- Tervező: backdrop-filter csak kis elemen; mobil elrendezés ≤820 px és fekvő telefonon; érintési célok 44 px, mezők 16 px.
+- Autoloader: útvonal mindig „/”-rel (Windows). Verzió marad 1.0.0 (kiadás előtt).
+- Helyi teszt: Local (Windows) – C:\Users\Andi\Local Sites\htombau.
 
 **Nyitott tételek**
-- htombau (Windows, Firefox): visszaigazolni, hogy a tervező már nem akad; ha igen, pontosan hol (görgetés, csúszka, megnyitás). Firefoxban nincs mérés.
-- Windowson végignézni: privát tároló, fájlírás, cron.
-- A teljes forrás-ZIP (tools/license-server, integrációs és regressziós tesztek) nincs a repóban – ha megvan, feltölteni.
-- Éles Magnific + Anthropic kulccsal végigtesztelni (eddig szimulált szerződés).
-- MySQL/MariaDB teljes kör, valódi e-mail (SMTP/SPF/DKIM), éles cron.
-- BRAMAC katalógus gyártói ellenőrzése.
-- Jogi szövegek + LICENSE.txt jogászi véglegesítése; fordítások anyanyelvi lektorálása.
-- Fizetési kapu (Stripe/Barion/SimplePay) – csak interfész van.
-- Licencszerver éles telepítése, kulcspár, AGH_LICENSE_PUBKEY.
+- htombau: új ZIP telepítése, majd Firefoxban/telefonon visszaigazolni a varázslót és az akadozás megszűnését.
+- Varázsló 5. lépés: a színminták 28 px-esek (WCAG AA 24 px teljesül, 44 px nem).
+- Új fordítások (27 szöveg) anyanyelvi lektorálása a többivel együtt.
+- Teljes forrás-ZIP (tools/license-server, régi tesztsor) nincs a repóban – ha megvan, feltölteni.
+- Éles Magnific + Anthropic kulccsal végigtesztelni; MySQL/MariaDB, SMTP/SPF/DKIM, éles cron; Windows: privát tároló, fájlírás.
+- BRAMAC katalógus gyártói ellenőrzése; jogi szövegek + LICENSE.txt jogászi véglegesítése.
+- Fizetési kapu (csak interfész); licencszerver éles telepítése, AGH_LICENSE_PUBKEY.
 - Ismert korlátok: docs/BIZTONSAGI-ELLENORZOLISTA.md C rész; docs/BOVITESI-TERV.md.
