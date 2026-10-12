@@ -4,7 +4,7 @@
 
 **Chat elején:** kösd be a repót (koltainorbert/AutoGroweHome, írási joggal), kövesd a CLAUDE.md-t; tesztkörnyezet: `bin/test-wp.sh`.
 
-**Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 1592 szöveg, 0 hiba · E2E (Playwright): tervező 7 mobil/tablet méret × 3 fül – túllógás 0, 44 px alatti cél 0, ráközelítő mező 0, konzolhiba 0; varázsló 6 méret × 7 lépés – túllógás 0, dupla id 0, konzolhiba 0; generálás a varázslóból 202 → Koncepciók fül. Régi, nem a repóban lévő tesztsor: integráció 147/147 · regresszió 120/116/71 · licencszerver 32/32.
+**Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 1594 szöveg, 0 hiba · E2E (Playwright): tervező 7 mobil/tablet méret × 3 fül – túllógás 0, 44 px alatti cél 0, ráközelítő mező 0, konzolhiba 0; varázsló 6 méret × 7 lépés – túllógás 0, dupla id 0, konzolhiba 0; generálás a varázslóból 202 → Koncepciók fül. Régi, nem a repóban lévő tesztsor: integráció 147/147 · regresszió 120/116/71 · licencszerver 32/32.
 
 **Döntések**
 - Minden változtatás automatikusan a repóba megy (teszt → commit → push main, ZIP újraépítés); ez a fájl a repóban és a projektben azonos.
@@ -19,6 +19,8 @@
 - Helyi teszt: Local (Windows) – C:\Users\Andi\Local Sites\htombau.
 
 **Nyitott tételek**
+- Stílusfotók: 16 stílus × 2 kép elkészült Magnificben (Seedream 5 Pro, 2496×1664; a fiók Personal projektjében, címek: /home/claude/style-img/urls.json – csak ebben a munkamenetben). A konténer nem éri el a letöltési CDN-t: a gép csatlakozásakor letölteni, stílusonként a jobbat kiválasztani, webp (1280 + 480 px) → assets/img/options/arch_style/, commit + ZIP. A kód kész (képek nélkül a vázlat jelenik meg).
+- Valódi koncepcióképek: Magnific API-kulcs (docs.magnific.com, x-magnific-api-key) az admin AI-szolgáltatók oldalán; utána éles végigteszt.
 - htombau: új ZIP telepítése, majd Firefoxban/telefonon visszaigazolni a varázslót és az akadozás megszűnését.
 - Varázsló 5. lépés: a színminták 28 px-esek (WCAG AA 24 px teljesül, 44 px nem).
 - Új fordítások (27 szöveg) anyanyelvi lektorálása a többivel együtt.
