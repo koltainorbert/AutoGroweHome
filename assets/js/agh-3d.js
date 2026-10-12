@@ -1228,7 +1228,7 @@ Viewer.prototype.treelineFor = function (c) {
 		m.compose(new THREE.Vector3(x, hgt * 0.62, z), q, new THREE.Vector3(sx, hgt * 0.38, sx)); crowns.setMatrixAt(i, m);
 		m.compose(new THREE.Vector3(x, hgt * 0.3, z), q, new THREE.Vector3(1, hgt * 0.6, 1)); trunks.setMatrixAt(i, m);
 	}
-	crowns.visible = !winter;
+	void winter; // winter: the leaf texture turns to a bare, grey-brown twig colour
 	this.treeline.add(crowns); this.treeline.add(trunks);
 };
 Viewer.prototype.fitCamera = function (reset) {
