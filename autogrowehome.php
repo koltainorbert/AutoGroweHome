@@ -3,7 +3,7 @@
  * Plugin Name:       AutoGroweHome
  * Plugin URI:        https://infostudio.hu/autogrowehome
  * Description:       AI-alapú, interaktív háztervező és kivitelezői ajánlatkérő rendszer: három házkoncepció, fotórealisztikus galériák, méretezett koncepció-tervvázlatok és jogosultságvédett kivitelezői csomag.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 6.2
  * Requires PHP:      8.0
  * Author:            Koltai Norbert – Infostudio
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'AGH_VERSION', '1.0.0' );
+define( 'AGH_VERSION', '1.0.1' );
 define( 'AGH_DB_VERSION', 5 ); // 4: quote recipients, consent UA, link recipient; 5: secrets re-encryption (Installer::upgrade_data()).
 define( 'AGH_FILE', __FILE__ );
 define( 'AGH_DIR', plugin_dir_path( __FILE__ ) );

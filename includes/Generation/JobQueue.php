@@ -418,6 +418,7 @@ final class JobQueue {
 		$deadline = microtime( true ) + $seconds;
 		$n        = 0;
 		while ( microtime( true ) < $deadline ) {
+			self::keep_alive();
 			$slot = self::acquire_slot();
 			if ( null === $slot ) {
 				break; // Site-wide parallel limit reached; other workers are busy.
@@ -442,6 +443,64 @@ final class JobQueue {
 			}
 		}
 		return $n;
+	}
+
+	/**
+	 * True while the project still has work: a waiting job, or a running one
+	 * whose worker lock is still valid.
+	 */
+	public static function has_live_jobs( int $project_id ): bool {
+		global $wpdb;
+		$t = Installer::table( 'jobs' );
+		return (bool) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$t} WHERE project_id = %d AND ( status IN ('queued','waiting') OR ( status = 'running' AND locked_until >= %s ) ) LIMIT 1", $project_id, Util::now() ) ); // phpcs:ignore
+	}
+
+	/**
+	 * Watchdog: a project still marked queued/planning/rendering although no
+	 * job of it is alive any more (worker killed, job lost) would spin
+	 * forever. After a grace period it is finalised: first the normal
+	 * bookkeeping (Pipeline::after_asset), then – if still "running" – the
+	 * project is marked failed and its unit is given back when it cost nothing.
+	 *
+	 * @return bool True when the project was finalised by this call.
+	 */
+	public static function recover_orphan( array $p, int $grace = 120 ): bool {
+		if ( ! in_array( $p['status'], array( 'queued', 'planning', 'rendering' ), true ) ) {
+			return false;
+		}
+		if ( strtotime( $p['updated_at'] . ' UTC' ) > time() - $grace || self::has_live_jobs( (int) $p['id'] ) ) {
+			return false;
+		}
+		Pipeline::after_asset( (int) $p['id'], 0, '' );
+		$now = Repository::project_by_id( (int) $p['id'] );
+		if ( $now && in_array( $now['status'], array( 'queued', 'planning', 'rendering' ), true ) ) {
+			Repository::update_project( (int) $p['id'], array( 'status' => 'failed', 'stage' => 'done' ) );
+			Logger::error( 'queue', 'Project without live jobs finalised as failed (watchdog).', array(), (int) $p['id'] );
+			if ( Pipeline::cost_free( (int) $p['id'] ) ) {
+				self::refund_project_once( (int) $p['id'] );
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Keep the PHP worker alive for one whole job.
+	 *
+	 * A provider call can take minutes (timeout × retries), far longer than a
+	 * typical max_execution_time (30–60 s). A worker killed mid-job leaves its
+	 * job lock and parallel slot taken for lock_seconds(), so the project
+	 * seemed to "spin" for minutes and later failed. The limit is raised per
+	 * job (set_time_limit() restarts the counter) and a closed browser tab no
+	 * longer aborts the work.
+	 */
+	public static function keep_alive(): void {
+		if ( function_exists( 'ignore_user_abort' ) ) {
+			@ignore_user_abort( true ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		}
+		$disabled = array_map( 'trim', explode( ',', (string) ini_get( 'disable_functions' ) ) );
+		if ( function_exists( 'set_time_limit' ) && ! in_array( 'set_time_limit', $disabled, true ) ) {
+			@set_time_limit( self::lock_seconds() + 30 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		}
 	}
 
 	/**

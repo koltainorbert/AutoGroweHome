@@ -21,6 +21,7 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 
 - `php tests/autoloader-test.php` (WordPress nélkül fut)
 - `node tests/sketch-test.js` (élő vázlat, WordPress nélkül fut)
+- Sor/generálás változott: `php tests/stuck-project-test.php` (tesztoldalon; beragadt projekt őrző) és `node tests/e2e/cancel.js` (leállítás beragadt szervernél).
 - Licencközpont változott: `php tests/license-hub-test.php` (a tesztoldalon, a valódi ügyfél-LicenseManagerrel; 40/40).
 - `find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 php -l`
 - Fordítás változott: `python3 bin/po-tools.py check` (0 hiba), majd `python3 bin/po-tools.py compile` (.mo újragenerálása).

@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.0.1 – 2026-10-12
+
+### Javítva – beragadó generálás
+- A feladatsor munkafolyamata feladatonként megemeli a PHP időkorlátot és nem áll le, ha a böngésző bezárul: a 30–60 s-os tárhelykorlát már nem öli meg a hosszú szolgáltatóhívást (eddig ilyenkor a zár percekig foglalt maradt, a projekt „pörgött”, majd hibára futott).
+- A státuszlekérdezés PHP-FPM/LiteSpeed alatt azonnal válaszol; a sor a válasz elküldése után fut.
+- Őrző: a feladat nélkül maradt „futó” projekt 2 perc után lezárul (hiba, a keret visszajár, ha nem volt költség), és nem blokkolja az új generálást.
+- Felület: minden kérésnek időkorlátja van (45 s, generálás 60 s); a „Leállítás” akkor is felszabadítja a felületet, ha a szerver nem válaszol; foglalt állapotban a kattintás üzenetet ad, nem marad néma.
+- Új teszt: `tests/stuck-project-test.php`, `tests/e2e/cancel.js`.
+
 ## 1.0.0 – 2026-10-11
 
 Első kiadás.

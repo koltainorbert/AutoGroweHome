@@ -157,7 +157,15 @@ final class RestController {
 		// Concurrency per IP.
 		global $wpdb;
 		$t       = Installer::table( 'projects' );
-		$running = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$t} WHERE ip_hash = %s AND status IN ('queued','planning','rendering') AND created_at > %s", $ip_hash, gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS ) ) ); // phpcs:ignore
+		// Only projects that still have live work count: an orphaned "running"
+		// project (worker killed) must not lock the visitor out for an hour.
+		$running = 0;
+		foreach ( (array) $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$t} WHERE ip_hash = %s AND status IN ('queued','planning','rendering') AND created_at > %s", $ip_hash, gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS ) ) ) as $rid ) { // phpcs:ignore
+			$rp = Repository::project_by_id( (int) $rid );
+			if ( $rp && ! JobQueue::recover_orphan( $rp ) ) {
+				$running++;
+			}
+		}
 		if ( $running >= max( 1, (int) Settings::get( 'limits.concurrent_per_ip', 1 ) ) && ! current_user_can( 'agh_manage' ) ) {
 			Stats::inc( 'limit_hit', 'concurrent' );
 			return self::error( 'agh_limit', RateLimiter::message( 'concurrent' ), 429 );
@@ -323,11 +331,39 @@ final class RestController {
 		if ( ! $p ) {
 			return self::error( 'agh_not_found', __( 'A projekt nem található.', 'autogrowehome' ), 404 );
 		}
-		if ( Settings::get( 'general.queue_tick_on_poll', true ) && in_array( $p['status'], array( 'queued', 'planning', 'rendering', 'ready', 'partial' ), true ) ) {
-			JobQueue::poll_tick( 8.0 );
+		if ( JobQueue::recover_orphan( $p ) ) {
 			$p = Repository::project_by_id( $p['id'] );
 		}
+		if ( Settings::get( 'general.queue_tick_on_poll', true ) && in_array( $p['status'], array( 'queued', 'planning', 'rendering', 'ready', 'partial' ), true ) ) {
+			if ( self::can_finish_early() ) {
+				// The poll answers at once; the queue runs after the response
+				// has been sent, so a slow provider call never blocks the visitor.
+				register_shutdown_function( array( __CLASS__, 'poll_tick_after_response' ) );
+			} else {
+				JobQueue::poll_tick( 8.0 );
+				$p = Repository::project_by_id( $p['id'] );
+			}
+		}
 		return self::nocache( new \WP_REST_Response( self::project_payload( $p ) ) );
+	}
+
+	/** True when the server can close the HTTP response and keep running (PHP-FPM, LiteSpeed). */
+	private static function can_finish_early(): bool {
+		return function_exists( 'fastcgi_finish_request' ) || function_exists( 'litespeed_finish_request' );
+	}
+
+	/** Shutdown callback of project(): flush the response, then run one queue tick. */
+	public static function poll_tick_after_response(): void {
+		if ( function_exists( 'fastcgi_finish_request' ) ) {
+			fastcgi_finish_request();
+		} elseif ( function_exists( 'litespeed_finish_request' ) ) {
+			litespeed_finish_request();
+		}
+		try {
+			JobQueue::poll_tick( 8.0 );
+		} catch ( \Throwable $e ) {
+			Logger::error( 'queue', 'Poll tick: ' . $e->getMessage() );
+		}
 	}
 
 	public static function my_projects( \WP_REST_Request $r ): \WP_REST_Response {

@@ -171,7 +171,10 @@
 	}
 
 	/* ------------------------------------------------------------------ api */
-	function api(method, path, body) {
+	// Every request has a time limit: a hanging server call (slow provider, PHP worker
+	// stuck) must never freeze the interface – the caller gets an error and can retry.
+	var API_TIMEOUT = 45000;
+	function api(method, path, body, timeoutMs) {
 		var headers = { 'Accept': 'application/json' };
 		if (S.boot) { headers['X-AGH-Nonce'] = S.boot.nonce; }
 		if (WP_NONCE) { headers['X-WP-Nonce'] = WP_NONCE; }
@@ -179,6 +182,9 @@
 		if (body !== undefined) { headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
 		var url = REST + path;
 		if (S.lang) { url += (url.indexOf('?') === -1 ? '?' : '&') + 'agh_lang=' + encodeURIComponent(S.lang); }
+		var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+		var timer = null;
+		if (ctrl) { opt.signal = ctrl.signal; timer = setTimeout(function () { ctrl.abort(); }, timeoutMs || API_TIMEOUT); }
 		return fetch(url, opt).then(function (r) {
 			return r.text().then(function (txt) {
 				var data = {};
@@ -186,6 +192,11 @@
 				if (!r.ok) { var err = new Error(data.message || ('HTTP ' + r.status)); err.status = r.status; err.data = data; throw err; }
 				return data;
 			});
+		}).then(function (d) { clearTimeout(timer); return d; }, function (e) {
+			clearTimeout(timer);
+			if (e && typeof e.status === 'number') { throw e; }
+			// Network failure or time limit (also while reading the body): friendly message, status 0.
+			var err = new Error(t('err_network')); err.status = 0; err.data = {}; err.timeout = !!(e && e.name === 'AbortError'); throw err;
 		});
 	}
 	function event(type) { api('POST', 'events', { type: type }).catch(function () {}); }
@@ -1638,12 +1649,13 @@
 
 	/* ------------------------------------------------------------------ generation */
 	function generate() {
-		if (S.busy) { return; }
+		// A request is already on its way: say so instead of ignoring the click.
+		if (S.busy) { toast(t('status_generating'), 'warn'); return; }
 		var lim = S.boot.limits || {};
 		var go = function (force) {
 			S.busy = true;
 			event('design_start');
-			api('POST', 'generate', { config: payloadConfig(), force: !!force }).then(function (r) {
+			api('POST', 'generate', { config: payloadConfig(), force: !!force }, 60000).then(function (r) {
 				S.busy = false;
 				if (r.limits) { S.boot.limits = r.limits; }
 				if (r.reused) { toast(r.message, 'ok', 6000); }
@@ -1745,7 +1757,17 @@
 	}
 
 	function cancelGeneration() {
-		api('POST', 'projects/' + S.project.id + '/cancel', {}).then(function () { return loadProject(S.project.id); }).then(function () { toast(t('cancelled'), 'warn'); }).catch(errToast);
+		if (!S.project) { return; }
+		var id = S.project.id;
+		stopPoll();
+		api('POST', 'projects/' + id + '/cancel', {}, 20000).then(function () { return loadProject(id); }).then(function () { toast(t('cancelled'), 'warn'); }).catch(function (err) {
+			// The server did not answer (busy or unreachable): stop locally anyway, so the
+			// visitor is never locked out – a new generation can start right away.
+			if (S.project && S.project.id === id && isRunning(S.project)) { S.project.status = 'cancelled'; }
+			S.busy = false;
+			renderStage(); renderSummary(); renderActionbar();
+			errToast(err);
+		});
 	}
 
 	function saveProject() {
@@ -2032,5 +2054,5 @@
 	}
 	function errToast(err) { toast((err && err.message) || t('err_network'), 'error', 7000); }
 
-	window.AGH_Designer = { open: open, close: close, version: '1.0.0', config: function () { return clone(S.config); } };
+	window.AGH_Designer = { open: open, close: close, version: '1.0.1', config: function () { return clone(S.config); } };
 })();
