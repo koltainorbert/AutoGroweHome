@@ -6746,3 +6746,11 @@ msgstr "Womit der Planer öffnet. Besucher können jederzeit wechseln; ihr Brows
 #: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
 msgid "Teljes tervező"
 msgstr "Ausführlicher Planer"
+
+#: includes/Frontend/Strings.php:232
+msgid "Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek."
+msgstr "Illustration des Stils – fotorealistische Bilder Ihres eigenen Hauses entstehen nach der Generierung."
+
+#: includes/Frontend/Strings.php:231
+msgid "Stílusminta"
+msgstr "Stilbeispiel"

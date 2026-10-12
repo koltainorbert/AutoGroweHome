@@ -6748,3 +6748,11 @@ msgstr "С чего открывается конструктор. Посети�
 #: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
 msgid "Teljes tervező"
 msgstr "Подробный конструктор"
+
+#: includes/Frontend/Strings.php:232
+msgid "Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek."
+msgstr "Иллюстрация стиля – фотореалистичные изображения вашего дома создаются после генерации."
+
+#: includes/Frontend/Strings.php:231
+msgid "Stílusminta"
+msgstr "Пример стиля"

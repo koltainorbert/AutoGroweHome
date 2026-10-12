@@ -6748,3 +6748,11 @@ msgstr "Čime se dizajner otvara. Posjetitelj može prebaciti u bilo kojem trenu
 #: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
 msgid "Teljes tervező"
 msgstr "Detaljni dizajner"
+
+#: includes/Frontend/Strings.php:232
+msgid "Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek."
+msgstr "Ilustracija stila – fotorealistične slike vaše kuće nastaju nakon generiranja."
+
+#: includes/Frontend/Strings.php:231
+msgid "Stílusminta"
+msgstr "Primjer stila"

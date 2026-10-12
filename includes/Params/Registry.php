@@ -266,6 +266,29 @@ final class Registry {
 	/**
 	 * Public schema for the frontend (no prompt internals).
 	 */
+	/**
+	 * A public option, with its bundled sample photo when there is one:
+	 * assets/img/options/{field}/{value}.webp (large) and …/thumb/{value}.webp (card).
+	 * The file's mtime is the cache-busting version.
+	 *
+	 * @param string $field Field id.
+	 * @param string $value Option value.
+	 * @param string $label Option label.
+	 */
+	private static function option_with_image( string $field, string $value, $label ): array {
+		$o = array( 'value' => $value, 'label' => $label );
+		if ( ! preg_match( '/^[a-z0-9_]+$/', $field . $value ) ) {
+			return $o;
+		}
+		foreach ( array( 'image' => '', 'thumb' => 'thumb/' ) as $key => $sub ) {
+			$rel = 'assets/img/options/' . $field . '/' . $sub . $value . '.webp';
+			if ( is_readable( AGH_DIR . $rel ) ) {
+				$o[ $key ] = AGH_URL . $rel . '?v=' . (int) filemtime( AGH_DIR . $rel );
+			}
+		}
+		return $o;
+	}
+
 	public static function public_schema(): array {
 		$out = array();
 		foreach ( self::fields() as $id => $def ) {
@@ -291,7 +314,7 @@ final class Registry {
 			if ( isset( $def['options'] ) ) {
 				$item['options'] = array();
 				foreach ( $def['options'] as $v => $l ) {
-					$item['options'][] = array( 'value' => (string) $v, 'label' => $l );
+					$item['options'][] = self::option_with_image( $id, (string) $v, $l );
 				}
 			}
 			if ( 'catalog' === $def['type'] ) {

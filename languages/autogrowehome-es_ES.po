@@ -6746,3 +6746,11 @@ msgstr "Con qué se abre el diseñador. El visitante puede cambiar en cualquier 
 #: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
 msgid "Teljes tervező"
 msgstr "Diseñador completo"
+
+#: includes/Frontend/Strings.php:232
+msgid "Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek."
+msgstr "Ilustración del estilo: las imágenes fotorrealistas de tu propia casa se crean tras la generación."
+
+#: includes/Frontend/Strings.php:231
+msgid "Stílusminta"
+msgstr "Muestra de estilo"

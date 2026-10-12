@@ -6748,3 +6748,11 @@ msgstr "Od czego zaczyna się projektant. Odwiedzający może w każdej chwili p
 #: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
 msgid "Teljes tervező"
 msgstr "Pełny projektant"
+
+#: includes/Frontend/Strings.php:232
+msgid "Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek."
+msgstr "Ilustracja stylu – fotorealistyczne obrazy Twojego domu powstają po wygenerowaniu."
+
+#: includes/Frontend/Strings.php:231
+msgid "Stílusminta"
+msgstr "Przykład stylu"

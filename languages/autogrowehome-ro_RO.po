@@ -6748,3 +6748,11 @@ msgstr "Cu ce se deschide designerul. Vizitatorul poate comuta oricând; browser
 #: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
 msgid "Teljes tervező"
 msgstr "Designer complet"
+
+#: includes/Frontend/Strings.php:232
+msgid "Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek."
+msgstr "Ilustrație a stilului – imaginile fotorealiste ale casei tale se creează după generare."
+
+#: includes/Frontend/Strings.php:231
+msgid "Stílusminta"
+msgstr "Exemplu de stil"

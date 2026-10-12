@@ -6746,3 +6746,11 @@ msgstr "Ce qui s’affiche à l’ouverture du configurateur. Le visiteur peut c
 #: includes/Frontend/Strings.php:257 includes/Admin/Admin.php:286
 msgid "Teljes tervező"
 msgstr "Configurateur complet"
+
+#: includes/Frontend/Strings.php:232
+msgid "Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek."
+msgstr "Illustration du style – les images photoréalistes de votre propre maison sont créées après la génération."
+
+#: includes/Frontend/Strings.php:231
+msgid "Stílusminta"
+msgstr "Exemple de style"

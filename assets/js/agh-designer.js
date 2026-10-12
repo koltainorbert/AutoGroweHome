@@ -572,7 +572,8 @@
 			case 'cards':
 				ctl = h('div', { class: 'agh-cards', role: 'radiogroup', 'aria-label': f.label });
 				(f.options || []).forEach(function (o) {
-					ctl.appendChild(h('button', { type: 'button', class: 'agh-card-opt', role: 'radio', 'aria-pressed': String(v) === o.value ? 'true' : 'false', 'aria-checked': String(v) === o.value ? 'true' : 'false', onclick: function () { setValue(f.id, o.value, true); maybeStylePack(f, o.value); } }, glyph(f.id, o.value), o.label));
+					ctl.appendChild(h('button', { type: 'button', class: 'agh-card-opt', role: 'radio', 'aria-pressed': String(v) === o.value ? 'true' : 'false', 'aria-checked': String(v) === o.value ? 'true' : 'false', onclick: function () { setValue(f.id, o.value, true); maybeStylePack(f, o.value); } }, o.thumb ? h('img', { src: o.thumb, alt: '', loading: 'lazy', decoding: 'async' }) : glyph(f.id, o.value), h('span', { class: 'agh-card-label', text: o.label })));
+					if (o.thumb) { ctl.lastChild.classList.add('agh-card-photo'); ctl.classList.add('has-photos'); }
 				});
 				break;
 			case 'multiselect':
@@ -1015,9 +1016,38 @@
 	function renderPreviewOnly() {
 		if (!els.previewBox || !document.body.contains(els.previewBox)) { return; }
 		var c = S.config;
-		els.previewBox.innerHTML = previewSvg(c);
-		els.previewBox.appendChild(previewCaption(c));
+		fillPreview(els.previewBox, c);
 		fillKpis(els.kpis, c);
+	}
+	// Photo of the chosen architectural style (bundled sample image), if there is one.
+	function stylePhoto(c) {
+		var o = S.fields.arch_style ? optByValue(S.fields.arch_style, c.arch_style) : null;
+		return o && o.image ? o : null;
+	}
+	// The preview: a photorealistic style sample with the live, parameter-driven sketch as an inset,
+	// or only the sketch when the style has no sample photo. The photo element is reused across
+	// updates (no reload/flicker while sliders move).
+	function fillPreview(box, c) {
+		var o = stylePhoto(c);
+		var old = box.querySelector('.agh-preview-photo');
+		var keep = o && old && old.getAttribute('src') === o.image ? old : null;
+		clear(box);
+		box.classList.toggle('has-photo', !!o);
+		if (!o) {
+			box.innerHTML = previewSvg(c);
+			box.appendChild(previewCaption(c));
+			return box;
+		}
+		box.appendChild(keep || h('img', { class: 'agh-preview-photo', src: o.image, alt: '', decoding: 'async' }));
+		var inset = h('div', { class: 'agh-preview-inset', title: t('live_preview'), 'aria-hidden': 'true' });
+		inset.innerHTML = previewSvg(c);
+		inset.appendChild(h('span', { text: t('live_preview') }));
+		box.appendChild(inset);
+		box.appendChild(h('div', { class: 'agh-preview-cap' },
+			h('div', null, h('div', { class: 'agh-h', text: (c.house_name || o.label) })),
+			h('span', { class: 'agh-badge', title: t('style_sample_note'), text: t('style_sample') })));
+		box.appendChild(h('p', { class: 'agh-preview-note', text: t('style_sample_note') }));
+		return box;
 	}
 	function fillKpis(box, c) {
 		clear(box);
@@ -1420,7 +1450,7 @@
 		lsSet(LS_UI, 'designer');
 		shell.classList.remove('is-wizard');
 		if (els.wizard) { els.wizard.hidden = true; clear(els.wizard); }
-		els.wizBody = els.wizSide = els.wizScroll = els.wizGen = els.wizDone = null;
+		els.wizBody = els.wizSide = els.wizScroll = els.wizGen = els.wizDone = els.wizPv = els.wizKpis = null;
 		updateWizardToggles();
 		renderParams();
 		renderStage();
@@ -1539,12 +1569,16 @@
 	// Live preview + key figures beside the steps (on phones: only on the last step) and the last step's summary.
 	function updateWizardSide() {
 		if (!S.wiz || !els.wizSide) { return; }
-		var c = S.config, side = clear(els.wizSide);
-		var pv = h('div', { class: 'agh-preview-box agh-wiz-preview' });
-		pv.innerHTML = previewSvg(c);
-		pv.appendChild(previewCaption(c));
-		side.appendChild(pv);
-		side.appendChild(fillKpis(h('div', { class: 'agh-kpis agh-wiz-kpis' }), c));
+		var c = S.config, side = els.wizSide;
+		if (!els.wizPv || !side.contains(els.wizPv)) {
+			clear(side);
+			els.wizPv = h('div', { class: 'agh-preview-box agh-wiz-preview' });
+			els.wizKpis = h('div', { class: 'agh-kpis agh-wiz-kpis' });
+			side.appendChild(els.wizPv);
+			side.appendChild(els.wizKpis);
+		}
+		fillPreview(els.wizPv, c);
+		fillKpis(els.wizKpis, c);
 		if (els.wizDone) { renderWizardDone(); }
 		if (els.wizGen) {
 			var running = S.project && ['queued', 'planning', 'rendering'].indexOf(S.project.status) !== -1;
@@ -1554,9 +1588,11 @@
 		}
 	}
 	function renderWizardDone() {
+		// Phones: the side preview is hidden, so the last step shows the preview inline (element reused).
+		var dpv = els.wizDone.querySelector('.agh-wiz-done-pv') || h('div', { class: 'agh-preview-box agh-wiz-done-pv', 'aria-hidden': 'true' });
+		if (dpv.parentNode) { dpv.parentNode.removeChild(dpv); }
 		var d = clear(els.wizDone);
-		// Phones: the side preview is hidden, so the last step shows the sketch inline.
-		d.appendChild(h('div', { class: 'agh-preview-box agh-wiz-done-pv', 'aria-hidden': 'true', html: previewSvg(S.config) }));
+		d.appendChild(fillPreview(dpv, S.config));
 		if (!S.boot.provider.ready) {
 			d.appendChild(h('div', { class: 'agh-msg is-warning' }, icon('alert'), h('span', { text: t('not_configured_visitor') })));
 		}

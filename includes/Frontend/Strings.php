@@ -228,6 +228,8 @@ final class Strings {
 			'pstatus_draft'          => __( 'vázlat', 'autogrowehome' ),
 			'pstatus_cancelled'      => __( 'leállítva', 'autogrowehome' ),
 			/* translators: %1$s: style name */
+			'style_sample'           => __( 'Stílusminta', 'autogrowehome' ),
+			'style_sample_note'      => __( 'Illusztráció a stílushoz – a saját házad fotórealisztikus képei a generálás után készülnek.', 'autogrowehome' ),
 			'style_pack_offer'       => __( 'A(z) „%1$s” stílushoz javasolt beállításcsomag is tartozik.', 'autogrowehome' ),
 			'sum_checks'             => __( 'Ellenőrzés', 'autogrowehome' ),
 			'sum_house'              => __( 'Ház', 'autogrowehome' ),
