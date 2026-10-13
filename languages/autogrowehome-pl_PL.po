@@ -4408,8 +4408,8 @@ msgid "Erkély"
 msgstr "Balkon"
 
 #: includes/Params/Definitions.php:188
-msgid "Csak emeletes vagy tetőteres háznál."
-msgstr "Tylko w domu piętrowym lub z poddaszem."
+msgid "Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély."
+msgstr "W domu piętrowym balkon wspornikowy, przy poddaszu na szczycie, w parterowym balkon francuski."
 
 #: includes/Params/Definitions.php:189
 msgid "Bejárati előtető"
@@ -8451,3 +8451,31 @@ msgstr "Brzeg jeziora"
 #: includes/Params/Definitions.php
 msgid "Tengerpart"
 msgstr "Wybrzeże morskie"
+
+#: includes/Params/Definitions.php
+msgid "Mennyi falikép"
+msgstr "Ile obrazów na ścianach"
+
+#: includes/Params/Definitions.php
+msgid "Hány kép kerüljön a szobák falára."
+msgstr "Ile obrazów ma wisieć na ścianach pomieszczeń."
+
+#: includes/Params/Definitions.php
+msgid "Visszafogott (1 kép)"
+msgstr "Powściągliwie (1 obraz)"
+
+#: includes/Params/Definitions.php
+msgid "Normál (2 kép)"
+msgstr "Normalnie (2 obrazy)"
+
+#: includes/Params/Definitions.php
+msgid "Sok, galériafal"
+msgstr "Dużo, ściana galeryjna"
+
+#: includes/Params/Definitions.php
+msgid "Homlokzattal azonos (csak plasztika)"
+msgstr "Taki jak elewacja (tylko plastyka)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál sötétebb"
+msgstr "Ciemniejszy niż elewacja"

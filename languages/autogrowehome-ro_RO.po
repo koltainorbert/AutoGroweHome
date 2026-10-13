@@ -4408,8 +4408,8 @@ msgid "Erkély"
 msgstr "Balcon"
 
 #: includes/Params/Definitions.php:188
-msgid "Csak emeletes vagy tetőteres háznál."
-msgstr "Doar la casele cu etaj sau mansardă."
+msgid "Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély."
+msgstr "La casa cu etaj balcon în consolă, la mansardă pe fronton, la casa parter balcon francez."
 
 #: includes/Params/Definitions.php:189
 msgid "Bejárati előtető"
@@ -8451,3 +8451,31 @@ msgstr "Mal de lac"
 #: includes/Params/Definitions.php
 msgid "Tengerpart"
 msgstr "Litoral"
+
+#: includes/Params/Definitions.php
+msgid "Mennyi falikép"
+msgstr "Câte tablouri"
+
+#: includes/Params/Definitions.php
+msgid "Hány kép kerüljön a szobák falára."
+msgstr "Câte tablouri să fie pe pereții camerelor."
+
+#: includes/Params/Definitions.php
+msgid "Visszafogott (1 kép)"
+msgstr "Discret (1 tablou)"
+
+#: includes/Params/Definitions.php
+msgid "Normál (2 kép)"
+msgstr "Normal (2 tablouri)"
+
+#: includes/Params/Definitions.php
+msgid "Sok, galériafal"
+msgstr "Multe, perete galerie"
+
+#: includes/Params/Definitions.php
+msgid "Homlokzattal azonos (csak plasztika)"
+msgstr "La fel ca fațada (doar relief)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál sötétebb"
+msgstr "Mai închis decât fațada"

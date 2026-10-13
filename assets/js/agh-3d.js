@@ -676,7 +676,8 @@ House.prototype.pitchedRoof = function (v, rd, type) {
 		var a = X(L.a[0], L.a[1], L.a[2]), b = X(L.b[0], L.b[1], L.b[2]);
 		var m;
 		if (L.kind === 'x') { return; }
-		if (L.kind && L.kind.indexOf('vent:') === 0) { self.roofVent(a, b, L.kind.slice(5)); return; }
+		if (L.kind && L.kind.indexOf('vent:') === 0) { var vp = L.kind.slice(5).split(':'); self.roofVent(a, b, vp[0], vp[1]); return; }
+		if (L.kind && L.kind.indexOf('snow:') === 0) { self.snowGuard(a, b, L.kind.slice(5)); return; }
 		if (L.width === 0.17) {
 			m = solid(L.color, 0.35, L.color === '#B87333' ? 0.9 : 0.5);
 			self.add(rod(a.clone().setY(a.y - 0.1), b.clone().setY(b.y - 0.1), 0.075, m, 10));
@@ -691,8 +692,40 @@ House.prototype.pitchedRoof = function (v, rd, type) {
 		else { self.add(rod(a, b, L.width === 0.12 ? 0.18 : 0.09, solid(L.color, 0.5, 0.3), 8)); }
 	});
 };
-// Roof ventilation element at a ridge point (a); the ridge vent runs from a to b.
-House.prototype.roofVent = function (a, b, type) {
+// The frame of a roof plane from a line that runs up the slope (a → b): the uphill direction, the
+// ridge-parallel axis and the outward normal. `slope` ("ux,uy,rise") is the fallback when a and b coincide.
+function roofFrame(a, b, slope) {
+	var U = b ? b.clone().sub(a) : new THREE.Vector3();
+	if (U.lengthSq() < 1e-6) { var s = String(slope || '0,-1,0.6').split(',').map(Number); U.set(s[0] || 0, s[2] || 0.6, s[1] || 0); }
+	if (U.lengthSq() < 1e-6) { U.set(0, 0.6, -1); }
+	U.normalize();
+	var hz = new THREE.Vector3(U.x, 0, U.z);
+	if (hz.lengthSq() < 1e-6) { hz.set(0, 0, -1); }
+	hz.normalize();
+	var R = new THREE.Vector3(-hz.z, 0, hz.x), N = new THREE.Vector3().crossVectors(R, U).normalize();
+	if (N.y < 0) { N.negate(); }
+	return { up: U, axis: R, n: N };
+}
+// Snow guards along the eave (a → b): two rails on brackets, lying on the roof plane.
+House.prototype.snowGuard = function (a, b, slope) {
+	var f = roofFrame(a, null, slope), len = a.distanceTo(b), self = this;
+	if (len < 0.6) { return; }
+	var g = col(this.c.gutters === 'white' ? '#E8E8E6' : (this.c.gutters === 'black' ? '#1E2023' : (this.c.gutters === 'copper' ? '#B87333' : (this.c.gutters === 'anthracite' ? '#3A3D40' : '#C9CDD0'))), '#C9CDD0');
+	var mt = solid(g, 0.35, 0.85);
+	[0.1, 0.19].forEach(function (hgt) {
+		var r = rod(a.clone().addScaledVector(f.n, hgt), b.clone().addScaledVector(f.n, hgt), 0.016, mt, 8);
+		if (r) { self.add(r); }
+	});
+	var n = Math.max(2, Math.round(len / 0.9));
+	for (var i = 0; i <= n; i++) {
+		var p = a.clone().lerp(b, i / n);
+		var br = rod(p.clone().addScaledVector(f.up, -0.14).addScaledVector(f.n, 0.01), p.clone().addScaledVector(f.up, 0.08).addScaledVector(f.n, 0.23), 0.018, mt, 6);
+		if (br) { self.add(br); }
+	}
+};
+// Roof ventilation element standing on the roof plane at a; a → b points up the slope (the ridge vent
+// runs along the ridge instead). Plane-mounted types are turned onto the plane, free-standing ones stay upright.
+House.prototype.roofVent = function (a, b, type, slope) {
 	var dk = solid(shadeHex(col(this.c.roof_color, '#3A3D40'), -0.1), 0.6, 0.2), mt = solid('#B9BDC1', 0.3, 0.85), g = new THREE.Group(), self = this;
 	function cyl(r0, r1, h, mat, y) { var m = new THREE.Mesh(new THREE.CylinderGeometry(r0, r1, h, 16), mat); m.position.y = y; m.castShadow = true; g.add(m); return m; }
 	if (type === 'ridge_vent') { var rv = beam(a.clone().setY(a.y + 0.1), b.clone().setY(b.y + 0.1), 0.1, 0.16, solid('#2E3033', 0.5, 0.4)); if (rv) { this.add(rv); } return; }
@@ -701,7 +734,10 @@ House.prototype.roofVent = function (a, b, type) {
 	else if (type === 'pipe') { cyl(0.065, 0.065, 0.78, solid('#6A6E72', 0.5, 0.5), 0.39); cyl(0.0, 0.17, 0.12, dk, 0.84); }
 	else if (type === 'solar_fan') { var bx = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.12, 0.45), dk); bx.position.y = 0.06; g.add(bx); var sp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.025, 0.4), solid('#1B2636', 0.25, 0.4)); sp.position.y = 0.16; sp.rotation.x = -0.35; g.add(sp); cyl(0.14, 0.14, 0.1, mt, 0.05); }
 	else { var vt = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.38), dk); vt.position.y = 0.06; vt.castShadow = true; g.add(vt); var vh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.06, 0.06), solid('#1E2023', 0.6)); vh.position.set(0, 0.11, 0.1); g.add(vh); }
-	g.position.copy(a); g.position.y += 0.02; self.add(g);
+	// vent tiles, mushrooms and solar fans sit flat on the tiles; a turbine and a pipe stand upright
+	var fr = roofFrame(a, b, slope);
+	if (type === 'tile_vent' || type === 'mushroom' || type === 'solar_fan' || !type) { g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), fr.n); }
+	g.position.copy(a).addScaledVector(fr.n, 0.02); self.add(g);
 };
 House.prototype.flatRoof = function (v, r) {
 	var c = this.c, h = v.h, fasc = solid(shadeHex(col(c.facade_color, '#F2EFE9'), c.arch_style === 'high_tech' ? -0.05 : 0.05), 0.8);

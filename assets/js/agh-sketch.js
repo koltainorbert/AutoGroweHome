@@ -298,8 +298,15 @@
 	// Colour of the surround around the windows (null = none): by style, or the visitor's choice.
 	function trimColor(c) {
 		var t = c.window_trim || 'auto', fc = col(c.facade_color, '#F2EFE9');
-		if (t === 'auto') { var st = styleOf(c).trim; return st ? (st === 'light' ? shade(fc, 0.35) : st) : null; }
-		return { none: null, white: '#F4F2EE', light: shade(fc, 0.35), dark: '#2E3033', stone: '#B9AE9C' }[t] || null;
+		if (t === 'auto') {
+			var st = styleOf(c).trim;
+			if (!st) { return null; }
+			if (st === 'light') { return shade(fc, 0.26); }
+			// a white surround on an already light rendered facade reads as a white ring around everything:
+			// there the band goes a shade deeper than the wall instead, and keeps its relief
+			return lum(fc) > 0.78 ? shade(fc, -0.12) : st;
+		}
+		return { none: null, white: '#F4F2EE', light: shade(fc, 0.26), facade: shade(fc, -0.07), darker: shade(fc, -0.24), dark: '#2E3033', stone: '#B9AE9C' }[t] || null;
 	}
 	// Fence runs between x0 and x1 minus the openings (gaps may overlap or stick out): [[a, b], …].
 	function fenceSegs(x0, x1, gaps) {
@@ -1223,19 +1230,30 @@
 		if (c.exposed_rafters && o > 0.15) {
 			for (var ra = A0 + 0.25; ra < A1; ra += 0.6) { out.under += sc.line(W3(ra, B1, h - 0.14), W3(ra, b1 - 0.04, eZ - 0.14), '#5A4030', 0.1); }
 		}
-		var guards = '';
-		if (c.snow_guards && type !== 'shed') { guards += sc.line(W3(a0 + 0.7, b1 - 0.55, eZ + 0.55 * tp + 0.06), W3(a1 - 0.7, b1 - 0.55, eZ + 0.55 * tp + 0.06), '#C9CDD0', 0.07); }
+		var guards = '', fx3 = function (n) { return String(Math.round(n * 1000) / 1000); };
+		// the slope of this part, as the 3D needs it: horizontal uphill direction + rise per metre
+		var upv = W3(0, -1, 0), slopeK = fx3(upv[0]) + ',' + fx3(upv[1]) + ',' + fx3(tp);
+		// snow guards: a rail about three tile rows up from the front eave, with brackets built in the 3D
+		if (c.snow_guards && type !== 'shed' && A1 - A0 > 1.8) { guards += sc.line(W3(a0 + 0.7, b1 - 0.55, eZ + 0.55 * tp + 0.04), W3(a1 - 0.7, b1 - 0.55, eZ + 0.55 * tp + 0.04), '#C9CDD0', 0.07, 'snow:' + slopeK); }
 		if (c.roof_ventilation && type !== 'shed' && type !== 'pyramid') {
-			var vt = c.roof_vent_type || 'tile_vent', vc = '#3A3D40', vk = 'vent:' + vt;
-			[Ac - L / 4, Ac + L / 4].forEach(function (a) {
-				if (vt === 'ridge_vent') { return; }
-				if (vt === 'turbine') { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.5), '#B9BDC1', 0.2, vk) + sc.line(W3(a - 0.2, Bc, zR + 0.6), W3(a + 0.2, Bc, zR + 0.6), '#9DA1A4', 0.3, 'x'); }
-				else if (vt === 'mushroom') { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.16), vc, 0.12, vk) + sc.line(W3(a - 0.2, Bc, zR + 0.2), W3(a + 0.2, Bc, zR + 0.2), vc, 0.12, 'x'); }
-				else if (vt === 'pipe') { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.75), '#6A6E72', 0.1, vk) + sc.line(W3(a - 0.1, Bc, zR + 0.78), W3(a + 0.1, Bc, zR + 0.78), vc, 0.1, 'x'); }
-				else if (vt === 'solar_fan') { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.12), vc, 0.5, vk) + sc.line(W3(a - 0.25, Bc, zR + 0.16), W3(a + 0.25, Bc, zR + 0.16), '#1B2636', 0.4, 'x'); }
-				else { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.4), vc, 0.22, vk) + sc.line(W3(a - 0.16, Bc, zR + 0.42), W3(a + 0.16, Bc, zR + 0.42), vc, 0.12, 'x'); }
-			});
-			if (vt === 'ridge_vent') { guards += sc.line(W3(A0 + 0.4, Bc, zR + 0.05), W3(A1 - 0.4, Bc, zR + 0.05), '#2E3033', 0.12, vk); }
+			// the elements sit on the front roof plane, a third of the way down from the ridge, and never
+			// outside it: on a hip the plane narrows by the same amount on both sides
+			var vt = c.roof_vent_type || 'tile_vent', vc = '#3A3D40', vk = 'vent:' + vt + ':' + slopeK;
+			var dIn = clamp((b1 - Bc) * 0.34, 0.4, 1.6), hipIn = (type === 'hip' ? Math.min(S / 2, dIn + 0.4) : (type === 'half_hip' ? bh : 0));
+			var vy = Bc + dIn, vz = zR - dIn * tp, vx0 = A0 + hipIn + 0.8, vx1 = A1 - hipIn - 0.8;
+			if (vt === 'ridge_vent') { var rvIn = (type === 'hip' ? S / 2 : (type === 'half_hip' ? bh : 0)) + 0.4; if (A1 - A0 > 2 * rvIn + 0.6) { guards += sc.line(W3(A0 + rvIn, Bc, zR + 0.05), W3(A1 - rvIn, Bc, zR + 0.05), '#2E3033', 0.12, vk); } }
+			else if (vx1 > vx0) {
+				[Ac - L / 4, Ac + L / 4].forEach(function (a) {
+					a = clamp(a, vx0, vx1);
+					// a -> b points one metre up the slope: the 3D turns the element onto the roof plane from it
+					var pa = W3(a, vy, vz), pb = W3(a, vy - 1, vz + tp);
+					if (vt === 'turbine') { guards += sc.line(pa, pb, '#B9BDC1', 0.2, vk) + sc.line(W3(a - 0.2, vy, vz + 0.6), W3(a + 0.2, vy, vz + 0.6), '#9DA1A4', 0.3, 'x'); }
+					else if (vt === 'mushroom') { guards += sc.line(pa, pb, vc, 0.12, vk) + sc.line(W3(a - 0.2, vy, vz + 0.2), W3(a + 0.2, vy, vz + 0.2), vc, 0.12, 'x'); }
+					else if (vt === 'pipe') { guards += sc.line(pa, pb, '#6A6E72', 0.1, vk) + sc.line(W3(a - 0.1, vy, vz + 0.78), W3(a + 0.1, vy, vz + 0.78), vc, 0.1, 'x'); }
+					else if (vt === 'solar_fan') { guards += sc.line(pa, pb, vc, 0.5, vk) + sc.line(W3(a - 0.25, vy, vz + 0.16), W3(a + 0.25, vy, vz + 0.16), '#1B2636', 0.4, 'x'); }
+					else { guards += sc.line(pa, pb, vc, 0.22, vk) + sc.line(W3(a - 0.16, vy, vz + 0.26), W3(a + 0.16, vy, vz + 0.26), vc, 0.12, 'x'); }
+				});
+			}
 		}
 		var rsp = ridgeSpec(c);
 		if (rsp.r > 0 && type !== 'shed' && type !== 'pyramid') {
@@ -1319,6 +1337,8 @@
 	// Railing style: glass / metal / wood / solid parapet, or 'french' (a railing in front of a door, no slab).
 	function balconyType(c) {
 		var t = c.balcony_type || 'auto';
+		// a single-storey house can only carry a french balcony: a full-height door with a railing, no slab
+		if (c.levels === 'single') { return 'french'; }
 		if (t === 'auto') { t = c.arch_style === 'alpine' || c.arch_style === 'rustic' || c.arch_style === 'american_farm' ? 'wood' : (c.arch_style === 'classic_burgher' || c.arch_style === 'mediterranean' || c.arch_style === 'industrial' ? 'metal' : 'glass'); }
 		return t;
 	}
@@ -1327,14 +1347,19 @@
 	// [{ face, u0, u1, d, z, fl, type, endA, endB }]. A french balcony spans the whole face (its windows become doors).
 	function balconies(c, v, pl, vols) {
 		var out = [];
-		if (!v.main || !c.balcony || pl.floors < 2 || (vols || []).some(function (q) { return q.balc; }) || roundR(c, v) > 0) { return out; }
+		if (!v.main || !c.balcony || (vols || []).some(function (q) { return q.balc; }) || roundR(c, v) > 0) { return out; }
 		var t = balconyType(c), size = c.balcony_size || 'medium', place = c.balcony_place || 'front';
 		var d = t === 'french' ? 0.14 : ({ small: 1.2, medium: 1.5, large: 1.8 }[size] || 1.5);
 		var W = v.x1 - v.x0, D = v.y1 - v.y0;
 		var faces = place === 'both' ? ['front', 'back'] : (place === 'wrap' ? ['front', 'right'] : (place === 'side' ? ['right'] : [place === 'back' ? 'back' : 'front']));
-		for (var fl = 1; fl < pl.floors; fl++) {
+		// one storey: the french balcony sits on the ground floor; a habitable attic carries one in the gable;
+		// otherwise every floor above the ground one
+		var single = pl.floors < 2 && !pl.attic, fl0 = single ? 0 : 1, flTop = single ? 1 : Math.max(pl.floors, 2);
+		for (var fl = fl0; fl < flTop; fl++) {
 			var z = pl.plinth + fl * pl.FH;
-			if (z < (v.z0 || 0) - 0.05 || z + 1.2 > v.h) { continue; }
+			// in the gable the wall above the slab is low, so a balcony there needs less headroom
+			var need = pl.attic && fl >= pl.floors ? 0.2 : 1.2;
+			if (z < (v.z0 || 0) - 0.05 || z + need > v.h) { continue; }
 			faces.forEach(function (F) {
 				var len = F === 'front' || F === 'back' ? W : D, a;
 				if (t === 'french') { a = [0, len]; }
@@ -2206,7 +2231,7 @@
 		if (VISUAL.indexOf(id) === -1) { return false; }
 		var pitched = c.roof_type !== 'flat', ta = num(c.terrace_area, 0) > 0, acc = c.facade_accent || [];
 		switch (id) {
-			case 'balcony': return c.levels === 'two' || c.levels === 'three';
+			case 'balcony': return true;
 			case 'window_trim': return !!trimColor(c);
 			case 'massing': return c.property_type !== 'semi_detached' && c.property_type !== 'row';
 			case 'footprint': return c.property_type !== 'semi_detached' && c.property_type !== 'row' && (c.massing || 'auto') === 'auto';
@@ -2240,7 +2265,7 @@
 			case 'shading': return value !== 'louvres' || c.levels === 'two' || c.levels === 'three';
 			case 'orientation': return c.weather !== 'overcast' && c.time_of_day !== 'night';
 			case 'balcony_type': case 'balcony_place': case 'balcony_size':
-				var bOn = !!c.balcony && (c.levels === 'two' || c.levels === 'three') && !volumes(c, plan(c)).some(function (q) { return q.balc; });
+				var bOn = !!c.balcony && c.levels !== 'single' && !volumes(c, plan(c)).some(function (q) { return q.balc; });
 				if (id === 'balcony_type') { return bOn && (c.balcony_type || 'auto') !== 'auto' && c.balcony_type !== balconyType(Object.assign({}, c, { balcony_type: 'auto' })); }
 				if (id === 'balcony_size') { return bOn && c.balcony_place !== 'back' && balconyType(c) !== 'french'; }
 				return bOn;

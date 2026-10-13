@@ -4408,8 +4408,8 @@ msgid "Erkély"
 msgstr "Balcone"
 
 #: includes/Params/Definitions.php:188
-msgid "Csak emeletes vagy tetőteres háznál."
-msgstr "Solo per case a più piani o con mansarda."
+msgid "Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély."
+msgstr "Balcone a sbalzo nella casa a due piani, sul timpano con mansarda, balcone alla francese nella casa a un piano."
 
 #: includes/Params/Definitions.php:189
 msgid "Bejárati előtető"
@@ -8449,3 +8449,31 @@ msgstr "Riva del lago"
 #: includes/Params/Definitions.php
 msgid "Tengerpart"
 msgstr "Costa"
+
+#: includes/Params/Definitions.php
+msgid "Mennyi falikép"
+msgstr "Quanti quadri"
+
+#: includes/Params/Definitions.php
+msgid "Hány kép kerüljön a szobák falára."
+msgstr "Quanti quadri vanno sulle pareti delle stanze."
+
+#: includes/Params/Definitions.php
+msgid "Visszafogott (1 kép)"
+msgstr "Sobrio (1 quadro)"
+
+#: includes/Params/Definitions.php
+msgid "Normál (2 kép)"
+msgstr "Normale (2 quadri)"
+
+#: includes/Params/Definitions.php
+msgid "Sok, galériafal"
+msgstr "Molti, parete galleria"
+
+#: includes/Params/Definitions.php
+msgid "Homlokzattal azonos (csak plasztika)"
+msgstr "Uguale alla facciata (solo rilievo)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál sötétebb"
+msgstr "Più scuro della facciata"

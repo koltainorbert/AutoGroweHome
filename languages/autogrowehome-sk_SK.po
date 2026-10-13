@@ -4408,8 +4408,8 @@ msgid "Erkély"
 msgstr "Balkón"
 
 #: includes/Params/Definitions.php:188
-msgid "Csak emeletes vagy tetőteres háznál."
-msgstr "Iba pri poschodovom dome alebo dome s podkrovím."
+msgid "Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély."
+msgstr "Pri poschodovom dome konzolový balkón, pri podkroví na štíte, pri prízemnom dome francúzske okno."
 
 #: includes/Params/Definitions.php:189
 msgid "Bejárati előtető"
@@ -8451,3 +8451,31 @@ msgstr "Breh jazera"
 #: includes/Params/Definitions.php
 msgid "Tengerpart"
 msgstr "Morské pobrežie"
+
+#: includes/Params/Definitions.php
+msgid "Mennyi falikép"
+msgstr "Koľko obrazov na stenách"
+
+#: includes/Params/Definitions.php
+msgid "Hány kép kerüljön a szobák falára."
+msgstr "Koľko obrazov má byť na stenách miestností."
+
+#: includes/Params/Definitions.php
+msgid "Visszafogott (1 kép)"
+msgstr "Striedmo (1 obraz)"
+
+#: includes/Params/Definitions.php
+msgid "Normál (2 kép)"
+msgstr "Normálne (2 obrazy)"
+
+#: includes/Params/Definitions.php
+msgid "Sok, galériafal"
+msgstr "Veľa, galerijná stena"
+
+#: includes/Params/Definitions.php
+msgid "Homlokzattal azonos (csak plasztika)"
+msgstr "Rovnaká ako fasáda (len plastika)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál sötétebb"
+msgstr "Tmavšia ako fasáda"

@@ -212,7 +212,7 @@ final class Definitions {
 			)
 		);
 		$f[] = array( 'id' => 'terrace_area', 'category' => 'massing', 'type' => 'range', 'label' => __( 'Fedett terasz', 'autogrowehome' ), 'help' => __( 'A kert felőli fedett terasz mérete (0 = nincs).', 'autogrowehome' ), 'default' => 20, 'min' => 0, 'max' => 120, 'step' => 1, 'unit' => 'm²', 'quick' => array( 0, 12, 20, 30 ), 'prompt' => 'generous covered terrace of about {value} m2' );
-		$f[] = array( 'id' => 'balcony', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Erkély', 'autogrowehome' ), 'help' => __( 'Csak emeletes vagy tetőteres háznál.', 'autogrowehome' ), 'default' => false, 'show_if' => array( 'field' => 'levels', 'op' => '!=', 'value' => 'single' ), 'prompt' => 'upper floor balcony' );
+		$f[] = array( 'id' => 'balcony', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Erkély', 'autogrowehome' ), 'help' => __( 'Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély.', 'autogrowehome' ), 'default' => true, 'prompt' => 'upper floor balcony' );
 		$f[] = array_merge(
 			array( 'id' => 'balcony_type', 'category' => 'massing', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Erkély típusa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'show_if' => array( 'field' => 'balcony', 'op' => '=', 'value' => true ), 'prompt' => '{value}' ),
 			self::opts(
@@ -518,6 +518,8 @@ final class Definitions {
 					'none'  => array( __( 'Nincs keret', 'autogrowehome' ), 'windows set into the wall without surrounds' ),
 					'white' => array( __( 'Fehér keret', 'autogrowehome' ), 'white window surrounds' ),
 					'light' => array( __( 'A homlokzatnál világosabb', 'autogrowehome' ), 'window surrounds a shade lighter than the facade' ),
+					'facade' => array( __( 'Homlokzattal azonos (csak plasztika)', 'autogrowehome' ), 'window surrounds in the facade colour, defined only by their relief' ),
+					'darker' => array( __( 'A homlokzatnál sötétebb', 'autogrowehome' ), 'window surrounds a shade darker than the facade' ),
 					'dark'  => array( __( 'Sötét keret', 'autogrowehome' ), 'dark window surrounds' ),
 					'stone' => array( __( 'Kőkeret', 'autogrowehome' ), 'stone window surrounds' ),
 				)
@@ -890,6 +892,17 @@ final class Definitions {
 					'mirror'    => array( __( 'Nagy boltíves tükör', 'autogrowehome' ), 'a large arched mirror' ),
 					'photo'       => array( __( 'Saját fotó keretben', 'autogrowehome' ), 'a framed personal photograph' ),
 					'none'      => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'art_amount', 'category' => 'furniture', 'type' => 'select', 'label' => __( 'Mennyi falikép', 'autogrowehome' ), 'help' => __( 'Hány kép kerüljön a szobák falára.', 'autogrowehome' ), 'default' => 'normal', 'show_if' => array( 'field' => 'art_style', 'op' => '!=', 'value' => 'none' ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'few'     => array( __( 'Visszafogott (1 kép)', 'autogrowehome' ), 'a single framed picture per room' ),
+					'normal'  => array( __( 'Normál (2 kép)', 'autogrowehome' ), 'a couple of framed pictures on the walls' ),
+					'gallery' => array( __( 'Sok, galériafal', 'autogrowehome' ), 'a gallery wall of framed pictures' ),
+					'none'    => array( __( 'Nincs', 'autogrowehome' ), 'bare walls without pictures' ),
 				)
 			)
 		);

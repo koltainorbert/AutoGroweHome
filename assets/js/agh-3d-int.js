@@ -1503,6 +1503,19 @@ export function stairs(m, type, w, H, run) {
 	}
 	return g;
 }
+// A staircase that fits the room: the chosen type where there is room for it, a space-saving shape where
+// there is not. Never returns nothing – a multi-level home must show its stairs.
+export function stairFit(m, c, W, D, H) {
+	var sty = pick(c, 'stair_type') || 'closed', runX = Math.min(W - 0.6, 3.6), wid = L.clamp(Math.min(1.0, D - 1.0), 0.62, 1.0);
+	// a straight flight needs ~2.6 m of run and 0.8 m of width; below that a spiral, and in the tightest hall
+	// an alternating-tread flight (the only shape that climbs a storey in under 2 m)
+	if (runX < 2.6 || wid < 0.8) { sty = (Math.min(W, D) >= 2.3) ? 'spiral' : 'space_saver'; }
+	else if (runX < 3.0 && (sty === 'u_shaped' || sty === 'l_shaped')) { sty = 'closed'; }
+	var rad = L.clamp(Math.min(W, D) / 2 - 0.2, 0.7, 0.95);
+	var g = stairs(m, sty, sty === 'spiral' ? rad : wid, H, Math.max(runX, 2.0));
+	g.userData.stairType = sty; g.userData.radius = rad; g.userData.field = 'stair_type'; g.userData.item = 'stair_type';
+	return g;
+}
 
 /* ================================================================== vehicles
  * Side profiles (x along the vehicle from the rear, y up), rounded and extruded across the width. */
@@ -1951,7 +1964,8 @@ export function interiorScene(c, room) {
 		P(lg, 0.1, 0.02, 0); lg.position.x = 0.1; occB.push([0, Math.min(W, 2.3), 9]);
 	} else if (kind === 'hall' || kind === 'stairs') {
 		var multi = c.levels && c.levels !== 'single';
-		if (kind === 'stairs' || (multi && W > 3.4)) { var sty = pick(c, 'stair_type'), stp = stairs(m, sty, 1.0, H, Math.min(W - 0.6, 3.4)); if (sty === 'spiral') { stp.position.set(W - 1.15, 0, 1.15); occB.push([W - 2.2, W, 9]); } else { stp.rotation.y = -Math.PI / 2; stp.position.set(Math.min(W - 0.3, 3.7), 0, 0.02); occB.push([0, W, 9]); } R.add(stp); }
+		// A multi-level home always shows its staircase here; in a narrow hall a shape that fits takes over.
+		if (kind === 'stairs' || multi) { var stp = stairFit(m, c, W, D, H), sty = stp.userData.stairType; if (sty === 'spiral') { var sr = stp.userData.radius; stp.position.set(W - sr - 0.1, 0, sr + 0.1); occB.push([W - 2 * sr - 0.2, W, 9]); } else { stp.rotation.y = -Math.PI / 2; stp.position.set(Math.min(W - 0.3, 3.7), 0, 0.02); occB.push([0, W, 9]); } R.add(stp); }
 		else {
 			var cs = G(); RB(cs, -0.6, 0.78, 0, 0.6, 0.82, 0.34, 0.005, m.wood, 1); [[-0.56, 0.04], [0.56, 0.04], [-0.56, 0.3], [0.56, 0.3]].forEach(function (q) { ROD(cs, [q[0], 0, q[1]], [q[0], 0.78, q[1]], 0.012, m.metal); }); vase(cs, m, -0.3, 0.82, 0.17, 1.2); bowl(cs, m, 0.3, 0.82, 0.17, 0.1, m.potD);
 			var mi = artwork(m, 'mirror', 1.0); mi.position.y = 0.1; cs.add(mi);
@@ -2043,6 +2057,17 @@ export function interiorScene(c, room) {
 		for (var i = 0; i < sides.length; i++) { if (sides[i] !== 'R' && sides[i] !== 'F' && atWall(sides[i], obj, w, d, h, sides[i] === 'B' ? W * prefer : D * prefer)) { return; } }
 		if (onFloor(obj, w, d, h >= 1.2, true) || atWall('F', obj, w, d, h, W * prefer)) { return; }
 		onFloor(obj, w, d, h >= 1.2);
+	}
+	// A multi-level home whose programme has no hall and no stair room: the main living space carries the
+	// staircase, so the stairs are never missing from the house.
+	if (living && c.levels && c.levels !== 'single' && W > 3.0 && D > 2.4 && !rooms0.some(function (q) { var k2 = roomKind(q.type); return k2 === 'hall' || k2 === 'stairs'; })) {
+		var lst = stairFit(m, c, Math.min(W, 4.4), D, H), lsty = lst.userData.stairType;
+		// wrap it so the piece is centred on x and runs forward on z: the floor planner can then turn it freely
+		var lw = lsty === 'spiral' ? lst.userData.radius * 2 + 0.2 : L.clamp(Math.min(1.0, D - 1.0), 0.62, 1.0);
+		var ld = lsty === 'spiral' ? lw : Math.max(Math.min(Math.min(W, 4.4) - 0.6, 3.6), 2.0);
+		var lg2 = G(); lg2.userData.item = 'stair_type'; lg2.userData.field = 'stair_type';
+		lst.position.set(lsty === 'spiral' ? 0 : -lw / 2, 0, lsty === 'spiral' ? ld / 2 : 0); lg2.add(lst);
+		onFloor(lg2, lw, ld, true, true);
 	}
 	// devices: a TV set wherever a TV, soundbar, console or speakers were asked for and there is none
 	if (['tv', 'soundbar', 'console', 'speakers'].some(function (k) { return EL.indexOf(k) !== -1; }) && !hasTV) {
@@ -2151,7 +2176,32 @@ export function interiorScene(c, room) {
 	if (kind === 'stairs' || ['pantry', 'technical', 'wine'].indexOf(type) !== -1) { lWins = []; bWins = type === 'pantry' || type === 'technical' || type === 'wine' ? [] : bWins; }
 	if (backArt && art !== 'none') {
 		var hasWinOver = bWins.some(function (o) { return o.x < backArt[0] + backArt[1] / 2 && o.x + o.w > backArt[0] - backArt[1] / 2; });
-		if (!hasWinOver) { var ag = artwork(m, art, Math.min(1.6, backArt[1] * 0.6)); ag.position.set(backArt[0], kind === 'bed' || kind === 'kids' ? 0.22 : 0.12, 0); R.add(ag); }
+		if (!hasWinOver) { var ag = tag(artwork(m, art, Math.min(1.6, backArt[1] * 0.6)), 'art_style'); ag.position.set(backArt[0], kind === 'bed' || kind === 'kids' ? 0.22 : 0.12, 0); R.add(ag); }
+	}
+	// ---- pictures on the visible walls: over the low furniture, never over a window, a door or a tall piece.
+	// `art_amount` says how many; the sofa/bed piece above counts as the first one.
+	var artAmt = { none: 0, few: 1, normal: 2, gallery: 3 }[c.art_amount || 'normal'];
+	if (artAmt === undefined) { artAmt = 2; }
+	if (art !== 'none' && artAmt > 0 && deco && !wet && kind !== 'stairs' && kind !== 'wardrobe' && kind !== 'laundry') {
+		var hung = backArt ? 1 : 0;
+		var blockB = bWins.map(function (o) { return [o.x - 0.15, o.x + o.w + 0.15]; })
+			.concat(occB.filter(function (o) { return o[2] >= 1.35; }).map(function (o) { return [o[0] - 0.1, o[1] + 0.1]; }));
+		if (backArt) { blockB.push([backArt[0] - 0.95, backArt[0] + 0.95]); }
+		var lowMid = occB.filter(function (o) { return o[2] < 1.35 && o[1] - o[0] > 0.8; }).map(function (o) { return (o[0] + o[1]) / 2; });
+		var spansA = freeSpans(blockB, W, 0.9).map(function (sp) { return { side: 'B', a: sp[0], b: sp[1] }; })
+			.concat(freeSpans(lWins.map(function (o) { return [o.x - 0.15, o.x + o.w + 0.15]; }).concat(occL.map(function (o) { return [o[0] - 0.1, o[1] + 0.1]; })), D, 0.9).map(function (sp) { return { side: 'L', a: sp[0], b: sp[1] }; }));
+		spansA.sort(function (p, q) { return (q.b - q.a) - (p.b - p.a); });
+		var artSet = (c.art_amount === 'gallery' ? ['gallery'] : []).concat(art === 'gallery' ? ['gallery', 'abstract', 'line'] : [art, art === 'landscape' ? 'photo' : 'landscape', 'line']);
+		for (var ai = 0; ai < spansA.length && hung < artAmt; ai++) {
+			var sp2 = spansA[ai], wA = Math.min(c.art_amount === 'gallery' && hung === 0 ? 1.8 : 1.3, sp2.b - sp2.a - 0.3);
+			if (wA < 0.55) { continue; }
+			var near = lowMid.filter(function (x) { return sp2.side === 'B' && x > sp2.a + wA / 2 && x < sp2.b - wA / 2; })[0];
+			var u2 = near === undefined ? (sp2.a + sp2.b) / 2 : near, kk = artSet[hung % artSet.length] || 'abstract';
+			var ag2 = tag(artwork(m, kk === 'none' || kk === 'mirror' ? 'abstract' : kk, wA), 'art_style');
+			if (sp2.side === 'B') { ag2.position.set(u2, kind === 'bed' || kind === 'kids' ? 0.2 : 0.12, 0.02); R.add(ag2); }
+			else { P(ag2, 0.04, D - u2, 90); ag2.position.y = 0.12; }
+			hung++;
+		}
 	}
 	var vaulted = c.ceiling === 'vaulted';
 	var walls = [

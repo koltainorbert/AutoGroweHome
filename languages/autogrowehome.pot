@@ -4617,7 +4617,7 @@ msgid "Erkély"
 msgstr ""
 
 #: includes/Params/Definitions.php:188
-msgid "Csak emeletes vagy tetőteres háznál."
+msgid "Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély."
 msgstr ""
 
 #: includes/Params/Definitions.php:189
@@ -8420,4 +8420,32 @@ msgstr ""
 
 #: includes/Params/Definitions.php
 msgid "Tengerpart"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Mennyi falikép"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Hány kép kerüljön a szobák falára."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Visszafogott (1 kép)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Normál (2 kép)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Sok, galériafal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Homlokzattal azonos (csak plasztika)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál sötétebb"
 msgstr ""

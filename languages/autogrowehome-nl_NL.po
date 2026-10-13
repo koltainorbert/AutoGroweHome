@@ -4408,8 +4408,8 @@ msgid "Erkély"
 msgstr "Balkon"
 
 #: includes/Params/Definitions.php:188
-msgid "Csak emeletes vagy tetőteres háznál."
-msgstr "Alleen bij woningen met verdieping of zolder."
+msgid "Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély."
+msgstr "Bij een woning met verdieping een uitkragend balkon, bij een zolder in de topgevel, bij een bungalow een frans balkon."
 
 #: includes/Params/Definitions.php:189
 msgid "Bejárati előtető"
@@ -8449,3 +8449,31 @@ msgstr "Meeroever"
 #: includes/Params/Definitions.php
 msgid "Tengerpart"
 msgstr "Zeekust"
+
+#: includes/Params/Definitions.php
+msgid "Mennyi falikép"
+msgstr "Hoeveel wandschilderijen"
+
+#: includes/Params/Definitions.php
+msgid "Hány kép kerüljön a szobák falára."
+msgstr "Hoeveel schilderijen aan de muren van de kamers komen."
+
+#: includes/Params/Definitions.php
+msgid "Visszafogott (1 kép)"
+msgstr "Ingetogen (1 schilderij)"
+
+#: includes/Params/Definitions.php
+msgid "Normál (2 kép)"
+msgstr "Normaal (2 schilderijen)"
+
+#: includes/Params/Definitions.php
+msgid "Sok, galériafal"
+msgstr "Veel, galeriewand"
+
+#: includes/Params/Definitions.php
+msgid "Homlokzattal azonos (csak plasztika)"
+msgstr "Gelijk aan de gevel (alleen reliëf)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál sötétebb"
+msgstr "Donkerder dan de gevel"

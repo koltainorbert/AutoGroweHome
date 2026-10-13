@@ -4408,8 +4408,8 @@ msgid "Erkély"
 msgstr "Балкон"
 
 #: includes/Params/Definitions.php:188
-msgid "Csak emeletes vagy tetőteres háznál."
-msgstr "Лише для двоповерхового будинку або будинку з мансардою."
+msgid "Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély."
+msgstr "У двоповерховому будинку консольний балкон, у мансарді на фронтоні, в одноповерховому французький балкон."
 
 #: includes/Params/Definitions.php:189
 msgid "Bejárati előtető"
@@ -8451,3 +8451,31 @@ msgstr "Берег озера"
 #: includes/Params/Definitions.php
 msgid "Tengerpart"
 msgstr "Морське узбережжя"
+
+#: includes/Params/Definitions.php
+msgid "Mennyi falikép"
+msgstr "Скільки картин на стінах"
+
+#: includes/Params/Definitions.php
+msgid "Hány kép kerüljön a szobák falára."
+msgstr "Скільки картин буде на стінах кімнат."
+
+#: includes/Params/Definitions.php
+msgid "Visszafogott (1 kép)"
+msgstr "Стримано (1 картина)"
+
+#: includes/Params/Definitions.php
+msgid "Normál (2 kép)"
+msgstr "Звичайно (2 картини)"
+
+#: includes/Params/Definitions.php
+msgid "Sok, galériafal"
+msgstr "Багато, галерейна стіна"
+
+#: includes/Params/Definitions.php
+msgid "Homlokzattal azonos (csak plasztika)"
+msgstr "Як фасад (лише рельєф)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál sötétebb"
+msgstr "Темніше за фасад"

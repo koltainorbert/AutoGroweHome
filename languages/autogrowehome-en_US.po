@@ -4408,8 +4408,8 @@ msgid "Erkély"
 msgstr "Balcony"
 
 #: includes/Params/Definitions.php:188
-msgid "Csak emeletes vagy tetőteres háznál."
-msgstr "Only for houses with an upper floor or attic."
+msgid "Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély."
+msgstr "A cantilevered balcony on a two-storey house, in the gable on an attic house, a french balcony on a bungalow."
 
 #: includes/Params/Definitions.php:189
 msgid "Bejárati előtető"
@@ -8449,3 +8449,31 @@ msgstr "Lake shore"
 #: includes/Params/Definitions.php
 msgid "Tengerpart"
 msgstr "Seaside"
+
+#: includes/Params/Definitions.php
+msgid "Mennyi falikép"
+msgstr "How much wall art"
+
+#: includes/Params/Definitions.php
+msgid "Hány kép kerüljön a szobák falára."
+msgstr "How many pictures go on the walls of the rooms."
+
+#: includes/Params/Definitions.php
+msgid "Visszafogott (1 kép)"
+msgstr "Restrained (1 picture)"
+
+#: includes/Params/Definitions.php
+msgid "Normál (2 kép)"
+msgstr "Normal (2 pictures)"
+
+#: includes/Params/Definitions.php
+msgid "Sok, galériafal"
+msgstr "Lots, gallery wall"
+
+#: includes/Params/Definitions.php
+msgid "Homlokzattal azonos (csak plasztika)"
+msgstr "Same as the facade (relief only)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál sötétebb"
+msgstr "Darker than the facade"

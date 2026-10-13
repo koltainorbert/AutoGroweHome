@@ -632,6 +632,10 @@
 		var fieldsWrap = h('div', { class: 'agh-fields' });
 		els.fieldsHead = h('div', { class: 'agh-fields-head' });
 		els.searchInput = h('input', { type: 'search', placeholder: t('search_params'), 'aria-label': t('search_params'), oninput: debounce(function (e) { S.search = e.target.value; updateRail(); renderFields(); }, 150) });
+		// The head is built once and never re-created: re-parenting the input would drop focus on the first keystroke.
+		els.fieldsTitle = h('h3', { class: 'agh-h' });
+		els.fieldsHead.appendChild(els.fieldsTitle);
+		els.fieldsHead.appendChild(h('div', { class: 'agh-search' }, icon('search'), els.searchInput));
 		els.fieldsList = h('div', { class: 'agh-fields-list' });
 		fieldsWrap.appendChild(els.fieldsHead);
 		fieldsWrap.appendChild(h('div', { class: 'agh-scroll' }, els.fieldsList));
@@ -662,8 +666,7 @@
 			keepFocus = { field: fw.getAttribute('data-field'), idx: Array.prototype.indexOf.call(fw.querySelectorAll('button, input, select, textarea'), act) };
 		}
 		els.listKey = S.cat + '|' + S.search + '|' + S.mode;
-		clear(els.fieldsHead).appendChild(h('h3', { class: 'agh-h', text: S.search ? t('search_results') : cat.label }));
-		els.fieldsHead.appendChild(h('div', { class: 'agh-search' }, icon('search'), els.searchInput));
+		if (els.fieldsTitle) { els.fieldsTitle.textContent = S.search ? t('search_results') : cat.label; }
 		var list = clear(els.fieldsList);
 		var fields = catFields(S.cat);
 		if (!fields.length) { list.appendChild(h('p', { class: 'agh-muted', text: t('no_fields') })); }

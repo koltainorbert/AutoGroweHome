@@ -1,5 +1,16 @@
 # Változásnapló
 
+## 1.8.0 – 2026-10-14
+
+- Kereső: egy betű után már nem dobja ki a fókuszt. A paraméterlista fejléce (cím + keresőmező) egyszer épül fel, gépelés közben nem építi újra a lista – korábban a mező DOM-ja minden leütésnél új helyre került, és ezzel elveszett a fókusz és a kurzor. Új E2E teszt: `tests/e2e/search.js` (2 képernyőméret × 6 leütés, 0 fókuszvesztés, 0 konzolhiba).
+- Lépcső: többszintes háznál mindig látszik. A lépcsőházban és az előtérben akkor is felépül, ha a helyiség keskeny (ilyenkor csigalépcső, legszűkebb helyen váltott fokú, helytakarékos lépcső); ha a tervben nincs előtér vagy lépcsőház, a nappaliba kerül, szabad helyre fordítva. Korábban csak 3,4 m-nél szélesebb előtérben jelent meg, ezért sok háznál sehol nem látszott.
+- Erkély: a mező mostantól minden háznál látszik és alapból be van kapcsolva. Tetőtér-beépítéses háznál az oromfalon jelenik meg (eddig kimaradt, mert a program egy szintnek számolta), földszintes háznál franciaerkély lesz belőle.
+- Falikép: nem csak a kanapé vagy az ágy fölött van kép. Új mező a mennyiségre (Nincs / Visszafogott / Normál / Sok, galériafal), a képek a látszó falak szabad szakaszaira kerülnek, alacsony bútor fölé igazítva, ablak, ajtó és magas bútor elé soha.
+- Tetőszellőző: a tetősíkon belül marad és követi a dőlést. Az elemek a gerinc helyett a tetősíkra, a gerinctől a lejtő harmadába kerülnek, kontyolt tetőnél a szűkülő síkon belülre; a szellőzőcserép, a gomba és a napelemes ventilátor a tető síkjába fordul, a turbina és a kémény függőleges marad. A gerincszellőző a valódi gerinc hosszában fut.
+- Hófogó: egy vékony vonal helyett valódi hófogó – két rúd konzolokon, az eresztől kb. három cserépsornyira, a tetősíkra simulva, az ereszcsatorna színében.
+- Homlokzati dekorsáv (dryvit): világos vakolt homlokzaton nem fehér többé, hanem egy árnyalattal mélyebb tónus, így nem keretezi fehér gyűrű a nyílásokat. Két új választás: „Homlokzattal azonos (csak plasztika)” és „A homlokzatnál sötétebb”.
+- 7 új felirat 15 nyelven, az erkély súgója újrafogalmazva.
+
 ## 1.7.0 – 2026-10-13
 
 - Tárgyak helyiségenként: a további bútorok, az elektronika és a háziállatok a belső nézetben az éppen nézett helyiségbe kerülnek (vagy onnan ki); a kártyák fölött látszik, melyik helyiségre hatnak, és mi áll máshol. Külső nézetből egy új tárgy a hozzá illő helyiségbe kerül, és a nézet oda vált. Egy tárgy több helyiségben is lehet; a prompt helyiségenként ezt írja le. Új mező: `room_items` (szerveroldali ellenőrzéssel).
