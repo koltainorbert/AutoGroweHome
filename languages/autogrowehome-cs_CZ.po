@@ -8479,3 +8479,91 @@ msgstr "Stejná jako fasáda (jen plastika)"
 #: includes/Params/Definitions.php
 msgid "A homlokzatnál sötétebb"
 msgstr "Tmavší než fasáda"
+
+#: includes/Params/Definitions.php
+msgid "Ajtókeret (tok, takaróléc)"
+msgstr "Zárubeň a obložka dveří"
+
+#: includes/Params/Definitions.php
+msgid "A belső ajtók körüli keret."
+msgstr "Rám kolem vnitřních dveří."
+
+#: includes/Params/Definitions.php
+msgid "Falszínű"
+msgstr "Barva stěny"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret (rejtett tok)"
+msgstr "Bez obložky (skrytá zárubeň)"
+
+#: includes/Params/Definitions.php
+msgid "Radiátorok"
+msgstr "Radiátory"
+
+#: includes/Params/Definitions.php
+msgid "Az ablak alá kerül, ahol van hely; a fürdőbe törölközőszárító."
+msgstr "Umístí se pod okno, kde je místo; do koupelny žebřík na ručníky."
+
+#: includes/Params/Definitions.php
+msgid "A gépészet szerint"
+msgstr "Podle techniky"
+
+#: includes/Params/Definitions.php
+msgid "Lapradiátor"
+msgstr "Deskový radiátor"
+
+#: includes/Params/Definitions.php
+msgid "Bordás (tagos)"
+msgstr "Článkový"
+
+#: includes/Params/Definitions.php
+msgid "Konvektor"
+msgstr "Konvektor"
+
+#: includes/Params/Definitions.php
+msgid "Nincs látható radiátor"
+msgstr "Bez viditelných radiátorů"
+
+#: includes/Params/Definitions.php
+msgid "Fali rejtett polc"
+msgstr "Plovoucí nástěnná police"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium"
+msgstr "Akvárium"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium mérete, formája"
+msgstr "Velikost a tvar akvária"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi, asztali"
+msgstr "Malé, stolní"
+
+#: includes/Params/Definitions.php
+msgid "Nagy, szögletes"
+msgstr "Velké, hranaté"
+
+#: includes/Params/Definitions.php
+msgid "Széles panoráma"
+msgstr "Široké panoramatické"
+
+#: includes/Params/Definitions.php
+msgid "Henger"
+msgstr "Válec"
+
+#: includes/Params/Definitions.php
+msgid "Falba épített"
+msgstr "Vestavěné do stěny"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium típusa"
+msgstr "Typ akvária"
+
+#: includes/Params/Definitions.php
+msgid "Édesvízi, növényes"
+msgstr "Sladkovodní, rostlinné"
+
+#: includes/Params/Definitions.php
+msgid "Tengeri, korallos"
+msgstr "Mořské, s korály"

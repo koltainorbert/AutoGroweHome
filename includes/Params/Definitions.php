@@ -723,6 +723,32 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
+			array( 'id' => 'door_frame', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Ajtókeret (tok, takaróléc)', 'autogrowehome' ), 'help' => __( 'A belső ajtók körüli keret.', 'autogrowehome' ), 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'  => array( __( 'A stílus szerint', 'autogrowehome' ), 'door casings matching the style' ),
+					'white' => array( __( 'Fehér', 'autogrowehome' ), 'white door casings' ),
+					'wood'  => array( __( 'Fa', 'autogrowehome' ), 'timber door casings' ),
+					'black' => array( __( 'Fekete', 'autogrowehome' ), 'black door casings' ),
+					'wall'  => array( __( 'Falszínű', 'autogrowehome' ), 'door casings in the wall colour' ),
+					'none'  => array( __( 'Nincs keret (rejtett tok)', 'autogrowehome' ), 'frameless doors with concealed jambs' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'radiators', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Radiátorok', 'autogrowehome' ), 'help' => __( 'Az ablak alá kerül, ahol van hely; a fürdőbe törölközőszárító.', 'autogrowehome' ), 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'      => array( __( 'A gépészet szerint', 'autogrowehome' ), '' ),
+					'panel'     => array( __( 'Lapradiátor', 'autogrowehome' ), 'panel radiators under the windows' ),
+					'column'    => array( __( 'Bordás (tagos)', 'autogrowehome' ), 'column radiators under the windows' ),
+					'convector' => array( __( 'Konvektor', 'autogrowehome' ), 'low convector heaters' ),
+					'towel'     => array( __( 'Törölközőszárító', 'autogrowehome' ), 'towel rail radiators' ),
+					'none'      => array( __( 'Nincs látható radiátor', 'autogrowehome' ), 'no visible radiators, underfloor heating' ),
+				)
+			)
+		);
+		$f[] = array_merge(
 			array( 'id' => 'thresholds', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Küszöbök', 'autogrowehome' ), 'help' => '', 'default' => 'none', 'advanced' => true, 'prompt' => '{value}' ),
 			self::opts(
 				array(
@@ -906,6 +932,28 @@ final class Definitions {
 				)
 			)
 		);
+		$f[] = array_merge(
+			array( 'id' => 'aquarium_shape', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Akvárium mérete, formája', 'autogrowehome' ), 'help' => '', 'default' => 'large', 'show_if' => array( 'field' => 'extra_furniture', 'op' => 'in', 'value' => array( 'aquarium' ) ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'small'    => array( __( 'Kicsi, asztali', 'autogrowehome' ), 'a small desktop aquarium' ),
+					'large'    => array( __( 'Nagy, szögletes', 'autogrowehome' ), 'a large rectangular aquarium' ),
+					'panorama' => array( __( 'Széles panoráma', 'autogrowehome' ), 'a wide panoramic aquarium' ),
+					'round'    => array( __( 'Gömb', 'autogrowehome' ), 'a round bowl aquarium' ),
+					'cylinder' => array( __( 'Henger', 'autogrowehome' ), 'a cylindrical column aquarium' ),
+					'builtin'  => array( __( 'Falba épített', 'autogrowehome' ), 'an aquarium built into the wall' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'aquarium_water', 'category' => 'furniture', 'type' => 'select', 'label' => __( 'Akvárium típusa', 'autogrowehome' ), 'help' => '', 'default' => 'fresh', 'show_if' => array( 'field' => 'extra_furniture', 'op' => 'in', 'value' => array( 'aquarium' ) ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'fresh'  => array( __( 'Édesvízi, növényes', 'autogrowehome' ), 'a planted freshwater aquarium' ),
+					'marine' => array( __( 'Tengeri, korallos', 'autogrowehome' ), 'a marine reef aquarium with corals' ),
+				)
+			)
+		);
 		$f[] = array( 'id' => 'art_photo', 'category' => 'furniture', 'type' => 'image', 'label' => __( 'Saját fotó a képkeretben', 'autogrowehome' ), 'help' => __( 'A fotó a 3D előnézet képkeretében jelenik meg (a „Saját fotó” falikép vagy a képfal része). A generált képre nem kerül rá.', 'autogrowehome' ), 'default' => '', 'prompt' => '' );
 		$f[] = array_merge(
 			array( 'id' => 'plants', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Szobanövények', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
@@ -948,6 +996,8 @@ final class Definitions {
 					'plant_stand'  => array( __( 'Virágállvány', 'autogrowehome' ), 'a plant stand' ),
 					'floor_mirror' => array( __( 'Álló tükör', 'autogrowehome' ), 'a leaning floor mirror' ),
 					'chest'        => array( __( 'Komód', 'autogrowehome' ), 'a chest of drawers' ),
+					'wall_shelf'   => array( __( 'Fali rejtett polc', 'autogrowehome' ), 'floating wall shelves with concealed fixings' ),
+					'aquarium'     => array( __( 'Akvárium', 'autogrowehome' ), 'an aquarium' ),
 					'vitrine'      => array( __( 'Vitrin', 'autogrowehome' ), 'a glass display cabinet' ),
 					'pouf'         => array( __( 'Puff', 'autogrowehome' ), 'a pouf' ),
 				)

@@ -8479,3 +8479,91 @@ msgstr "La fel ca fațada (doar relief)"
 #: includes/Params/Definitions.php
 msgid "A homlokzatnál sötétebb"
 msgstr "Mai închis decât fațada"
+
+#: includes/Params/Definitions.php
+msgid "Ajtókeret (tok, takaróléc)"
+msgstr "Toc și pervaz de ușă"
+
+#: includes/Params/Definitions.php
+msgid "A belső ajtók körüli keret."
+msgstr "Rama din jurul ușilor interioare."
+
+#: includes/Params/Definitions.php
+msgid "Falszínű"
+msgstr "Culoarea peretelui"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret (rejtett tok)"
+msgstr "Fără pervaz (toc ascuns)"
+
+#: includes/Params/Definitions.php
+msgid "Radiátorok"
+msgstr "Calorifere"
+
+#: includes/Params/Definitions.php
+msgid "Az ablak alá kerül, ahol van hely; a fürdőbe törölközőszárító."
+msgstr "Se pune sub fereastră unde este loc; în baie un radiator port-prosop."
+
+#: includes/Params/Definitions.php
+msgid "A gépészet szerint"
+msgstr "În funcție de instalații"
+
+#: includes/Params/Definitions.php
+msgid "Lapradiátor"
+msgstr "Calorifer din panou"
+
+#: includes/Params/Definitions.php
+msgid "Bordás (tagos)"
+msgstr "Calorifer din elemenți"
+
+#: includes/Params/Definitions.php
+msgid "Konvektor"
+msgstr "Convector"
+
+#: includes/Params/Definitions.php
+msgid "Nincs látható radiátor"
+msgstr "Fără calorifere vizibile"
+
+#: includes/Params/Definitions.php
+msgid "Fali rejtett polc"
+msgstr "Raft suspendat invizibil"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium"
+msgstr "Acvariu"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium mérete, formája"
+msgstr "Dimensiunea și forma acvariului"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi, asztali"
+msgstr "Mic, de masă"
+
+#: includes/Params/Definitions.php
+msgid "Nagy, szögletes"
+msgstr "Mare, dreptunghiular"
+
+#: includes/Params/Definitions.php
+msgid "Széles panoráma"
+msgstr "Panoramic lat"
+
+#: includes/Params/Definitions.php
+msgid "Henger"
+msgstr "Cilindru"
+
+#: includes/Params/Definitions.php
+msgid "Falba épített"
+msgstr "Încastrat în perete"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium típusa"
+msgstr "Tipul acvariului"
+
+#: includes/Params/Definitions.php
+msgid "Édesvízi, növényes"
+msgstr "Cu apă dulce, plantat"
+
+#: includes/Params/Definitions.php
+msgid "Tengeri, korallos"
+msgstr "Marin, cu corali"

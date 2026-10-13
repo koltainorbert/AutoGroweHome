@@ -9,7 +9,12 @@
 - Tetőszellőző: a tetősíkon belül marad és követi a dőlést. Az elemek a gerinc helyett a tetősíkra, a gerinctől a lejtő harmadába kerülnek, kontyolt tetőnél a szűkülő síkon belülre; a szellőzőcserép, a gomba és a napelemes ventilátor a tető síkjába fordul, a turbina és a kémény függőleges marad. A gerincszellőző a valódi gerinc hosszában fut.
 - Hófogó: egy vékony vonal helyett valódi hófogó – két rúd konzolokon, az eresztől kb. három cserépsornyira, a tetősíkra simulva, az ereszcsatorna színében.
 - Homlokzati dekorsáv (dryvit): világos vakolt homlokzaton nem fehér többé, hanem egy árnyalattal mélyebb tónus, így nem keretezi fehér gyűrű a nyílásokat. Két új választás: „Homlokzattal azonos (csak plasztika)” és „A homlokzatnál sötétebb”.
-- 7 új felirat 15 nyelven, az erkély súgója újrafogalmazva.
+- Ajtókeret: minden belső ajtó körül 7 cm-es tok és takaróléc, választható színnel (a stílus szerint, fehér, fa, fekete, falszínű, vagy rejtett tok). Tolóajtó és pajtaajtó nem kap keretet.
+- Radiátorok: új mező (a gépészet szerint, lapradiátor, bordás, konvektor, törölközőszárító, nincs). Elsőként az ablak alá kerül, különben szabad falszakaszra, szűk helyen keskenyebb kivitelben; a fürdőbe törölközőszárító, amely a mosdó és a WC fölé is felkerülhet. Padlófűtésnél alapból csak a fürdőben van.
+- Új bútorok: fali rejtett polc (három lebegő polc, rejtett LED-del, könyvekkel és dísztárgyakkal) és akvárium. Az akvárium mérete és formája választható (kicsi asztali, nagy szögletes, széles panoráma, gömb, henger, falba épített), a vize édesvízi növényes vagy tengeri korallos; világítással, növényekkel vagy korallokkal, kövekkel, halakkal és akváriumbútorral.
+- Háziállat a lakásban: a kutya és a macska mellé fekhely, tálak és macskának kaparófa is kerül.
+- Új teszt: `tests/e2e/rooms.js` – véletlen konfigurációkkal belső tereket épít és méri, hogy minden tárgy a szobán belül van-e. Mérve: 56 szoba, 311 tárgy, 0 kilógó, 0 ajtóban álló, 0 konzolhiba, és többszintes háznál 6/6 helyiségben megvan a lépcső.
+- 29 új felirat 15 nyelven, az erkély súgója újrafogalmazva.
 
 ## 1.7.0 – 2026-10-13
 

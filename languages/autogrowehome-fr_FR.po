@@ -8477,3 +8477,91 @@ msgstr "Identique à la façade (relief seul)"
 #: includes/Params/Definitions.php
 msgid "A homlokzatnál sötétebb"
 msgstr "Plus foncé que la façade"
+
+#: includes/Params/Definitions.php
+msgid "Ajtókeret (tok, takaróléc)"
+msgstr "Encadrement de porte (bâti et chambranle)"
+
+#: includes/Params/Definitions.php
+msgid "A belső ajtók körüli keret."
+msgstr "L'encadrement autour des portes intérieures."
+
+#: includes/Params/Definitions.php
+msgid "Falszínű"
+msgstr "Couleur du mur"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret (rejtett tok)"
+msgstr "Sans chambranle (bâti invisible)"
+
+#: includes/Params/Definitions.php
+msgid "Radiátorok"
+msgstr "Radiateurs"
+
+#: includes/Params/Definitions.php
+msgid "Az ablak alá kerül, ahol van hely; a fürdőbe törölközőszárító."
+msgstr "Placé sous la fenêtre là où il y a de la place ; un sèche-serviettes dans la salle de bains."
+
+#: includes/Params/Definitions.php
+msgid "A gépészet szerint"
+msgstr "Selon les équipements techniques"
+
+#: includes/Params/Definitions.php
+msgid "Lapradiátor"
+msgstr "Radiateur panneau"
+
+#: includes/Params/Definitions.php
+msgid "Bordás (tagos)"
+msgstr "Radiateur à éléments"
+
+#: includes/Params/Definitions.php
+msgid "Konvektor"
+msgstr "Convecteur"
+
+#: includes/Params/Definitions.php
+msgid "Nincs látható radiátor"
+msgstr "Pas de radiateurs visibles"
+
+#: includes/Params/Definitions.php
+msgid "Fali rejtett polc"
+msgstr "Étagère murale flottante"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium"
+msgstr "Aquarium"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium mérete, formája"
+msgstr "Taille et forme de l'aquarium"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi, asztali"
+msgstr "Petit, de table"
+
+#: includes/Params/Definitions.php
+msgid "Nagy, szögletes"
+msgstr "Grand, rectangulaire"
+
+#: includes/Params/Definitions.php
+msgid "Széles panoráma"
+msgstr "Large panoramique"
+
+#: includes/Params/Definitions.php
+msgid "Henger"
+msgstr "Cylindre"
+
+#: includes/Params/Definitions.php
+msgid "Falba épített"
+msgstr "Encastré dans le mur"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium típusa"
+msgstr "Type d'aquarium"
+
+#: includes/Params/Definitions.php
+msgid "Édesvízi, növényes"
+msgstr "Eau douce, planté"
+
+#: includes/Params/Definitions.php
+msgid "Tengeri, korallos"
+msgstr "Marin, avec coraux"

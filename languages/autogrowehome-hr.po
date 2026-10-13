@@ -8479,3 +8479,91 @@ msgstr "Isto kao fasada (samo plastika)"
 #: includes/Params/Definitions.php
 msgid "A homlokzatnál sötétebb"
 msgstr "Tamnije od fasade"
+
+#: includes/Params/Definitions.php
+msgid "Ajtókeret (tok, takaróléc)"
+msgstr "Dovratnik i letvica vrata"
+
+#: includes/Params/Definitions.php
+msgid "A belső ajtók körüli keret."
+msgstr "Okvir oko unutarnjih vrata."
+
+#: includes/Params/Definitions.php
+msgid "Falszínű"
+msgstr "Boja zida"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret (rejtett tok)"
+msgstr "Bez letvice (skriveni dovratnik)"
+
+#: includes/Params/Definitions.php
+msgid "Radiátorok"
+msgstr "Radijatori"
+
+#: includes/Params/Definitions.php
+msgid "Az ablak alá kerül, ahol van hely; a fürdőbe törölközőszárító."
+msgstr "Postavlja se ispod prozora gdje ima mjesta; u kupaonicu sušilo za ručnike."
+
+#: includes/Params/Definitions.php
+msgid "A gépészet szerint"
+msgstr "Prema strojarstvu"
+
+#: includes/Params/Definitions.php
+msgid "Lapradiátor"
+msgstr "Pločasti radijator"
+
+#: includes/Params/Definitions.php
+msgid "Bordás (tagos)"
+msgstr "Člankasti"
+
+#: includes/Params/Definitions.php
+msgid "Konvektor"
+msgstr "Konvektor"
+
+#: includes/Params/Definitions.php
+msgid "Nincs látható radiátor"
+msgstr "Bez vidljivih radijatora"
+
+#: includes/Params/Definitions.php
+msgid "Fali rejtett polc"
+msgstr "Lebdeća zidna polica"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium"
+msgstr "Akvarij"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium mérete, formája"
+msgstr "Veličina i oblik akvarija"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi, asztali"
+msgstr "Mali, stolni"
+
+#: includes/Params/Definitions.php
+msgid "Nagy, szögletes"
+msgstr "Veliki, pravokutni"
+
+#: includes/Params/Definitions.php
+msgid "Széles panoráma"
+msgstr "Široki panoramski"
+
+#: includes/Params/Definitions.php
+msgid "Henger"
+msgstr "Valjak"
+
+#: includes/Params/Definitions.php
+msgid "Falba épített"
+msgstr "Ugrađen u zid"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium típusa"
+msgstr "Vrsta akvarija"
+
+#: includes/Params/Definitions.php
+msgid "Édesvízi, növényes"
+msgstr "Slatkovodni, biljni"
+
+#: includes/Params/Definitions.php
+msgid "Tengeri, korallos"
+msgstr "Morski, s koraljima"

@@ -614,7 +614,8 @@
 			case '!=': return String(cur) !== String(s.value);
 			case '>': return Number(cur) > Number(s.value);
 			case '<': return Number(cur) < Number(s.value);
-			case 'in': return (s.value || []).map(String).indexOf(String(cur)) !== -1;
+			// "in": the value is one of these – on a multiselect: the list contains one of them
+			case 'in': return Array.isArray(cur) ? cur.some(function (v) { return (s.value || []).map(String).indexOf(String(v)) !== -1; }) : (s.value || []).map(String).indexOf(String(cur)) !== -1;
 			default: return String(cur) === String(s.value);
 		}
 	}

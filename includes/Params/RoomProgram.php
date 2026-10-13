@@ -238,6 +238,8 @@ final class RoomProgram {
 			'chest'         => array( 'master', 'bedroom', 'guest', 'kids', 'hall' ),
 			'vitrine'       => array( 'dining', 'living', 'living_kitchen' ),
 			'pouf'          => array( 'living', 'living_kitchen', 'master', 'bedroom' ),
+			'wall_shelf'    => array( 'living', 'living_kitchen', 'office', 'kids', 'hall' ),
+			'aquarium'      => array( 'living', 'living_kitchen', 'office', 'hall' ),
 			'computer'      => array( 'office', 'kids', 'bedroom', 'guest', 'master' ),
 			'laptop'        => array( 'office', 'living', 'living_kitchen', 'master' ),
 			'smart_panel'   => array( 'hall', 'living', 'living_kitchen' ),

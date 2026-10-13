@@ -177,7 +177,16 @@ final class Validator {
 			case '<':
 				return (float) $cur < (float) $s['value'];
 			case 'in':
-				return in_array( (string) $cur, (array) $s['value'], true );
+				// on a multiselect the field holds a list: it is enough if one of the values is in it
+				if ( is_array( $cur ) ) {
+					foreach ( $cur as $one ) {
+						if ( in_array( (string) $one, array_map( 'strval', (array) $s['value'] ), true ) ) {
+							return true;
+						}
+					}
+					return false;
+				}
+				return in_array( (string) $cur, array_map( 'strval', (array) $s['value'] ), true );
 			default:
 				return (string) $cur === (string) $s['value'];
 		}

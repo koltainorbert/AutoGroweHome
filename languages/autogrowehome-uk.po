@@ -8479,3 +8479,91 @@ msgstr "Як фасад (лише рельєф)"
 #: includes/Params/Definitions.php
 msgid "A homlokzatnál sötétebb"
 msgstr "Темніше за фасад"
+
+#: includes/Params/Definitions.php
+msgid "Ajtókeret (tok, takaróléc)"
+msgstr "Дверна коробка і лиштва"
+
+#: includes/Params/Definitions.php
+msgid "A belső ajtók körüli keret."
+msgstr "Обрамлення навколо внутрішніх дверей."
+
+#: includes/Params/Definitions.php
+msgid "Falszínű"
+msgstr "Колір стіни"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret (rejtett tok)"
+msgstr "Без лиштви (прихована коробка)"
+
+#: includes/Params/Definitions.php
+msgid "Radiátorok"
+msgstr "Радіатори"
+
+#: includes/Params/Definitions.php
+msgid "Az ablak alá kerül, ahol van hely; a fürdőbe törölközőszárító."
+msgstr "Ставиться під вікном, де є місце; у ванній — рушникосушарка."
+
+#: includes/Params/Definitions.php
+msgid "A gépészet szerint"
+msgstr "Відповідно до інженерних систем"
+
+#: includes/Params/Definitions.php
+msgid "Lapradiátor"
+msgstr "Панельний радіатор"
+
+#: includes/Params/Definitions.php
+msgid "Bordás (tagos)"
+msgstr "Секційний"
+
+#: includes/Params/Definitions.php
+msgid "Konvektor"
+msgstr "Конвектор"
+
+#: includes/Params/Definitions.php
+msgid "Nincs látható radiátor"
+msgstr "Без видимих радіаторів"
+
+#: includes/Params/Definitions.php
+msgid "Fali rejtett polc"
+msgstr "Підвісна настінна полиця"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium"
+msgstr "Акваріум"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium mérete, formája"
+msgstr "Розмір і форма акваріума"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi, asztali"
+msgstr "Маленький, настільний"
+
+#: includes/Params/Definitions.php
+msgid "Nagy, szögletes"
+msgstr "Великий, прямокутний"
+
+#: includes/Params/Definitions.php
+msgid "Széles panoráma"
+msgstr "Широкий панорамний"
+
+#: includes/Params/Definitions.php
+msgid "Henger"
+msgstr "Циліндр"
+
+#: includes/Params/Definitions.php
+msgid "Falba épített"
+msgstr "Вбудований у стіну"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium típusa"
+msgstr "Тип акваріума"
+
+#: includes/Params/Definitions.php
+msgid "Édesvízi, növényes"
+msgstr "Прісноводний, рослинний"
+
+#: includes/Params/Definitions.php
+msgid "Tengeri, korallos"
+msgstr "Морський, з коралами"

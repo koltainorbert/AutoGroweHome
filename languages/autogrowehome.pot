@@ -8449,3 +8449,91 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "A homlokzatnál sötétebb"
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Ajtókeret (tok, takaróléc)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A belső ajtók körüli keret."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Falszínű"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret (rejtett tok)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Radiátorok"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Az ablak alá kerül, ahol van hely; a fürdőbe törölközőszárító."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A gépészet szerint"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Lapradiátor"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Bordás (tagos)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Konvektor"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Nincs látható radiátor"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fali rejtett polc"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Akvárium"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Akvárium mérete, formája"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kicsi, asztali"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Nagy, szögletes"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Széles panoráma"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Henger"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Falba épített"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Akvárium típusa"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Édesvízi, növényes"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Tengeri, korallos"
+msgstr ""

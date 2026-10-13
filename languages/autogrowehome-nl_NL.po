@@ -8477,3 +8477,91 @@ msgstr "Gelijk aan de gevel (alleen reliëf)"
 #: includes/Params/Definitions.php
 msgid "A homlokzatnál sötétebb"
 msgstr "Donkerder dan de gevel"
+
+#: includes/Params/Definitions.php
+msgid "Ajtókeret (tok, takaróléc)"
+msgstr "Deurkozijn en omlijsting"
+
+#: includes/Params/Definitions.php
+msgid "A belső ajtók körüli keret."
+msgstr "De omlijsting rond de binnendeuren."
+
+#: includes/Params/Definitions.php
+msgid "Falszínű"
+msgstr "Muurkleur"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret (rejtett tok)"
+msgstr "Geen omlijsting (verdekt kozijn)"
+
+#: includes/Params/Definitions.php
+msgid "Radiátorok"
+msgstr "Radiatoren"
+
+#: includes/Params/Definitions.php
+msgid "Az ablak alá kerül, ahol van hely; a fürdőbe törölközőszárító."
+msgstr "Komt onder het raam waar ruimte is; in de badkamer een handdoekradiator."
+
+#: includes/Params/Definitions.php
+msgid "A gépészet szerint"
+msgstr "Volgens de installaties"
+
+#: includes/Params/Definitions.php
+msgid "Lapradiátor"
+msgstr "Paneelradiator"
+
+#: includes/Params/Definitions.php
+msgid "Bordás (tagos)"
+msgstr "Ledenradiator"
+
+#: includes/Params/Definitions.php
+msgid "Konvektor"
+msgstr "Convector"
+
+#: includes/Params/Definitions.php
+msgid "Nincs látható radiátor"
+msgstr "Geen zichtbare radiatoren"
+
+#: includes/Params/Definitions.php
+msgid "Fali rejtett polc"
+msgstr "Zwevende wandplank"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium"
+msgstr "Aquarium"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium mérete, formája"
+msgstr "Formaat en vorm van het aquarium"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi, asztali"
+msgstr "Klein, voor op tafel"
+
+#: includes/Params/Definitions.php
+msgid "Nagy, szögletes"
+msgstr "Groot, rechthoekig"
+
+#: includes/Params/Definitions.php
+msgid "Széles panoráma"
+msgstr "Breed panorama"
+
+#: includes/Params/Definitions.php
+msgid "Henger"
+msgstr "Cilinder"
+
+#: includes/Params/Definitions.php
+msgid "Falba épített"
+msgstr "Ingebouwd in de muur"
+
+#: includes/Params/Definitions.php
+msgid "Akvárium típusa"
+msgstr "Type aquarium"
+
+#: includes/Params/Definitions.php
+msgid "Édesvízi, növényes"
+msgstr "Zoetwater, beplant"
+
+#: includes/Params/Definitions.php
+msgid "Tengeri, korallos"
+msgstr "Zeewater, met koralen"

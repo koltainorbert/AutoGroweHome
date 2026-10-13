@@ -1419,6 +1419,7 @@
 	var ITEM_HOME = { bookshelf: ['living', 'living_kitchen', 'office', 'kids'], sideboard: ['dining', 'living', 'living_kitchen'], desk: ['office', 'kids', 'bedroom', 'guest', 'master'], reading: ['living', 'living_kitchen', 'master', 'bedroom'],
 		piano: ['living', 'living_kitchen', 'dining'], bar_cart: ['living', 'living_kitchen', 'dining'], bench: ['hall', 'master', 'bedroom'], plant_stand: ['living', 'living_kitchen', 'dining', 'hall'], floor_mirror: ['master', 'bedroom', 'hall', 'wardrobe'],
 		chest: ['master', 'bedroom', 'guest', 'kids', 'hall'], vitrine: ['dining', 'living', 'living_kitchen'], pouf: ['living', 'living_kitchen', 'master', 'bedroom'],
+		wall_shelf: ['living', 'living_kitchen', 'office', 'kids', 'hall'], aquarium: ['living', 'living_kitchen', 'office', 'hall'],
 		tv: ['living', 'living_kitchen'], soundbar: ['living', 'living_kitchen'], speakers: ['living', 'living_kitchen'], console: ['living', 'living_kitchen'], projector: ['living', 'living_kitchen'], robot_vacuum: ['living', 'living_kitchen'], smart_speaker: ['living', 'living_kitchen', 'kitchen'],
 		computer: ['office', 'kids', 'bedroom', 'guest', 'master'], laptop: ['office', 'living', 'living_kitchen', 'master'], smart_panel: ['hall', 'living', 'living_kitchen'], dog_large: ['living', 'living_kitchen'], dog_small: ['living', 'living_kitchen'], cat: ['living', 'living_kitchen'] };
 	// Household items per room id: the visitor's own placement (room_items), else one fitting room per selected item.
