@@ -7126,3 +7126,55 @@ msgstr "Per gli amministratori: sul proprio sito la riga define( 'AGH_OWNER_MODE
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "Il configuratore funziona in modalità base (Starter): %1$d impostazioni su %2$d sono nascoste ai visitatori perché non c'è una licenza Professional attiva (o è terminato il periodo di tolleranza). Sul proprio sito aggiungere a wp-config.php: define( 'AGH_OWNER_MODE', true ); – sul sito di un cliente attivare la licenza."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Cornice della finestra (contorno)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "La cornice attorno alla finestra sulla facciata; «Nessuna cornice» la elimina."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "Secondo lo stile"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Nessuna cornice"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Cornice bianca"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Più chiara della facciata"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Cornice scura"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Cornice in pietra"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Vista"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Esterno"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Interno"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Vista interna"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Guarda dentro"

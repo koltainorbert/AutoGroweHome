@@ -7128,3 +7128,55 @@ msgstr "Dla administratorów: na własnej stronie wiersz define( 'AGH_OWNER_MODE
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "Projektant działa w trybie podstawowym (Starter): %1$d z %2$d ustawień jest ukrytych przed odwiedzającymi, bo brak aktywnej licencji Professional (lub minął okres karencji). Na własnej stronie dodaj do wp-config.php: define( 'AGH_OWNER_MODE', true ); – na stronie klienta aktywuj licencję."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Opaska okienna (obramienie)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "Obramienie wokół okna na elewacji; „Brak opaski” je usuwa."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "Według stylu"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Brak opaski"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Biała opaska"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Jaśniejsza niż elewacja"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Ciemna opaska"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Kamienna opaska"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Widok"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Na zewnątrz"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Wewnątrz"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Widok wnętrza"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Zobacz wnętrze"

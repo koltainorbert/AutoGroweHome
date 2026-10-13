@@ -7130,3 +7130,55 @@ msgstr "Za skrbnike: na lastni strani vrstica define( 'AGH_OWNER_MODE', true ); 
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "Oblikovalnik deluje v osnovnem načinu (Starter): %1$d od %2$d nastavitev je skritih pred obiskovalci, ker ni aktivne licence Professional (ali je poteklo obdobje odloga). Na lastni strani dodajte v wp-config.php: define( 'AGH_OWNER_MODE', true ); – na strani stranke aktivirajte licenco."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Okenska obroba (šambrana)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "Okvir okoli okna na fasadi; »Brez obrobe« ga odstrani."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "Glede na slog"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Brez obrobe"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Bela obroba"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Svetlejša od fasade"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Temna obroba"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Kamnita obroba"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Pogled"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Zunaj"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Znotraj"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Notranji pogled"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Poglej od znotraj"

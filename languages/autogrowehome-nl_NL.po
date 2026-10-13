@@ -7126,3 +7126,55 @@ msgstr "Voor beheerders: op je eigen site de regel define( 'AGH_OWNER_MODE', tru
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "De ontwerper draait in basismodus (Starter): %1$d van de %2$d instellingen zijn verborgen voor bezoekers omdat er geen actieve Professional-licentie is (of de respijtperiode is verlopen). Voeg op je eigen site toe aan wp-config.php: define( 'AGH_OWNER_MODE', true ); – activeer op een klantsite de licentie."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Raamomlijsting (kader)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "Het kader rond het raam op de gevel; „Geen omlijsting” verwijdert het."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "Volgens de stijl"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Geen omlijsting"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Witte omlijsting"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Lichter dan de gevel"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Donkere omlijsting"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Stenen omlijsting"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Weergave"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Buiten"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Binnen"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Binnenaanzicht"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Bekijk van binnen"

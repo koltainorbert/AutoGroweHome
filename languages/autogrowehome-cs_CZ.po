@@ -7128,3 +7128,55 @@ msgstr "Pro správce: na vlastním webu řádek define( 'AGH_OWNER_MODE', true )
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "Návrhář běží v základním režimu (Starter): %1$d z %2$d nastavení je před návštěvníky skryto, protože chybí aktivní licence Professional (nebo vypršela ochranná lhůta). Na vlastním webu přidejte do wp-config.php: define( 'AGH_OWNER_MODE', true ); – na webu klienta aktivujte licenci."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Okenní šambrána (lem)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "Rámeček kolem okna na fasádě; „Žádná šambrána“ jej odstraní."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "Podle stylu"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Žádná šambrána"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Bílá šambrána"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Světlejší než fasáda"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Tmavá šambrána"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Kamenná šambrána"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Pohled"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Venku"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Uvnitř"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Vnitřní pohled"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Prohlédnout zevnitř"

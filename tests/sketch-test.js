@@ -14,7 +14,7 @@ const O = {
   roof_product: ['', 'bramac-romai-teglavoros', 'bramac-reviva-barna', 'bramac-tectura-antracit', 'bramac-tegalit-terracotta'],
   facade_main: ['render', 'brick', 'clinker', 'stone', 'wood', 'metal', 'concrete', 'panel'], plinth: ['dark_render', 'stone', 'concrete', 'flush'],
   facade_texture: ['fine', 'smooth', 'coarse'], corner_detail: ['sharp', 'quoins', 'glass'],
-  window_style: ['classic', 'large', 'panoramic', 'vertical', 'arched', 'square', 'ribbon', 'bay'], window_frame_material: ['pvc', 'aluminium', 'wood', 'wood_alu'],
+  window_style: ['classic', 'large', 'panoramic', 'vertical', 'arched', 'square', 'ribbon', 'bay'], window_frame_material: ['pvc', 'aluminium', 'wood', 'wood_alu'], window_trim: ['auto', 'none', 'white', 'light', 'dark', 'stone'],
   terrace_door: ['french', 'sliding', 'lift_slide', 'folding'], entrance_door: ['solid_modern', 'glass_strip', 'wood', 'classic', 'pivot', 'double', 'glass_full', 'half_glass', 'slat', 'sidelight'],
   chimney_type: ['auto', 'brick', 'render', 'stone', 'steel', 'clad', 'wide'], solar_type: ['black_mono', 'blue_poly', 'in_roof', 'solar_tile', 'glass'], solar_coverage: ['small', 'medium', 'full'],
   roof_vent_type: ['tile_vent', 'ridge_vent', 'turbine', 'mushroom', 'pipe', 'solar_fan'], ridge_tile: ['round', 'angular', 'mortar', 'dry', 'metal', 'none'], ac_units: ['none', 'wall', 'ground', 'screened', 'roof'],
@@ -50,7 +50,7 @@ const BASE = { property_type: 'detached', levels: 'two', arch_style: 'modern_min
   garden_features: ['lawn', 'trees', 'paths', 'garden_lights'], shading: ['blinds'], energy: ['heat_pump'], ac_units: 'wall', ridge_tile: 'mortar', time_of_day: 'golden', season: 'summer', weather: 'few_clouds',
   camera: 'three_quarter', lens: '24mm', net_area: 160, roof_pitch: 35, facade_color: '#F2EFE9', roof_color: '#3A3D40', window_frame_color: '#2F3235', facade_accent_color: '#B9824F',
   plinth_color: '#4A4D50', entrance_door_color: '#2B2E31', plot_width: 20, plot_length: 40, snow_guards: true, exterior_lighting: true, night_lighting: true,
-  gable_finish: 'plaster', gutters: 'anthracite', roof_surface: 'matt', roof_product: '', facade_texture: 'fine', orientation: 'south', glazing: 'clear', window_frame_material: 'aluminium', corner_detail: 'sharp', entrance_door: 'solid_modern', terrace_floor: 'wpc' };
+  gable_finish: 'plaster', gutters: 'anthracite', roof_surface: 'matt', roof_product: '', facade_texture: 'fine', orientation: 'south', glazing: 'clear', window_frame_material: 'aluminium', window_trim: 'white', corner_detail: 'sharp', entrance_door: 'solid_modern', terrace_floor: 'wpc' };
 
 let fail = 0, n = 0, maxMs = 0, total = 0;
 const err = (m) => { fail++; if (fail < 15) console.log('HIBA:', m); };

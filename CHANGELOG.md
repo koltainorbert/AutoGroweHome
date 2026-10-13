@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.4.0 – 2026-10-13
+
+- Belső nézet a 3D előnézetben: „Kívül / Belül” kapcsoló, alatta a ház helyiségei (a Helyiségek listából). Egy helyiség metszetes 3D-ben látszik a beállításokkal: padló (helyiségenként: nappali, háló, konyha, előtér, vizes), falszín és falburkolat, belső stílus, bútorstílus és -szín, konyha (elrendezés, frontok, munkalap, sziget), fürdő (burkolat, berendezés), világítás, függöny, mennyezet. 25 helyiségtípus.
+- A belső beállítások (belső tér, konyha, fürdő, felületek, helyiségek) kiválasztásakor és módosításakor az előnézet magától belső nézetre vált, a megfelelő helyiséggel (konyha → konyha, fürdő → fürdőszoba, hálók padlója → hálószoba, előtér padlója → előtér); a külső kategóriák (stílus, tető, homlokzat, nyílászárók, kert, energia) visszaváltanak külső nézetre.
+- A Helyiségek listában szem gomb: az adott helyiség belülről; a helyiség saját szélessége, hossza, belmagassága, stílusa, falszíne és bútorszíne a belső nézetben is érvényes.
+- Új beállítás: „Ablak körüli keret (szegély)” – a stílus szerint, nincs, fehér, a homlokzatnál világosabb, sötét, kőkeret. A „Nincs keret” eltünteti az ablak körüli világos keretet (2D és 3D).
+- Részletes módban egy beállítás módosítása után a beállításlista nem ugrik vissza a tetejére (a görgetési helyzet és a fókusz megmarad).
+- 13 új felirat 15 nyelven.
+
 ## 1.3.3 – 2026-10-13
 
 - Közös kertterv a 2D vázlatnak és a 3D előnézetnek: fák, cserjék, sövény, virágágyás, kerti tároló, játszótér, tűzrakó, pergola, kerti bútor és lámpák csak a telken belül, a burkolatoktól (terasz, járda, beálló, garázs, medence, tornác, veranda, lépcső) és a háztól távol kerülnek elhelyezésre, egymásra sem kerülnek. Önteszt: 600 véletlen kert, ~4300 növény, 0 hibás elhelyezés.

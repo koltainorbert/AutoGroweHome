@@ -7126,3 +7126,55 @@ msgstr "Pour les administrateurs : sur votre propre site, la ligne define( 'AGH_
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "Le configurateur fonctionne en mode de base (Starter) : %1$d réglages sur %2$d sont masqués aux visiteurs faute de licence Professional active (ou la période de grâce est terminée). Sur votre propre site, ajoutez à wp-config.php : define( 'AGH_OWNER_MODE', true ); – sur le site d'un client, activez la licence."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Encadrement de fenêtre (bandeau)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "Le cadre autour de la fenêtre sur la façade ; « Sans encadrement » le supprime."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "Selon le style"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Sans encadrement"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Encadrement blanc"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Plus clair que la façade"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Encadrement foncé"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Encadrement en pierre"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Vue"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Extérieur"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Intérieur"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Vue intérieure"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Voir l'intérieur"

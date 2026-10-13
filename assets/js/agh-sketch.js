@@ -295,6 +295,12 @@
 		passive: { pv: true, reveal: true }
 	};
 	function styleOf(c) { return STYLES[c.arch_style] || {}; }
+	// Colour of the surround around the windows (null = none): by style, or the visitor's choice.
+	function trimColor(c) {
+		var t = c.window_trim || 'auto', fc = col(c.facade_color, '#F2EFE9');
+		if (t === 'auto') { var st = styleOf(c).trim; return st ? (st === 'light' ? shade(fc, 0.35) : st) : null; }
+		return { none: null, white: '#F4F2EE', light: shade(fc, 0.35), dark: '#2E3033', stone: '#B9AE9C' }[t] || null;
+	}
 	// Fence runs between x0 and x1 minus the openings (gaps may overlap or stick out): [[a, b], …].
 	function fenceSegs(x0, x1, gaps) {
 		var g = gaps.map(function (q) { return [Math.max(x0, q[0]), Math.min(x1, q[1])]; }).filter(function (q) { return q[1] > q[0]; }).sort(function (a, b) { return a[0] - b[0]; });
@@ -779,7 +785,8 @@
 		var mat = c.window_frame_material || 'aluminium';
 		var fr = { pvc: 0.09, aluminium: 0.045, wood: 0.075, wood_alu: 0.06 }[mat] || 0.05;
 		var s = '';
-		if (st.trim) { var tc = st.trim === 'light' ? shade(col(c.facade_color, '#F2EFE9'), 0.35) : st.trim; s += '<rect x="' + f(x - 0.11) + '" y="' + f(y - 0.11) + '" width="' + f(w + 0.22) + '" height="' + f(h + 0.22) + '" fill="' + tc + '"/>'; }
+		var tc = trimColor(c);
+		if (tc) { s += '<rect x="' + f(x - 0.11) + '" y="' + f(y - 0.11) + '" width="' + f(w + 0.22) + '" height="' + f(h + 0.22) + '" fill="' + tc + '"/>'; }
 		if (st.lintel) { s += '<rect x="' + f(x - 0.16) + '" y="' + f(y + h + 0.02) + '" width="' + f(w + 0.32) + '" height="0.2" fill="' + st.lintel + '"/>'; }
 		if ((st.arches || c.window_style === 'arched') && !(opt && opt.noArch)) { s += '<path d="M' + f(x) + ' ' + f(y + h - 0.01) + 'A' + f(w / 2) + ' ' + f(Math.min(w / 2, 0.55)) + ' 0 0 0 ' + f(x + w) + ' ' + f(y + h - 0.01) + 'Z" fill="' + fc + '"/><path d="M' + f(x + fr) + ' ' + f(y + h) + 'A' + f(w / 2 - fr) + ' ' + f(Math.min(w / 2, 0.55) - fr) + ' 0 0 0 ' + f(x + w - fr) + ' ' + f(y + h) + 'Z" fill="' + glass(sc) + '"/>'; }
 		s += '<rect x="' + f(x) + '" y="' + f(y) + '" width="' + f(w) + '" height="' + f(h) + '" fill="' + fc + '"/>' +
@@ -1807,7 +1814,7 @@
 	var VISUAL = ['plot_width', 'plot_length', 'exterior_steps', 'accessible', 'ridge_height', 'eaves_depth', 'snow_guards', 'roof_ventilation', 'exposed_rafters', 'facade_texture', 'property_type', 'levels', 'net_area', 'building_width', 'building_length', 'orientation', 'arch_style', 'massing', 'footprint', 'garage', 'terrace_area', 'balcony', 'entrance_canopy', 'outdoor_covered', 'basement', 'chimney', 'ceiling_height',
 		'roof_type', 'roof_pitch', 'roof_overhang', 'gable_finish', 'roof_windows', 'dormers', 'roof_solar', 'gutters', 'roof_product', 'roof_color', 'roof_surface',
 		'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'plinth_color', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number',
-		'window_style', 'window_frame_color', 'window_frame_material', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading',
+		'window_style', 'window_frame_color', 'window_frame_material', 'window_trim', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading',
 		'garden_style', 'garden_features', 'terrace_floor', 'driveway', 'fence', 'gate', 'neighbors', 'time_of_day', 'season', 'weather', 'camera', 'lens', 'night_lighting', 'energy',
 		'chimney_type', 'solar_type', 'solar_coverage', 'roof_vent_type', 'ridge_tile', 'shutter_color', 'ac_units'];
 
@@ -1818,6 +1825,7 @@
 		var pitched = c.roof_type !== 'flat', ta = num(c.terrace_area, 0) > 0, acc = c.facade_accent || [];
 		switch (id) {
 			case 'balcony': return c.levels === 'two' || c.levels === 'three';
+			case 'window_trim': return !!trimColor(c);
 			case 'massing': return c.property_type !== 'semi_detached' && c.property_type !== 'row';
 			case 'footprint': return c.property_type !== 'semi_detached' && c.property_type !== 'row' && (c.massing || 'auto') === 'auto';
 			case 'plot_width': return num(c.plot_width, 0) > 0 && num(c.plot_width, 0) <= 60;
@@ -1857,7 +1865,7 @@
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
 		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
 		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
-		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _roundPts: roundPts, massing: MASSING };
+		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));

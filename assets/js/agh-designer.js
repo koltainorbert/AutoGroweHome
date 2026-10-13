@@ -73,6 +73,7 @@
 		wall: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M3 14h18M9 4v5M15 9v5M9 14v6"/>',
 		window: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M12 3v18M4 12h16"/>',
 		plan: '<rect x="3" y="3" width="18" height="18" rx="1.5"/><path d="M3 12h7v9M10 3v5M14 12h7M14 12V3"/>',
+		eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
 		sofa: '<path d="M4 11V8a2 2 0 012-2h12a2 2 0 012 2v3"/><path d="M2 12a2 2 0 014 0v3h12v-3a2 2 0 014 0v6H2z"/><path d="M5 18v2M19 18v2"/>',
 		kitchen: '<rect x="3" y="3" width="18" height="18" rx="1.5"/><path d="M3 9h18"/><circle cx="8" cy="6" r=".8"/><circle cx="12" cy="6" r=".8"/><path d="M8 13h8M8 17h5"/>',
 		bath: '<path d="M4 12h16v3a5 5 0 01-5 5H9a5 5 0 01-5-5z"/><path d="M6 12V5a2 2 0 014 0"/><path d="M7 20l-1 2M17 20l1 2"/>',
@@ -157,6 +158,8 @@
 		config: null,
 		explicit: {},
 		mode: 'simple',
+		view: 'ext',
+		roomId: null,
 		cat: 'basics',
 		search: '',
 		theme: 'light',
@@ -587,7 +590,7 @@
 		S.boot.schema.categories.forEach(function (c) {
 			var hasFields = S.boot.schema.fields.some(function (f) { return f.category === c.id; });
 			if (!hasFields) { return; }
-			var btn = h('button', { type: 'button', title: c.label, 'aria-label': c.label, 'aria-current': S.cat === c.id && !S.search ? 'true' : 'false', 'data-cat': c.id, style: catColor(c.icon) ? '--agh-cat:' + catColor(c.icon) : null, onclick: function () { S.cat = c.id; S.search = ''; if (els.searchInput) { els.searchInput.value = ''; } updateRail(); renderFields(); } }, catIcon(c.icon));
+			var btn = h('button', { type: 'button', title: c.label, 'aria-label': c.label, 'aria-current': S.cat === c.id && !S.search ? 'true' : 'false', 'data-cat': c.id, style: catColor(c.icon) ? '--agh-cat:' + catColor(c.icon) : null, onclick: function () { S.cat = c.id; S.search = ''; if (els.searchInput) { els.searchInput.value = ''; } updateRail(); renderFields(); var was = S.view + '|' + S.roomId; autoView(null, c.id); if (was !== S.view + '|' + S.roomId) { renderPreviewOnly(); } } }, catIcon(c.icon));
 			rail.appendChild(btn);
 		});
 		els.rail = rail;
@@ -616,6 +619,14 @@
 	function renderFields() {
 		if (S.wiz) { renderWizardStep(false); return; }
 		var cat = S.boot.schema.categories.filter(function (c) { return c.id === S.cat; })[0] || S.boot.schema.categories[0];
+		// A value change re-renders the list: keep the scroll offset and the keyboard position in the same category.
+		var scroller = els.fieldsList && els.fieldsList.parentNode, sameView = els.listKey === S.cat + '|' + S.search + '|' + S.mode;
+		var keepTop = scroller && sameView ? scroller.scrollTop : 0, act = document.activeElement, keepFocus = null;
+		if (sameView && act && els.fieldsList.contains(act) && act.closest('[data-field]')) {
+			var fw = act.closest('[data-field]');
+			keepFocus = { field: fw.getAttribute('data-field'), idx: Array.prototype.indexOf.call(fw.querySelectorAll('button, input, select, textarea'), act) };
+		}
+		els.listKey = S.cat + '|' + S.search + '|' + S.mode;
 		clear(els.fieldsHead).appendChild(h('h3', { class: 'agh-h', text: S.search ? t('search_results') : cat.label }));
 		els.fieldsHead.appendChild(h('div', { class: 'agh-search' }, icon('search'), els.searchInput));
 		var list = clear(els.fieldsList);
@@ -627,6 +638,11 @@
 			if (hidden) { list.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', onclick: function () { setMode('detailed'); } }, icon('sliders', 'agh-ico-s'), tf('show_advanced', hidden))); }
 		}
 		if (S.cat === 'custom' && !S.search) { list.appendChild(renderInterpret()); }
+		if (scroller) { scroller.scrollTop = keepTop; }
+		if (keepFocus) {
+			var fw2 = list.querySelector('[data-field="' + keepFocus.field + '"]'), ctl = fw2 ? fw2.querySelectorAll('button, input, select, textarea')[keepFocus.idx] : null;
+			if (ctl && ctl.tagName !== 'INPUT') { try { ctl.focus({ preventScroll: true }); } catch (e) { ctl.focus(); } }
+		}
 		// Licence plan without the full parameter set: say so instead of silently showing less.
 		var locked = S.boot.features && !S.boot.features.full_params ? Number(S.boot.features.params_locked || 0) : 0;
 		if (locked > 0) {
@@ -649,6 +665,7 @@
 		S.config[id] = value;
 		S.explicit[id] = true;
 		S.dirty = true;
+		autoView(id);
 		persist();
 		validate();
 		var dependents = S.boot.schema.fields.some(function (f) { return f.show_if && f.show_if.field === id; }) || S.boot.schema.fields.some(function (f) { return f.filter_by === id; });
@@ -794,7 +811,7 @@
 		}
 		return box;
 	}
-	var setValueQuiet = debounce(function (id, v) { markChange(id); S.config[id] = v; S.explicit[id] = true; S.dirty = true; renderPreviewOnly(); renderSummary(); updateWizardSide(); }, 60);
+	var setValueQuiet = debounce(function (id, v) { markChange(id); autoView(id); S.config[id] = v; S.explicit[id] = true; S.dirty = true; renderPreviewOnly(); renderSummary(); updateWizardSide(); }, 60);
 
 	function renderColor(f, v) {
 		var box = h('div', { class: 'agh-color' });
@@ -990,6 +1007,7 @@
 	function updateRoom(idx, key, val, rerender) {
 		var rooms = (S.config.rooms || []).slice();
 		rooms[idx] = Object.assign({}, rooms[idx]);
+		S.roomId = String(rooms[idx].id || rooms[idx].type);
 		if (val === '' || val === null) { delete rooms[idx][key]; } else { rooms[idx][key] = val; }
 		setValue('rooms', rooms, rerender);
 	}
@@ -1005,8 +1023,9 @@
 		var lvl = h('select', { class: 'agh-select', 'aria-label': t('room_level'), onchange: function (e) { updateRoom(idx, 'level', Number(e.target.value)); } });
 		for (var i = 0; i < levelCount(); i++) { lvl.appendChild(h('option', { value: i, selected: Number(r.level) === i ? 'selected' : null, text: levelName(i) })); }
 		var render = h('label', { class: 'agh-switch', title: t('room_render_help') }, h('input', { type: 'checkbox', checked: r.render ? 'checked' : null, onchange: function (e) { updateRoom(idx, 'render', e.target.checked); } }), h('span', { class: 'agh-switch-track' }), h('span', { class: 'agh-small', text: t('room_render') }));
+		var see = A3 ? h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-room-see', title: t('view_room'), 'aria-label': t('view_room') + ': ' + r.name, onclick: function () { setView('int', String(r.id || r.type)); } }, icon('eye', 'agh-ico-s')) : null;
 		var more = h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', 'aria-expanded': S.openRooms[r.id] ? 'true' : 'false', onclick: function () { S.openRooms[r.id] = !S.openRooms[r.id]; renderFields(); } }, t('room_details'));
-		card.appendChild(h('div', { class: 'agh-room-meta' }, typeSel, lvl, render, more));
+		card.appendChild(h('div', { class: 'agh-room-meta' }, typeSel, lvl, render, see, more));
 		if (S.openRooms[r.id]) {
 			var d = h('div', { class: 'agh-room-details' });
 			function txt(key, label, full) {
@@ -1210,7 +1229,7 @@
 	// chosen style (if any) is a small inset. Every change of a visible parameter redraws the sketch;
 	// a short note names the change and says when it only shows up in the concept images.
 	function fillPreview(box, c) {
-		var o = stylePhoto(c), fresh = S.lastChange && Date.now() - S.lastChange.at < 1500;
+		var o = S.view === 'int' && A3 ? null : stylePhoto(c), fresh = S.lastChange && Date.now() - S.lastChange.at < 1500;
 		var oldFig = box.querySelector('.agh-preview-style');
 		var keep = o && oldFig && oldFig.getAttribute('data-src') === (o.thumb || o.image) ? oldFig : null;
 		if (keep) { keep.parentNode.removeChild(keep); }
@@ -1221,8 +1240,9 @@
 		if (A3) {
 			// keep the live 3D canvas, replace everything else
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
-			try { A3.attach(box, c); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
-			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
+			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
+			if (A3 && S.view === 'int') { box.appendChild(roomChips()); }
+			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
 		} else if (A3wait) {
 			clear(box);
 			box.appendChild(waitBox());
@@ -1257,7 +1277,77 @@
 		});
 		return box;
 	}
+	/* Interior view: the preview shows one room of the house (cut-away), chosen by the visitor or by the
+	 * setting being changed (kitchen settings → kitchen, bathroom → bathroom, bedroom floor → bedroom …). */
+	var INT_CATS = ['interior', 'kitchen', 'bathroom', 'surfaces', 'rooms'], EXT_CATS = ['style', 'massing', 'roof', 'facade', 'openings', 'garden', 'energy'];
+	var ROOM_ORDER = ['living_kitchen', 'living', 'kitchen', 'dining', 'master', 'bedroom', 'kids', 'guest', 'bathroom', 'office', 'hall', 'wc', 'laundry', 'wardrobe'];
+	function roomList() {
+		var out = [], seen = {};
+		(S.config.rooms || []).forEach(function (r) { if (r && r.type && !seen[r.id || r.type]) { seen[r.id || r.type] = 1; out.push({ id: String(r.id || r.type), type: r.type, name: r.name || (roomType(r.type).label || r.type), area: Number(r.area) || 0 }); } });
+		if (!out.length) { ['living_kitchen', 'master', 'bathroom'].forEach(function (tp) { out.push({ id: 'virtual:' + tp, type: tp, name: roomType(tp).label, area: roomType(tp).area || 0 }); }); }
+		out.sort(function (a, b) { var ia = ROOM_ORDER.indexOf(a.type), ib = ROOM_ORDER.indexOf(b.type); return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib); });
+		return out;
+	}
+	function curRoom() {
+		var list = roomList(), sel = S.roomId && list.filter(function (r) { return r.id === S.roomId; })[0];
+		if (!sel && S.roomId && S.roomId.indexOf('virtual:') === 0) { var tp = S.roomId.slice(8); sel = { id: S.roomId, type: tp, name: roomType(tp).label, area: roomType(tp).area || 0 }; }
+		return sel || list[0];
+	}
+	function viewCfg(c) {
+		if (S.view !== 'int') { return c; }
+		var r = curRoom(), o = {}, src = (S.config.rooms || []).filter(function (q) { return String(q.id || q.type) === r.id; })[0] || {};
+		Object.keys(c).forEach(function (k) { o[k] = c[k]; });
+		o._int = { id: r.id, type: r.type, area: r.area };
+		['width', 'length', 'ceiling_height', 'interior_style', 'wall_color', 'furniture_color'].forEach(function (k) { if (src[k] !== undefined && src[k] !== '') { o._int[k] = src[k]; } });
+		return o;
+	}
+	// Which room shows a setting best (null: the current one).
+	function roomTypesFor(id) {
+		var f = S.fields[id] || {};
+		if (f.category === 'kitchen' || id === 'floor_kitchen') { return ['kitchen', 'living_kitchen']; }
+		if (f.category === 'bathroom' || id === 'floor_wet') { return ['bathroom', 'wc', 'wellness']; }
+		if (id === 'floor_bedrooms') { return ['master', 'bedroom', 'guest', 'kids']; }
+		if (id === 'floor_entry') { return ['hall', 'corridor']; }
+		return null;
+	}
+	function autoView(id, cat) {
+		if (!A3) { return; }
+		var ct = cat || (S.fields[id] || {}).category;
+		if (INT_CATS.indexOf(ct) !== -1) {
+			S.view = 'int';
+			var types = id ? roomTypesFor(id) : (ct === 'kitchen' ? ['kitchen', 'living_kitchen'] : (ct === 'bathroom' ? ['bathroom', 'wc'] : null));
+			var cur = curRoom();
+			if (types && types.indexOf(cur.type) === -1) {
+				var r = roomList().filter(function (q) { return types.indexOf(q.type) !== -1; })[0];
+				S.roomId = r ? r.id : 'virtual:' + types[0];
+			}
+		} else if (EXT_CATS.indexOf(ct) !== -1) { S.view = 'ext'; }
+	}
+	function setView(v, roomId) {
+		S.view = v;
+		if (roomId) { S.roomId = roomId; }
+		renderPreviewOnly();
+		updateWizardSide();
+	}
+	function viewSwitch() {
+		return h('div', { class: 'agh-3d-view', role: 'group', 'aria-label': t('view_switch') },
+			h('button', { type: 'button', 'aria-pressed': S.view !== 'int' ? 'true' : 'false', onclick: function () { setView('ext'); } }, icon('home', 'agh-ico-s'), h('span', { text: t('view_exterior') })),
+			h('button', { type: 'button', 'aria-pressed': S.view === 'int' ? 'true' : 'false', onclick: function () { setView('int'); } }, icon('sofa', 'agh-ico-s'), h('span', { text: t('view_interior') })));
+	}
+	function roomChips() {
+		var cur = curRoom(), list = roomList();
+		if (cur && list.every(function (r) { return r.id !== cur.id; })) { list.unshift(cur); }
+		return h('div', { class: 'agh-3d-rooms', role: 'group', 'aria-label': t('view_rooms') }, list.map(function (r) {
+			return h('button', { type: 'button', 'aria-pressed': cur && r.id === cur.id ? 'true' : 'false', onclick: function () { setView('int', r.id); }, text: r.name });
+		}));
+	}
 	function previewCaption(c) {
+		if (S.view === 'int' && A3) {
+			var r = curRoom();
+			return h('div', { class: 'agh-preview-cap' },
+				h('div', null, h('div', { class: 'agh-eyebrow', text: t('view_interior_cap') }), h('div', { class: 'agh-h', text: r ? r.name : '' })),
+				h('span', { class: 'agh-badge', text: t('schematic') }));
+		}
 		return h('div', { class: 'agh-preview-cap' },
 			h('div', null, h('div', { class: 'agh-eyebrow', text: t('live_preview') }), h('div', { class: 'agh-h', text: (c.house_name || optLabel(S.fields.arch_style || {}, c.arch_style)) })),
 			h('span', { class: 'agh-badge', text: t('schematic') }));

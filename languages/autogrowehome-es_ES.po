@@ -7126,3 +7126,55 @@ msgstr "Para administradores: en tu propio sitio la línea define( 'AGH_OWNER_MO
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "El diseñador funciona en modo básico (Starter): %1$d de %2$d ajustes están ocultos para los visitantes porque no hay una licencia Professional activa (o terminó el periodo de gracia). En tu propio sitio añade a wp-config.php: define( 'AGH_OWNER_MODE', true ); – en el sitio de un cliente activa la licencia."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Recercado de ventana (moldura)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "El marco que rodea la ventana en la fachada; «Sin recercado» lo elimina."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "Según el estilo"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Sin recercado"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Recercado blanco"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Más claro que la fachada"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Recercado oscuro"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Recercado de piedra"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Vista"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Exterior"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Interior"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Vista interior"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Ver por dentro"

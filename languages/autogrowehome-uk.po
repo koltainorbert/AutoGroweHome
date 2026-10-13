@@ -7128,3 +7128,55 @@ msgstr "Для адміністраторів: на власному сайті 
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "Конструктор працює в базовому режимі (Starter): %1$d з %2$d налаштувань приховано від відвідувачів, бо немає активної ліцензії Professional (або минув пільговий період). На власному сайті додайте до wp-config.php: define( 'AGH_OWNER_MODE', true ); – на сайті клієнта активуйте ліцензію."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Обрамлення вікна (лиштва)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "Рамка навколо вікна на фасаді; «Без обрамлення» прибирає її."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "За стилем"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Без обрамлення"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Біле обрамлення"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Світліше за фасад"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Темне обрамлення"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Кам'яне обрамлення"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Вигляд"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Ззовні"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Всередині"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Вигляд зсередини"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Подивитися зсередини"

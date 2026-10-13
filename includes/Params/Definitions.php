@@ -459,6 +459,19 @@ final class Definitions {
 				)
 			)
 		);
+		$f[] = array_merge(
+			array( 'id' => 'window_trim', 'category' => 'openings', 'type' => 'select', 'label' => __( 'Ablak körüli keret (szegély)', 'autogrowehome' ), 'help' => __( 'A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti.', 'autogrowehome' ), 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'  => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'none'  => array( __( 'Nincs keret', 'autogrowehome' ), 'windows set into the wall without surrounds' ),
+					'white' => array( __( 'Fehér keret', 'autogrowehome' ), 'white window surrounds' ),
+					'light' => array( __( 'A homlokzatnál világosabb', 'autogrowehome' ), 'window surrounds a shade lighter than the facade' ),
+					'dark'  => array( __( 'Sötét keret', 'autogrowehome' ), 'dark window surrounds' ),
+					'stone' => array( __( 'Kőkeret', 'autogrowehome' ), 'stone window surrounds' ),
+				)
+			)
+		);
 		$f[] = array( 'id' => 'window_divided', 'category' => 'openings', 'type' => 'toggle', 'label' => __( 'Osztott üvegezés', 'autogrowehome' ), 'help' => '', 'default' => false, 'advanced' => true, 'prompt' => 'divided-lite glazing bars' );
 		$f[] = array( 'id' => 'corner_window', 'category' => 'openings', 'type' => 'toggle', 'label' => __( 'Sarokablak', 'autogrowehome' ), 'help' => '', 'default' => false, 'advanced' => true, 'prompt' => 'one frameless corner window' );
 		$f[] = array_merge(

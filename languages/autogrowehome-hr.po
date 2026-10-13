@@ -7128,3 +7128,55 @@ msgstr "Za administratore: na vlastitoj stranici redak define( 'AGH_OWNER_MODE',
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "Dizajner radi u osnovnom načinu (Starter): %1$d od %2$d postavki skriveno je od posjetitelja jer nema aktivne licence Professional (ili je isteklo razdoblje odgode). Na vlastitoj stranici dodajte u wp-config.php: define( 'AGH_OWNER_MODE', true ); – na stranici klijenta aktivirajte licencu."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Okvir oko prozora (šambrana)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "Okvir oko prozora na pročelju; „Bez okvira” ga uklanja."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "Prema stilu"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Bez okvira"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Bijeli okvir"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Svjetliji od pročelja"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Tamni okvir"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Kameni okvir"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Prikaz"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Izvana"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Iznutra"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Pogled iznutra"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Pogledaj iznutra"

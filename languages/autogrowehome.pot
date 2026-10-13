@@ -7098,3 +7098,55 @@ msgstr ""
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr ""

@@ -553,7 +553,8 @@ House.prototype.opening = function (g, o, T, st) {
 		return;
 	}
 	// window
-	if (st.trim) { var tc = st.trim === 'light' ? shadeHex(col(c.facade_color, '#F2EFE9'), 0.35) : st.trim; this.frameRect(g, x0 - 0.13, y0 - 0.13, x1 + 0.13, y1 + (arch ? Math.min(o.w / 2, 0.4) : 0) + 0.13, T, T + 0.04, 0.13, solid(tc, 0.7)); }
+	var tc = SK()._trim(c);
+	if (tc) { this.frameRect(g, x0 - 0.13, y0 - 0.13, x1 + 0.13, y1 + (arch ? Math.min(o.w / 2, 0.4) : 0) + 0.13, T, T + 0.04, 0.13, c.window_trim === 'stone' ? pbr('stone', { color: tc }, { normal: 1.5 }) : solid(tc, 0.7)); }
 	if (st.lintel) { g.add(lbox(x0 - 0.16, y1 + 0.02, T, x1 + 0.16, y1 + 0.22, T + 0.05, st.lintel === '#1E1F21' ? solid(st.lintel, 0.5, 0.6) : pbr('wood', { color: st.lintel }, { normal: 1 }))); }
 	this.frameRect(g, x0, y0, x1, y1, w0, w1, fr, fm);
 	if (mat === 'wood' || mat === 'wood_alu') { this.frameRect(g, x0 + fr * 0.55, y0 + fr * 0.55, x1 - fr * 0.55, y1 - fr * 0.55, w1 - 0.01, w1 + 0.005, fr * 0.4, pbr('wood', { color: '#A8744A' }, { normal: 0.6 })); }
@@ -1354,18 +1355,22 @@ Viewer.prototype.update = function (cfg, mode) {
 	this.scene.environmentIntensity = night ? 1.2 : (c.time_of_day === 'blue' ? 1.2 : (overcast ? 1.6 : 0.9));
 	this.ground.material = groundVC(c);
 	var hz = overcast ? (night ? '#151A26' : (c.time_of_day === 'blue' ? '#5C6175' : '#C9CDD2')) : (SKYCOL[c.time_of_day] || SKYCOL.golden).hor;
-	this.scene.fog = new THREE.FogExp2(hz, overcast ? 0.0075 : 0.0045);
+	// interior view: one room as a cut-away, without the meadow, the tree line and the haze
+	var inner = !!c._int || mode === 'interior';
+	this.scene.fog = inner ? null : new THREE.FogExp2(hz, overcast ? 0.0075 : 0.0045);
+	this.ground.visible = !inner; this.treeline.visible = !inner;
 	// rebuild the house
 	if (this.house) { this.scene.remove(this.house.root); disposeTree(this.house.root); }
 	if (mode === 'facade') { this.house = facadeScene(c); }
 	else if (mode === 'floor') { this.house = floorScene(c); }
+	else if (inner) { this.house = interiorScene(c, c._int || { type: 'living' }); }
 	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini' }).build(); }
 	mergeStatic(this.house.fit || this.house.root);
 	if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
 	this.scene.add(this.house.root);
 	this.renderer.shadowMap.needsUpdate = true;
 	this.treelineFor(c);
-	var key = [c.camera, c.lens, mode].join('|');
+	var key = [inner ? 'interior' : c.camera, c.lens, mode, inner && c._int ? (c._int.id || c._int.type) : ''].join('|');
 	this.fitCamera(key !== this.camKey);
 	this.camKey = key;
 	this.requestRender();
@@ -1400,7 +1405,8 @@ Viewer.prototype.fitCamera = function (reset) {
 	this.camera.fov = vfov; this.camera.updateProjectionMatrix();
 	var aspect = this.camera.aspect || 1.5, hfov = 2 * Math.atan(Math.tan(vfov * D2R / 2) * aspect);
 	var dist = sph.radius / Math.sin(Math.min(vfov * D2R, hfov) / 2) * (this.thumb ? 0.68 : 0.8);
-	var preset = { three_quarter: [36, 14], frontal: [4, 8], low: [30, 4], elevated: [40, 38] }[c.camera || 'three_quarter'];
+	var room = this.house && this.house.room;
+	var preset = room ? [32, 42] : { three_quarter: [36, 14], frontal: [4, 8], low: [30, 4], elevated: [40, 38] }[c.camera || 'three_quarter'];
 	var target = sph.center.clone(); target.y = Math.max(1.2, sph.center.y * 0.75);
 	// sun shadow frustum around the house
 	var R = sph.radius + 14;
@@ -1417,7 +1423,7 @@ Viewer.prototype.fitCamera = function (reset) {
 		var az = preset[0] * D2R, el = preset[1] * D2R;
 		var dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
 		this.camera.position.copy(target).addScaledVector(dir, dist);
-		if (c.camera === 'low') { this.camera.position.y = 1.4; }
+		if (c.camera === 'low' && !room) { this.camera.position.y = 1.4; }
 		this.camera.lookAt(target);
 		if (this.controls) { this.controls.target.copy(target); this.controls.minDistance = sph.radius * 0.5; this.controls.maxDistance = sph.radius * 4; }
 	}
@@ -1604,6 +1610,306 @@ function floorScene(c) {
 	// camera framing: the corner with floor in front (an invisible box)
 	var fit = new THREE.Mesh(boxGeo(4.2, 1.2, 4.2), new THREE.MeshBasicMaterial({ visible: false }));
 	fit.position.copy(X(-0.5, -0.5, 0.6)); hs.add(fit);
+	return hs;
+}
+
+/* ================================================================== interior: a room as a cut-away doll's house */
+// The room the designer shows: floor, walls (windows, door, feature wall), ceiling details, light,
+// curtains, furniture and fittings of its type – all from the visitor's interior settings. The walls are
+// single-sided and face inwards, so from any side the camera looks over the near walls into the room.
+var ROOM_KIND = { living: 'living', living_kitchen: 'living_kitchen', dining: 'dining', kitchen: 'kitchen', master: 'bed', bedroom: 'bed', guest: 'bed', kids: 'kids', office: 'office', wardrobe: 'wardrobe', bathroom: 'bath', wc: 'wc', wellness: 'bath', sauna: 'bath', laundry: 'laundry', utility: 'laundry', pantry: 'laundry', technical: 'laundry', hall: 'hall', corridor: 'hall', stairs: 'hall', gym: 'office', playroom: 'kids', wine: 'office', custom: 'living' };
+function roomFloorKey(c, type) {
+	var same = function (v) { return !v || v === 'same' ? (c.floor_main || 'parquet') : v; };
+	if (/^(bathroom|wc|wellness|sauna|laundry|utility)$/.test(type)) { return c.floor_wet || 'tiles'; }
+	if (/^(master|bedroom|guest|kids|wardrobe|playroom)$/.test(type)) { return same(c.floor_bedrooms); }
+	if (type === 'kitchen') { return same(c.floor_kitchen); }
+	if (/^(hall|corridor|stairs)$/.test(type)) { return same(c.floor_entry); }
+	return c.floor_main || 'parquet';
+}
+function roomFloorMat(c, key) {
+	var fl = FLOOR_MATS[key] || FLOOR_MATS.parquet, o = Object.assign({ pattern: fl[0], color: fl[1] }, fl[2] || {});
+	if (/^(planks|herring|chevron)$/.test(fl[0]) && ['parquet', 'herringbone', 'chevron', 'laminate'].indexOf(key) !== -1 && /^#[0-9a-f]{6}$/i.test(c.floor_color || '')) { o.color = c.floor_color; }
+	if (fl[0] === 'tile' && /^#[0-9a-f]{6}$/i.test(c.grout_color || '')) { o.grout = c.grout_color; }
+	var polished = key === 'marble' || key === 'terrazzo';
+	return pbr('floor', o, { normal: fl[0] === 'carpet' ? 1.6 : (polished ? 0.4 : 1), roughness: 1, clearcoat: polished ? 0.6 : 0, physical: polished });
+}
+// Wall tiles of wet rooms.
+function bathTileMat(c) {
+	var k = { large_stone: 'tiles_large', microcement: 'microcement', terrazzo: 'terrazzo', marble: 'marble', zellige: 'tiles' }[c.bath_tiles] || 'tiles_large';
+	if (c.bath_tiles === 'zellige') { return pbr('floor', { pattern: 'tile', color: '#7FA6A0', size: 0.15, grout: '#E8E4DC' }, { normal: 1.2, roughness: 0.6, clearcoat: 0.8, physical: true }); }
+	return roomFloorMat(c, k);
+}
+function interiorScene(c, room) {
+	// the room's own settings (rooms editor) override the house-wide interior ones
+	if (room) {
+		c = Object.assign({}, c);
+		['interior_style', 'wall_color', 'furniture_color', 'ceiling_height'].forEach(function (k) { if (room[k]) { c[k] = room[k]; } });
+	}
+	var hs = new House(c, { mini: true }), K = SK(), pal = (K._interior || {})[c.interior_style] || ['#F2EBE1', '#D7C3A8', '#A88464', '#6E5A4A'];
+	var type = room && room.type ? room.type : 'living', kind = ROOM_KIND[type] || 'living', night = hs.night;
+	var area = clamp(num(room && room.area, 0) || ({ living: 30, living_kitchen: 45, dining: 12, kitchen: 12, bed: 14, kids: 12, office: 10, wardrobe: 6, bath: 7, wc: 2.5, laundry: 5, hall: 7 }[kind] || 14), 2.5, 90);
+	var W = clamp(Math.sqrt(area * 1.35), 1.6, 10), D = clamp(area / W, 1.4, 8), H = clamp(num(c.ceiling_height, 2.8), 2.4, 4);
+	if (num(room && room.width, 0) >= 1 && num(room && room.length, 0) >= 1) { W = clamp(Math.max(room.width, room.length), 1.4, 12); D = clamp(Math.min(room.width, room.length), 1.4, 10); }
+	if (kind === 'wc') { W = Math.max(W, 1.5); D = Math.max(D, 1.5); }
+	var g = hs.fit, add = function (m) { if (m) { g.add(m); } return m; };
+	var B = function (x0, y0, z0, x1, y1, z1, m, o) { return add(box(x0, y0, z0, x1, y1, z1, m, o)); };
+	var fs = c.furniture_style || 'contemporary';
+	var woodC = { contemporary: '#C9A27A', mid_century: '#7A4E2D', classic: '#5A3A24', rustic: '#8A6446', luxury: '#2B2421' }[fs] || '#C9A27A';
+	var wood = pbr('wood', { color: woodC }, { normal: 0.8 }), metal = fs === 'luxury' ? solid('#B08D57', 0.3, 0.9) : solid('#2B2B2B', 0.45, 0.6);
+	var fabric = solid(col(c.furniture_color, '#D8CCBB'), 0.95), accent = solid(pal[3], 0.9), rugM = solid(pal[1], 1), soft = solid(pal[2], 0.95);
+	var wallC = col(c.wall_color, '#F4F1EC'), wallM = solid(wallC, 0.92), white = solid('#F6F5F2', 0.5), dark = solid('#1E1F21', 0.4, 0.3);
+	var wet = kind === 'bath' || kind === 'wc';
+	var wallMat = wet ? bathTileMat(c) : (has(c.wall_finish, 'limewash') ? pbr('render', { color: wallC, texture: 'coarse' }, { normal: 0.5 }) : wallM);
+	// floor slab (with a light base around it) and the floor itself
+	hs.add(box(-0.35, -0.35, -0.25, W + 0.35, D + 0.35, -0.02, solid('#E4DFD7', 0.95)), false);
+	B(0, 0, -0.02, W, D, 0.0, roomFloorMat(c, roomFloorKey(c, type)));
+	// walls: back (y = 0), left (x = 0), right (x = W), front (y = D); holes for windows and the door
+	var ws = K._win(c), winW = Math.min(c.window_style === 'panoramic' ? 2.4 : Math.max(ws.w, 1.0), W - 1.0), winH = Math.min(c.window_style === 'panoramic' ? H - 0.35 : Math.max(ws.h, 1.3), H - 0.7), sill = c.window_style === 'panoramic' ? 0.05 : clamp(ws.sill, 0.5, 1.0);
+	if (wet) { winW = Math.min(1.0, W - 0.8); winH = 0.7; sill = Math.min(1.6, H - 0.9); }
+	// the camera looks from the front right: windows and the door are on the far walls (back, left), where
+	// they read from inside; furniture against the back wall decides where its windows may go
+	var layoutK = c.kitchen_layout || 'island';
+	var backR = kind === 'living_kitchen' ? [W * 0.45, W] : [0, W];
+	var backN = ['living', 'living_kitchen', 'dining', 'office'].indexOf(kind) !== -1 ? Math.max(1, Math.floor((backR[1] - backR[0] - 0.6) / (winW + 1.2))) : 0;
+	var leftR = [Math.min(D - 0.2, 1.6), D - 0.25], leftN = { bed: 1, kids: 1, bath: 1, wc: 1, laundry: 1, kitchen: layoutK === 'l' || layoutK === 'u' ? 0 : 1, living: D > 4.2 ? 1 : 0, dining: D > 4 ? 1 : 0 }[kind] || 0;
+	if (leftR[1] - leftR[0] < 1.0) { leftN = 0; }
+	if (type === 'pantry' || type === 'technical' || type === 'wine') { backN = 0; leftN = 0; }
+	var walls = [
+		{ o: [0, 0], u: [1, 0], len: W, win: backN, range: backR },
+		{ o: [0, D], u: [0, -1], len: D, win: leftN, range: leftR, door: true },
+		{ o: [W, 0], u: [0, 1], len: D, win: 0 },
+		{ o: [W, D], u: [-1, 0], len: W, win: 0 }
+	];
+	var fm = frameMat(c), gm = glassMat(c, night), sillM = solid('#ECE9E3', 0.6), doorM = solid(shadeHex(wallC, -0.06), 0.6);
+	var windows = [];
+	walls.forEach(function (Wl) {
+		var U = X(Wl.u[0], Wl.u[1], 0), V = new THREE.Vector3(0, 1, 0), N = new THREE.Vector3().crossVectors(U, V);
+		var grp = new THREE.Group(), mx = new THREE.Matrix4().makeBasis(U, V, N); mx.setPosition(X(Wl.o[0], Wl.o[1], 0));
+		grp.matrixAutoUpdate = false; grp.matrix.copy(mx);
+		var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(Wl.len, 0); s.lineTo(Wl.len, H); s.lineTo(0, H); s.lineTo(0, 0);
+		var ops = [];
+		var r0 = Wl.range ? Wl.range[0] : 0, rl = (Wl.range ? Wl.range[1] : Wl.len) - r0, ww = Math.min(winW, rl - 0.3);
+		for (var i = 0; i < Wl.win && ww > 0.5; i++) { var step = rl / Wl.win, x = r0 + step * i + (step - ww) / 2; ops.push({ x: x, y: sill, w: ww, h: winH, win: true }); }
+		if (Wl.door && Wl.len > 1.4) { ops.push({ x: 0.3, y: 0, w: 0.9, h: Math.min(2.1, H - 0.2), door: true }); }
+		ops.forEach(function (o) { var p = new THREE.Path(); p.moveTo(o.x, o.y); p.lineTo(o.x + o.w, o.y); p.lineTo(o.x + o.w, o.y + o.h); p.lineTo(o.x, o.y + o.h); p.lineTo(o.x, o.y); s.holes.push(p); });
+		var wm = new THREE.Mesh(new THREE.ShapeGeometry(s, 6), wallMat); wm.receiveShadow = true; wm.castShadow = true; grp.add(wm);
+		var lb = function (u0, v0, w0, u1, v1, w1, m) { grp.add(lbox(u0, v0, w0, u1, v1, w1, m)); };
+		ops.forEach(function (o) {
+			var x0 = o.x, x1 = o.x + o.w, y0 = o.y, y1 = o.y + o.h;
+			// reveals (wall thickness) and the opening's contents
+			lb(x0 - 0.02, y0, -0.25, x0, y1, 0, wallMat); lb(x1, y0, -0.25, x1 + 0.02, y1, 0, wallMat); lb(x0, y1, -0.25, x1, y1 + 0.02, 0, wallMat);
+			if (o.win) {
+				lb(x0, y0 - 0.02, -0.25, x1, y0, 0, wallMat);
+				lb(x0, y0, -0.16, x1, y0 + 0.06, -0.08, fm); lb(x0, y1 - 0.06, -0.16, x1, y1, -0.08, fm); lb(x0, y0, -0.16, x0 + 0.06, y1, -0.08, fm); lb(x1 - 0.06, y0, -0.16, x1, y1, -0.08, fm);
+				var panes = Math.max(1, Math.round(o.w / 1.2));
+				for (var p = 1; p < panes; p++) { var px = x0 + o.w * p / panes; lb(px - 0.03, y0, -0.16, px + 0.03, y1, -0.08, fm); }
+				grp.add(lbox(x0 + 0.05, y0 + 0.05, -0.13, x1 - 0.05, y1 - 0.05, -0.12, gm, true));
+				if (y0 > 0.2) { lb(x0 - 0.06, y0 - 0.03, -0.02, x1 + 0.06, y0 + 0.02, 0.2, sillM); }
+				windows.push({ grp: grp, x0: x0, x1: x1, y0: y0, y1: y1, wall: Wl });
+			} else {
+				lb(x0, y0, -0.06, x1, y1, -0.02, doorM);
+				lb(x0 + 0.72, y0 + 1.0, 0, x0 + 0.84, y0 + 1.03, 0.06, metal);
+				// door frame
+				lb(x0 - 0.07, y0, -0.02, x0, y1 + 0.07, 0.02, white); lb(x1, y0, -0.02, x1 + 0.07, y1 + 0.07, 0.02, white); lb(x0 - 0.07, y1, -0.02, x1 + 0.07, y1 + 0.07, 0.02, white);
+			}
+		});
+		// skirting
+		if (c.skirting && !wet) { lb(0, 0, 0, Wl.len, 0.08, 0.015, white); }
+		g.add(grp);
+	});
+	// feature wall behind the main furniture (back wall, right part)
+	var fw = c.wall_finish || [], fx0 = W * 0.08, fx1 = W * 0.92;
+	if (!wet && fw.length) {
+		var f0 = fw[0];
+		if (f0 === 'slats') { for (var sx = fx0; sx < fx1; sx += 0.09) { B(sx, 0.0, 0.0, sx + 0.05, 0.035, H - 0.02, wood); } }
+		else if (f0 === 'stone') { B(fx0, 0, 0, fx1, 0.03, H, pbr('stone', { color: '#B9AE9C' }, { normal: 2 })); }
+		else if (f0 === 'panels') { B(fx0, 0, 0, fx1, 0.02, 1.1, solid(shadeHex(wallC, -0.05), 0.8)); for (var px2 = fx0 + 0.05; px2 < fx1 - 0.4; px2 += 0.6) { B(px2, 0.02, 0.15, px2 + 0.5, 0.035, 0.95, solid(shadeHex(wallC, 0.04), 0.8)); } B(fx0, 0, 1.08, fx1, 0.05, 1.13, white); }
+		else if (f0 === 'wallpaper') { B(fx0, 0, 0, fx1, 0.012, H, pbr('panel', { color: pal[1] }, { normal: 0.4 })); }
+	}
+	// ceiling: beams, a concealed light cove
+	if (c.ceiling === 'beams') { for (var bx = 0.6; bx < W; bx += 1.2) { B(bx - 0.08, 0, H - 0.22, bx + 0.08, D, H, wood); } }
+	if (c.ceiling === 'cove' || c.lighting === 'minimal') {
+		var cove = night ? solid('#FFE2B0', 0.3, 0, { emissive: '#FFD9A0', emissiveIntensity: 3 }) : solid('#FFF6E6', 0.4);
+		B(0.02, 0.02, H - 0.08, W - 0.02, 0.06, H - 0.05, cove); B(0.02, 0.02, H - 0.08, 0.06, D - 0.02, H - 0.05, cove);
+	}
+	// curtains beside the windows
+	if (c.curtains !== false) {
+		var cm = solid(shadeHex(pal[0], -0.04), 1);
+		windows.forEach(function (w) {
+			var lb2 = function (u0, v0, w0, u1, v1, w1, m) { w.grp.add(lbox(u0, v0, w0, u1, v1, w1, m)); };
+			lb2(w.x0 - 0.45, 0.02, 0.06, w.x0 - 0.05, Math.min(H - 0.1, w.y1 + 0.25), 0.16, cm);
+			lb2(w.x1 + 0.05, 0.02, 0.06, w.x1 + 0.45, Math.min(H - 0.1, w.y1 + 0.25), 0.16, cm);
+			lb2(w.x0 - 0.5, Math.min(H - 0.08, w.y1 + 0.28), 0.1, w.x1 + 0.5, Math.min(H - 0.05, w.y1 + 0.31), 0.13, metal);
+		});
+	}
+	// lights
+	function pendant(x, y, big) {
+		var z = H - (big ? 1.1 : 0.85), r = big ? 0.55 : 0.22;
+		add(rod(X(x, y, H), X(x, y, z + r * 0.5), 0.01, dark, 4));
+		var sh = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 12, 0, Math.PI * 2, 0, Math.PI * (big ? 0.62 : 0.5)), night ? solid('#FFE7C0', 0.4, 0, { emissive: '#FFD9A0', emissiveIntensity: 2.5 }) : (fs === 'luxury' ? metal : solid(pal[3], 0.5, 0.2)));
+		sh.material.side = THREE.DoubleSide; sh.position.copy(X(x, y, z)); sh.castShadow = true; add(sh);
+		if (night) { var L = new THREE.PointLight('#FFC98A', 5, 7, 2); L.position.copy(X(x, y, z - 0.1)); add(L); }
+	}
+	function floorLamp(x, y) {
+		B(x - 0.15, y - 0.15, 0, x + 0.15, y + 0.15, 0.03, metal); add(rod(X(x, y, 0), X(x, y, 1.45), 0.015, metal, 6));
+		var sh = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 0.3, 20, 1, true), night ? solid('#FFE7C0', 0.5, 0, { emissive: '#FFD9A0', emissiveIntensity: 2 }) : solid('#EFE8DC', 0.9));
+		sh.material.side = THREE.DoubleSide; sh.position.copy(X(x, y, 1.5)); add(sh);
+	}
+	function plantPot(x, y, s) { var pot = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * s, 0.14 * s, 0.38 * s, 18), solid(pal[3], 0.7)); pot.position.copy(X(x, y, 0.19 * s)); pot.castShadow = true; add(pot); hs.plant('shrub', x, y, 1.0 * s, 4); }
+	function art(x, y0w, wlen) { B(x, 0.0, 1.35, x + wlen, 0.03, 1.35 + wlen * 0.7, solid(pal[3], 0.6)); B(x + 0.05, 0.03, 1.4, x + wlen - 0.05, 0.035, 1.3 + wlen * 0.7, solid(pal[1], 0.9)); void y0w; }
+	function rug(x0, y0, x1, y1) { B(x0, y0, 0, x1, y1, 0.015, rugM, { noCast: true }); }
+	function sofa(x0, y0, w, L) {
+		// seat along the back wall side (facing +y), optional chaise on the right
+		B(x0, y0, 0.08, x0 + w, y0 + 0.9, 0.42, fabric); B(x0, y0, 0.42, x0 + w, y0 + 0.22, 0.85, fabric);
+		B(x0 - 0.18, y0, 0.08, x0, y0 + 0.9, 0.62, fabric); B(x0 + w, y0, 0.08, x0 + w + 0.18, y0 + 0.9, 0.62, fabric);
+		if (L) { B(x0 + w - 0.9, y0 + 0.9, 0.08, x0 + w, y0 + 2.0, 0.42, fabric); B(x0 + w, y0 + 0.9, 0.08, x0 + w + 0.18, y0 + 2.0, 0.62, fabric); }
+		for (var k = 0; k < 3; k++) { B(x0 + 0.25 + k * (w - 0.6) / 2, y0 + 0.2, 0.42, x0 + 0.65 + k * (w - 0.6) / 2, y0 + 0.32, 0.8, soft); }
+		[[x0 + 0.05, y0 + 0.05], [x0 + w - 0.1, y0 + 0.05], [x0 + 0.05, y0 + 0.8], [x0 + w - 0.1, y0 + 0.8]].forEach(function (q) { B(q[0], q[1], 0, q[0] + 0.05, q[1] + 0.05, 0.08, metal); });
+	}
+	function armchair(x, y) { B(x, y, 0.1, x + 0.8, y + 0.8, 0.45, soft); B(x, y + 0.65, 0.45, x + 0.8, y + 0.8, 0.85, soft); [[x, y], [x + 0.75, y], [x, y + 0.75], [x + 0.75, y + 0.75]].forEach(function (q) { B(q[0], q[1], 0, q[0] + 0.05, q[1] + 0.05, 0.1, wood); }); }
+	function table(x0, y0, x1, y1, z, round) {
+		if (round) { var t = new THREE.Mesh(new THREE.CylinderGeometry((x1 - x0) / 2, (x1 - x0) / 2, 0.04, 40), fs === 'luxury' ? pbr('floor', { pattern: 'tile', color: '#EEECE8', size: 2, vein: 1 }, { normal: 0.3 }) : wood); t.position.copy(X((x0 + x1) / 2, (y0 + y1) / 2, z - 0.02)); t.castShadow = true; add(t); add(rod(X((x0 + x1) / 2, (y0 + y1) / 2, 0), X((x0 + x1) / 2, (y0 + y1) / 2, z - 0.04), 0.06, metal, 10)); return; }
+		B(x0, y0, z - 0.04, x1, y1, z, fs === 'luxury' ? pbr('stone', { color: '#2E2B29' }, { normal: 0.4 }) : wood);
+		[[x0 + 0.05, y0 + 0.05], [x1 - 0.1, y0 + 0.05], [x0 + 0.05, y1 - 0.1], [x1 - 0.1, y1 - 0.1]].forEach(function (q) { B(q[0], q[1], 0, q[0] + 0.05, q[1] + 0.05, z - 0.04, fs === 'mid_century' || fs === 'rustic' || fs === 'classic' ? wood : metal); });
+	}
+	function chair(x, y, face) { B(x, y, 0.44, x + 0.45, y + 0.45, 0.48, fs === 'luxury' ? soft : wood); var by = face > 0 ? y : y + 0.41; B(x, by, 0.48, x + 0.45, by + 0.04, 0.9, fs === 'luxury' ? soft : wood); [[x, y], [x + 0.41, y], [x, y + 0.41], [x + 0.41, y + 0.41]].forEach(function (q) { B(q[0], q[1], 0, q[0] + 0.04, q[1] + 0.04, 0.44, metal); }); }
+	function dining(cx, cy, n) {
+		var tw = Math.max(1.4, n / 2 * 0.6), x0 = cx - tw / 2, x1 = cx + tw / 2;
+		table(x0, cy - 0.45, x1, cy + 0.45, 0.75, false);
+		for (var k = 0; k < n / 2; k++) { var x = x0 + 0.1 + k * (tw - 0.2) / Math.max(1, n / 2 - 1) - (n / 2 === 1 ? -tw / 2 + 0.3 : 0); chair(Math.min(x, x1 - 0.5), cy - 0.95, 1); chair(Math.min(x, x1 - 0.5), cy + 0.5, -1); }
+		if (c.lighting !== 'minimal') { pendant(cx - (tw > 2 ? 0.5 : 0), cy, c.lighting === 'statement'); if (tw > 2 && c.lighting !== 'statement') { pendant(cx + 0.5, cy, false); } }
+	}
+	function bed(cx, double) {
+		var bw = double ? 1.8 : 1.0, x0 = cx - bw / 2, L = 2.1;
+		B(x0 - 0.05, 0.05, 0.0, x0 + bw + 0.05, L + 0.1, 0.3, fs === 'luxury' || fs === 'contemporary' ? fabric : wood);
+		B(x0, 0.1, 0.3, x0 + bw, L, 0.52, white);
+		B(x0, 0.75, 0.52, x0 + bw, L, 0.58, soft);
+		B(x0 - 0.1, 0.02, 0.0, x0 + bw + 0.1, 0.12, 1.15, fs === 'classic' || fs === 'rustic' ? wood : accent);
+		B(x0 + 0.1, 0.18, 0.52, x0 + bw / 2 - 0.05, 0.5, 0.68, white); if (double) { B(x0 + bw / 2 + 0.05, 0.18, 0.52, x0 + bw - 0.1, 0.5, 0.68, white); }
+		[x0 - 0.6, x0 + bw + 0.1].forEach(function (nx) { B(nx, 0.05, 0, nx + 0.5, 0.45, 0.5, wood); var lmp = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 0.22, 16), night ? solid('#FFE7C0', 0.5, 0, { emissive: '#FFD9A0', emissiveIntensity: 2 }) : solid('#EFE8DC', 0.8)); lmp.position.copy(X(nx + 0.25, 0.25, 0.75)); add(lmp); add(rod(X(nx + 0.25, 0.25, 0.5), X(nx + 0.25, 0.25, 0.64), 0.012, metal, 6)); });
+		rug(x0 - 0.5, L - 0.6, x0 + bw + 0.5, L + 0.8);
+	}
+	function wardrobe(x0, y0, w, along) {
+		var fr = solid(col(c.fronts_color, '#E9E4DC'), 0.6);
+		if (along === 'y') { B(x0, y0, 0, x0 + 0.6, y0 + w, Math.min(2.4, H - 0.1), fr); for (var k = 0.6; k < w; k += 0.6) { B(x0 + 0.6, y0 + k - 0.005, 0.05, x0 + 0.605, y0 + k + 0.005, Math.min(2.35, H - 0.15), dark); } }
+		else { B(x0, y0, 0, x0 + w, y0 + 0.6, Math.min(2.4, H - 0.1), fr); for (var k2 = 0.6; k2 < w; k2 += 0.6) { B(x0 + k2 - 0.005, y0 + 0.6, 0.05, x0 + k2 + 0.005, y0 + 0.605, Math.min(2.35, H - 0.15), dark); } }
+	}
+	function desk(x0, y0) { table(x0, y0, x0 + 1.4, y0 + 0.7, 0.75, false); chair(x0 + 0.45, y0 + 0.85, -1); B(x0 + 0.5, y0 + 0.1, 0.75, x0 + 0.9, y0 + 0.12, 1.05, dark); }
+	function shelf(x0, y0, w) { for (var z = 0.4; z < 2.0; z += 0.4) { B(x0, y0, z, x0 + w, y0 + 0.32, z + 0.03, wood); for (var bk = x0 + 0.05; bk < x0 + w - 0.1; bk += 0.12) { if ((Math.round(bk * 37 + z * 11)) % 3) { B(bk, y0 + 0.04, z + 0.03, bk + 0.07, y0 + 0.26, z + 0.3, solid([pal[1], pal[2], pal[3]][Math.round(bk * 10) % 3], 0.9)); } } } [x0, x0 + w - 0.03].forEach(function (sx2) { B(sx2, y0, 0, sx2 + 0.03, y0 + 0.32, 2.05, wood); }); }
+	// kitchen: cabinet runs, worktop, backsplash, appliances, sink, island
+	function kitchen(x0, y0, x1, y1, layout) {
+		var fr = c.fronts === 'wood_veneer' ? pbr('wood', { color: col(c.fronts_color, '#B98D63') }, { normal: 0.6 }) : (c.fronts === 'gloss' ? cached('kgloss' + c.fronts_color, function () { return new THREE.MeshPhysicalMaterial({ color: col(c.fronts_color, '#E9E4DC'), roughness: 0.15, clearcoat: 1, clearcoatRoughness: 0.08 }); }) : solid(col(c.fronts_color, '#E9E4DC'), c.fronts === 'fenix' ? 0.95 : 0.6));
+		var wt = c.worktop || 'quartz', wtc = col(c.worktop_color, '#EDEBE6');
+		var top = wt === 'wood' ? pbr('wood', { color: wtc === '#EDEBE6' ? '#B98D63' : wtc }, { normal: 0.6 }) : (wt === 'granite' ? pbr('stone', { color: wtc === '#EDEBE6' ? '#4A4542' : wtc }, { normal: 0.5 }) : solid(wtc, wt === 'laminate' ? 0.6 : 0.3, 0, wt === 'quartz' || wt === 'ceramic' ? {} : undefined));
+		var hd = { handleless: null, bar_black: solid('#1E1F21', 0.4, 0.6), brass: solid('#B08D57', 0.3, 0.9), knobs: solid('#8E9296', 0.3, 0.9) }[c.handles || 'handleless'];
+		var bs = c.backsplash || 'worktop_material', bsM = bs === 'tiles' ? pbr('floor', { pattern: 'tile', color: '#E9E6E0', size: 0.15, grout: '#CFCAC2' }, { normal: 0.8 }) : (bs === 'glass' ? solid(shadeHex(wallC, -0.03), 0.1, 0.1) : (bs === 'mirror' ? solid('#C9CDD0', 0.05, 1) : top));
+		var app = c.appliances || ['oven', 'hob', 'dishwasher', 'fridge'], hob = null, sink = null;
+		// one run along x (y fixed at the back wall) or along y (x fixed at a side wall)
+		function run(a0, a1, alongY, at, flip, withUppers) {
+			var len = a1 - a0, BB = function (u0, v0, z0, u1, v1, z1, m) { return alongY ? B(flip ? at - v1 : at + v0, u0, z0, flip ? at - v0 : at + v1, u1, z1, m) : B(u0, flip ? at - v1 : at + v0, z0, u1, flip ? at - v0 : at + v1, z1, m); };
+			BB(a0, 0, 0, a1, 0.56, 0.1, dark);
+			BB(a0, 0, 0.1, a1, 0.58, 0.88, fr);
+			BB(a0 - 0.01, 0, 0.88, a1 + 0.01, 0.62, 0.92, top);
+			for (var k = a0 + 0.6; k < a1 - 0.05; k += 0.6) { BB(k - 0.004, 0.58, 0.12, k + 0.004, 0.585, 0.86, dark); }
+			if (hd) { for (var k2 = a0 + 0.3; k2 < a1 - 0.1; k2 += 0.6) { if (c.handles === 'knobs') { BB(k2 - 0.02, 0.58, 0.75, k2 + 0.02, 0.61, 0.79, hd); } else { BB(k2 - 0.12, 0.58, 0.8, k2 + 0.12, 0.6, 0.82, hd); } } }
+			else { BB(a0, 0.585, 0.84, a1, 0.59, 0.86, dark); }
+			if (withUppers) {
+				BB(a0, 0, 0.92, a1, 0.02, 1.5, bsM);
+				if (H > 2.4) { BB(a0, 0, 1.5, a1, 0.35, Math.min(2.25, H - 0.1), fr); for (var k3 = a0 + 0.6; k3 < a1 - 0.05; k3 += 0.6) { BB(k3 - 0.004, 0.35, 1.52, k3 + 0.004, 0.355, Math.min(2.23, H - 0.12), dark); } }
+			}
+			return { at: function (u, v, z) { return alongY ? [flip ? at - v : at + v, u, z] : [u, flip ? at - v : at + v, z]; }, len: len };
+		}
+		var back = run(x0, x1, false, y0, false, true);
+		// hob, hood, sink with tap, oven, fridge column, dishwasher
+		var hx = x0 + (x1 - x0) * 0.62, sxk = x0 + (x1 - x0) * 0.3;
+		if (has(app, 'hob')) { B(hx - 0.4, y0 + 0.08, 0.92, hx + 0.4, y0 + 0.55, 0.925, solid('#121314', 0.15, 0.2)); }
+		if (!has(app, 'hood_hidden') && H > 2.4) { B(hx - 0.45, y0, 1.6, hx + 0.45, y0 + 0.5, 1.68, solid('#B9BDC1', 0.3, 0.8)); B(hx - 0.15, y0, 1.68, hx + 0.15, y0 + 0.3, H, solid('#B9BDC1', 0.3, 0.8)); }
+		if (has(app, 'oven')) { B(hx - 0.3, y0 + 0.58, 0.2, hx + 0.3, y0 + 0.59, 0.78, solid('#16181A', 0.12, 0.3)); }
+		var sinkM = c.sink === 'composite' ? solid('#3A3836', 0.5) : (c.sink === 'farmhouse' ? solid('#F3F2EF', 0.2) : solid('#B9BDC1', 0.25, 0.9));
+		B(sxk - 0.4, y0 + 0.1, 0.9, sxk + 0.4, y0 + 0.5, 0.925, sinkM);
+		if (c.sink === 'farmhouse') { B(sxk - 0.42, y0 + 0.55, 0.62, sxk + 0.42, y0 + 0.62, 0.92, sinkM); }
+		add(rod(X(sxk, y0 + 0.08, 0.92), X(sxk, y0 + 0.08, 1.25), 0.015, hd || metal, 8)); add(rod(X(sxk, y0 + 0.08, 1.25), X(sxk, y0 + 0.3, 1.25), 0.015, hd || metal, 8));
+		if (has(app, 'dishwasher')) { B(sxk + 0.45, y0 + 0.58, 0.12, sxk + 1.05, y0 + 0.585, 0.86, dark); }
+		if (has(app, 'fridge') || has(app, 'side_by_side')) { var fw2 = has(app, 'side_by_side') ? 0.92 : 0.62; B(x1 - fw2, y0, 0, x1, y0 + 0.65, Math.min(2.25, H - 0.1), has(app, 'side_by_side') ? solid('#B9BDC1', 0.3, 0.8) : fr); if (has(app, 'side_by_side')) { B(x1 - fw2 / 2 - 0.004, y0 + 0.65, 0.1, x1 - fw2 / 2 + 0.004, y0 + 0.655, 2.0, dark); } }
+		if (has(app, 'wine')) { B(x0, y0, 0, x0 + 0.6, y0 + 0.6, 0.88, gm); }
+		if (has(app, 'coffee') && c.pantry_link !== false) { B(x1 - 1.3, y0, 0, x1 - 0.68, y0 + 0.65, Math.min(2.25, H - 0.1), fr); B(x1 - 1.22, y0 + 0.65, 1.0, x1 - 0.76, y0 + 0.66, 1.4, solid('#16181A', 0.15, 0.4)); }
+		if (layout === 'l' || layout === 'u') { run(y0 + 0.62, Math.min(y1, y0 + 0.62 + (y1 - y0) * 0.6), true, x0, false, true); }
+		if (layout === 'u') { run(y0 + 0.62, Math.min(y1, y0 + 0.62 + (y1 - y0) * 0.6), true, x1, true, false); }
+		if (layout === 'galley') { run(x0, x1, false, y0 + 2.2, true, false); }
+		if (layout === 'island') {
+			var iw = Math.min(2.4, (x1 - x0) * 0.6), ix = (x0 + x1) / 2 - iw / 2, iy = y0 + 1.75;
+			B(ix, iy, 0, ix + iw, iy + 0.9, 0.88, fr); B(ix - 0.05, iy - 0.05, 0.88, ix + iw + 0.05, iy + 1.2, 0.92, top);
+			for (var st2 = 0; st2 < Math.floor(iw / 0.6); st2++) { var sx3 = ix + 0.3 + st2 * 0.6; add(rod(X(sx3, iy + 1.45, 0), X(sx3, iy + 1.45, 0.65), 0.02, metal, 6)); var seat = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.06, 20), soft); seat.position.copy(X(sx3, iy + 1.45, 0.67)); add(seat); }
+			if (c.lighting !== 'minimal') { pendant(ix + iw * 0.3, iy + 0.45, false); pendant(ix + iw * 0.7, iy + 0.45, false); }
+		}
+	}
+	// bathroom fittings
+	function bathroom() {
+		var fx = c.bath_fixtures || ['walkin', 'double_basin', 'wc'], tap = { chrome: solid('#D7DADC', 0.15, 1), black: solid('#1E1F21', 0.35, 0.6), brass: solid('#B08D57', 0.25, 0.95), steel: solid('#A9ADB0', 0.35, 0.9) }[c.taps || 'black'];
+		var porc = solid('#F7F7F5', 0.15), x = 0.15;
+		var basins = has(fx, 'double_basin') ? 2 : (has(fx, 'basin') ? 1 : 0);
+		if (basins) {
+			var vw = basins === 2 ? Math.min(1.6, W * 0.45) : Math.min(0.9, W * 0.35), vx = W - vw - 0.2;
+			if (c.bath_storage !== false) { B(vx, 0, 0.3, vx + vw, 0.5, 0.82, solid(col(c.bath_color, '#D9D4CC'), 0.6)); }
+			B(vx, 0, 0.82, vx + vw, 0.52, 0.86, porc);
+			for (var b = 0; b < basins; b++) { var bx2 = vx + vw * (b + 0.5) / basins; var bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.12, 24), porc); bowl.position.copy(X(bx2, 0.27, 0.92)); add(bowl); add(rod(X(bx2, 0.04, 0.86), X(bx2, 0.04, 1.1), 0.012, tap, 6)); add(rod(X(bx2, 0.04, 1.1), X(bx2, 0.16, 1.1), 0.012, tap, 6)); }
+			if (c.bath_mirror !== false) { B(vx + 0.05, 0.0, 1.2, vx + vw - 0.05, 0.02, 1.95, solid('#D8DEE2', 0.04, 1)); }
+		}
+		if (has(fx, 'wc')) { var wx = basins ? W - (basins === 2 ? Math.min(1.6, W * 0.45) : 0.9) - 0.75 : W - 0.6; B(wx - 0.2, 0.0, 0.3, wx + 0.2, 0.55, 0.42, porc); B(wx - 0.25, 0.0, 0.75, wx + 0.25, 0.02, 1.0, solid('#E6E6E3', 0.3)); }
+		if (has(fx, 'bidet')) { B(0.3, D - 0.6, 0.3, 0.7, D - 0.05, 0.42, porc); }
+		if (has(fx, 'bathtub')) { B(x, D - 0.8, 0, x + Math.min(1.7, W * 0.55), D - 0.02, 0.55, porc); B(x + 0.08, D - 0.72, 0.4, x + Math.min(1.7, W * 0.55) - 0.08, D - 0.1, 0.56, solid('#E9F1F4', 0.05)); x += 1.8; }
+		if (has(fx, 'freestanding')) { var tub = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.34, 0.58, 32), porc); tub.scale.set(2.0, 1, 1); tub.position.copy(X(Math.min(W - 1.0, 1.2), D - 1.0, 0.29)); tub.castShadow = true; add(tub); add(rod(X(Math.min(W - 1.0, 1.2) - 0.75, D - 1.0, 0), X(Math.min(W - 1.0, 1.2) - 0.75, D - 1.0, 0.9), 0.015, tap, 6)); }
+		if (has(fx, 'walkin') || has(fx, 'shower')) {
+			var sw = 1.0, sx4 = 0.05, sy = 0.05;
+			B(sx4, sy, 0, sx4 + sw, sy + 1.0, 0.02, solid('#3A3836', 0.6));
+			var gl = cached('showerglass', function () { return new THREE.MeshPhysicalMaterial({ color: '#E6F0F2', roughness: 0.05, transparent: true, opacity: 0.25 }); });
+			B(sx4 + sw, sy, 0, sx4 + sw + 0.01, sy + (has(fx, 'shower') ? 1.0 : 0.9), 2.0, gl, { noCast: true });
+			if (has(fx, 'shower')) { B(sx4, sy + 1.0, 0, sx4 + sw, sy + 1.01, 2.0, gl, { noCast: true }); }
+			add(rod(X(sx4 + 0.5, sy + 0.02, 0), X(sx4 + 0.5, sy + 0.02, 2.1), 0.012, tap, 6)); B(sx4 + 0.35, sy + 0.02, 2.08, sx4 + 0.65, sy + 0.32, 2.1, tap);
+		}
+		if (has(fx, 'towel_rail')) { for (var tz = 0.6; tz < 1.6; tz += 0.15) { B(W - 0.02, D - 1.3, tz, W - 0.0, D - 0.8, tz + 0.02, tap); } }
+	}
+	// furniture by room kind
+	var decor = c.decor !== false;
+	if (kind === 'living' || kind === 'living_kitchen' || kind === 'dining') {
+		var lx = kind === 'living_kitchen' ? W * 0.45 : 0;
+		if (kind === 'living_kitchen') { kitchen(0.05, 0.02, Math.min(W * 0.42, 4.2), D, c.kitchen_layout === 'u' ? 'l' : (c.kitchen_layout || 'island')); dining(W * 0.24, D * 0.78, 4); }
+		if (kind === 'dining') { dining(W / 2, D / 2, 6); }
+		else {
+			var sw2 = Math.min(2.6, (W - lx) * 0.6), sx5 = lx + (W - lx - sw2) / 2;
+			rug(sx5 - 0.4, 0.9, sx5 + sw2 + 0.4, Math.min(D - 0.3, 3.4));
+			sofa(sx5, 0.15, sw2, (fs === 'contemporary' || fs === 'luxury') && W - lx > 4);
+			table(sx5 + sw2 / 2 - 0.5, 1.5, sx5 + sw2 / 2 + 0.5, 2.1, 0.42, fs === 'mid_century' || fs === 'luxury');
+			armchair(Math.min(W - 1.0, sx5 + sw2 + 0.4), 2.2);
+			// media wall opposite the sofa (front wall)
+			if (D > 3.2) { B(sx5, D - 0.45, 0, sx5 + sw2, D - 0.02, 0.45, wood); B(sx5 + sw2 / 2 - 0.65, D - 0.06, 0.8, sx5 + sw2 / 2 + 0.65, D - 0.02, 1.55, dark); }
+			if (c.lighting === 'statement') { pendant(sx5 + sw2 / 2, 1.8, true); } else if (c.lighting !== 'minimal') { floorLamp(sx5 - 0.45, 0.4); }
+		}
+		if (decor) { plantPot(W - 0.4, 0.4, 1.1); if (kind !== 'living_kitchen') { art(W * 0.15, 0, 0.7); } }
+	} else if (kind === 'kitchen') {
+		kitchen(0.05, 0.02, W - 0.05, D, c.kitchen_layout || 'island');
+		if (c.kitchen_layout === 'straight' && D > 2.8) { dining(W / 2, D - 0.9, 4); }
+	} else if (kind === 'bed' || kind === 'kids') {
+		var dbl = type === 'master' || type === 'guest' || (kind === 'bed' && W > 3.2);
+		bed(W / 2, dbl);
+		if (D > 3.4) { wardrobe(0.05, D - 0.62, Math.min(W - 0.4, 2.4)); }
+		if (kind === 'kids') { shelf(W - 1.0, 0.02, 0.9); B(0.3, D * 0.5, 0, 1.0, D * 0.5 + 0.6, 0.5, solid(pal[1], 0.7)); }
+		if (decor) { plantPot(W - 0.35, D - 0.9, 0.9); art(W / 2 - 0.5, 0, 1.0); }
+		if (c.lighting === 'statement') { pendant(W / 2, 1.2, true); }
+	} else if (kind === 'office') { desk(0.4, 0.05); shelf(W - 1.2, 0.02, 1.1); if (decor) { plantPot(W - 0.4, D - 0.5, 1); } }
+	else if (kind === 'wardrobe') { wardrobe(0.05, 0.02, W - 0.1); wardrobe(0.02, 0.7, D - 0.8, 'y'); B(W / 2 - 0.4, D / 2, 0, W / 2 + 0.4, D / 2 + 0.6, 0.45, soft); }
+	else if (kind === 'bath' || kind === 'wc') { bathroom(); }
+	else if (kind === 'laundry') { var wm2 = solid('#F4F4F2', 0.4); B(0.1, 0.02, 0, 0.7, 0.62, 0.85, wm2); B(0.75, 0.02, 0, 1.35, 0.62, 0.85, wm2); [0.4, 1.05].forEach(function (q) { var d = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.02, 24), solid('#2B2E31', 0.2, 0.3)); d.rotation.x = Math.PI / 2; d.position.copy(X(q, 0.63, 0.5)); add(d); }); B(0.05, 0.02, 0.85, Math.min(W - 0.05, 2.2), 0.64, 0.89, solid(col(c.worktop_color, '#EDEBE6'), 0.4)); shelf(Math.max(0.05, W - 1.0), 0.02, 0.9); }
+	else if (kind === 'hall') {
+		B(0.3, 0.02, 0.75, Math.min(W - 0.3, 1.6), 0.4, 0.8, wood); [[0.32, 0.04], [Math.min(W - 0.35, 1.55), 0.04]].forEach(function (q) { B(q[0], q[1], 0, q[0] + 0.04, q[1] + 0.04, 0.75, metal); });
+		B(0.5, 0.0, 1.1, Math.min(W - 0.5, 1.4), 0.02, 1.9, solid('#D8DEE2', 0.04, 1));
+		B(0.02, D * 0.4, 0, 0.42, D * 0.4 + 1.1, 0.45, wood); for (var hk = D * 0.4; hk < D * 0.4 + 1.0; hk += 0.25) { B(0.0, hk, 1.7, 0.08, hk + 0.03, 1.73, metal); }
+		if (decor) { plantPot(W - 0.4, 0.4, 0.9); }
+	}
+	// sizes for the camera: the room box (an invisible frame)
+	var fit = new THREE.Mesh(boxGeo(W + 0.4, H * 0.75, D + 0.4), new THREE.MeshBasicMaterial({ visible: false }));
+	fit.position.copy(X(W / 2, D / 2, H * 0.35)); hs.add(fit);
+	hs.room = { W: W, D: D, H: H, kind: kind };
 	return hs;
 }
 

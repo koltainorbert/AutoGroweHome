@@ -7128,3 +7128,55 @@ msgstr "Pentru administratori: pe propriul site linia define( 'AGH_OWNER_MODE', 
 #, php-format
 msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
 msgstr "Designerul rulează în modul de bază (Starter): %1$d din %2$d setări sunt ascunse vizitatorilor deoarece nu există o licență Professional activă (sau perioada de grație a expirat). Pe propriul site adaugă în wp-config.php: define( 'AGH_OWNER_MODE', true ); – pe site-ul unui client activează licența."
+
+#: includes/Params/Definitions.php
+msgid "Ablak körüli keret (szegély)"
+msgstr "Ancadrament fereastră (bordură)"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzaton az ablakot körülvevő keret; a „Nincs keret” eltünteti."
+msgstr "Rama din jurul ferestrei pe fațadă; „Fără ancadrament” o elimină."
+
+#: includes/Params/Definitions.php
+msgid "A stílus szerint"
+msgstr "După stil"
+
+#: includes/Params/Definitions.php
+msgid "Nincs keret"
+msgstr "Fără ancadrament"
+
+#: includes/Params/Definitions.php
+msgid "Fehér keret"
+msgstr "Ancadrament alb"
+
+#: includes/Params/Definitions.php
+msgid "A homlokzatnál világosabb"
+msgstr "Mai deschis decât fațada"
+
+#: includes/Params/Definitions.php
+msgid "Sötét keret"
+msgstr "Ancadrament închis"
+
+#: includes/Params/Definitions.php
+msgid "Kőkeret"
+msgstr "Ancadrament din piatră"
+
+#: includes/Frontend/Strings.php
+msgid "Nézet"
+msgstr "Vizualizare"
+
+#: includes/Frontend/Strings.php
+msgid "Kívül"
+msgstr "Exterior"
+
+#: includes/Frontend/Strings.php
+msgid "Belül"
+msgstr "Interior"
+
+#: includes/Frontend/Strings.php
+msgid "Belső nézet"
+msgstr "Vedere interioară"
+
+#: includes/Frontend/Strings.php
+msgid "Megnézem belülről"
+msgstr "Vezi interiorul"
