@@ -7038,3 +7038,75 @@ msgstr "Met lamellenscherm"
 #: includes/Params/Definitions.php
 msgid "Lapostetőn"
 msgstr "Op het platte dak"
+
+#: includes/Params/Definitions.php
+msgid "Épülettömeg (forma)"
+msgstr "Bouwmassa (vorm)"
+
+#: includes/Params/Definitions.php
+msgid "Minden stílus saját, jellegzetes épületformát javasol; bármikor átállítható."
+msgstr "Elke stijl stelt een eigen, karakteristieke gebouwvorm voor; op elk moment aan te passen."
+
+#: includes/Params/Definitions.php
+msgid "Az alaprajzi forma szerint"
+msgstr "Volgens de plattegrondvorm"
+
+#: includes/Params/Definitions.php
+msgid "Hosszú pavilon kerettel"
+msgstr "Lang paviljoen met kader"
+
+#: includes/Params/Definitions.php
+msgid "Konzolosan kinyúló emelet"
+msgstr "Uitkragende verdieping"
+
+#: includes/Params/Definitions.php
+msgid "Udvaros, U alakú, toronnyal"
+msgstr "Hofhuis, U-vormig, met toren"
+
+#: includes/Params/Definitions.php
+msgid "Két összekapcsolt nyeregtetős tömeg"
+msgstr "Twee verbonden zadeldakvolumes"
+
+#: includes/Params/Definitions.php
+msgid "Egymásba tolt kockák"
+msgstr "In elkaar geschoven kubussen"
+
+#: includes/Params/Definitions.php
+msgid "Alacsony pavilonok verandával"
+msgstr "Lage paviljoens met veranda"
+
+#: includes/Params/Definitions.php
+msgid "Szimmetrikus tömb középrizalittal"
+msgstr "Symmetrisch blok met middenrisaliet"
+
+#: includes/Params/Definitions.php
+msgid "Hosszú parasztház tornáccal"
+msgstr "Lange boerderij met veranda"
+
+#: includes/Params/Definitions.php
+msgid "Két csűrház üveg nyaktaggal"
+msgstr "Twee schuurwoningen met glazen tussenlid"
+
+#: includes/Params/Definitions.php
+msgid "Keresztszárnyas, tornácos"
+msgstr "Met dwarskap en veranda"
+
+#: includes/Params/Definitions.php
+msgid "Utcára néző oromzatú chalet"
+msgstr "Chalet met de puntgevel naar de straat"
+
+#: includes/Params/Definitions.php
+msgid "Ipari blokk fűrészfogas csarnokkal"
+msgstr "Industrieel blok met sheddakhal"
+
+#: includes/Params/Definitions.php
+msgid "Lekerekített, lágy tömegek"
+msgstr "Zachte, afgeronde volumes"
+
+#: includes/Params/Definitions.php
+msgid "Üvegdoboz látszó acélvázzal"
+msgstr "Glazen doos met zichtbaar staalskelet"
+
+#: includes/Params/Definitions.php
+msgid "Kompakt, tagolatlan tömb"
+msgstr "Compact, eenvoudig volume"

@@ -7038,3 +7038,75 @@ msgstr "Con cubierta de lamas"
 #: includes/Params/Definitions.php
 msgid "Lapostetőn"
 msgstr "En la cubierta plana"
+
+#: includes/Params/Definitions.php
+msgid "Épülettömeg (forma)"
+msgstr "Volumetría (forma)"
+
+#: includes/Params/Definitions.php
+msgid "Minden stílus saját, jellegzetes épületformát javasol; bármikor átállítható."
+msgstr "Cada estilo propone su propia forma característica de edificio; puedes cambiarla en cualquier momento."
+
+#: includes/Params/Definitions.php
+msgid "Az alaprajzi forma szerint"
+msgstr "Según la forma de la planta"
+
+#: includes/Params/Definitions.php
+msgid "Hosszú pavilon kerettel"
+msgstr "Pabellón alargado con marco"
+
+#: includes/Params/Definitions.php
+msgid "Konzolosan kinyúló emelet"
+msgstr "Planta superior en voladizo"
+
+#: includes/Params/Definitions.php
+msgid "Udvaros, U alakú, toronnyal"
+msgstr "Con patio, en U, con torre"
+
+#: includes/Params/Definitions.php
+msgid "Két összekapcsolt nyeregtetős tömeg"
+msgstr "Dos volúmenes a dos aguas unidos"
+
+#: includes/Params/Definitions.php
+msgid "Egymásba tolt kockák"
+msgstr "Cubos encajados"
+
+#: includes/Params/Definitions.php
+msgid "Alacsony pavilonok verandával"
+msgstr "Pabellones bajos con veranda"
+
+#: includes/Params/Definitions.php
+msgid "Szimmetrikus tömb középrizalittal"
+msgstr "Bloque simétrico con cuerpo central saliente"
+
+#: includes/Params/Definitions.php
+msgid "Hosszú parasztház tornáccal"
+msgstr "Casa de campo alargada con porche"
+
+#: includes/Params/Definitions.php
+msgid "Két csűrház üveg nyaktaggal"
+msgstr "Dos casas granero con nexo de vidrio"
+
+#: includes/Params/Definitions.php
+msgid "Keresztszárnyas, tornácos"
+msgstr "Con hastial transversal y porche"
+
+#: includes/Params/Definitions.php
+msgid "Utcára néző oromzatú chalet"
+msgstr "Chalet con el hastial a la calle"
+
+#: includes/Params/Definitions.php
+msgid "Ipari blokk fűrészfogas csarnokkal"
+msgstr "Bloque industrial con nave de cubierta en diente de sierra"
+
+#: includes/Params/Definitions.php
+msgid "Lekerekített, lágy tömegek"
+msgstr "Volúmenes suaves y redondeados"
+
+#: includes/Params/Definitions.php
+msgid "Üvegdoboz látszó acélvázzal"
+msgstr "Caja de vidrio con estructura de acero vista"
+
+#: includes/Params/Definitions.php
+msgid "Kompakt, tagolatlan tömb"
+msgstr "Volumen compacto y sencillo"

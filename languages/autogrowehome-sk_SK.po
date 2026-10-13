@@ -7040,3 +7040,75 @@ msgstr "S lamelovým krytom"
 #: includes/Params/Definitions.php
 msgid "Lapostetőn"
 msgstr "Na plochej streche"
+
+#: includes/Params/Definitions.php
+msgid "Épülettömeg (forma)"
+msgstr "Hmota budovy (tvar)"
+
+#: includes/Params/Definitions.php
+msgid "Minden stílus saját, jellegzetes épületformát javasol; bármikor átállítható."
+msgstr "Každý štýl navrhuje vlastný charakteristický tvar budovy; dá sa kedykoľvek zmeniť."
+
+#: includes/Params/Definitions.php
+msgid "Az alaprajzi forma szerint"
+msgstr "Podľa tvaru pôdorysu"
+
+#: includes/Params/Definitions.php
+msgid "Hosszú pavilon kerettel"
+msgstr "Dlhý pavilón s rámom"
+
+#: includes/Params/Definitions.php
+msgid "Konzolosan kinyúló emelet"
+msgstr "Vykonzolované poschodie"
+
+#: includes/Params/Definitions.php
+msgid "Udvaros, U alakú, toronnyal"
+msgstr "S dvorom, v tvare U, s vežou"
+
+#: includes/Params/Definitions.php
+msgid "Két összekapcsolt nyeregtetős tömeg"
+msgstr "Dva prepojené sedlové objemy"
+
+#: includes/Params/Definitions.php
+msgid "Egymásba tolt kockák"
+msgstr "Do seba zasunuté kocky"
+
+#: includes/Params/Definitions.php
+msgid "Alacsony pavilonok verandával"
+msgstr "Nízke pavilóny s verandou"
+
+#: includes/Params/Definitions.php
+msgid "Szimmetrikus tömb középrizalittal"
+msgstr "Symetrický blok so stredným rizalitom"
+
+#: includes/Params/Definitions.php
+msgid "Hosszú parasztház tornáccal"
+msgstr "Dlhý gazdovský dom s podstením"
+
+#: includes/Params/Definitions.php
+msgid "Két csűrház üveg nyaktaggal"
+msgstr "Dva stodolové domy so skleneným spojovacím krčkom"
+
+#: includes/Params/Definitions.php
+msgid "Keresztszárnyas, tornácos"
+msgstr "S priečnym štítom a verandou"
+
+#: includes/Params/Definitions.php
+msgid "Utcára néző oromzatú chalet"
+msgstr "Chata so štítom do ulice"
+
+#: includes/Params/Definitions.php
+msgid "Ipari blokk fűrészfogas csarnokkal"
+msgstr "Industriálny blok s halou s pílovou strechou"
+
+#: includes/Params/Definitions.php
+msgid "Lekerekített, lágy tömegek"
+msgstr "Mäkké, zaoblené hmoty"
+
+#: includes/Params/Definitions.php
+msgid "Üvegdoboz látszó acélvázzal"
+msgstr "Sklenený box s viditeľnou oceľovou konštrukciou"
+
+#: includes/Params/Definitions.php
+msgid "Kompakt, tagolatlan tömb"
+msgstr "Kompaktný, jednoduchý objem"

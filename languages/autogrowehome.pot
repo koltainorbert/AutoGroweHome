@@ -7010,3 +7010,75 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "Lapostetőn"
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Épülettömeg (forma)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Minden stílus saját, jellegzetes épületformát javasol; bármikor átállítható."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Az alaprajzi forma szerint"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Hosszú pavilon kerettel"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Konzolosan kinyúló emelet"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Udvaros, U alakú, toronnyal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Két összekapcsolt nyeregtetős tömeg"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Egymásba tolt kockák"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Alacsony pavilonok verandával"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szimmetrikus tömb középrizalittal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Hosszú parasztház tornáccal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Két csűrház üveg nyaktaggal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Keresztszárnyas, tornácos"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Utcára néző oromzatú chalet"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Ipari blokk fűrészfogas csarnokkal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Lekerekített, lágy tömegek"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Üvegdoboz látszó acélvázzal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kompakt, tagolatlan tömb"
+msgstr ""

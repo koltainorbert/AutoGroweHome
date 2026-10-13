@@ -1,5 +1,17 @@
 # Változásnapló
 
+## 1.3.0 – 2026-10-13
+
+### Stílusonként saját épületforma
+- Új „Épülettömeg (forma)” paraméter 15 formával (2D és 3D): hosszú pavilon kerettel, konzolos emelet, udvaros U-ház toronnyal, két összekapcsolt nyeregtetős tömeg, egymásba tolt kockák tetőterasszal, mélyereszes pavilonok verandával, szimmetrikus tömb középrizalittal, hosszú parasztház tornáccal, két csűrház üveg nyaktaggal, keresztszárnyas tornácos ház, utcára néző chalet erkélyekkel, ipari blokk fűrészfogas csarnokkal, lekerekített organikus tömegek, üvegdoboz látszó acélvázzal, kompakt tömb.
+- Minden stílus saját formát, szintszámot, tetőt és anyagokat javasol (a korábbi közös családi alapok megszűntek). DB v8: csak az érintetlen stílusjavaslatok frissülnek.
+- A forma a varázsló „Alapok” lépésében kártyákon választható, a promptba is bekerül.
+### Javítások
+- A telekhatár-vonal teljesen eltűnt a gyepről (3D és 2D); a kerítés a telek első vonalán áll, a telek legalább olyan széles, mint az épületek.
+- A medence mindig a telken és a kerítésen belül, a háztól, garázstól, terasztól, járdától és fáktól távol kerül elhelyezésre (oldalt, ha nincs hely, a ház mögött).
+- Presetek: lista helyett előnézeti kártyák (a preset házának 3D képe, stílusnál a stílusfotó is).
+- 18 új felirat mind a 15 nyelven.
+
 ## 1.2.0 – 2026-10-13
 
 - A medence a telken és a kerítésen belül marad (a ház mellett vagy a hátsó kertben).

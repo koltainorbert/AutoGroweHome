@@ -30,7 +30,7 @@ final class Registry {
 	 * Basic (Starter) parameter set – everything else requires the "full_params" feature.
 	 */
 	public static function basic_ids(): array {
-		return array( 'project_name', 'property_type', 'occupants', 'bedrooms', 'bathrooms', 'levels', 'net_area', 'plot_area', 'orientation', 'country', 'budget', 'accessible', 'arch_style', 'style_custom', 'footprint', 'garage', 'terrace_area', 'roof_type', 'roof_pitch', 'roof_brand', 'roof_product', 'roof_color', 'facade_main', 'facade_color', 'facade_accent', 'window_style', 'window_frame_color', 'open_plan', 'rooms', 'interior_style', 'floor_main', 'garden_style', 'garden_features', 'time_of_day', 'custom_text' );
+		return array( 'project_name', 'property_type', 'occupants', 'bedrooms', 'bathrooms', 'levels', 'net_area', 'plot_area', 'orientation', 'country', 'budget', 'accessible', 'arch_style', 'style_custom', 'massing', 'footprint', 'garage', 'terrace_area', 'roof_type', 'roof_pitch', 'roof_brand', 'roof_product', 'roof_color', 'facade_main', 'facade_color', 'facade_accent', 'window_style', 'window_frame_color', 'open_plan', 'rooms', 'interior_style', 'floor_main', 'garden_style', 'garden_features', 'time_of_day', 'custom_text' );
 	}
 
 	/**

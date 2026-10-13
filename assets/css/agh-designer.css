@@ -791,3 +791,16 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 .agh-state-err { display: block; max-width: 90%; margin-top: 6px; font-size: 11px; line-height: 1.35; opacity: .8; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; word-break: break-word; }
 .agh-btn.is-busy { pointer-events: none; opacity: .8; }
 .agh-btn.is-busy .agh-ico { animation: agh-spin .9s linear infinite; }
+
+/* Presets: preview cards (the house each preset gives) */
+.agh-preset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.agh-preset { position: relative; }
+.agh-preset-btn { display: flex; flex-direction: column; width: 100%; padding: 0; text-align: left; background: var(--agh-surface-solid); border: 1px solid var(--agh-line); border-radius: var(--agh-r-m, 12px); overflow: hidden; cursor: pointer; color: inherit; font: inherit; transition: border-color .2s, box-shadow .2s, transform .2s var(--agh-ease); }
+.agh-preset-btn:hover, .agh-preset-btn:focus-visible { border-color: var(--agh-accent); box-shadow: var(--agh-shadow); transform: translateY(-2px); }
+.agh-preset-vis { position: relative; }
+.agh-preset-vis .agh-preset-photo { position: absolute; right: 8px; bottom: 8px; width: 34%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 8px; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); }
+.agh-preset-txt { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 12px; min-height: 44px; }
+.agh-preset-txt b { font-size: 14px; }
+.agh-preset-txt .agh-small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.agh-preset-del { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; background: rgba(255, 255, 255, .92); }
+@media (max-width: 520px) { .agh-preset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }

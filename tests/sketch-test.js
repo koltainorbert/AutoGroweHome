@@ -7,6 +7,7 @@ const K = require('../assets/js/agh-sketch.js');
 const O = {
   property_type: ['detached', 'semi_detached', 'row', 'holiday', 'villa', 'small'], levels: ['single', 'attic', 'two', 'three'],
   arch_style: ['modern_minimal', 'contemporary_lux', 'mediterranean', 'scandinavian', 'bauhaus', 'japandi', 'classic_burgher', 'rustic', 'modern_farmhouse', 'american_farm', 'alpine', 'industrial', 'organic_modern', 'high_tech', 'passive', 'custom'],
+  massing: ['auto', 'pavilion', 'cantilever', 'courtyard', 'gable_pair', 'cubes', 'engawa', 'symmetric', 'long_house', 'twin_barns', 'cross_gable', 'chalet', 'loft', 'organic', 'glass_frame', 'compact'],
   footprint: ['rectangle', 'l_shape', 'u_shape', 'staggered'], garage: ['none', 'carport', 'garage_1', 'garage_2', 'separate'],
   roof_type: ['gable', 'hip', 'half_hip', 'shed', 'pyramid', 'flat', 'multi', 'complex'], gable_finish: ['plaster', 'wood', 'metal', 'glass', 'flush'],
   gutters: ['anthracite', 'black', 'white', 'copper', 'hidden'], roof_surface: ['matt', 'satin', 'glazed', 'green', 'gravel'],
@@ -44,7 +45,7 @@ function randomCfg() {
   for (const k of COLORS) c[k] = hex();
   return c;
 }
-const BASE = { property_type: 'detached', levels: 'two', arch_style: 'modern_minimal', footprint: 'rectangle', garage: 'carport', roof_type: 'gable', facade_main: 'render', facade_accent: ['wood'],
+const BASE = { property_type: 'detached', levels: 'two', arch_style: 'modern_minimal', massing: 'auto', footprint: 'rectangle', garage: 'carport', roof_type: 'gable', facade_main: 'render', facade_accent: ['wood'],
   plinth: 'dark_render', window_style: 'large', terrace_area: 24, terrace_door: 'lift_slide', fence: 'slats', gate: true, driveway: 'pavers', garden_style: 'natural',
   garden_features: ['lawn', 'trees', 'paths', 'garden_lights'], shading: ['blinds'], energy: ['heat_pump'], ac_units: 'wall', ridge_tile: 'mortar', time_of_day: 'golden', season: 'summer', weather: 'few_clouds',
   camera: 'three_quarter', lens: '24mm', net_area: 160, roof_pitch: 35, facade_color: '#F2EFE9', roof_color: '#3A3D40', window_frame_color: '#2F3235', facade_accent_color: '#B9824F',
@@ -99,6 +100,11 @@ for (const v of O.time_of_day) check(K.vignette('time', v, BASE), 'napszak ' + v
 const distinct = (list) => new Set(list).size === list.length;
 if (!distinct(O.roof_type.map(v => K.render(Object.assign({}, BASE, { roof_type: v }), { mini: true, id: 'm' })))) err('a tetőforma-kártyák nem mind különbözők');
 if (!distinct(O.facade_main.map(v => K.swatch('facade', v, BASE)))) err('a homlokzat-minták nem mind különbözők');
+// every massing gives a different building with each roof family, also as a card (mini)
+for (const rt of ['flat', 'gable', 'hip']) {
+  if (!distinct(O.massing.map(v => K.render(Object.assign({}, BASE, { massing: v, roof_type: rt }), { mini: true, id: 'm' })))) err('a tömegforma-kártyák nem mind különbözők (' + rt + ')');
+  for (const v of O.massing) for (const lv of ['single', 'attic', 'two', 'three']) check(K.render(Object.assign({}, BASE, { massing: v, roof_type: rt, levels: lv, garden_features: ['lawn', 'pool', 'trees', 'paths', 'shed'] }), { id: 'x' }), 'tömeg ' + v + '/' + rt + '/' + lv);
+}
 
 console.log(`vázlat: ${n} rajz, ${tested} paraméterváltozat (${changed} változott), átlag ${(total / 800).toFixed(1)} ms, max ${maxMs.toFixed(1)} ms, hiba ${fail}`);
 process.exit(fail ? 1 : 0);

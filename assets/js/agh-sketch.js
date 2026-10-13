@@ -304,7 +304,8 @@
 		return out;
 	}
 	// Front edge of paths and driveway: the fence line when there is a fence.
-	function siteEdge(c, front) { return c.fence && c.fence !== 'none' ? front - 0.4 : front; }
+	// Fence line: the front plot line when the plot is given, otherwise just inside the scene's front edge.
+	function siteEdge(c, front, plot) { return c.fence && c.fence !== 'none' ? (plot ? plot.yF : front - 0.4) : front; }
 	function doorPos(c, len) {
 		var w = { pivot: 1.4, double: 1.7, sidelight: 1.7, glass_full: 1.2 }[c.entrance_door] || 1.05;
 		return { x: styleOf(c).sym ? len / 2 - w / 2 : clamp(len * 0.26, 0.8, len - w - 0.8), w: w, h: c.entrance_door === 'pivot' ? 2.6 : 2.3 };
@@ -338,28 +339,282 @@
 		return { floors: floors, attic: levels === 'attic', W: W * units, unitW: W, units: units, D: D, FH: FH, pitch: pitch,
 			plinth: plinth, h0: h0, over: over, eave: ed > 0 ? Math.max(clamp(ed, 0.05, 2.5), styleOf(c).over || 0) : over };
 	}
-	// Building volumes (axis-aligned boxes) for the footprint shape.
+	// Building volumes (axis-aligned boxes) for the massing / footprint. Flags: main (first, terrace side),
+	// entrance (front door), items (carries chimney / solar / roof windows), wing, second, z0 (sits on a
+	// lower volume), roofMap (roof type per chosen roof type, '*' = any), round (soft corners on flat roofs),
+	// glass (glazed link), frame, veranda, balc, exo, terraceRoof, porch, accent.
+	var MASSING = ['pavilion', 'cantilever', 'courtyard', 'gable_pair', 'cubes', 'engawa', 'symmetric', 'long_house', 'twin_barns', 'cross_gable', 'chalet', 'loft', 'organic', 'glass_frame', 'compact'];
 	function volumes(c, pl) {
-		var W = pl.W, D = pl.D, h = pl.plinth + pl.floors * pl.FH + (pl.attic ? 0.9 : 0), v = [];
-		var fp = pl.units > 1 ? 'rectangle' : (c.footprint || 'rectangle');
-		if (c.roof_type === 'multi' || c.roof_type === 'complex') { fp = fp === 'rectangle' ? 'l_shape' : fp; }
-		if (fp === 'l_shape') {
-			var w2 = clamp(W * 0.38, 3.5, 7), d2 = clamp(D * 0.6, 3, 7);
-			v.push({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true, ridge: 'x' });
-			v.push({ x0: W - w2, x1: W, y0: D, y1: D + d2, h: c.roof_type === 'complex' ? h - pl.FH * 0.35 : h, ridge: 'y', wing: true });
-		} else if (fp === 'u_shape') {
-			var w3 = clamp(W * 0.26, 3, 6), d3 = clamp(D * 0.55, 3, 6);
-			v.push({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true, ridge: 'x' });
-			v.push({ x0: 0, x1: w3, y0: D, y1: D + d3, h: h, ridge: 'y', wing: true });
-			v.push({ x0: W - w3, x1: W, y0: D, y1: D + d3, h: h, ridge: 'y', wing: true });
-		} else if (fp === 'staggered') {
-			var s = W * 0.55;
-			v.push({ x0: 0, x1: s + 0.4, y0: 0, y1: D, h: h, main: true, ridge: 'x' });
-			v.push({ x0: s, x1: W + 1.2, y0: 1.6, y1: D + 1.6, h: Math.max(pl.plinth + pl.FH + 0.4, h - pl.FH), ridge: 'x', second: true });
-		} else {
-			v.push({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true, ridge: 'x' });
+		var W = pl.W, D = pl.D, P = pl.plinth, FH = pl.FH, fl = pl.floors, h = P + fl * FH + (pl.attic ? 0.9 : 0), A = W * D, v = [];
+		var m = pl.units > 1 ? 'auto' : (c.massing || 'auto');
+		function V(o) { o.ridge = o.ridge || 'x'; v.push(o); return o; }
+		var FLAT = { '*': 'flat' };
+		switch (m) {
+			case 'pavilion':
+				V({ x0: 0, x1: W * 0.7, y0: 0, y1: D, h: h, main: true, frame: true, ext: 0.35 });
+				V({ x0: W * 0.7, x1: W * 1.1, y0: -D * 0.35, y1: D - 1.8, h: Math.max(P + FH * 0.85, h - 0.45), wing: true });
+				break;
+			case 'cantilever':
+				if (fl >= 2) {
+					V({ x0: 0, x1: W * 0.72, y0: 0, y1: D, h: P + FH, main: true, roofMap: FLAT });
+					V({ x0: W * 0.3, x1: W * 1.12, y0: -0.5, y1: D + 1.5, z0: P + FH, h: h, second: true, accent: true, items: true });
+				} else {
+					V({ x0: 0, x1: W * 0.62, y0: 0, y1: D, h: h, main: true });
+					V({ x0: W * 0.58, x1: W * 1.12, y0: -1.4, y1: D - 1.2, h: h + 0.9, second: true, accent: true });
+				}
+				break;
+			case 'courtyard':
+				var w3 = clamp(W * 0.24, 3, 5.5), d3 = clamp(D * 0.6, 3, 6);
+				V({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true });
+				V({ x0: 0, x1: w3, y0: D, y1: D + d3, h: h, ridge: 'y', wing: true });
+				V({ x0: W - w3, x1: W, y0: D, y1: D + d3, h: h, ridge: 'y', wing: true });
+				V({ x0: 0.5, x1: 4.1, y0: -1.4, y1: 2.2, h: h + FH, tower: true, roofMap: { flat: 'flat', '*': 'pyramid' }, pitch: 28 });
+				break;
+			case 'gable_pair':
+				V({ x0: 0, x1: W * 0.6, y0: 0, y1: D * 0.92, h: h, main: true });
+				V({ x0: W * 0.6, x1: W * 1.02, y0: -0.6, y1: D * 0.92 + 1.6, h: P + FH, ridge: 'y', wing: true, accent: true });
+				break;
+			case 'cubes':
+				if (fl >= 2) {
+					V({ x0: 0, x1: W * 0.52, y0: 0, y1: D, h: h, main: true, roofMap: FLAT });
+					V({ x0: W * 0.52, x1: W * 1.08, y0: -1.4, y1: D - 1.1, h: P + FH, wing: true, roofMap: FLAT, terraceRoof: true });
+					V({ x0: W * 0.8, x1: W * 1.08, y0: -1.4, y1: 1.6, z0: P + FH, h: h, second: true, accent: true, roofMap: FLAT });
+				} else {
+					V({ x0: 0, x1: W * 0.55, y0: 0, y1: D, h: h + 0.8, main: true, roofMap: FLAT });
+					V({ x0: W * 0.55, x1: W * 1.1, y0: -1.2, y1: D - 1.1, h: h, wing: true, accent: true, roofMap: FLAT, terraceRoof: true });
+				}
+				break;
+			case 'engawa':
+				V({ x0: 0, x1: W * 0.78, y0: 0, y1: D * 0.82, h: h, main: true, veranda: true });
+				V({ x0: W * 0.6, x1: W * 1.12, y0: -D * 0.75, y1: 0.3, h: Math.max(P + FH * 0.8, h - 0.25), wing: true });
+				break;
+			case 'symmetric':
+				var rw = clamp(W * 0.3, 3.2, 5.5);
+				V({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true });
+				V({ x0: W / 2 - rw / 2, x1: W / 2 + rw / 2, y0: D - 0.4, y1: D + 0.9, h: h, ridge: 'y', entrance: true, risalit: true, roofMap: { flat: 'flat', '*': 'gable' } });
+				break;
+			case 'long_house':
+				var lw = W * 1.3, ld = Math.max(5.5, D * 0.72), bw2 = clamp(W * 0.3, 3.5, 5.5);
+				V({ x0: 0, x1: lw, y0: 0, y1: ld, h: h, main: true, porch: '#6B4A33' });
+				V({ x0: lw - bw2, x1: lw, y0: -clamp(D * 0.9, 4, 8), y1: 0.2, h: Math.max(P + FH * 0.8, h - 0.2), ridge: 'y', wing: true, accent: true });
+				break;
+			case 'twin_barns':
+				var bw = clamp(D * 0.85, 5.5, 7.2), bl = clamp(A * 0.52 / bw, 8, 20);
+				V({ x0: 0, x1: bw, y0: 0, y1: bl, h: h, ridge: 'y', main: true });
+				V({ x0: bw + 2.6, x1: 2 * bw + 2.6, y0: -2.4, y1: bl - 2.4, h: h, ridge: 'y', second: true, accent: true });
+				V({ x0: bw - 0.05, x1: bw + 2.65, y0: bl * 0.3, y1: bl * 0.3 + 3.2, h: P + FH, glass: true, roofMap: FLAT });
+				break;
+			case 'cross_gable':
+				var ww = clamp(W * 0.34, 4, 6.5);
+				V({ x0: ww, x1: ww + W * 0.72, y0: 0, y1: D, h: h, main: true, porch: '#F4F1EA' });
+				V({ x0: 0, x1: ww, y0: D * 0.1, y1: D + 2.4, h: h, ridge: 'y', wing: true });
+				break;
+			case 'chalet':
+				var cw = clamp(Math.sqrt(A * 0.95), 8, 14);
+				V({ x0: 0, x1: cw, y0: 0, y1: Math.max(A / cw, 8), h: h, ridge: 'y', main: true, balc: true, ext: 1.25 });
+				break;
+			case 'loft':
+				V({ x0: 0, x1: W * 0.48, y0: 0, y1: D, h: fl >= 2 ? h : h + 0.8, main: true });
+				V({ x0: W * 0.48, x1: W * 1.2, y0: -1.6, y1: D - 0.8, h: P + FH + 0.5, wing: true, accent: true, roofMap: { '*': 'saw' }, pitch: 24 });
+				break;
+			case 'organic':
+				V({ x0: 0, x1: W * 0.78, y0: 0, y1: D, h: h, main: true, round: true });
+				V({ x0: W * 0.5, x1: W * 1.08, y0: -D * 0.55, y1: D * 0.45, h: h + (fl >= 2 ? 0 : 1.1), second: true, round: true, accent: true });
+				break;
+			case 'glass_frame':
+				V({ x0: 0, x1: W, y0: 0, y1: D * 0.95, h: h, main: true, exo: true, ext: 1.1 });
+				break;
+			case 'compact':
+				var cd2 = clamp(Math.sqrt(A / 1.2), 6, 12);
+				V({ x0: 0, x1: A / cd2, y0: 0, y1: cd2, h: h, main: true });
+				break;
 		}
+		if (!v.length) {
+			var fp = pl.units > 1 ? 'rectangle' : (c.footprint || 'rectangle');
+			if (c.roof_type === 'multi' || c.roof_type === 'complex') { fp = fp === 'rectangle' ? 'l_shape' : fp; }
+			if (fp === 'l_shape') {
+				var w2 = clamp(W * 0.38, 3.5, 7), d2 = clamp(D * 0.6, 3, 7);
+				V({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true });
+				V({ x0: W - w2, x1: W, y0: D, y1: D + d2, h: c.roof_type === 'complex' ? h - pl.FH * 0.35 : h, ridge: 'y', wing: true });
+			} else if (fp === 'u_shape') {
+				var w4 = clamp(W * 0.26, 3, 6), d4 = clamp(D * 0.55, 3, 6);
+				V({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true });
+				V({ x0: 0, x1: w4, y0: D, y1: D + d4, h: h, ridge: 'y', wing: true });
+				V({ x0: W - w4, x1: W, y0: D, y1: D + d4, h: h, ridge: 'y', wing: true });
+			} else if (fp === 'staggered') {
+				var s = W * 0.55;
+				V({ x0: 0, x1: s + 0.4, y0: 0, y1: D, h: h, main: true });
+				V({ x0: s, x1: W + 1.2, y0: 1.6, y1: D + 1.6, h: Math.max(pl.plinth + pl.FH + 0.4, h - pl.FH), second: true });
+			} else {
+				V({ x0: 0, x1: W, y0: 0, y1: D, h: h, main: true });
+			}
+		}
+		if (!v.some(function (q) { return q.entrance; })) { v[0].entrance = true; }
+		if (!v.some(function (q) { return q.items; })) { v[0].items = true; }
+		v.forEach(function (q) { q.z0 = q.z0 || 0; });
 		return v;
+	}
+	// Roof type of one volume.
+	function vtype(c, v) {
+		var rt = c.roof_type || 'gable', type = rt;
+		if (v.roofMap) { var mm = v.roofMap[rt] || v.roofMap['*']; if (mm) { return mm; } }
+		if (v.wing) { type = rt === 'flat' ? 'flat' : (rt === 'complex' || rt === 'multi' ? 'gable' : rt); }
+		if (v.second && rt !== 'flat') { type = rt === 'hip' || rt === 'pyramid' ? 'hip' : rt; }
+		if (type === 'multi' || type === 'complex') { type = rt === 'complex' ? 'hip' : 'gable'; }
+		return type;
+	}
+	// Plan values of one volume (own roof pitch).
+	function vplan(pl, v) { return v.pitch ? Object.assign({}, pl, { pitch: v.pitch, over: Math.min(pl.over, 0.3), eave: Math.min(pl.eave, 0.3) }) : pl; }
+	// Corner radius of a soft (rounded) volume; only with a flat roof.
+	function roundR(c, v) { var r = v.round && vtype(c, v) === 'flat' ? clamp(Math.min(2.6, (v.y1 - v.y0) / 2 - 0.4, (v.x1 - v.x0) / 2 - 0.4), 0, 2.6) : 0; return r < 0.8 ? 0 : r; }
+	// Front face of a volume: the parts covered by other volumes, the entrance door and the terrace door
+	// (face-local x, measured from off = the start of the straight front wall).
+	function frontPlan(c, v, vols) {
+		var r = roundR(c, v), len = v.x1 - v.x0 - 2 * r, block = [];
+		(vols || []).forEach(function (w) {
+			if (w === v || w.z0 > v.z0 + 0.5 || v.z0 > w.z0 + 0.5) { return; }
+			if (w.y0 <= v.y1 + 0.05 && w.y1 > v.y1 + 0.05 && w.x1 > v.x0 + r + 0.05 && w.x0 < v.x1 - r - 0.05) { block.push([Math.max(0, w.x0 - v.x0 - r), Math.min(len, w.x1 - v.x0 - r)]); }
+		});
+		var free = fenceSegs(0, len, block), out = { off: r, len: len, block: block, free: free, door: null, tdoor: null };
+		if (!free.length) { return out; }
+		var big = free.reduce(function (a, q) { return q[1] - q[0] > a[1] - a[0] ? q : a; }, free[0]);
+		if (v.entrance) {
+			var d0 = doorPos(c, len), dw = d0.w;
+			var home = !block.length ? [0, len] : (styleOf(c).sym ? (free.filter(function (q) { return q[0] <= len / 2 - dw / 2 && q[1] >= len / 2 + dw / 2; })[0] || big) : big);
+			var fl2 = home[1] - home[0];
+			var dx = !block.length ? d0.x : (styleOf(c).sym && home !== big ? len / 2 - dw / 2 : (fl2 < dw + 1.6 ? home[0] + (fl2 - dw) / 2 : clamp(home[0] + fl2 * 0.26, home[0] + 0.8, home[1] - dw - 0.8)));
+			out.door = { x: dx, w: dw, h: d0.h };
+		}
+		if (v.main && num(c.terrace_area, 0) > 0) {
+			var tw = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3, dr = out.door;
+			var ok = function (x) { return (!dr || x >= dr.x + dr.w + 1.2 || x + tw <= dr.x - 1.2) && free.some(function (q) { return x >= q[0] + 0.6 - 1e-6 && x + tw <= q[1] - 0.6 + 1e-6; }); };
+			var tx = clamp(len * 0.62, dr ? dr.x + dr.w + 1.2 : 0.6, len - tw - 0.6);
+			if (len > 7 && !ok(tx)) {
+				tx = null;
+				free.forEach(function (q) { if (tx !== null) { return; } var x = clamp(q[0] + (q[1] - q[0]) * 0.55 - tw / 2, Math.max(q[0] + 0.6, dr && dr.x < q[1] && dr.x > q[0] ? dr.x + dr.w + 1.2 : -1e9), q[1] - tw - 0.6); if (ok(x)) { tx = x; } });
+			}
+			if (len > 7 && tx !== null) { out.tdoor = { x: tx, w: tw }; }
+		}
+		return out;
+	}
+	// Ground footprint of all volumes (with their outside structures: frame, exoskeleton, balconies).
+	function siteBox(vols) {
+		var e = function (q) { return q.ext || 0; };
+		return {
+			x0: Math.min.apply(null, vols.map(function (q) { return q.x0 - e(q); })), x1: Math.max.apply(null, vols.map(function (q) { return q.x1 + e(q); })),
+			y0: Math.min.apply(null, vols.map(function (q) { return q.y0 - e(q); })), y1: Math.max.apply(null, vols.map(function (q) { return q.y1 + e(q); }))
+		};
+	}
+	// The plot: centred on the house with its garage / parking (gx1 = their right edge), 5 m front setback;
+	// never narrower than the buildings, its back line only when it falls inside the scene.
+	function plotRect(c, vols, gx1) {
+		var pw = num(c.plot_width, 0), plen = num(c.plot_length, 0), bb = siteBox(vols);
+		if (!(pw > 0 && pw <= 60)) { return null; }
+		var g1 = Math.max(bb.x1, gx1 || 0), w = Math.max(pw, g1 - bb.x0 + 2), cx = (bb.x0 + g1) / 2, yF = bb.y1 + 5;
+		var yB = plen > 0 && plen < bb.y1 - bb.y0 + 20 ? Math.min(yF - plen, bb.y0 - 1.5) : null;
+		return { x0: cx - w / 2, x1: cx + w / 2, yF: yF, yB: yB };
+	}
+
+	// Middle of the entrance door (world x) and the entrance wall (y).
+	function entranceAt(c, vols) {
+		var ev = vols.filter(function (q) { return q.entrance; })[0] || vols[0], fp = frontPlan(c, ev, vols);
+		var d = fp.door || { x: fp.len * 0.26, w: 1 };
+		return { x: ev.x0 + fp.off + d.x + d.w / 2, y: ev.y1, v: ev };
+	}
+	// Terrace in front of the main volume: centred on the terrace door, inside the free part of the wall.
+	function terraceRect(c, mainV, vols, ta) {
+		var td = clamp(ta / 6, 2.4, 5), fp = frontPlan(c, mainV, vols), off = mainV.x0 + fp.off, mlen = fp.len;
+		var tdw = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
+		var tcx = fp.tdoor ? off + fp.tdoor.x + fp.tdoor.w / 2 : off + mlen * 0.62;
+		var fi = fp.free.filter(function (q) { return off + q[0] <= tcx + 1e-6 && off + q[1] >= tcx - 1e-6; })[0] || [0, mlen];
+		var fx0 = off + fi[0], fx1 = off + fi[1], fln = Math.max(0.5, fx1 - fx0);
+		var tw = clamp(ta / td, Math.min(tdw + 0.8, fln), fln), x0 = clamp(tcx - tw / 2, fx0, fx1 - tw);
+		return { x0: x0, x1: x0 + tw, y0: mainV.y1, y1: mainV.y1 + td };
+	}
+	// Garden areas the pool must keep clear of: garage, driveway, terrace, path, play area, trees, seating.
+	function siteAvoid(c, vols, ext, gar, ter, doorMid, entY) {
+		var gf = c.garden_features || [], out = [], bb = siteBox(vols), my = vols[0].y1;
+		var R = function (x0, y0, x1, y1, m) { out.push([x0 - m, y0 - m, x1 + m, y1 + m]); };
+		if (gar) { R(gar.x0, gar.y0, gar.x1, ext.front, 0.5); } else { R(bb.x1 + 0.8, bb.y0 + (bb.y1 - bb.y0) * 0.45, bb.x1 + 3.8, ext.front, 0.4); }
+		if (ter) { R(ter.x0, ter.y0, ter.x1, ter.y1, 0.4); }
+		if (has(gf, 'paths') || !c.garden_features) { R(doorMid - 0.6, entY, doorMid + 0.6, ext.front, 0.4); }
+		if (has(gf, 'shed') || has(gf, 'playground')) { R(ext.right - 3.6, ext.back + 1, ext.right - 1, ext.back + 8.6, 0.3); }
+		if (has(gf, 'firepit')) { R(ext.left + 2.8, my + 2.8, ext.left + 4.2, my + 4.2, 0.3); }
+		if (!ter && (has(gf, 'pergola') || has(c.shading, 'pergola') || has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen'))) { R(ext.left + 1.3, my + 2.1, ext.left + 4.4, my + 4.9, 0.3); }
+		if (has(gf, 'trees') || !c.garden_features) {
+			[[ext.left + 2.2, ext.back + 2.5], [ext.right - 2.5, ext.back + 3], [ext.left + 1.6, ext.front - 2.2], [ext.right - 1.8, ext.front - 1.6]].forEach(function (q) { R(q[0], q[1], q[0], q[1], 1.3); });
+		}
+		return out;
+	}
+	// Pool footprint: inside the plot and the fence, clear of the house and the garden areas; preferably
+	// beside the house, otherwise behind it (never in front of it when there is any other room).
+	function poolRect(c, vols, ext, plot, fenceY, avoid) {
+		var bb = siteBox(vols);
+		var L = Math.max(ext.left + 1.0, plot ? plot.x0 + 0.8 : -1e9), R = Math.min(ext.right - 1.0, plot ? plot.x1 - 0.8 : 1e9);
+		var F = Math.min(fenceY, ext.front) - 1.2, B = Math.max(ext.back + 1.0, plot && plot.yB !== null ? plot.yB + 0.8 : -1e9);
+		function hit(x0, y0, x1, y1) {
+			if (x0 < L || x1 > R || y0 < B || y1 > F) { return true; }
+			for (var i = 0; i < vols.length; i++) { var q = vols[i], m = 1.0 + (q.ext || 0); if (x0 < q.x1 + m && x1 > q.x0 - m && y0 < q.y1 + m && y1 > q.y0 - m) { return true; } }
+			for (var j = 0; j < avoid.length; j++) { var a = avoid[j]; if (x0 < a[2] && x1 > a[0] && y0 < a[3] && y1 > a[1]) { return true; } }
+			return false;
+		}
+		var tx = bb.x0 - 1.0, ty = (bb.y0 + bb.y1) / 2, sizes = [[3.4, 7], [7, 3.4], [3.2, 6], [6, 3.2], [3, 5], [5, 3], [2.6, 4.2], [2.4, 3.4]];
+		for (var si = 0; si < sizes.length; si++) {
+			var w = sizes[si][0], d = sizes[si][1], best = null, bd = 1e18;
+			for (var x = L; x + w <= R + 1e-6; x += 0.5) {
+				for (var y = B; y + d <= F + 1e-6; y += 0.5) {
+					if (hit(x, y, x + w, y + d)) { continue; }
+					var cx = x + w / 2, cy = y + d / 2, dist = (cx - tx) * (cx - tx) + (cy - ty) * (cy - ty) + (cy > bb.y1 ? 400 : 0);
+					if (dist < bd) { bd = dist; best = { x0: x, y0: y, x1: x + w, y1: y + d }; }
+				}
+			}
+			if (best) { return best; }
+		}
+		var fw = 2.4, fd = 3.4, fx = clamp(bb.x0, L, R - fw), fy = clamp(bb.y0 - 1.2 - fd, B, F - fd);
+		return { x0: fx, y0: fy, x1: fx + fw, y1: fy + fd };
+	}
+	// Massing signatures drawn around a volume: frame, veranda, balconies, exoskeleton, roof-terrace railing.
+	function deco2d(sc, v, pl, type, roof) {
+		var c = sc.c, out = [], fcol = col(c.facade_color, '#F2EFE9');
+		var push = function (list) { list.forEach(function (r) { if (r) { out.push(r); } }); };
+		if (v.frame && type === 'flat') {
+			var fm = { top: shade(fcol, 0.06), front: fcol, side: shade(fcol, -0.12) }, dy = 1.5;
+			push(box(sc, v.x0 - 0.35, v.y1 - 0.3, v.h + 0.05, v.x1 + 0.35, v.y1 + dy, v.h + 0.55, fm));
+			push(box(sc, v.x0 - 0.35, v.y1, 0, v.x0, v.y1 + dy, v.h + 0.05, fm));
+			push(box(sc, v.x1, v.y1, 0, v.x1 + 0.35, v.y1 + dy, v.h + 0.05, fm));
+		}
+		if (v.veranda) {
+			var ez = type === 'flat' ? v.h : v.h - (pl.eave || 0) * Math.tan(pl.pitch * D2R) - 0.05;
+			push(box(sc, v.x0, v.y1, 0, v.x1, v.y1 + 1.5, pl.plinth, { top: sc.mat('deck', '#A97B52'), front: '#6B5240' }));
+			for (var px = v.x0 + 0.3; px < v.x1 - 0.1; px += 2.4) { push(box(sc, px, v.y1 + 1.25, pl.plinth, px + 0.14, v.y1 + 1.39, ez, { top: '#5A4636', front: '#7A5A40', side: '#5A4636' })); }
+		}
+		if (v.balc && (pl.floors > 1 || pl.attic)) {
+			var bz = pl.plinth + pl.FH, lenF = v.x1 - v.x0 - 0.4, lenR = v.y1 - v.y0 - 0.6, sl = function (L) { var q = ''; for (var x = 0.08; x < L; x += 0.16) { q += '<rect x="' + f(x) + '" y="0" width="0.08" height="1" fill="#7A5236"/>'; } return q + '<rect x="0" y="0.92" width="' + f(L) + '" height="0.08" fill="#6B4A33"/>'; };
+			push(box(sc, v.x0 + 0.2, v.y1, bz - 0.22, v.x1 - 0.2, v.y1 + 1.3, bz, { top: sc.mat('deck', '#A97B52'), front: '#7A5A40' }));
+			push([sc.plane([v.x0 + 0.2, v.y1 + 1.3, bz], [1, 0, 0], [0, 0, 1], [[0, 0], [lenF, 0], [lenF, 1], [0, 1]], 'none', sl(lenF), { noShade: true, edge: false })]);
+			push(box(sc, v.x1, v.y0 + 0.6, bz - 0.22, v.x1 + 1.2, v.y1, bz, { top: sc.mat('deck', '#A97B52'), front: '#7A5A40' }));
+			push([sc.plane([v.x1 + 1.2, v.y1, bz], [0, -1, 0], [0, 0, 1], [[0, 0], [lenR, 0], [lenR, 1], [0, 1]], 'none', sl(lenR), { noShade: true, edge: false })]);
+		}
+		if (v.exo) {
+			var stl = '#5E6266', sm = { top: '#7C8186', front: stl, side: shade(stl, -0.15) }, e = 0.9, zt = v.h + 0.45;
+			var nx = Math.max(2, Math.round((v.x1 - v.x0 + 2 * e) / 3)), ny = Math.max(2, Math.round((v.y1 - v.y0 + 2 * e) / 3));
+			for (var k = 1; k < pl.floors; k++) {
+				var z = pl.plinth + k * pl.FH;
+				if (z >= v.h) { break; }
+				push(box(sc, v.x0 - e, v.y1, z - 0.18, v.x1 + e, v.y1 + e + 0.1, z, { top: '#8A8F94', front: stl }));
+				push([sc.plane([v.x0 - e, v.y1 + e + 0.1, z], [1, 0, 0], [0, 0, 1], [[0, 0], [v.x1 - v.x0 + 2 * e, 0], [v.x1 - v.x0 + 2 * e, 1], [0, 1]], 'rgba(200,225,235,0.35)', '', { noShade: true, stroke: '#C7D4DA', sw: 0.02 })]);
+			}
+			push(box(sc, v.x0 - e - 0.15, v.y0 - e - 0.15, v.h + 0.35, v.x1 + e + 0.15, v.y1 + e + 0.15, v.h + 0.5, { top: '#C9CCCE', front: '#9DA1A4', side: '#8A8F94' }));
+			for (var i = 0; i <= nx; i++) { var cx = v.x0 - e + (v.x1 - v.x0 + 2 * e) * i / nx; push(box(sc, cx - 0.1, v.y1 + e - 0.1, 0, cx + 0.1, v.y1 + e + 0.1, zt, sm)); }
+			for (var j = 0; j < ny; j++) { var cy = v.y0 - e + (v.y1 - v.y0 + 2 * e) * j / ny; push(box(sc, v.x1 + e - 0.1, cy - 0.1, 0, v.x1 + e + 0.1, cy + 0.1, zt, sm)); }
+		}
+		if (v.terraceRoof && type === 'flat') {
+			var zr = v.h + 0.35, gl = 'rgba(200,225,235,0.35)', o2 = { noShade: true, stroke: '#C7D4DA', sw: 0.02 };
+			push([sc.plane([v.x0, v.y1 + 0.05, zr], [1, 0, 0], [0, 0, 1], [[0, 0], [v.x1 - v.x0, 0], [v.x1 - v.x0, 1], [0, 1]], gl, '', o2),
+				sc.plane([v.x1 + 0.05, v.y1, zr], [0, -1, 0], [0, 0, 1], [[0, 0], [v.y1 - v.y0, 0], [v.y1 - v.y0, 1], [0, 1]], gl, '', o2)]);
+		}
+		void roof;
+		return out;
 	}
 
 	/* ------------------------------------------------------------------ facade details (local coords) */
@@ -491,24 +746,51 @@
 		return s;
 	}
 	// Front (y = y1) and right (x = x1) walls with windows/doors; gable triangles when the roof needs them.
-	function walls(sc, v, pl, roof, isEntrance) {
-		var c = sc.c, out = [];
+	// Outline of a rounded volume (counter-clockwise, offset e outwards).
+	function roundPts(v, r, e, n) {
+		var out = [], cs = [[v.x1 - r, v.y0 + r, -Math.PI / 2], [v.x1 - r, v.y1 - r, 0], [v.x0 + r, v.y1 - r, Math.PI / 2], [v.x0 + r, v.y0 + r, Math.PI]];
+		cs.forEach(function (q) { for (var i = 0; i <= n; i++) { var a = q[2] + Math.PI / 2 * i / n; out.push([q[0] + (r + e) * Math.cos(a), q[1] + (r + e) * Math.sin(a)]); } });
+		return out;
+	}
+	// Curved corners of a rounded volume as narrow wall strips (z from z0 to z1).
+	function roundStrips(sc, v, r, e, z0, z1, fill) {
+		var out = [], cs = [[v.x1 - r, v.y1 - r, 0], [v.x0 + r, v.y1 - r, Math.PI / 2], [v.x0 + r, v.y0 + r, Math.PI], [v.x1 - r, v.y0 + r, Math.PI * 1.5]], n = 6;
+		cs.forEach(function (q) {
+			for (var i = n; i > 0; i--) {
+				var a = q[2] + Math.PI / 2 * i / n, b = q[2] + Math.PI / 2 * (i - 1) / n;
+				var p0 = [q[0] + (r + e) * Math.cos(a), q[1] + (r + e) * Math.sin(a), 0], p1 = [q[0] + (r + e) * Math.cos(b), q[1] + (r + e) * Math.sin(b), 0];
+				var d = sub(p1, p0), L = Math.sqrt(dot(d, d));
+				var rr = sc.plane(p0, mul(d, 1 / L), [0, 0, 1], [[0, z0], [L, z0], [L, z1], [0, z1]], fill, '', { edge: false });
+				if (rr) { out.push(rr); }
+			}
+		});
+		return out;
+	}
+	function walls(sc, v, pl, roof, vols) {
+		var c = sc.c, out = [], r = roundR(c, v), z0 = v.z0 || 0, fp = frontPlan(c, v, vols);
 		var faces = [
-			{ name: 'front', o: [v.x0, v.y1, 0], du: [1, 0, 0], len: v.x1 - v.x0 },
-			{ name: 'right', o: [v.x1, v.y1, 0], du: [0, -1, 0], len: v.y1 - v.y0 }
+			{ name: 'front', o: [v.x0 + r, v.y1, 0], du: [1, 0, 0], len: v.x1 - v.x0 - 2 * r },
+			{ name: 'right', o: [v.x1, v.y1 - r, 0], du: [0, -1, 0], len: v.y1 - v.y0 - 2 * r }
 		];
+		if (r > 0) { roundStrips(sc, v, r, 0, z0, v.h, wallFill(sc, v, 'front')).forEach(function (q) { out.push(q); }); }
 		faces.forEach(function (F) {
 			var dv = [0, 0, 1];
 			if (!sc.visible(F.du, dv)) { return; }
-			var poly = [[0, 0], [F.len, 0]];
+			var poly = [[0, z0], [F.len, z0]];
 			var top = roof.wallTop ? roof.wallTop(F.name) : null;
 			if (top) { top.forEach(function (p) { poly.push(p); }); } else { poly.push([F.len, v.h], [0, v.h]); }
-			if (!top) { poly = [[0, 0], [F.len, 0], [F.len, v.h], [0, v.h]]; }
+			if (v.glass) {
+				var mul2 = '';
+				for (var mx = 1.2; mx < F.len - 0.2; mx += 1.2) { mul2 += '<rect x="' + f(mx - 0.03) + '" y="' + f(z0) + '" width="0.06" height="' + f(v.h - z0) + '" fill="' + col(c.window_frame_color, '#2F3235') + '"/>'; }
+				var gw = sc.plane(F.o, F.du, dv, poly, glass(sc), mul2);
+				if (gw) { out.push(gw); }
+				return;
+			}
 			var inner = '', st = styleOf(c), acc = c.facade_accent || [], main = v.main;
 			var fcol = col(c.facade_color, '#F2EFE9');
 			// accent zones: 1st = entrance bay, 2nd = gable (or the front part of the side wall), 3rd = side wall ground floor
-			if (main && F.name === 'front' && acc[0] && isEntrance) {
-				var dp = doorPos(c, F.len);
+			if (F.name === 'front' && acc[0] && fp.door && (main || v.risalit)) {
+				var dp = fp.door;
 				inner += '<rect x="' + f(Math.max(0, dp.x - 0.75)) + '" y="0" width="' + f(Math.min(F.len, dp.w + 1.5)) + '" height="' + f(v.h) + '" fill="' + accentFill(sc, acc[0]) + '"/>';
 			}
 			if (main && acc[1]) {
@@ -520,7 +802,7 @@
 			if (main && c.gable_finish === 'glass' && top && F.name === roof.gableFace) { inner += '<polygon points="' + pts([[0.35, v.h + 0.1], [F.len - 0.35, v.h + 0.1]].concat(top.map(function (q) { return [clamp(q[0], 0.35, F.len - 0.35), Math.max(v.h + 0.1, q[1] - 0.3)]; }))) + '" fill="' + glass(sc) + '" stroke="' + col(c.window_frame_color, '#2F3235') + '" stroke-width="0.06"/>'; }
 			if (main && st.slats && F.name === 'front') { for (var sl = 0.15; sl < F.len * 0.3; sl += 0.24) { inner += '<rect x="' + f(F.len - 0.2 - sl) + '" y="' + f(pl.plinth) + '" width="0.12" height="' + f(v.h - pl.plinth - 0.1) + '" fill="' + st.slats + '"/>'; } }
 			var pf = plinthFill(c);
-			if (pf) { inner += '<rect x="0" y="0" width="' + f(F.len) + '" height="' + f(pl.plinth) + '" fill="' + (c.plinth === 'stone' ? sc.mat('stone', pf) : pf) + '"/>'; }
+			if (pf && !z0) { inner += '<rect x="0" y="0" width="' + f(F.len) + '" height="' + f(pl.plinth) + '" fill="' + (c.plinth === 'stone' ? sc.mat('stone', pf) : pf) + '"/>'; }
 			if (st.cornice || c.facade_ornaments) {
 				// cornice and floor band
 				inner += '<rect x="0" y="' + f(v.h - 0.32) + '" width="' + f(F.len) + '" height="0.32" fill="' + shade(fcol, c.facade_ornaments && st.cornice ? 0.3 : 0.16) + '"/><rect x="0" y="' + f(v.h - 0.36) + '" width="' + f(F.len) + '" height="0.05" fill="' + shade(fcol, -0.12) + '"/>';
@@ -530,34 +812,28 @@
 			if (st.fins && main && F.name === 'front') { for (var fi = 0; fi < 7; fi++) { inner += '<rect x="' + f(F.len * 0.62 + fi * F.len * 0.055) + '" y="' + f(pl.plinth) + '" width="0.1" height="' + f(v.h - pl.plinth) + '" fill="' + st.fins + '"/>'; } }
 			if (main && F.name === 'right') { inner += wallTech(sc, F.len, pl); }
 			if (c.corner_detail === 'quoins' || st.quoins) {
-				for (var q = pl.plinth; q < v.h - 0.3; q += 0.5) {
+				for (var q = Math.max(pl.plinth, z0); q < v.h - 0.3; q += 0.5) {
 					var qw = (Math.round(q * 2) % 2) ? 0.35 : 0.5;
 					inner += '<rect x="' + f(F.len - qw) + '" y="' + f(q) + '" width="' + f(qw) + '" height="0.42" fill="' + (st.quoins && c.corner_detail !== 'quoins' ? '#9C927F' : shade(fcol, -0.1)) + '"/>';
 				}
 			}
-			inner += openings(sc, v, pl, F, isEntrance && F.name === 'front', roof);
+			inner += openings(sc, v, pl, F, F.name === 'front' ? fp : null, roof);
 			var r = sc.plane(F.o, F.du, dv, poly, wallFill(sc, v, F.name), inner);
 			if (r) { out.push(r); }
 		});
 		return out;
 	}
-	function openings(sc, v, pl, F, entrance, roof) {
+	function openings(sc, v, pl, F, fp, roof) {
 		var c = sc.c, ws = windowSpec(c), s = '', len = F.len, shut = shutterColor(c);
 		var styleBand = !!styleOf(c).band;
-		var reserved = [];
-		var dp = doorPos(c, len), doorW = dp.w, doorH = dp.h;
-		var doorX = null, tdoorX = null, tdoorW = 0;
-		if (entrance) {
-			doorX = dp.x;
-			reserved.push([doorX - 0.5, doorX + doorW + 0.5]);
-			if (num(c.terrace_area, 0) > 0 && len > 7) {
-				tdoorW = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
-				tdoorX = clamp(len * 0.62, doorX + doorW + 1.2, len - tdoorW - 0.6);
-				reserved.push([tdoorX - 0.4, tdoorX + tdoorW + 0.4]);
-			}
-		}
+		var reserved = [], blocked = fp ? fp.block.map(function (b) { return [b[0] - 0.3, b[1] + 0.3]; }) : [];
+		var doorW = 0, doorH = 0;
+		var doorX = null, tdoorX = null, tdoorW = 0, entrance = !!(fp && fp.door);
+		if (fp && fp.door) { doorX = fp.door.x; doorW = fp.door.w; doorH = fp.door.h; reserved.push([doorX - 0.5, doorX + doorW + 0.5]); }
+		if (fp && fp.tdoor) { tdoorX = fp.tdoor.x; tdoorW = fp.tdoor.w; reserved.push([tdoorX - 0.4, tdoorX + tdoorW + 0.4]); }
 		for (var fl = 0; fl < pl.floors; fl++) {
 			var z0 = pl.plinth + fl * pl.FH;
+			if (z0 < (v.z0 || 0) - 0.05) { continue; }
 			if (z0 + 1 > v.h) { break; }
 			var w = ws.w, h = Math.min(ws.h, pl.FH - 0.6), sill = ws.sill;
 			if (c.window_style === 'panoramic' && fl > 0) { w = 1.9; h = 1.7; sill = 0.6; }
@@ -568,6 +844,7 @@
 			for (var i = 0; i < n; i++) {
 				var x = step * i + (step - w) / 2;
 				if (fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
+				if (blocked.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
 				s += windowSvg(sc, x, z0 + sill, w, h, { shutters: shut, blindsDown: (i + fl) % 3 === 1 });
 				if (has(c.shading, 'louvres') && fl > 0) {
 					for (var lv = 0; lv <= 4; lv++) { s += '<rect x="' + f(x - 0.1 + lv * (w + 0.2) / 4 - 0.03) + '" y="' + f(z0 + sill - 0.2) + '" width="0.06" height="' + f(h + 0.4) + '" fill="#9DA1A4"/>'; }
@@ -646,6 +923,14 @@
 		}
 		if (type === 'flat') {
 			var pz = h + 0.35, fasc = shade(col(c.facade_color, '#F2EFE9'), c.arch_style === 'high_tech' ? -0.05 : 0.05);
+			var rr = roundR(c, v);
+			if (rr > 0) {
+				var topR = sc.poly3(roundPts(v, rr, 0.1, 6).map(function (q) { return [q[0], q[1], pz]; }), mat, '', { noShade: true });
+				if (topR) { P.push(topR); }
+				roundStrips(sc, v, rr, 0.1, h - 0.05, pz, fasc).forEach(function (q) { P.push(q); });
+				out.flatTop = pz;
+				return out;
+			}
 			var top = sc.plane([X0 - 0.1, Y1 + 0.1, pz], [1, 0, 0], [0, -1, 0], [[0, 0], [X1 - X0 + 0.2, 0], [X1 - X0 + 0.2, Y1 - Y0 + 0.2], [0, Y1 - Y0 + 0.2]], fasc,
 				'<rect x="0.3" y="0.3" width="' + f(X1 - X0 - 0.4) + '" height="' + f(Y1 - Y0 - 0.4) + '" fill="' + mat + '"/>' + (snow ? '<rect width="' + f(X1 - X0 + 0.2) + '" height="' + f(Y1 - Y0 + 0.2) + '" fill="#F4F7FA" opacity="0.85"/>' : ''), { noShade: true });
 			if (top) { P.push(top); }
@@ -653,6 +938,26 @@
 			var rr = sc.plane([X1 + 0.1, Y1 + 0.1, h - 0.05], [0, -1, 0], [0, 0, 1], [[0, 0], [Y1 - Y0 + 0.2, 0], [Y1 - Y0 + 0.2, 0.4], [0, 0.4]], fasc);
 			if (fr) { P.push(fr); } if (rr) { P.push(rr); }
 			out.flatTop = pz;
+			return out;
+		}
+		if (type === 'saw') {
+			// sawtooth (north-light) roof: shed teeth rising to the street side, glazed upstands
+			var nT = Math.max(2, Math.round((Y1 - Y0) / 3)), tw = (Y1 - Y0) / nT, rz = tw * Math.tan(pl.pitch * D2R), gfill = sc.mock ? 'glass' : glass(sc);
+			out.rise = rz; out.gableFace = 'right';
+			for (var ti = 0; ti < nT; ti++) {
+				var yb0 = Y0 + ti * tw, yb1 = yb0 + tw;
+				addP([[X0 - 0.15, yb0, h], [X1 + 0.15, yb0, h], [X1 + 0.15, yb1, h + rz], [X0 - 0.15, yb1, h + rz]], ti === 0);
+				var gq = sc.poly3([[X0, yb1, h], [X1, yb1, h], [X1, yb1, h + rz], [X0, yb1, h + rz]], gfill, '', { normal: [0, 1, 0], glass: true });
+				if (gq) { P.push(gq); }
+			}
+			out.wallTop = function (face) {
+				if (face !== 'right') { return null; }
+				var pp = [[Y1 - Y0, h]];
+				for (var k = 0; k < nT; k++) { var u = Y1 - (Y0 + (k + 1) * tw); pp.push([u, h + rz], [u, h]); }
+				return pp;
+			};
+			out.frontZ = function () { return h; };
+			out.tp = Math.tan(pl.pitch * D2R);
 			return out;
 		}
 		var alongX = v.ridge !== 'y';
@@ -760,19 +1065,6 @@
 		return ({ round: { r: 0.11, seg: 8, shift: -0.15 }, angular: { r: 0.12, seg: 4, shift: -0.12 }, mortar: { r: 0.13, seg: 8, shift: 0.1, mortar: true },
 			dry: { r: 0.08, seg: 4, shift: -0.2, vented: true }, metal: { r: 0.05, seg: 6, shift: 0, metal: true }, none: { r: 0 } })[c.ridge_tile || 'round'] || { r: 0.11, seg: 8, shift: -0.15 };
 	}
-	// Pool footprint: inside the plot and the front fence, beside the house, otherwise in the back garden.
-	function poolRect(mainV, left, right, front, back, plot, fenceOn) {
-		var fy = front - (fenceOn ? 0.4 : 0) - 1.4, d = 6.5, w = 3.4;
-		var px0 = Math.max(left + 1.2, plot ? plot.x0 + 0.8 : -1e9), room = mainV.x0 - 0.9 - px0, y0, y1, x0;
-		if (room >= 2.4) {
-			w = Math.min(w, room); x0 = px0;
-			y1 = Math.min(mainV.y1 + 1.5 + d, fy); y0 = Math.max(mainV.y0 + 0.5, y1 - d);
-		} else {
-			x0 = clamp(mainV.x0 + 1.2, Math.max(left + 1.2, plot ? plot.x0 + 0.8 : -1e9), Math.min(right - 1.2, plot ? plot.x1 - 0.8 : 1e9) - w);
-			y1 = mainV.y0 - 1.2; y0 = Math.max(y1 - d, back + 0.8, plot && plot.yB !== null ? plot.yB + 0.8 : -1e9);
-		}
-		return { x0: x0, x1: x0 + w, y0: y0, y1: Math.max(y1, y0 + 1.5) };
-	}
 	// Layout of the front roof plane (ridge along x): dormers, the solar field and roof windows never overlap.
 	// u = distance from the volume's left edge, s = distance up the slope from the eave.
 	function roofLayout(c, v, pl, slopeL, hipIn, solar) {
@@ -813,8 +1105,9 @@
 		return out;
 	}
 	// Roof-mounted items: solar panels, roof windows, dormers (front plane of a ridge-along-x roof), chimney.
-	function roofItems(sc, v, pl, roof) {
+	function roofItems(sc, v, pl, roof, type) {
 		var c = sc.c, items = [];
+		if (!v.items || type === 'saw') { return items; }
 		var solar = c.roof_solar || has(c.energy, 'solar') || !!styleOf(c).pv;
 		var W = v.x1 - v.x0, D = v.y1 - v.y0;
 		function chimneyBox(zBase) {
@@ -837,16 +1130,19 @@
 			if (c.chimney) { chimneyBox(function () { return roof.flatTop; }); }
 			return items;
 		}
-		if (v.ridge === 'y') { return items; }
+		if (v.ridge === 'y') {
+			if (c.chimney) { chimneyBox(function () { return v.h; }); }
+			return items;
+		}
 		var tp = roof.tp, cosP = Math.cos(pl.pitch * D2R), sinP = Math.sin(pl.pitch * D2R);
 		var up = [0, -cosP, sinP];
-		var slopeL = (c.roof_type === 'shed' ? D : D / 2) / cosP;
+		var slopeL = (type === 'shed' ? D : D / 2) / cosP;
 		function onRoof(u, s, w, hh, fill, inner) {
 			var o3 = add(add([v.x0 + u, v.y1, v.h], mul(up, s)), [0, 0.05 * sinP, 0.05 * cosP]);
 			var r = sc.plane(o3, [1, 0, 0], up, [[0, 0], [w, 0], [w, hh], [0, hh]], fill, inner || '', { noShade: true });
 			if (r) { r.depth += 40; items.push(r); }
 		}
-		var hipIn = c.roof_type === 'hip' || c.roof_type === 'pyramid' ? D / 2 : 0;
+		var hipIn = type === 'hip' || type === 'pyramid' ? D / 2 : 0;
 		var lay = roofLayout(c, v, pl, slopeL, hipIn, solar);
 		if (lay.solar) {
 			var ss2 = solarSpec(c), L2 = lay.solar, inner = '';
@@ -867,7 +1163,7 @@
 			].forEach(function (r) { if (r) { parts.push(r.svg); } });
 			items.push({ depth: sc.depth([dx, yd, z0]) + 45 + dd * 0.01, svg: parts.join('') });
 		}
-		if (c.chimney) { chimneyBox(c.roof_type === 'shed' || c.roof_type === 'gable' || c.roof_type === 'half_hip' || c.roof_type === 'hip' ? function (y) { return roof.frontZ(Math.max(y, (v.y0 + v.y1) / 2)); } : function () { return v.h; }); }
+		if (c.chimney) { chimneyBox(type === 'shed' || type === 'gable' || type === 'half_hip' || type === 'hip' ? function (y) { return roof.frontZ(Math.max(y, (v.y0 + v.y1) / 2)); } : function () { return v.h; }); }
 		return items;
 	}
 
@@ -954,17 +1250,16 @@
 		var L = sc.light;
 		var mini = !!opts.mini;
 		var mainV = vols[0];
-		var W = pl.W, D = pl.D, maxY = Math.max.apply(null, vols.map(function (v) { return v.y1; }));
-		var maxX = Math.max.apply(null, vols.map(function (v) { return v.x1; }));
-		var tight = !!opts.tight, front = maxY + (mini ? 2.5 : (tight ? 5.5 : 6.5)), back = -(mini ? 2 : (tight ? 2.5 : 6)), left = mini ? -2 : (tight ? -3.5 : -6.5);
+		var W = pl.W, D = pl.D, bbx = siteBox(vols), maxY = bbx.y1;
+		var maxX = bbx.x1;
+		var tight = !!opts.tight, front = maxY + (mini ? 2.5 : (tight ? 5.5 : 6.5)), back = bbx.y0 - (mini ? 2 : (tight ? 2.5 : 6)), left = bbx.x0 - (mini ? 2 : (tight ? 3.5 : 6.5));
 		var garage = c.garage || 'none';
 		var gx0 = maxX + 0.4, gW = garage === 'garage_2' ? 6.2 : 3.4, gD = 6.2;
 		if (garage === 'separate') { gx0 = maxX + 2.2; }
 		var right = (garage !== 'none' ? gx0 + gW : maxX) + (mini ? 2 : (tight ? 3.5 : 6));
 		// the plot: house centred on the plot width, 5 m front setback; the plot outline is drawn when it fits
-		var plot = null, pw = num(c.plot_width, 0), plen = num(c.plot_length, 0);
-		if (!mini && !tight && pw > 0 && pw <= 60) {
-			plot = { x0: W / 2 - pw / 2, x1: W / 2 + pw / 2, yF: maxY + 5, yB: plen > 0 && plen < maxY + 20 ? maxY + 5 - plen : null };
+		var plot = mini || tight ? null : plotRect(c, vols, garage !== 'none' ? gx0 + gW : maxX + 3.8);
+		if (plot) {
 			left = Math.min(left, plot.x0 - 1.2); right = Math.max(right, plot.x1 + 1.2); front = Math.max(front, plot.yF + 1.2);
 			if (plot.yB !== null) { back = Math.min(back, plot.yB - 1.2); }
 		}
@@ -984,11 +1279,6 @@
 			if (r) { slab += r.svg; }
 		});
 		var gpoly = [[left, front], [right, front], [right, back], [left, back]].map(function (q) { return sc.cam.P([q[0], q[1], 0]); });
-		if (plot) {
-			var pyB = plot.yB !== null ? plot.yB : back + 0.4, pc4 = [[plot.x0, pyB], [plot.x0, plot.yF], [plot.x1, plot.yF], [plot.x1, pyB]];
-			if (plot.yB !== null) { pc4.push([plot.x0, pyB]); }
-			groundSvg += '<path d="' + pc4.map(function (q, i) { var p2 = sc.cam.P([q[0], q[1], 0.02]); return (i ? 'L' : 'M') + f(p2[0]) + ' ' + f(p2[1]); }).join('') + '" fill="none" stroke="' + shade(groundC, -0.22) + '" stroke-opacity="0.55" stroke-width="0.07"/>';
-		}
 		var clipId = sc.def('gclip', '<clipPath id="' + sc.id + 'gclip"><polygon points="' + pts(gpoly) + '"/></clipPath>');
 		var horizon = '';
 
@@ -1012,15 +1302,11 @@
 		}
 
 		/* buildings */
-		var roofType = c.roof_type || 'gable';
-		var units = pl.units;
+		var units = pl.units, balcVol = vols.some(function (q) { return q.balc; });
 		vols.forEach(function (v, idx) {
-			var type = roofType;
-			if (v.wing) { type = roofType === 'flat' ? 'flat' : (roofType === 'complex' ? 'gable' : (roofType === 'multi' ? 'gable' : roofType)); }
-			if (v.second && roofType !== 'flat') { type = roofType === 'hip' || roofType === 'pyramid' ? 'hip' : roofType; }
-			if (type === 'multi' || type === 'complex') { type = roofType === 'complex' ? 'hip' : 'gable'; }
-			var roof = roofFor(sc, v, pl, type);
-			var ws = walls(sc, v, pl, roof, idx === 0 || (v.wing && vols.length === 2 && false));
+			var type = vtype(c, v), vp = vplan(pl, v), fpv = frontPlan(c, v, vols);
+			var roof = roofFor(sc, v, vp, type);
+			var ws = walls(sc, v, vp, roof, vols);
 			// units (semi-detached / row): party walls and extra doors
 			if (v.main && units > 1) {
 				var extra = '';
@@ -1032,16 +1318,16 @@
 				}
 				ws.push({ svg: extra, depth: 0 });
 			}
-			var ri = roofItems(sc, v, pl, roof);
+			var ri = roofItems(sc, v, vp, roof, type);
 			var parts = ws.concat(roof.under ? [{ svg: roof.under, depth: 0 }] : []).concat(roof.planes.sort(function (a, b) { return a.depth - b.depth; })).concat(ri);
 			// canopy over the entrance
-			if (v.main && c.entrance_canopy) {
-				var dpc = doorPos(c, v.x1 - v.x0), dx = v.x0 + dpc.x + dpc.w / 2 - 0.95;
+			if (fpv.door && c.entrance_canopy) {
+				var dpc = fpv.door, dx = v.x0 + fpv.off + dpc.x + dpc.w / 2 - 0.95;
 				box(sc, dx, v.y1, pl.plinth + 2.55, dx + 1.9, v.y1 + 1.2, pl.plinth + 2.72, { top: shade(col(c.facade_color, '#F2EFE9'), -0.08), front: shade(col(c.facade_color, '#F2EFE9'), -0.15) }).forEach(function (r) { parts.push(r); });
 			}
 			// entrance steps (raised plinth / basement) or an accessible ramp
-			if (v.main && (c.exterior_steps || c.basement || c.accessible)) {
-				var dpe = doorPos(c, v.x1 - v.x0), ex0 = v.x0 + dpe.x - 0.35, ex1 = ex0 + dpe.w + 0.7, stc = '#B9B4AA';
+			if (fpv.door && (c.exterior_steps || c.basement || c.accessible)) {
+				var dpe = fpv.door, ex0 = v.x0 + fpv.off + dpe.x - 0.35, ex1 = ex0 + dpe.w + 0.7, stc = '#B9B4AA';
 				if (c.accessible) {
 					var rz = pl.plinth, rl2 = Math.max(1.2, rz * 12);
 					var ramp = sc.poly3([[ex1, v.y1 + 1.3, 0.02], [ex1 + rl2, v.y1 + 1.3, 0.02], [ex1, v.y1 + 1.3, rz]].concat([]), stc);
@@ -1055,8 +1341,8 @@
 				}
 			}
 			// porch along the front (farmhouse styles)
-			if (v.main && styleOf(c).porch) {
-				var pcol = styleOf(c).porch, px0 = v.x0 + 0.3, px1 = v.x1 - 0.3, pd = 2.2, pz = pl.plinth + 2.7;
+			if (v.porch || (v.main && styleOf(c).porch)) {
+				var pcol = v.porch || styleOf(c).porch, px0 = v.x0 + 0.3, px1 = v.x1 - 0.3, pd = 2.2, pz = pl.plinth + 2.7;
 				box(sc, px0, v.y1, 0, px1, v.y1 + pd, pl.plinth, { top: sc.mat('deck', '#A97B52'), front: '#6B5240' }).forEach(function (r) { parts.push(r); });
 				for (var pp = 0; pp <= Math.floor((px1 - px0) / 2.6); pp++) {
 					var ppx = Math.min(px1 - 0.18, px0 + pp * 2.6);
@@ -1066,13 +1352,14 @@
 				if (proof) { parts.push(proof); }
 			}
 			// balcony on the first upper floor
-			if (v.main && c.balcony && pl.floors > 1) {
+			if (v.main && c.balcony && pl.floors > 1 && !balcVol) {
 				var bz = pl.plinth + pl.FH, bx0 = v.x0 + (v.x1 - v.x0) * 0.5, bx1 = Math.min(v.x1 - 0.5, bx0 + 4.5);
 				var rail = c.arch_style === 'alpine' ? '#9C6B44' : null;
 				box(sc, bx0, v.y1, bz - 0.22, bx1, v.y1 + 1.4, bz, { top: '#D8D4CC', front: '#E9E6E0' }).forEach(function (r) { parts.push(r); });
 				var rl = sc.plane([bx0, v.y1 + 1.4, bz], [1, 0, 0], [0, 0, 1], [[0, 0], [bx1 - bx0, 0], [bx1 - bx0, 1.0], [0, 1.0]], rail || 'rgba(200,225,235,0.35)', rail ? '' : '<path d="M0 1H' + f(bx1 - bx0) + '" stroke="#5A6066" stroke-width="0.05"/>', { noShade: true, stroke: rail ? null : '#C7D4DA', sw: 0.02 });
 				if (rl) { parts.push(rl); }
 			}
+			deco2d(sc, v, vp, type, roof).forEach(function (r) { parts.push(r); });
 			var gr = group(parts, 0);
 			// volumes are ordered by their footprint (ground) position, not by the height of their parts
 			if (gr) { sc.push(sc.depth([(v.x0 + v.x1) / 2, (v.y0 + v.y1) / 2, 0]) + idx * 0.001, gr.svg); }
@@ -1081,11 +1368,8 @@
 		/* terrace (+ pergola / covered) */
 		var ta = clamp(num(c.terrace_area, 0), 0, 200);
 		if (ta > 0) {
-			var td = clamp(ta / 6, 2.4, 5), mlen = mainV.x1 - mainV.x0, mdp = doorPos(c, mlen);
-			var tdw = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
-			// centred on the terrace door (same rule as the facade openings), never wider than the main volume
-			var tcx = mainV.x0 + (mlen > 7 ? clamp(mlen * 0.62, mdp.x + mdp.w + 1.2, mlen - tdw - 0.6) + tdw / 2 : mlen * 0.62);
-			var tw = clamp(ta / td, Math.min(tdw + 0.8, mlen), mlen), tx0 = clamp(tcx - tw / 2, mainV.x0, mainV.x1 - tw), ty1 = mainV.y1 + td;
+			var td = clamp(ta / 6, 2.4, 5), tr = terraceRect(c, mainV, vols, ta), tw = tr.x1 - tr.x0, tx0 = tr.x0, ty1 = tr.y1;
+			var terraceBox = tr;
 			var tfc = { wpc: '#7A6E64', wood: '#A97B52', stone: '#CFC6B6', ceramic: '#BEB8AE' }[c.terrace_floor || 'wpc'];
 			var tfill = c.terrace_floor === 'stone' || c.terrace_floor === 'ceramic' ? sc.mat('slabs', tfc) : sc.mat('deck', tfc);
 			var tparts = box(sc, tx0, mainV.y1, 0, tx0 + tw, ty1, 0.18, { top: tfill, front: shade(tfc, -0.25) });
@@ -1133,7 +1417,7 @@
 			if (!mini) {
 				var dc2 = { pavers: '#B4ADA2', gravel: '#B9B3A8', grass: '#90A85C', asphalt: '#4A4C4F' }[c.driveway || 'pavers'];
 				var dfill = c.driveway === 'gravel' ? sc.mat('gravel', dc2) : (c.driveway === 'grass' ? sc.mat('pavers', '#8FA85E') : (c.driveway === 'asphalt' ? dc2 : sc.mat('pavers', dc2)));
-				var dEdge = siteEdge(c, front);
+				var dEdge = siteEdge(c, front, plot);
 				var dvw = sc.plane([gx0, dEdge, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [gW, 0], [gW, dEdge - gy1], [0, dEdge - gy1]], dfill, '', { noShade: true });
 				if (dvw) { groundSvg += dvw.svg; }
 			}
@@ -1143,7 +1427,7 @@
 		if (garage === 'none' && !mini) {
 			var dc3 = { pavers: '#B4ADA2', gravel: '#B9B3A8', grass: '#90A85C', asphalt: '#4A4C4F' }[c.driveway || 'pavers'];
 			var pfill = c.driveway === 'gravel' ? sc.mat('gravel', dc3) : (c.driveway === 'grass' ? sc.mat('pavers', '#8FA85E') : (c.driveway === 'asphalt' ? dc3 : sc.mat('pavers', dc3)));
-			var pEdge = siteEdge(c, front);
+			var pEdge = siteEdge(c, front, plot);
 			var pad = sc.plane([maxX + 0.8, pEdge, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [3, 0], [3, pEdge - D * 0.45], [0, pEdge - D * 0.45]], pfill, '', { noShade: true });
 			if (pad) { groundSvg += pad.svg; }
 		}
@@ -1175,15 +1459,15 @@
 		/* garden: path, pool, trees, hedges, fence */
 		if (!mini) {
 			var gf = c.garden_features || [];
-			var dpm = doorPos(c, mainV.x1 - mainV.x0), doorMid = mainV.x0 + dpm.x + dpm.w / 2;
+			var ent = entranceAt(c, vols), doorMid = ent.x, entY = ent.y;
 			if (has(gf, 'paths') || !c.garden_features) {
 				var pathFill = sc.mat('slabs', season === 'winter' ? '#D5DADD' : '#C9C2B6');
-				var wEdge = siteEdge(c, front);
-				var pth = sc.plane([doorMid - 0.6, wEdge, 0.012], [1, 0, 0], [0, -1, 0], [[0, 0], [1.2, 0], [1.2, wEdge - mainV.y1], [0, wEdge - mainV.y1]], pathFill, '', { noShade: true });
+				var wEdge = siteEdge(c, front, plot);
+				var pth = sc.plane([doorMid - 0.6, wEdge, 0.012], [1, 0, 0], [0, -1, 0], [[0, 0], [1.2, 0], [1.2, wEdge - entY], [0, wEdge - entY]], pathFill, '', { noShade: true });
 				if (pth) { groundSvg += pth.svg; }
 			}
 			if (has(gf, 'pool')) {
-				var pr = poolRect(mainV, left, right, front, back, plot, !!c.fence && c.fence !== 'none'), px0 = pr.x0, py0 = pr.y0, pw2 = pr.x1 - pr.x0, pd = pr.y1 - pr.y0;
+				var pr = poolRect(c, vols, { left: left, right: right, front: front, back: back }, plot, siteEdge(c, front, plot), siteAvoid(c, vols, { left: left, right: right, front: front, back: back }, garage !== 'none' ? { x0: gx0, x1: gx0 + gW, y0: (garage === 'separate' ? D * 0.8 : Math.min(D, gD)) - gD, y1: garage === 'separate' ? D * 0.8 : Math.min(D, gD) } : null, ta > 0 ? terraceRect(c, mainV, vols, ta) : null, doorMid, entY)), px0 = pr.x0, py0 = pr.y0, pw2 = pr.x1 - pr.x0, pd = pr.y1 - pr.y0;
 				var pool = sc.plane([px0, py0 + pd, 0.02], [1, 0, 0], [0, -1, 0], [[0, 0], [pw2, 0], [pw2, pd], [0, pd]], '#E9E4DA', '<rect x="0.25" y="0.25" width="' + f(pw2 - 0.5) + '" height="' + f(pd - 0.5) + '" fill="' + (L.dark ? '#1E5C7A' : '#5FB2CF') + '"/><rect x="0.25" y="' + f(pd * 0.55) + '" width="' + f(pw2 - 0.5) + '" height="' + f(pd * 0.1) + '" fill="#9FDBEA" opacity="0.5"/>', { noShade: true });
 				if (pool) { groundSvg += pool.svg; }
 			}
@@ -1253,7 +1537,7 @@
 			// fence along the front edge: openings for the path (optional gate) and the driveway
 			var fence = c.fence || 'none';
 			if (fence !== 'none') {
-				var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = left + 0.6, fx1 = right - 0.6, fy2 = front - 0.4;
+				var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = plot ? Math.max(left + 0.6, plot.x0) : left + 0.6, fx1 = plot ? Math.min(right - 0.6, plot.x1) : right - 0.6, fy2 = siteEdge(c, front, plot);
 				var gateX = doorMid - 0.6, gateOn = c.gate !== false, pathOn = has(gf, 'paths') || !c.garden_features;
 				var dr0 = garage === 'none' ? maxX + 0.8 : gx0, dr1 = garage === 'none' ? maxX + 3.8 : gx0 + gW;
 				var fcol = { slats: c.arch_style === 'scandinavian' ? '#9C978E' : '#3B3E42', mesh: '#5B6B5A', masonry: shade(col(c.facade_color, '#F2EFE9'), -0.06), gabion: '#8E8A84' }[fence];
@@ -1305,6 +1589,8 @@
 		var pad = mini ? 0.6 : { '24mm': 2.6, '35mm': 1.4, '50mm': 0.5 }[c.lens || '35mm'] || 1.4;
 		var vbx = sc.minX - pad, vby = sc.minY - pad * 1.6, vbw = sc.maxX - sc.minX + pad * 2, vbh = sc.maxY - sc.minY + pad * 2.6;
 		if (!isFinite(vbx)) { vbx = 0; vby = 0; vbw = 10; vbh = 6; }
+		// very wide, flat scenes (frontal camera, wide plot): more sky instead of a letterbox strip
+		if (vbw > vbh * 4) { vby -= vbw / 4 - vbh; vbh = vbw / 4; }
 		// sky
 		var sky = SKY[L.tod];
 		var skyTop = c.weather === 'overcast' ? mix(sky[0], '#9AA3AD', 0.65) : sky[0];
@@ -1407,7 +1693,7 @@
 		return render(c, { id: 'v' + kind + value, mini: false, fit: 'xMidYMid slice', tight: true, plantScale: kind === 'garden' ? 1.7 : 1.2 });
 	}
 
-	var VISUAL = ['plot_width', 'plot_length', 'exterior_steps', 'accessible', 'ridge_height', 'eaves_depth', 'snow_guards', 'roof_ventilation', 'exposed_rafters', 'facade_texture', 'property_type', 'levels', 'net_area', 'building_width', 'building_length', 'orientation', 'arch_style', 'footprint', 'garage', 'terrace_area', 'balcony', 'entrance_canopy', 'outdoor_covered', 'basement', 'chimney', 'ceiling_height',
+	var VISUAL = ['plot_width', 'plot_length', 'exterior_steps', 'accessible', 'ridge_height', 'eaves_depth', 'snow_guards', 'roof_ventilation', 'exposed_rafters', 'facade_texture', 'property_type', 'levels', 'net_area', 'building_width', 'building_length', 'orientation', 'arch_style', 'massing', 'footprint', 'garage', 'terrace_area', 'balcony', 'entrance_canopy', 'outdoor_covered', 'basement', 'chimney', 'ceiling_height',
 		'roof_type', 'roof_pitch', 'roof_overhang', 'gable_finish', 'roof_windows', 'dormers', 'roof_solar', 'gutters', 'roof_product', 'roof_color', 'roof_surface',
 		'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'plinth_color', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number',
 		'window_style', 'window_frame_color', 'window_frame_material', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading',
@@ -1421,11 +1707,12 @@
 		var pitched = c.roof_type !== 'flat', ta = num(c.terrace_area, 0) > 0, acc = c.facade_accent || [];
 		switch (id) {
 			case 'balcony': return c.levels === 'two' || c.levels === 'three';
-			case 'footprint': return c.property_type !== 'semi_detached' && c.property_type !== 'row';
+			case 'massing': return c.property_type !== 'semi_detached' && c.property_type !== 'row';
+			case 'footprint': return c.property_type !== 'semi_detached' && c.property_type !== 'row' && (c.massing || 'auto') === 'auto';
 			case 'plot_width': return num(c.plot_width, 0) > 0 && num(c.plot_width, 0) <= 60;
 			case 'plot_length':
-				var pv = volumes(c, plan(c)), my = Math.max.apply(null, pv.map(function (q) { return q.y1; }));
-				return num(c.plot_width, 0) > 0 && num(c.plot_width, 0) <= 60 && num(c.plot_length, 0) > 0 && num(c.plot_length, 0) < my + 20;
+				var pb = siteBox(volumes(c, plan(c)));
+				return num(c.plot_width, 0) > 0 && num(c.plot_width, 0) <= 60 && num(c.plot_length, 0) > 0 && num(c.plot_length, 0) < pb.y1 - pb.y0 + 20;
 			case 'ridge_height': return ['gable', 'hip', 'half_hip', 'multi', 'complex'].indexOf(c.roof_type || 'gable') !== -1 && num(c.ridge_height, 0) > plan(c).h0 + 0.8;
 			case 'eaves_depth': case 'snow_guards': case 'exposed_rafters': return pitched && (id !== 'snow_guards' || c.roof_type !== 'shed');
 			case 'roof_ventilation': return pitched && c.roof_type !== 'shed' && c.roof_type !== 'pyramid';
@@ -1458,7 +1745,8 @@
 	var api = { render: render, swatch: swatch, palette: palette, vignette: vignette, visual: VISUAL, visibleFor: visibleFor, plan: plan,
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
 		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
-		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect };
+		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
+		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _roundPts: roundPts, massing: MASSING };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));

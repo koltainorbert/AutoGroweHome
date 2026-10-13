@@ -87,8 +87,8 @@ final class Installer {
 				Logger::error( 'core', 'Secrets storage upgrade failed: ' . $e->getMessage() );
 			}
 		}
-		if ( $from > 0 && $from < 7 ) {
-			// DB v6/v7: richer style suggestions, shared family bases (only untouched seeds).
+		if ( $from > 0 && $from < 8 ) {
+			// DB v6–v8: current style suggestions with their own building forms (only untouched seeds).
 			try {
 				$n = Catalog::upgrade_style_defaults();
 				Logger::info( 'core', 'Style suggestions updated', array( 'count' => $n ) );

@@ -399,7 +399,7 @@ final class PromptEngine {
 			'concept_description'=> (string) ( $brief['exterior_description'] ?? '' ),
 			'concept_features'   => self::join( (array) ( $brief['signature_features'] ?? array() ) ),
 			'concept_materials'  => self::join( (array) ( $brief['materials'] ?? array() ) ),
-			'concept_massing'    => ucfirst( trim( (string) ( $brief['massing'] ?? '' ) ) ),
+			'concept_massing'    => ucfirst( trim( implode( '. ', array_filter( array( 'auto' !== ( $c['massing'] ?? 'auto' ) ? 'Massing: ' . self::phrase( 'massing', $c ) : '', trim( (string) ( $brief['massing'] ?? '' ) ) ) ) ) ) ),
 			'variant_letter'     => (string) ( $concept['variant'] ?? 'A' ),
 			'variant_direction'  => (string) ( $brief['differentiation'] ?? '' ),
 			'consistency_id'     => (string) ( $concept['consistency_id'] ?? '' ),

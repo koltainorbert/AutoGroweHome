@@ -865,7 +865,7 @@
 		if (K) {
 			var cfg = {};
 			Object.keys(S.config).forEach(function (k) { cfg[k] = S.config[k]; });
-			if (['roof_type', 'levels', 'property_type', 'garage', 'footprint', 'window_style'].indexOf(field) !== -1) {
+			if (['roof_type', 'levels', 'property_type', 'garage', 'massing', 'footprint', 'window_style'].indexOf(field) !== -1) {
 				cfg[field] = value;
 				cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer';
 				if (field === 'footprint') { cfg.camera = 'elevated'; cfg.property_type = 'detached'; }
@@ -889,7 +889,7 @@
 	}
 	// Rendered 3D picture for a card (when the 3D preview is available); cached per configuration.
 	var THUMBS = {};
-	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', floor_bedrooms: 'floor', floor_kitchen: 'floor', floor_entry: 'floor', floor_wet: 'floor', garden_style: 'full', time_of_day: 'full' };
+	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', massing: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', floor_bedrooms: 'floor', floor_kitchen: 'floor', floor_entry: 'floor', floor_wet: 'floor', garden_style: 'full', time_of_day: 'full' };
 	function cardThumb(el, field, value) {
 		var mode = THUMB_FIELDS[field];
 		if (!A3 || !mode || lsGet('agh_3d_thumbs', true) === false) { return; }
@@ -1503,7 +1503,7 @@
 	// switch to the full designer at any point without losing anything.
 	var WIZ = [
 		{ key: 'style', fields: ['arch_style'] },
-		{ key: 'home', fields: ['property_type', 'levels', 'occupants'] },
+		{ key: 'home', fields: ['property_type', 'levels', 'massing', 'occupants'] },
 		{ key: 'size', fields: ['net_area', 'bedrooms', 'bathrooms'] },
 		{ key: 'roof', fields: ['roof_type', 'roof_pitch', 'roof_product'] },
 		{ key: 'look', fields: ['facade_main', 'facade_color', 'window_style'] },
@@ -1979,23 +1979,49 @@
 	}
 
 	/* ------------------------------------------------------------------ presets & projects */
+	// Preview of a whole preset: the house it gives (3D picture when available, otherwise the sketch).
+	function presetVisual(values, photo) {
+		var cfg = Object.assign(clone(S.boot.defaults), clone(values || {}));
+		cfg.time_of_day = 'golden'; cfg.weather = 'clear'; cfg.season = 'summer'; cfg.camera = 'three_quarter';
+		var el = h('span', { class: 'agh-card-vis agh-preset-vis', 'aria-hidden': 'true' });
+		var svg = window.AGH_Sketch ? window.AGH_Sketch.render(cfg, { mini: true, id: 'pv' + (++visSeq) + '_', fit: 'xMidYMid meet' }) : '';
+		var key = 'preset|' + JSON.stringify(cfg);
+		var put = function (url) { el.classList.remove('is-wait'); el.innerHTML = ''; if (url) { el.appendChild(h('img', { src: url, alt: '', decoding: 'async' })); } else { el.innerHTML = svg; } addPhoto(); };
+		function addPhoto() { if (photo) { el.appendChild(h('img', { class: 'agh-preset-photo', src: photo, alt: '', decoding: 'async' })); } }
+		if (A3 && lsGet('agh_3d_thumbs', true) !== false) {
+			if (THUMBS[key]) { put(THUMBS[key]); }
+			else { el.classList.add('is-wait'); A3.thumb(cfg, 360, 240, 'mini').then(function (url) { if (url) { THUMBS[key] = url; } put(url); }); }
+		} else { el.innerHTML = svg; addPhoto(); }
+		return el;
+	}
+	function presetCard(p, onApply, extra) {
+		var card = h('div', { class: 'agh-preset' },
+			h('button', { type: 'button', class: 'agh-preset-btn', 'aria-label': t('apply') + ': ' + p.name, onclick: onApply },
+				presetVisual(p.values, p.image),
+				h('span', { class: 'agh-preset-txt' }, h('b', { text: p.name }), p.desc ? h('span', { class: 'agh-small agh-muted', text: p.desc }) : null)));
+		if (extra) { card.appendChild(extra); }
+		return card;
+	}
 	function showPresets() {
-		var body = h('div', { class: 'agh-list' });
+		var body = h('div', { class: 'agh-preset-grid' });
 		(S.boot.schema.presets || []).forEach(function (p) {
-			body.appendChild(h('div', { class: 'agh-list-item' }, p.image ? h('img', { src: p.image, alt: '', style: { width: '64px', height: '44px', 'object-fit': 'cover', 'border-radius': '8px' } }) : icon(p.style ? 'sparkle' : 'layers'), h('div', { class: 'agh-grow' }, h('b', { text: p.name }), h('span', { class: 'agh-small agh-muted', text: p.desc || '' })), h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { applyValues(p.values, true); closeDialogs(); } }, t('apply'))));
+			body.appendChild(presetCard(p, function () { applyValues(p.values, true); closeDialogs(); }));
 		});
 		var mine = lsGet(LS_PRESETS, []);
-		var mineBox = h('div', { class: 'agh-list', style: { 'margin-top': '14px' } }, h('div', { class: 'agh-eyebrow', text: t('my_presets') }));
+		var mineGrid = h('div', { class: 'agh-preset-grid' });
+		var mineBox = h('div', { style: { 'margin-top': '16px' } }, h('div', { class: 'agh-eyebrow', text: t('my_presets') }), mineGrid);
 		function drawMine() {
-			Array.prototype.slice.call(mineBox.querySelectorAll('.agh-list-item')).forEach(function (x) { x.remove(); });
+			clear(mineGrid);
 			mine.forEach(function (p, i) {
-				mineBox.appendChild(h('div', { class: 'agh-list-item' }, icon('star'), h('div', { class: 'agh-grow' }, h('b', { text: p.name })), h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { S.config = Object.assign(clone(S.boot.defaults), p.values); S.styleApplied = null; applyValues({}, false); closeDialogs(); } }, t('apply')), h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('delete'), onclick: function () { mine.splice(i, 1); lsSet(LS_PRESETS, mine); syncPresets(mine); drawMine(); } }, icon('trash', 'agh-ico-s'))));
+				mineGrid.appendChild(presetCard(p, function () { S.config = Object.assign(clone(S.boot.defaults), p.values); S.styleApplied = null; applyValues({}, false); closeDialogs(); },
+					h('button', { type: 'button', class: 'agh-iconbtn agh-preset-del', 'aria-label': t('delete'), title: t('delete'), onclick: function () { mine.splice(i, 1); lsSet(LS_PRESETS, mine); syncPresets(mine); drawMine(); } }, icon('trash', 'agh-ico-s'))));
 			});
+			mineBox.style.display = mine.length ? '' : 'none';
 		}
 		drawMine();
 		var nm = h('input', { class: 'agh-input', placeholder: t('preset_name'), maxlength: 80 });
-		var add = h('div', { class: 'agh-numrow', style: { 'margin-top': '10px' } }, nm, h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { if (!nm.value.trim()) { return; } mine.unshift({ name: nm.value.trim(), values: clone(S.config) }); mine = mine.slice(0, 20); lsSet(LS_PRESETS, mine); syncPresets(mine); nm.value = ''; drawMine(); toast(t('preset_saved'), 'ok'); } }, icon('plus', 'agh-ico-s'), t('save_as_preset')));
-		dialog(t('presets'), h('div', null, body, mineBox, add), [{ label: t('close') }]);
+		var add = h('div', { class: 'agh-numrow', style: { 'margin-top': '12px' } }, nm, h('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { if (!nm.value.trim()) { return; } mine.unshift({ name: nm.value.trim(), values: clone(S.config) }); mine = mine.slice(0, 20); lsSet(LS_PRESETS, mine); syncPresets(mine); nm.value = ''; drawMine(); toast(t('preset_saved'), 'ok'); } }, icon('plus', 'agh-ico-s'), t('save_as_preset')));
+		dialog(t('presets'), h('div', null, body, mineBox, add), [{ label: t('close') }], true);
 		if (S.boot.logged_in) {
 			api('GET', 'presets').then(function (r) { if (r.presets && r.presets.length && !mine.length) { mine = r.presets; lsSet(LS_PRESETS, mine); drawMine(); } }).catch(function () {});
 		}

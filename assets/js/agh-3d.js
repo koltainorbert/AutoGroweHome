@@ -228,20 +228,28 @@ function beam(a, b, w, h, mat) {
 
 /* ================================================================== roof geometry (shared with the 2D sketch) */
 function roofData(c, v, pl, type) {
-	var polys = [], lines = [];
+	var polys = [], lines = [], glassy = [];
 	var sc = {
-		c: c, o: {}, id: 'r', light: {}, cam: { t: [0, 0, 1], P: function () { return [0, 0]; } },
+		c: c, o: {}, id: 'r', light: {}, mock: true, cam: { t: [0, 0, 1], P: function () { return [0, 0]; } },
 		mat: function () { return 'm'; }, def: function (k) { return k; },
-		poly3: function (p3, fill) { polys.push(p3); return { svg: '', depth: 0 }; },
-		plane: function (o, du, dv, poly) { polys.push(poly.map(function (q) { return [o[0] + du[0] * q[0] + dv[0] * q[1], o[1] + du[1] * q[0] + dv[1] * q[1], o[2] + du[2] * q[0] + dv[2] * q[1]]; })); return { svg: '', depth: 0 }; },
+		poly3: function (p3, fill, inner, op) { polys.push(p3); glassy.push(!!(op && op.glass)); return { svg: '', depth: 0 }; },
+		plane: function (o, du, dv, poly) { glassy.push(false); polys.push(poly.map(function (q) { return [o[0] + du[0] * q[0] + dv[0] * q[1], o[1] + du[1] * q[0] + dv[1] * q[1], o[2] + du[2] * q[0] + dv[2] * q[1]]; })); return { svg: '', depth: 0 }; },
 		line: function (a, b, color, width, kind) { lines.push({ a: a, b: b, color: color, width: width, kind: kind || '' }); return ''; },
 		track: function () { return [0, 0]; }, depth: function () { return 0; }, visible: function () { return true; }, lit: function () { return 0; }
 	};
 	var r = SK()._roof(sc, v, pl, type);
-	return { info: r, polys: polys, lines: lines };
+	return { info: r, polys: polys, lines: lines, glassy: glassy };
 }
 // Profile of the wall top on the gable ends, as [u, z] points from u = len down to 0.
 function gableTop(face, v, type, rise) {
+	if (type === 'saw') {
+		if (face !== 'right' && face !== 'left') { return null; }
+		var nT = Math.max(2, Math.round((v.y1 - v.y0) / 3)), tw = (v.y1 - v.y0) / nT, S2 = v.y1 - v.y0, pp = [];
+		// right face: u = 0 at the front; left face: u = 0 at the back
+		if (face === 'right') { pp.push([S2, v.h]); for (var k = 0; k < nT; k++) { var u = S2 - (k + 1) * tw; pp.push([u, v.h + rise], [u, v.h]); } }
+		else { for (var k2 = nT - 1; k2 >= 0; k2--) { var u2 = (k2 + 1) * tw; pp.push([u2, v.h], [u2, v.h + rise]); } pp.push([0, v.h]); }
+		return pp;
+	}
 	if (['gable', 'half_hip', 'shed'].indexOf(type) === -1) { return null; }
 	var alongX = v.ridge !== 'y';
 	if ((alongX ? ['right', 'left'] : ['front', 'back']).indexOf(face) === -1) { return null; }
@@ -263,22 +271,19 @@ function gableTop(face, v, type, rise) {
 function windowSpec(c) { return SK()._win(c); }
 // Layout of the openings on one wall face (face-local u, v). Mirrors the 2D sketch for the front and
 // the right side; the back and the left side get windows by the same rules.
-function faceOpenings(c, v, pl, F, entrance, rise, gabled) {
-	var ws = windowSpec(c), st = SK()._style(c), len = F.len, out = [], reserved = [];
-	var dp = SK()._door(c, len);
-	if (entrance) {
-		out.push({ kind: 'door', x: dp.x, y: pl.plinth, w: dp.w, h: dp.h });
-		reserved.push([dp.x - 0.5, dp.x + dp.w + 0.5]);
-		if (num(c.terrace_area, 0) > 0 && len > 7) {
-			var tw = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
-			var tx = clamp(len * 0.62, dp.x + dp.w + 1.2, len - tw - 0.6);
-			out.push({ kind: 'tdoor', x: tx, y: pl.plinth, w: tw, h: 2.35 });
-			reserved.push([tx - 0.4, tx + tw + 0.4]);
-		}
+function faceOpenings(c, v, pl, F, fp, rise, gabled) {
+	var ws = windowSpec(c), st = SK()._style(c), len = F.len, out = [], reserved = [], blocked = [];
+	if (v.glass) { return out; }
+	if (fp) {
+		if (fp.door) { out.push({ kind: 'door', x: fp.door.x, y: pl.plinth, w: fp.door.w, h: fp.door.h }); reserved.push([fp.door.x - 0.5, fp.door.x + fp.door.w + 0.5]); }
+		if (fp.tdoor) { out.push({ kind: 'tdoor', x: fp.tdoor.x, y: pl.plinth, w: fp.tdoor.w, h: 2.35 }); reserved.push([fp.tdoor.x - 0.4, fp.tdoor.x + fp.tdoor.w + 0.4]); }
+		blocked = fp.block.map(function (b) { return [b[0] - 0.3, b[1] + 0.3]; });
 	}
+	var entrance = !!(fp && fp.door);
 	var side = F.name === 'right' || F.name === 'left';
 	for (var fl = 0; fl < pl.floors; fl++) {
 		var z0 = pl.plinth + fl * pl.FH;
+		if (z0 < v.z0 - 0.05) { continue; }
 		if (z0 + 1 > v.h) { break; }
 		var w = ws.w, h = Math.min(ws.h, pl.FH - 0.6), sill = ws.sill;
 		if (c.window_style === 'panoramic' && fl > 0) { w = 1.9; h = 1.7; sill = 0.6; }
@@ -290,6 +295,7 @@ function faceOpenings(c, v, pl, F, entrance, rise, gabled) {
 		for (var i = 0; i < n; i++) {
 			var x = step * i + (step - w) / 2;
 			if (fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
+			if (blocked.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
 			out.push({ kind: 'win', x: x, y: z0 + sill, w: w, h: h, fl: fl, i: i });
 		}
 	}
@@ -323,31 +329,25 @@ House.prototype.add = function (m, fit) { if (m) { (fit === false ? this.root : 
 House.prototype.build = function () {
 	var c = this.c, K = SK(), pl = K.plan(c), vols = K._volumes(c, pl), self = this;
 	this.pl = pl; this.vols = vols;
-	var roofType = c.roof_type || 'gable';
-	vols.forEach(function (v, idx) {
-		var type = roofType;
-		if (v.wing) { type = roofType === 'flat' ? 'flat' : (roofType === 'complex' || roofType === 'multi' ? 'gable' : roofType); }
-		if (v.second && roofType !== 'flat') { type = roofType === 'hip' || roofType === 'pyramid' ? 'hip' : roofType; }
-		if (type === 'multi' || type === 'complex') { type = roofType === 'complex' ? 'hip' : 'gable'; }
-		self.volume(v, idx, type);
-	});
+	this.balcVol = vols.some(function (q) { return q.balc; });
+	vols.forEach(function (v, idx) { self.volume(v, idx, K._vtype(c, v), K._vplan(pl, v)); });
 	if (pl.units > 1) { this.units(vols[0]); }
 	this.extras();
 	if (!this.o.mini) { this.site(); }
 	return this;
 };
 
-House.prototype.volume = function (v, idx, type) {
-	var c = this.c, pl = this.pl, st = SK()._style(c), self = this, T = 0.3;
+House.prototype.volume = function (v, idx, type, vpl) {
+	var c = this.c, pl = vpl || this.pl, st = SK()._style(c), self = this, T = 0.3, z0 = v.z0 || 0;
 	var rd = type === 'flat' ? null : roofData(c, v, pl, type);
 	var rise = rd ? rd.info.rise : 0;
-	var acc = c.facade_accent || [];
-	var wallMat = (v.wing || v.second) && acc.length ? accentMat(c, acc[0]) : facadeMat(c, c.facade_main);
+	var acc = c.facade_accent || [], r = SK()._round(c, v), fp = SK()._front(c, v, this.vols);
+	var wallMat = v.glass ? glassMat(c, this.night) : ((v.wing || v.second || v.accent) && acc.length ? accentMat(c, acc[0]) : facadeMat(c, c.facade_main));
 	var faces = [
-		{ name: 'front', o: [v.x0, v.y1], u: [1, 0], n: X(0, 1, 0), len: v.x1 - v.x0 },
-		{ name: 'right', o: [v.x1, v.y1], u: [0, -1], n: X(1, 0, 0), len: v.y1 - v.y0 },
-		{ name: 'back', o: [v.x1, v.y0], u: [-1, 0], n: X(0, -1, 0), len: v.x1 - v.x0 },
-		{ name: 'left', o: [v.x0, v.y0], u: [0, 1], n: X(-1, 0, 0), len: v.y1 - v.y0 }
+		{ name: 'front', o: [v.x0 + r, v.y1], u: [1, 0], n: X(0, 1, 0), len: v.x1 - v.x0 - 2 * r },
+		{ name: 'right', o: [v.x1, v.y1 - r], u: [0, -1], n: X(1, 0, 0), len: v.y1 - v.y0 - 2 * r },
+		{ name: 'back', o: [v.x1 - r, v.y0], u: [-1, 0], n: X(0, -1, 0), len: v.x1 - v.x0 - 2 * r },
+		{ name: 'left', o: [v.x0, v.y0 + r], u: [0, 1], n: X(-1, 0, 0), len: v.y1 - v.y0 - 2 * r }
 	];
 	faces.forEach(function (F) {
 		var g = new THREE.Group();
@@ -357,37 +357,64 @@ House.prototype.volume = function (v, idx, type) {
 		m.setPosition(org);
 		g.matrixAutoUpdate = false; g.matrix.copy(m);
 		var top = gableTop(F.name, v, type, rise);
-		var entrance = v.main && F.name === 'front';
-		var ops = faceOpenings(c, v, pl, F, entrance, rise, top && type !== 'shed' ? type : false);
+		F.fp = F.name === 'front' ? fp : null;
+		var ops = faceOpenings(c, v, pl, F, F.fp, rise, top && type !== 'shed' && type !== 'saw' ? type : false);
 		F.ops = ops;
 		// a shed roof's high side needs a full-height wall
 		var fullH = type === 'shed' && F.name === (v.ridge !== 'y' ? 'back' : 'left') ? v.h + rise : v.h;
 		// wall shape with holes
 		var shape = new THREE.Shape();
-		shape.moveTo(0, 0); shape.lineTo(F.len, 0);
+		shape.moveTo(0, z0); shape.lineTo(F.len, z0);
 		if (top) { top.forEach(function (p) { shape.lineTo(p[0], p[1]); }); } else { shape.lineTo(F.len, fullH); shape.lineTo(0, fullH); }
-		shape.lineTo(0, 0);
+		shape.lineTo(0, z0);
 		ops.forEach(function (o) { shape.holes.push(holePath(o, st, c)); });
 		var wg = new THREE.ExtrudeGeometry(shape, { depth: T, bevelEnabled: false, curveSegments: 10 });
 		var wm = new THREE.Mesh(wg, wallMat); wm.castShadow = true; wm.receiveShadow = true;
 		g.add(wm);
-		self.wallDetails(g, v, F, ops, top, T, st, wallMat);
+		if (v.glass) { for (var mx = 1.2; mx < F.len - 0.2; mx += 1.2) { g.add(lbox(mx - 0.03, z0, T - 0.02, mx + 0.03, v.h, T + 0.04, frameMat(c))); } }
+		else { self.wallDetails(g, v, F, ops, top, T, st, wallMat); }
 		ops.forEach(function (o) { self.opening(g, o, T, st); });
 		self.add(g);
 	});
-	// interior: dark box so open doors/thin glass never show the sky through the house
-	this.add(box(v.x0 + T + 0.02, v.y0 + T + 0.02, 0.05, v.x1 - T - 0.02, v.y1 - T - 0.02, v.h - 0.05, solid('#1F1E1C', 1, 0), { noCast: true }));
-	// plinth band
-	var pm = plinthMat(c);
-	if (pm) {
-		var ph = pl.plinth, e = 0.03;
-		this.add(box(v.x0 - e, v.y0 - e, 0, v.x1 + e, v.y1 + e, ph, pm));
+	var dark = solid('#1F1E1C', 1, 0);
+	if (r > 0) {
+		// soft corners: quarter cylinders, a rounded interior and no plinth band
+		[[v.x1 - r, v.y1 - r, 0], [v.x0 + r, v.y1 - r, 1.5], [v.x0 + r, v.y0 + r, 1], [v.x1 - r, v.y0 + r, 0.5]].forEach(function (q) {
+			var cg = new THREE.CylinderGeometry(r, r, v.h - z0, 18, 1, true, q[2] * Math.PI, Math.PI / 2);
+			var cm = new THREE.Mesh(cg, wallMat); cm.position.copy(X(q[0], q[1], (v.h + z0) / 2)); cm.castShadow = true; cm.receiveShadow = true; self.add(cm);
+		});
+		this.add(roundSlab(v, r, -T - 0.02, z0 + 0.05, v.h - 0.05, dark));
+	} else {
+		// interior: dark box so open doors/thin glass never show the sky through the house
+		if (!v.glass) { this.add(box(v.x0 + T + 0.02, v.y0 + T + 0.02, z0 + 0.05, v.x1 - T - 0.02, v.y1 - T - 0.02, v.h - 0.05, dark, { noCast: true })); }
+		// plinth band
+		var pm = plinthMat(c);
+		if (pm && !z0) {
+			var ph = pl.plinth, e = 0.03;
+			this.add(box(v.x0 - e, v.y0 - e, 0, v.x1 + e, v.y1 + e, ph, pm));
+		}
 	}
+	// the underside of a floating (cantilevered) volume
+	if (z0 > 0) { this.add(box(v.x0, v.y0, z0 - 0.28, v.x1, v.y1, z0 + 0.02, solid(shadeHex(col(c.facade_color, '#F2EFE9'), -0.06), 0.85))); }
 	// roof
-	if (type === 'flat') { this.flatRoof(v); } else { this.pitchedRoof(v, rd, type); }
-	this.roofItems(v, type, rd ? rd.info : null);
-	if (v.main) { this.frontExtras(v); }
+	if (type === 'flat') { this.flatRoof(v, r); } else { this.pitchedRoof(v, rd, type); }
+	this.roofItems(v, type, rd ? rd.info : null, pl);
+	this.frontExtras(v, fp, type, pl);
 };
+// A slab following the outline of a rounded volume (e: outward offset), from z0 to z1.
+function roundSlab(v, r, e, z0, z1, mat, hole) {
+	var pts = SK()._roundPts(v, r, e, 8), sh = new THREE.Shape();
+	pts.forEach(function (p, i) { if (i) { sh.lineTo(p[0], -p[1]); } else { sh.moveTo(p[0], -p[1]); } });
+	if (hole !== undefined) {
+		var hp = new THREE.Path(), hpts = SK()._roundPts(v, r, hole, 8).reverse();
+		hpts.forEach(function (p, i) { if (i) { hp.lineTo(p[0], -p[1]); } else { hp.moveTo(p[0], -p[1]); } });
+		sh.holes.push(hp);
+	}
+	var geo = new THREE.ExtrudeGeometry(sh, { depth: z1 - z0, bevelEnabled: false, curveSegments: 8 });
+	geo.rotateX(-Math.PI / 2); geo.translate(0, z0, 0);
+	var m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true;
+	return m;
+}
 function plinthMat(c) {
 	switch (c.plinth) {
 		case 'stone': return pbr('stone', { color: '#8D8576' }, { normal: 2 });
@@ -427,8 +454,9 @@ House.prototype.wallDetails = function (g, v, F, ops, top, T, st, wallMat) {
 		g.add(me);
 	};
 	var opsIn = function (x0, x1, y1) { return ops.filter(function (o) { return o.x < x1 && o.x + o.w > x0 && o.y < (y1 === undefined ? 1e9 : y1); }); };
-	if (main && F.name === 'front' && acc[0]) {
-		var dp = SK()._door(c, F.len), ax0 = Math.max(0, dp.x - 0.75), ax1 = Math.min(F.len, dp.x + dp.w + 0.75);
+	var door = F.fp && F.fp.door;
+	if (door && acc[0] && (main || v.risalit)) {
+		var dp = door, ax0 = Math.max(0, dp.x - 0.75), ax1 = Math.min(F.len, dp.x + dp.w + 0.75);
 		proud([[ax0, 0], [ax1, 0], [ax1, v.h], [ax0, v.h]], accentMat(c, acc[0]), opsIn(ax0, ax1));
 	}
 	if (main && acc[1]) {
@@ -452,11 +480,11 @@ House.prototype.wallDetails = function (g, v, F, ops, top, T, st, wallMat) {
 	if (main && st.slats && F.name === 'front') { for (var sl = 0.15; sl < F.len * 0.3; sl += 0.24) { g.add(lbox(F.len - 0.32 - sl, pl.plinth, T + 0.04, F.len - 0.2 - sl, v.h - 0.1, T + 0.12, pbr('wood', { color: st.slats }, { normal: 1 }))); } }
 	if (c.corner_detail === 'quoins' || st.quoins) {
 		var qm = st.quoins && c.corner_detail !== 'quoins' ? pbr('stone', { color: '#9C927F' }, { normal: 2 }) : solid(shadeHex(fcol, -0.1), 0.8);
-		for (var q = pl.plinth; q < v.h - 0.3; q += 0.5) { var qw = (Math.round(q * 2) % 2) ? 0.35 : 0.5; g.add(lbox(F.len - qw, q, T, F.len, q + 0.42, T + 0.03, qm)); }
+		for (var q = Math.max(pl.plinth, v.z0 || 0); q < v.h - 0.3; q += 0.5) { var qw = (Math.round(q * 2) % 2) ? 0.35 : 0.5; g.add(lbox(F.len - qw, q, T, F.len, q + 0.42, T + 0.03, qm)); }
 	}
 	if (main && F.name === 'right') { this.wallTech(g, F, T); }
-	if (main && F.name === 'front') {
-		var dp2 = SK()._door(c, F.len);
+	if (door) {
+		var dp2 = door;
 		if (st.portal) {
 			var pc = solid(st.portal, 0.5, 0.3);
 			g.add(lbox(dp2.x - 0.6, pl.plinth, T, dp2.x - 0.38, pl.plinth + dp2.h + 0.55, T + 0.25, pc));
@@ -569,7 +597,12 @@ House.prototype.pitchedRoof = function (v, rd, type) {
 	var ridgeM = rsp.metal ? solid('#8E9296', 0.35, 0.8) : (rsp.mortar ? solid('#8A857C', 0.9) : solid(shadeHex(col(c.roof_color, '#3A3D40'), rsp.shift || -0.15), 0.6, 0.1));
 	if (c.season === 'winter') { ridgeM = solid('#EEF2F6', 0.6); }
 	var P3 = rd.polys.map(function (p) { return p.map(function (q) { return X(q[0], q[1], q[2]); }); });
-	P3.forEach(function (pts) { var m = polyMesh(pts, [rm, soffit], { thick: 0.16 }); if (m) { m.position.y += 0.02; self.add(m); } });
+	var gm = glassMat(c, this.night), fm = frameMat(c);
+	P3.forEach(function (pts, i) {
+		if (rd.glassy[i]) { var gq = polyMesh(pts, [gm, gm], { thick: 0.04 }); if (gq) { self.add(gq); } return; }
+		var m = polyMesh(pts, [rm, soffit], { thick: 0.16 }); if (m) { m.position.y += 0.02; self.add(m); }
+	});
+	if (type === 'saw') { P3 = P3.filter(function (p, i) { if (rd.glassy[i]) { self.add(beam(p[2], p[3], 0.08, 0.08, fm)); } return !rd.glassy[i]; }); }
 	// ridge and hip caps: edges shared by two roof planes
 	var edges = {};
 	function k(p) { return [p.x, p.y, p.z].map(function (x) { return Math.round(x * 100); }).join(','); }
@@ -581,7 +614,7 @@ House.prototype.pitchedRoof = function (v, rd, type) {
 	});
 	Object.keys(edges).forEach(function (kk) {
 		var e = edges[kk];
-		if (e.n >= 2 && (e.a.y > v.h + 0.3 || e.b.y > v.h + 0.3)) { if (rsp.r > 0) { var r = rod(e.a.clone().setY(e.a.y + 0.05), e.b.clone().setY(e.b.y + 0.05), rsp.r, ridgeM, rsp.seg || 8); if (r) { self.add(r); } } }
+		if (type !== 'saw' && e.n >= 2 && (e.a.y > v.h + 0.3 || e.b.y > v.h + 0.3)) { if (rsp.r > 0) { var r = rod(e.a.clone().setY(e.a.y + 0.05), e.b.clone().setY(e.b.y + 0.05), rsp.r, ridgeM, rsp.seg || 8); if (r) { self.add(r); } } }
 	});
 	// gutters, downpipes, barge boards, rafters, snow guards, vents
 	rd.lines.forEach(function (L) {
@@ -615,9 +648,15 @@ House.prototype.roofVent = function (a, b, type) {
 	else { var vt = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.38), dk); vt.position.y = 0.06; vt.castShadow = true; g.add(vt); var vh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.06, 0.06), solid('#1E2023', 0.6)); vh.position.set(0, 0.11, 0.1); g.add(vh); }
 	g.position.copy(a); g.position.y += 0.02; self.add(g);
 };
-House.prototype.flatRoof = function (v) {
+House.prototype.flatRoof = function (v, r) {
 	var c = this.c, h = v.h, fasc = solid(shadeHex(col(c.facade_color, '#F2EFE9'), c.arch_style === 'high_tech' ? -0.05 : 0.05), 0.8);
 	var e = 0.1, top = h + 0.35, t = 0.25;
+	if (r > 0) {
+		this.add(roundSlab(v, r, e, h - 0.05, top, fasc, e - t));
+		this.add(roundSlab(v, r, e - t + 0.01, h - 0.05, h + 0.08, roofMat(c)));
+		v.flatTop = h + 0.08;
+		return;
+	}
 	this.add(box(v.x0 - e, v.y0 - e, h - 0.05, v.x1 + e, v.y0 - e + t, top, fasc));
 	this.add(box(v.x0 - e, v.y1 + e - t, h - 0.05, v.x1 + e, v.y1 + e, top, fasc));
 	this.add(box(v.x0 - e, v.y0 - e, h - 0.05, v.x0 - e + t, v.y1 + e, top, fasc));
@@ -631,8 +670,9 @@ House.prototype.flatRoof = function (v) {
 	this.add(box(v.x0 - e - 0.02, v.y0 - e - 0.02, top, v.x0 - e + t + 0.02, v.y1 + e + 0.02, top + 0.03, cp));
 	v.flatTop = h + 0.08;
 };
-House.prototype.roofItems = function (v, type, info) {
-	var c = this.c, pl = this.pl, self = this, W = v.x1 - v.x0, D = v.y1 - v.y0;
+House.prototype.roofItems = function (v, type, info, vpl) {
+	var c = this.c, pl = vpl || this.pl, self = this, W = v.x1 - v.x0, D = v.y1 - v.y0;
+	if (!v.items || type === 'saw') { return; }
 	var solar = c.roof_solar || has(c.energy, 'solar') || !!SK()._style(c).pv;
 	var ss = SK()._solar(c);
 	var panelM = pbr('solar', { type: ss.t }, { roughness: ss.t === 'glass' ? 0.25 : 0.6, metalness: 0.35, normal: ss.tiles ? 1.2 : 0.8, clearcoat: 1, physical: true });
@@ -670,8 +710,8 @@ House.prototype.roofItems = function (v, type, info) {
 	if (c.chimney) { chimney(v.h + (info ? info.rise : 0) + 1.0); }
 	if (v.ridge === 'y') { return; }
 	var tp = Math.tan(pl.pitch * D2R), cosP = Math.cos(pl.pitch * D2R), sinP = Math.sin(pl.pitch * D2R);
-	var slopeL = (c.roof_type === 'shed' ? D : D / 2) / cosP;
-	var hipIn = c.roof_type === 'hip' || c.roof_type === 'pyramid' ? D / 2 : 0;
+	var slopeL = (type === 'shed' ? D : D / 2) / cosP;
+	var hipIn = type === 'hip' || type === 'pyramid' ? D / 2 : 0;
 	// point on the front roof plane: u along the eave, s up the slope, lift above the surface
 	function onRoof(u, s, lift) { return X(v.x0 + u, v.y1 - s * cosP + lift * sinP, v.h + s * sinP + lift * cosP + 0.02); }
 	function roofRect(u, s, w, hh, lift, mats, thick) {
@@ -705,16 +745,17 @@ House.prototype.roofItems = function (v, type, info) {
 		this.add(polyMesh([X(dx - 0.15, yd + 0.2, zt - 0.08), X(dx + dw / 2, yd + 0.2, zr), X(dx + dw / 2, yb, zr), X(dx - 0.15, yb, zt - 0.08)], [rm, solid('#E6E2DA', 0.8)], { thick: 0.1 }));
 	}
 };
-// Canopy, porch, balcony, steps / ramp on the main volume.
-House.prototype.frontExtras = function (v) {
-	var c = this.c, pl = this.pl, st = SK()._style(c), fcol = col(c.facade_color, '#F2EFE9'), self = this;
-	var dp = SK()._door(c, v.x1 - v.x0);
-	if (c.entrance_canopy) {
-		var dx = v.x0 + dp.x + dp.w / 2 - 0.95;
+// Canopy and steps at the entrance; porch, balcony and the massing signatures (frame, veranda,
+// chalet balconies, steel exoskeleton, roof-terrace railing) around a volume.
+House.prototype.frontExtras = function (v, fp, type, vpl) {
+	var c = this.c, pl = vpl || this.pl, st = SK()._style(c), fcol = col(c.facade_color, '#F2EFE9'), self = this;
+	var dp = fp && fp.door, dx0 = v.x0 + (fp ? fp.off : 0);
+	if (dp && c.entrance_canopy) {
+		var dx = dx0 + dp.x + dp.w / 2 - 0.95;
 		this.add(box(dx, v.y1, pl.plinth + 2.55, dx + 1.9, v.y1 + 1.2, pl.plinth + 2.72, solid(shadeHex(fcol, -0.12), 0.7)));
 	}
-	if (c.exterior_steps || c.basement || c.accessible) {
-		var ex0 = v.x0 + dp.x - 0.35, ex1 = ex0 + dp.w + 0.7, sm = pbr('slabs', { color: '#C9C2B6' }, { normal: 1 });
+	if (dp && (c.exterior_steps || c.basement || c.accessible)) {
+		var ex0 = dx0 + dp.x - 0.35, ex1 = ex0 + dp.w + 0.7, sm = pbr('slabs', { color: '#C9C2B6' }, { normal: 1 });
 		if (c.accessible) {
 			var rz = pl.plinth, rl = Math.max(1.2, rz * 12);
 			this.add(box(ex0, v.y1, 0, ex1, v.y1 + 1.3, rz, sm));
@@ -725,22 +766,76 @@ House.prototype.frontExtras = function (v) {
 			for (var i = 0; i < nst; i++) { this.add(box(ex0, v.y1, i * sh, ex1, v.y1 + 0.3 * (nst - i), (i + 1) * sh, sm)); }
 		}
 	}
-	if (st.porch) {
-		var pc = st.porch, px0 = v.x0 + 0.3, px1 = v.x1 - 0.3, pd = 2.2, pz = pl.plinth + 2.7, rm = roofMat(c);
+	if (v.porch || (v.main && st.porch)) {
+		var pc = v.porch || st.porch, px0 = v.x0 + 0.3, px1 = v.x1 - 0.3, pd = 2.2, pz = pl.plinth + 2.7, rm = roofMat(c);
 		this.add(box(px0, v.y1, 0, px1, v.y1 + pd, pl.plinth, pbr('deck', { color: '#A97B52' }, { normal: 1 })));
 		for (var p = 0; p <= Math.floor((px1 - px0) / 2.6); p++) { var ppx = Math.min(px1 - 0.18, px0 + p * 2.6); this.add(box(ppx, v.y1 + pd - 0.18, pl.plinth, ppx + 0.16, v.y1 + pd - 0.02, pz, solid(pc, 0.6))); }
 		this.add(polyMesh([X(px0 - 0.2, v.y1 + pd + 0.3, pz), X(px1 + 0.2, v.y1 + pd + 0.3, pz), X(px1 + 0.2, v.y1, pz + 0.75), X(px0 - 0.2, v.y1, pz + 0.75)], [rm, solid('#E6E2DA', 0.8)], { thick: 0.12 }));
 	}
-	if (c.balcony && pl.floors > 1) {
+	var wood = pbr('wood', { color: '#9C6B44' }, { normal: 1 });
+	var railGlass = cached('balglass', function () { return new THREE.MeshPhysicalMaterial({ color: '#BFD6DE', roughness: 0.05, metalness: 0, transmission: 0, transparent: true, opacity: 0.32, envMapIntensity: 1.5 }); });
+	if (v.main && c.balcony && pl.floors > 1 && !this.balcVol) {
 		var bz = pl.plinth + pl.FH, bx0 = v.x0 + (v.x1 - v.x0) * 0.5, bx1 = Math.min(v.x1 - 0.5, bx0 + 4.5);
 		this.add(box(bx0, v.y1, bz - 0.22, bx1, v.y1 + 1.4, bz, solid('#D8D4CC', 0.8)));
 		if (c.arch_style === 'alpine') {
-			for (var bxx = bx0 + 0.05; bxx < bx1; bxx += 0.16) { this.add(box(bxx, v.y1 + 1.33, bz, bxx + 0.1, v.y1 + 1.4, bz + 1.0, pbr('wood', { color: '#9C6B44' }, { normal: 1 }))); }
+			for (var bxx = bx0 + 0.05; bxx < bx1; bxx += 0.16) { this.add(box(bxx, v.y1 + 1.33, bz, bxx + 0.1, v.y1 + 1.4, bz + 1.0, wood)); }
 		} else {
-			var gr = cached('balglass', function () { return new THREE.MeshPhysicalMaterial({ color: '#BFD6DE', roughness: 0.05, metalness: 0, transmission: 0, transparent: true, opacity: 0.32, envMapIntensity: 1.5 }); });
-			this.add(box(bx0, v.y1 + 1.36, bz, bx1, v.y1 + 1.4, bz + 1.0, gr, { noCast: true }));
+			this.add(box(bx0, v.y1 + 1.36, bz, bx1, v.y1 + 1.4, bz + 1.0, railGlass, { noCast: true }));
 			this.add(box(bx0, v.y1 + 1.34, bz + 1.0, bx1, v.y1 + 1.42, bz + 1.05, solid('#5A6066', 0.4, 0.7)));
 		}
+	}
+	// modern minimal: a deep frame around the glazed front
+	if (v.frame && type === 'flat') {
+		var frm = solid(shadeHex(fcol, 0.04), 0.8), dy = 1.5;
+		this.add(box(v.x0 - 0.35, v.y1 - 0.3, v.h + 0.05, v.x1 + 0.35, v.y1 + dy, v.h + 0.55, frm));
+		this.add(box(v.x0 - 0.35, v.y1, 0, v.x0, v.y1 + dy, v.h + 0.05, frm));
+		this.add(box(v.x1, v.y1, 0, v.x1 + 0.35, v.y1 + dy, v.h + 0.05, frm));
+	}
+	// japandi: timber veranda (engawa) under the deep eave, on slender posts
+	if (v.veranda) {
+		var ez = type === 'flat' ? v.h : v.h - (pl.eave || 0) * Math.tan(pl.pitch * D2R) - 0.05, dk = pbr('deck', { color: '#A97B52' }, { normal: 1.2 }), pm = pbr('wood', { color: '#6B4A33' }, { normal: 1 });
+		this.add(box(v.x0, v.y1, 0, v.x1, v.y1 + 1.5, pl.plinth, dk));
+		for (var px = v.x0 + 0.3; px < v.x1 - 0.1; px += 2.4) { this.add(box(px, v.y1 + 1.25, pl.plinth, px + 0.14, v.y1 + 1.39, ez, pm)); }
+	}
+	// alpine chalet: timber balconies along the front and the side
+	if (v.balc && (pl.floors > 1 || pl.attic)) {
+		var cz = pl.plinth + pl.FH, deck = pbr('deck', { color: '#A97B52' }, { normal: 1 });
+		this.add(box(v.x0 + 0.2, v.y1, cz - 0.22, v.x1 - 0.2, v.y1 + 1.3, cz, deck));
+		for (var sx = v.x0 + 0.25; sx < v.x1 - 0.25; sx += 0.16) { this.add(box(sx, v.y1 + 1.22, cz, sx + 0.08, v.y1 + 1.3, cz + 0.95, wood)); }
+		this.add(box(v.x0 + 0.2, v.y1 + 1.2, cz + 0.95, v.x1 - 0.2, v.y1 + 1.32, cz + 1.05, wood));
+		this.add(box(v.x1, v.y0 + 0.6, cz - 0.22, v.x1 + 1.2, v.y1, cz, deck));
+		for (var sy = v.y0 + 0.65; sy < v.y1 - 0.05; sy += 0.16) { this.add(box(v.x1 + 1.12, sy, cz, v.x1 + 1.2, sy + 0.08, cz + 0.95, wood)); }
+		this.add(box(v.x1 + 1.1, v.y0 + 0.6, cz + 0.95, v.x1 + 1.22, v.y1, cz + 1.05, wood));
+	}
+	// high-tech: steel exoskeleton with walkways and an overhanging roof plate
+	if (v.exo) {
+		var stl = solid('#5E6266', 0.35, 0.7), e = 0.9, zt = v.h + 0.45;
+		var nx = Math.max(2, Math.round((v.x1 - v.x0 + 2 * e) / 3)), ny = Math.max(2, Math.round((v.y1 - v.y0 + 2 * e) / 3));
+		for (var ix = 0; ix <= nx; ix++) {
+			var cx = v.x0 - e + (v.x1 - v.x0 + 2 * e) * ix / nx;
+			this.add(box(cx - 0.1, v.y1 + e - 0.1, 0, cx + 0.1, v.y1 + e + 0.1, zt, stl));
+			this.add(box(cx - 0.1, v.y0 - e - 0.1, 0, cx + 0.1, v.y0 - e + 0.1, zt, stl));
+		}
+		for (var iy = 1; iy < ny; iy++) {
+			var cy = v.y0 - e + (v.y1 - v.y0 + 2 * e) * iy / ny;
+			this.add(box(v.x1 + e - 0.1, cy - 0.1, 0, v.x1 + e + 0.1, cy + 0.1, zt, stl));
+			this.add(box(v.x0 - e - 0.1, cy - 0.1, 0, v.x0 - e + 0.1, cy + 0.1, zt, stl));
+		}
+		for (var k = 1; k < pl.floors; k++) {
+			var z = pl.plinth + k * pl.FH;
+			if (z >= v.h) { break; }
+			this.add(box(v.x0 - e, v.y1, z - 0.18, v.x1 + e, v.y1 + e + 0.1, z, pbr('louvre', { color: '#8A8F94' }, { normal: 1 })));
+			this.add(box(v.x0 - e, v.y1 + e + 0.06, z, v.x1 + e, v.y1 + e + 0.1, z + 1.0, railGlass, { noCast: true }));
+			this.add(box(v.x0 - e, v.y1 + e + 0.04, z + 1.0, v.x1 + e, v.y1 + e + 0.12, z + 1.05, stl));
+		}
+		this.add(box(v.x0 - e - 0.15, v.y0 - e - 0.15, v.h + 0.35, v.x1 + e + 0.15, v.y1 + e + 0.15, v.h + 0.5, solid('#C9CCCE', 0.5, 0.3)));
+	}
+	// bauhaus: glass railing around the roof terrace
+	if (v.terraceRoof && type === 'flat') {
+		var zr = v.h + 0.35;
+		this.add(box(v.x0, v.y1 + 0.02, zr, v.x1, v.y1 + 0.06, zr + 1.0, railGlass, { noCast: true }));
+		this.add(box(v.x1 + 0.02, v.y0, zr, v.x1 + 0.06, v.y1, zr + 1.0, railGlass, { noCast: true }));
+		this.add(box(v.x0, v.y1 + 0.0, zr + 1.0, v.x1 + 0.08, v.y1 + 0.08, zr + 1.05, solid('#5A6066', 0.4, 0.7)));
 	}
 	void self;
 };
@@ -757,16 +852,14 @@ House.prototype.units = function (v) {
 // Terrace, garage / carport, building services – parts of the "house" the camera frames.
 House.prototype.extras = function () {
 	var c = this.c, pl = this.pl, vols = this.vols, mainV = vols[0], self = this;
-	var W = pl.W, D = pl.D, maxX = Math.max.apply(null, vols.map(function (v) { return v.x1; }));
+	var W = pl.W, D = pl.D, maxX = SK()._siteBox(vols).x1;
 	var gf = c.garden_features || [];
 	var ta = clamp(num(c.terrace_area, 0), 0, 200);
 	this.ta = ta;
 	if (ta > 0) {
-		var td = clamp(ta / 6, 2.4, 5), mlen = mainV.x1 - mainV.x0, mdp = SK()._door(c, mlen);
-		var tdw = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
-		// centred on the terrace door (same rule as faceOpenings), never wider than the main volume
-		var tcx = mainV.x0 + (mlen > 7 ? clamp(mlen * 0.62, mdp.x + mdp.w + 1.2, mlen - tdw - 0.6) + tdw / 2 : mlen * 0.62);
-		var tw = clamp(ta / td, Math.min(tdw + 0.8, mlen), mlen), tx0 = clamp(tcx - tw / 2, mainV.x0, mainV.x1 - tw), ty1 = mainV.y1 + td;
+		// centred on the terrace door, inside the free part of the main front wall (shared with the 2D sketch)
+		var tr = SK()._terrace(c, mainV, vols, ta), td = tr.y1 - tr.y0, tw = tr.x1 - tr.x0, tx0 = tr.x0, ty1 = tr.y1;
+		this.terrace = tr;
 		var tfc = { wpc: '#7A6E64', wood: '#A97B52', stone: '#CFC6B6', ceramic: '#BEB8AE' }[c.terrace_floor || 'wpc'];
 		var tm = c.terrace_floor === 'stone' || c.terrace_floor === 'ceramic' ? pbr('slabs', { color: tfc }, { normal: 1 }) : pbr('deck', { color: tfc }, { normal: 1.2 });
 		if (c.season === 'winter') { tm = pbr('snow', {}, { normal: 0.4 }); }
@@ -873,13 +966,12 @@ House.prototype.car = function (cx, cy) {
 
 /* ------------------------------------------------------------------ site: plot, paths, garden, fence */
 House.prototype.site = function () {
-	var c = this.c, pl = this.pl, vols = this.vols, mainV = vols[0], self = this, season = c.season || 'summer';
-	var W = pl.W, D = pl.D, maxY = Math.max.apply(null, vols.map(function (v) { return v.y1; })), maxX = Math.max.apply(null, vols.map(function (v) { return v.x1; }));
+	var c = this.c, pl = this.pl, vols = this.vols, mainV = vols[0], self = this, season = c.season || 'summer', K = SK();
+	var W = pl.W, D = pl.D, bbx = K._siteBox(vols), maxY = bbx.y1, maxX = bbx.x1;
 	var garage = c.garage || 'none', gf = c.garden_features || [], gs = c.garden_style || 'natural';
-	var front = maxY + 6.5, back = -6, left = -6.5, right = (this.garage ? this.garage.x1 : maxX) + 6;
-	var pw = num(c.plot_width, 0), plen = num(c.plot_length, 0), plot = null;
-	if (pw > 0 && pw <= 60) {
-		plot = { x0: W / 2 - pw / 2, x1: W / 2 + pw / 2, yF: maxY + 5, yB: plen > 0 && plen < maxY + 20 ? maxY + 5 - plen : null };
+	var front = maxY + 6.5, back = bbx.y0 - 6, left = bbx.x0 - 6.5, right = (this.garage ? this.garage.x1 : maxX) + 6;
+	var plot = K._plot(c, vols, this.garage ? this.garage.x1 : maxX + 3.8);
+	if (plot) {
 		left = Math.min(left, plot.x0 - 1.2); right = Math.max(right, plot.x1 + 1.2); front = Math.max(front, plot.yF + 1.2);
 		if (plot.yB !== null) { back = Math.min(back, plot.yB - 1.2); }
 	}
@@ -888,23 +980,18 @@ House.prototype.site = function () {
 	// lawn of the plot (slightly raised over the surrounding meadow)
 	var lawn = has(gf, 'lawn') || !c.garden_features;
 	flat(left, back, right, front, 0.01, groundKind(c, lawn ? 'grass' : 'meadow'));
-	if (plot) {
-		// the plot edge: a thin, low-contrast seam in the lawn (no white frame)
-		var lm = solid(season === 'winter' ? '#B7C2CB' : '#5B7840', 0.95), yB = plot.yB !== null ? plot.yB : back + 0.4, lw = 0.04;
-		flat(plot.x0 - lw, yB, plot.x0 + lw, plot.yF, 0.025, lm); flat(plot.x1 - lw, yB, plot.x1 + lw, plot.yF, 0.025, lm); flat(plot.x0, plot.yF - lw, plot.x1, plot.yF + lw, 0.025, lm);
-		if (plot.yB !== null) { flat(plot.x0, yB - lw, plot.x1, yB + lw, 0.025, lm); }
-	}
-	var dpm = SK()._door(c, mainV.x1 - mainV.x0), doorMid = mainV.x0 + dpm.x + dpm.w / 2;
-	// Paths and the driveway end at the fence line (the fence has openings for them), never beyond it.
-	var fence = c.fence || 'none', fy = front - 0.4, edge = fence !== 'none' ? fy : front;
+	var ent = K._entrance(c, vols), doorMid = ent.x;
+	// Paths and the driveway end at the fence line (on the front plot line when the plot is given).
+	var fence = c.fence || 'none', fy = K._siteEdge(c, front, plot), edge = fy;
 	var pathOn = has(gf, 'paths') || !c.garden_features;
-	if (pathOn) { flat(doorMid - 0.6, mainV.y1, doorMid + 0.6, edge, 0.02, groundKind(c, 'slabs')); }
+	if (pathOn) { flat(doorMid - 0.6, ent.y, doorMid + 0.6, edge, 0.02, groundKind(c, 'slabs')); }
 	var dk = { gravel: 'gravel', grass: 'grasspavers', asphalt: 'asphalt' }[c.driveway] || 'pavers';
 	var drive = garage !== 'none' ? [this.garage.x0, this.garage.x1] : [maxX + 0.8, maxX + 3.8];
 	flat(drive[0], garage !== 'none' ? this.garage.y1 : D * 0.45, drive[1], edge, 0.02, groundKind(c, dk));
 	if (gs === 'minimal' || gs === 'mediterranean') { flat(left + 0.8, mainV.y1 + 0.8, Math.max(left + 1.8, doorMid - 1.4), front - 0.8, 0.012, groundKind(c, 'gravel')); }
 	if (has(gf, 'pool')) {
-		var pr = SK()._pool(mainV, left, right, front, back, plot, fence !== 'none'), px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
+		var ext = { left: left, right: right, front: front, back: back };
+		var pr = K._pool(c, vols, ext, plot, fy, K._avoid(c, vols, ext, this.garage || null, this.terrace || null, doorMid, ent.y)), px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
 		flat(px0, py0, px0 + poolW, py0 + pdp, 0.06, groundKind(c, 'slabs'));
 		var water = cached('water', function () { return new THREE.MeshPhysicalMaterial({ color: '#2D8FB0', roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
 		flat(px0 + 0.3, py0 + 0.3, px0 + poolW - 0.3, py0 + pdp - 0.3, 0.07, water);
@@ -955,7 +1042,7 @@ House.prototype.site = function () {
 	}
 	// fence along the front: openings for the path (with an optional gate) and for the driveway
 	if (fence !== 'none') {
-		var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = left + 0.6, fx1 = right - 0.6, gx = doorMid - 0.6, gateOn = c.gate !== false;
+		var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = plot ? Math.max(left + 0.6, plot.x0) : left + 0.6, fx1 = plot ? Math.min(right - 0.6, plot.x1) : right - 0.6, gx = doorMid - 0.6, gateOn = c.gate !== false;
 		var fm = fence === 'slats' ? (c.arch_style === 'scandinavian' ? pbr('wood', { color: '#9C978E' }, { normal: 1 }) : solid('#3B3E42', 0.45, 0.5)) : null;
 		var gaps = [[drive[0] - 0.15, drive[1] + 0.15]];
 		if (pathOn || gateOn) { gaps.push([gx, gx + 1.2]); }

@@ -162,7 +162,30 @@ final class Definitions {
 
 		/* ---------------------------------------------------------------- Épületforma */
 		$f[] = array_merge(
-			array( 'id' => 'footprint', 'category' => 'massing', 'type' => 'cards', 'label' => __( 'Alaprajzi forma', 'autogrowehome' ), 'help' => __( 'Az épülettömeg alapformája.', 'autogrowehome' ), 'default' => 'rectangle', 'prompt' => '{value} footprint' ),
+			array( 'id' => 'massing', 'category' => 'massing', 'type' => 'cards', 'label' => __( 'Épülettömeg (forma)', 'autogrowehome' ), 'help' => __( 'Minden stílus saját, jellegzetes épületformát javasol; bármikor átállítható.', 'autogrowehome' ), 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'        => array( __( 'Az alaprajzi forma szerint', 'autogrowehome' ), '' ),
+					'pavilion'    => array( __( 'Hosszú pavilon kerettel', 'autogrowehome' ), 'a long low single-storey pavilion with a deep protruding frame around the glazed front and a set-back side wing' ),
+					'cantilever'  => array( __( 'Konzolosan kinyúló emelet', 'autogrowehome' ), 'a two-storey composition with the upper floor cantilevering boldly over the ground floor' ),
+					'courtyard'   => array( __( 'Udvaros, U alakú, toronnyal', 'autogrowehome' ), 'a U-shaped house around a front courtyard with a small tower' ),
+					'gable_pair'  => array( __( 'Két összekapcsolt nyeregtetős tömeg', 'autogrowehome' ), 'two linked gabled volumes of different heights, the lower one with its gable to the street' ),
+					'cubes'       => array( __( 'Egymásba tolt kockák', 'autogrowehome' ), 'interlocking cubic volumes of different heights with a roof terrace' ),
+					'engawa'      => array( __( 'Alacsony pavilonok verandával', 'autogrowehome' ), 'low single-storey pavilions with deep eaves and a timber veranda (engawa)' ),
+					'symmetric'   => array( __( 'Szimmetrikus tömb középrizalittal', 'autogrowehome' ), 'a symmetrical block with a projecting central bay crowned by a pediment' ),
+					'long_house'  => array( __( 'Hosszú parasztház tornáccal', 'autogrowehome' ), 'a long narrow farmhouse with a covered porch (tornác) and a perpendicular barn wing' ),
+					'twin_barns'  => array( __( 'Két csűrház üveg nyaktaggal', 'autogrowehome' ), 'two parallel barn-house volumes with their gable ends to the street, linked by a glass connector' ),
+					'cross_gable' => array( __( 'Keresztszárnyas, tornácos', 'autogrowehome' ), 'a cross-gabled farmhouse with a front-facing gable wing and a long porch' ),
+					'chalet'      => array( __( 'Utcára néző oromzatú chalet', 'autogrowehome' ), 'a wide chalet with its gable to the street, deep overhangs and timber balconies' ),
+					'loft'        => array( __( 'Ipari blokk fűrészfogas csarnokkal', 'autogrowehome' ), 'a tall block next to a hall with a sawtooth roof and glazed north lights' ),
+					'organic'     => array( __( 'Lekerekített, lágy tömegek', 'autogrowehome' ), 'soft rounded volumes with curved walls' ),
+					'glass_frame' => array( __( 'Üvegdoboz látszó acélvázzal', 'autogrowehome' ), 'a glass box inside an expressed steel exoskeleton with walkways' ),
+					'compact'     => array( __( 'Kompakt, tagolatlan tömb', 'autogrowehome' ), 'a compact, unarticulated volume' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'footprint', 'category' => 'massing', 'type' => 'cards', 'label' => __( 'Alaprajzi forma', 'autogrowehome' ), 'help' => __( 'Az épülettömeg alapformája.', 'autogrowehome' ), 'default' => 'rectangle', 'show_if' => array( 'field' => 'massing', 'op' => '=', 'value' => 'auto' ), 'prompt' => '{value} footprint' ),
 			self::opts(
 				array(
 					'rectangle' => array( __( 'Egyszerű téglalap', 'autogrowehome' ), 'simple rectangular' ),
