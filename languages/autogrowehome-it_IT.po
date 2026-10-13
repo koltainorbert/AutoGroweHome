@@ -6842,3 +6842,199 @@ msgstr "Pavimento di ingresso e corridoio"
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr "Bagno, WC, lavanderia, area benessere."
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr "Tipo di camino"
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr "In armonia con lo stile"
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr "Camino in mattoni"
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr "Camino intonacato"
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr "Camino in pietra"
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr "Canna fumaria in acciaio inox"
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr "Rivestito in lamiera"
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr "Largo, a doppia canna"
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr "Tipo di pannello solare"
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr "Nero, senza cornice (all-black)"
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr "Celle blu, cornice argento"
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr "Integrato nel tetto"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr "Tegola solare"
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr "Modulo vetro-vetro"
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr "Dimensione del campo fotovoltaico"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr "Piccolo (alcuni pannelli)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr "Medio"
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr "Intera falda del tetto"
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr "Tipo di ventilazione del tetto"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr "Tegola di ventilazione"
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr "Aeratore di colmo"
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr "Turbina eolica"
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr "A forma di fungo"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr "Tubo di ventilazione con comignolo"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr "Ventilatore solare"
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr "Colmo / coppo di colmo"
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr "Coppo di colmo rotondo"
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr "Coppo di colmo angolare"
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr "Colmo posato su malta"
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr "Colmo a secco, colmo ventilato"
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr "Profilo di colmo in metallo"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr "Colmo nudo, non visibile"
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr "Finestre ad arco"
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr "Piccole finestre quadrate"
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr "Finestre a nastro"
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr "Finestre larghe con divisioni"
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr "A due ante"
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr "Tutto vetro, cornice sottile"
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr "Vetrata nella parte superiore"
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr "Lamelle in legno"
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr "Con luce laterale"
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr "Colore di persiane / tapparelle"
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr "Si applica alle persiane o tapparelle scelte nel campo «Ombreggiatura»."
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr "Unità esterna del climatizzatore / pompa di calore"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr "Non visibile"
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr "A parete, su staffa"
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr "A terra, su basamento"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr "Con schermatura a lamelle"
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr "Sul tetto piano"

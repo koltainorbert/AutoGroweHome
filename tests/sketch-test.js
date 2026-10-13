@@ -13,8 +13,10 @@ const O = {
   roof_product: ['', 'bramac-romai-teglavoros', 'bramac-reviva-barna', 'bramac-tectura-antracit', 'bramac-tegalit-terracotta'],
   facade_main: ['render', 'brick', 'clinker', 'stone', 'wood', 'metal', 'concrete', 'panel'], plinth: ['dark_render', 'stone', 'concrete', 'flush'],
   facade_texture: ['fine', 'smooth', 'coarse'], corner_detail: ['sharp', 'quoins', 'glass'],
-  window_style: ['classic', 'large', 'panoramic', 'vertical'], window_frame_material: ['pvc', 'aluminium', 'wood', 'wood_alu'],
-  terrace_door: ['french', 'sliding', 'lift_slide', 'folding'], entrance_door: ['solid_modern', 'glass_strip', 'wood', 'classic', 'pivot'],
+  window_style: ['classic', 'large', 'panoramic', 'vertical', 'arched', 'square', 'ribbon', 'bay'], window_frame_material: ['pvc', 'aluminium', 'wood', 'wood_alu'],
+  terrace_door: ['french', 'sliding', 'lift_slide', 'folding'], entrance_door: ['solid_modern', 'glass_strip', 'wood', 'classic', 'pivot', 'double', 'glass_full', 'half_glass', 'slat', 'sidelight'],
+  chimney_type: ['auto', 'brick', 'render', 'stone', 'steel', 'clad', 'wide'], solar_type: ['black_mono', 'blue_poly', 'in_roof', 'solar_tile', 'glass'], solar_coverage: ['small', 'medium', 'full'],
+  roof_vent_type: ['tile_vent', 'ridge_vent', 'turbine', 'mushroom', 'pipe', 'solar_fan'], ridge_tile: ['round', 'angular', 'mortar', 'dry', 'metal', 'none'], ac_units: ['none', 'wall', 'ground', 'screened', 'roof'],
   glazing: ['clear', 'tinted', 'frosted'], garden_style: ['natural', 'formal', 'minimal', 'cottage', 'mediterranean'],
   terrace_floor: ['wpc', 'wood', 'stone', 'ceramic'], driveway: ['pavers', 'gravel', 'grass', 'asphalt'], fence: ['none', 'slats', 'mesh', 'masonry', 'gabion'],
   time_of_day: ['morning', 'midday', 'golden', 'blue', 'night'], season: ['spring', 'summer', 'autumn', 'winter'], weather: ['clear', 'few_clouds', 'overcast'],
@@ -27,7 +29,7 @@ const MULTI = {
 };
 const BOOL = ['balcony', 'entrance_canopy', 'outdoor_covered', 'basement', 'chimney', 'roof_solar', 'snow_guards', 'roof_ventilation', 'exposed_rafters', 'facade_ornaments', 'exterior_lighting', 'house_number', 'window_divided', 'corner_window', 'gate', 'neighbors', 'night_lighting', 'exterior_steps', 'accessible'];
 const NUM = { net_area: [40, 600], terrace_area: [0, 60], roof_pitch: [5, 60], roof_overhang: [0, 1.5], eaves_depth: [0, 2], roof_windows: [0, 6], dormers: [0, 4], ceiling_height: [2.4, 4], building_width: [0, 30], building_length: [0, 20], plot_width: [0, 60], plot_length: [0, 80], ridge_height: [0, 14] };
-const COLORS = ['facade_color', 'roof_color', 'window_frame_color', 'entrance_door_color', 'facade_accent_color', 'plinth_color'];
+const COLORS = ['facade_color', 'roof_color', 'window_frame_color', 'entrance_door_color', 'facade_accent_color', 'plinth_color', 'shutter_color'];
 
 let seed = 12345;
 const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
@@ -44,7 +46,7 @@ function randomCfg() {
 }
 const BASE = { property_type: 'detached', levels: 'two', arch_style: 'modern_minimal', footprint: 'rectangle', garage: 'carport', roof_type: 'gable', facade_main: 'render', facade_accent: ['wood'],
   plinth: 'dark_render', window_style: 'large', terrace_area: 24, terrace_door: 'lift_slide', fence: 'slats', gate: true, driveway: 'pavers', garden_style: 'natural',
-  garden_features: ['lawn', 'trees', 'paths', 'garden_lights'], shading: ['blinds'], energy: ['heat_pump'], time_of_day: 'golden', season: 'summer', weather: 'few_clouds',
+  garden_features: ['lawn', 'trees', 'paths', 'garden_lights'], shading: ['blinds'], energy: ['heat_pump'], ac_units: 'wall', ridge_tile: 'mortar', time_of_day: 'golden', season: 'summer', weather: 'few_clouds',
   camera: 'three_quarter', lens: '24mm', net_area: 160, roof_pitch: 35, facade_color: '#F2EFE9', roof_color: '#3A3D40', window_frame_color: '#2F3235', facade_accent_color: '#B9824F',
   plinth_color: '#4A4D50', entrance_door_color: '#2B2E31', plot_width: 20, plot_length: 40, snow_guards: true, exterior_lighting: true, night_lighting: true,
   gable_finish: 'plaster', gutters: 'anthracite', roof_surface: 'matt', roof_product: '', facade_texture: 'fine', orientation: 'south', glazing: 'clear', window_frame_material: 'aluminium', corner_detail: 'sharp', entrance_door: 'solid_modern', terrace_floor: 'wpc' };
@@ -53,7 +55,7 @@ let fail = 0, n = 0, maxMs = 0, total = 0;
 const err = (m) => { fail++; if (fail < 15) console.log('HIBA:', m); };
 function check(svg, label) {
   n++;
-  if (/NaN|undefined|Infinity|null/.test(svg)) err(label + ': NaN/undefined a kimenetben');
+  { const mm = svg.match(/.{0,60}(NaN|undefined|Infinity|null).{0,40}/); if (mm) err(label + ': NaN/undefined a kimenetben: ' + mm[0]); }
   const vb = (svg.match(/viewBox="([^"]+)"/) || [])[1];
   const p = vb ? vb.split(' ').map(Number) : [];
   if (p.length !== 4 || p.some(x => !isFinite(x)) || p[2] <= 0 || p[3] <= 0) err(label + ': hibás viewBox ' + vb);

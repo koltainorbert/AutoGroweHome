@@ -6844,3 +6844,199 @@ msgstr "Pardoseala holului și a coridorului"
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr "Baie, WC, spălătorie, wellness."
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr "Tipul coșului de fum"
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr "Se potrivește stilului"
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr "Coș de cărămidă"
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr "Coș tencuit"
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr "Coș de piatră"
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr "Tubulatură din inox"
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr "Placat cu tablă"
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr "Lat, cu două canale"
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr "Tipul panoului solar"
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr "Negru, fără ramă (all-black)"
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr "Celule albastre, ramă argintie"
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr "Integrat în acoperiș"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr "Țiglă solară"
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr "Modul sticlă-sticlă"
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr "Dimensiunea câmpului solar"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr "Mic (câteva panouri)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr "Mediu"
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr "Întreaga față de acoperiș"
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr "Tipul ventilației acoperișului"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr "Țiglă de ventilație"
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr "Ventilator de coamă"
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr "Turbină eoliană"
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr "În formă de ciupercă"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr "Țeavă de ventilație cu coș"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr "Ventilator solar"
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr "Coamă / țiglă de coamă"
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr "Țiglă de coamă rotundă"
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr "Țiglă de coamă unghiulară"
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr "Țiglă de coamă pe mortar"
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr "Coamă uscată, țiglă de coamă ventilată"
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr "Profil metalic de coamă"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr "Coamă simplă, nevizibilă"
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr "Ferestre arcuite"
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr "Ferestre pătrate mici"
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr "Ferestre continue"
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr "Ferestre late, compartimentate"
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr "Cu două canaturi"
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr "Sticlă integrală, ramă îngustă"
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr "Vitrată în partea de sus"
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr "Lamele de lemn"
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr "Cu luminator lateral"
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr "Culoarea obloanelor / jaluzelelor"
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr "Se aplică obloanelor sau jaluzelelor alese în câmpul „Umbrire”."
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr "Unitate exterioară aer condiționat / pompă de căldură"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr "Nu se vede"
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr "Pe perete, pe consolă"
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr "Pe sol, pe postament"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr "Cu paravan cu lamele"
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr "Pe acoperișul plat"

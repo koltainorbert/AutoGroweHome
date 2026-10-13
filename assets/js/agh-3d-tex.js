@@ -404,13 +404,22 @@ var GEN = {
 			return [c[0] * k, c[1] * k, c[2] * k, leaf, 0.8];
 		} };
 	},
-	solar: function () {
+	solar: function (o) {
+		var t = o.type || 'blue_poly';
+		if (t === 'solar_tile') {
+			return { tw: 0.84, th: 0.7, w: 256, h: 256, fn: function (u, v) {
+				var cx = (u * 2) % 1, cy = (v * 2) % 1, gap = cx < 0.03 || cy < 0.04, row = Math.floor(v * 2) % 2 ? 0.02 : 0, k = gap ? 0.5 : 1 + (hash2(Math.floor(u * 2), Math.floor(v * 2), 3) - 0.5) * 0.08;
+				return [0.07 * k + row, 0.09 * k + row, 0.13 * k + row, gap ? 0.3 : 0.55, 0.3];
+			} };
+		}
+		var blue = t === 'blue_poly', nc = 6, nr = 10;
 		return { tw: 1.12, th: 1.75, w: 256, h: 512, fn: function (u, v) {
-			var cx = (u * 6) % 1, cy = (v * 10) % 1, line = cx < 0.04 || cy < 0.025 ? 1 : 0, bus = Math.abs(cx - 0.5) < 0.012 ? 1 : 0;
+			var cx = (u * nc) % 1, cy = (v * nr) % 1, line = cx < 0.04 || cy < 0.025 ? 1 : 0, bus = Math.abs(cx - 0.5) < 0.012 ? 1 : 0;
 			var frame = u < 0.02 || u > 0.98 || v < 0.012 || v > 0.988;
-			if (frame) { return [0.75, 0.77, 0.8, 1, 0.3]; }
-			var k = line ? 0.55 : 1;
-			return bus ? [0.5, 0.52, 0.56, 0.6, 0.3] : [0.05 * k + 0.02, 0.08 * k + 0.02, 0.16 * k + 0.03, 0.5, 0.18];
+			if (frame) { return blue ? [0.75, 0.77, 0.8, 1, 0.3] : (t === 'glass' ? [0.02, 0.025, 0.035, 0.6, 0.12] : [0.04, 0.045, 0.05, 0.9, 0.35]); }
+			if (blue) { var k = line ? 0.55 : 1; return bus ? [0.5, 0.52, 0.56, 0.6, 0.3] : [0.05 * k + 0.02, 0.08 * k + 0.02, 0.16 * k + 0.03, 0.5, 0.18]; }
+			var kk = line ? 0.6 : 1;
+			return bus ? [0.16, 0.17, 0.19, 0.5, 0.3] : [0.02 * kk + 0.012, 0.025 * kk + 0.014, 0.04 * kk + 0.02, 0.5, t === 'glass' ? 0.1 : 0.2];
 		} };
 	},
 	louvre: function (o) {

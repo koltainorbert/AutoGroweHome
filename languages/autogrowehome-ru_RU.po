@@ -6844,3 +6844,199 @@ msgstr "Пол в прихожей и коридоре"
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr "Ванная, туалет, прачечная, велнес."
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr "Тип дымохода"
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr "Подходит к стилю"
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr "Кирпичная труба"
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr "Оштукатуренная труба"
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr "Каменная труба"
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr "Дымоход из нержавеющей стали"
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr "Обшита листовым металлом"
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr "Широкая, с двумя каналами"
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr "Тип солнечной панели"
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr "Чёрная, без рамки (all-black)"
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr "Синие элементы, серебристая рамка"
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr "Встроенная в крышу"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr "Солнечная черепица"
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr "Модуль стекло-стекло"
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr "Размер солнечного поля"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr "Малое (несколько панелей)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr "Среднее"
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr "Весь скат крыши"
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr "Тип кровельной вентиляции"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr "Вентиляционная черепица"
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr "Коньковый аэратор"
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr "Ветровая турбина"
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr "Грибовидный"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr "Вентиляционная труба с дефлектором"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr "Вентилятор на солнечной батарее"
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr "Конёк / коньковая черепица"
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr "Круглая коньковая черепица"
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr "Угловая коньковая черепица"
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr "Конёк на растворе"
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr "Сухой конёк, вентилируемая коньковая черепица"
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr "Металлическая коньковая планка"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr "Скрытый, гладкий конёк"
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr "Арочные окна"
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr "Маленькие квадратные окна"
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr "Ленточные окна"
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr "Широкие окна с делением"
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr "Двустворчатая"
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr "Полностью стеклянная, узкая рама"
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr "Остеклена сверху"
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr "Деревянные ламели"
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr "С боковым светом"
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr "Цвет ставен / рольставен"
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr "Относится к ставням или рольставням, выбранным в поле «Затенение»."
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr "Наружный блок кондиционера / теплового насоса"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr "Не виден"
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr "На стене, на кронштейне"
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr "На земле, на основании"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr "С решётчатым ограждением"
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr "На плоской крыше"

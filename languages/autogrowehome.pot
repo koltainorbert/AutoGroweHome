@@ -6814,3 +6814,199 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr ""

@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.2.0 – 2026-10-13
+
+- A medence a telken és a kerítésen belül marad (a ház mellett vagy a hátsó kertben).
+- Spaletta / redőny színe külön állítható (3D és 2D).
+- Tetőablakok, napelem és manzárdablak egy síkban, a tetőn, egymást nem fedve helyezkednek el.
+- Új: kémény típusa (tégla, vakolt, kő, rozsdamentes, fémburkolt, széles), napelem típusa és mezőmérete (all-black, kék, tetőbe integrált, napelemes cserép, üveg-üveg), tetőszellőző típusa (6), kúpcserép / gerinc típusa (6), klíma / hőszivattyú külső egysége (4 elhelyezés).
+- Több ajtó- (kétszárnyú, teljes üveg, felül üvegezett, lamellás, oldalvilágítós) és ablaktípus (íves, négyzetes, szalag, osztott).
+- 49 új felirat mind a 15 nyelven.
+
 ## 1.1.2 – 2026-10-13
 
 - A fehér telekhatár-keret eltűnt: a telek széle vékony, a pázsitnál sötétebb vonal (3D és 2D).

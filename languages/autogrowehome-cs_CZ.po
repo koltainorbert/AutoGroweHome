@@ -6844,3 +6844,199 @@ msgstr "Podlaha v předsíni a chodbě"
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr "Koupelna, WC, prádelna, wellness."
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr "Typ komína"
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr "Odpovídá stylu"
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr "Cihlový komín"
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr "Omítaný komín"
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr "Kamenný komín"
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr "Nerezový kouřovod"
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr "Obložený plechem"
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr "Široký, dvouprůduchový"
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr "Typ fotovoltaického panelu"
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr "Černý, bezrámový (all-black)"
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr "Modré články, stříbrný rám"
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr "Integrovaný do střechy"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr "Solární taška"
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr "Modul sklo-sklo"
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr "Velikost fotovoltaického pole"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr "Malé (několik panelů)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr "Střední"
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr "Celá střešní plocha"
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr "Typ střešního větrání"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr "Větrací taška"
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr "Hřebenový větrák"
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr "Větrná turbína"
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr "Houbovitý tvar"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr "Větrací trubka s komínkem"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr "Solární ventilátor"
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr "Hřeben / hřebenáč"
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr "Kulatý hřebenáč"
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr "Hranatý hřebenáč"
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr "Hřebenáč do malty"
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr "Suchý hřeben, větraný hřebenáč"
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr "Kovová hřebenová lišta"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr "Neviditelný, holý hřeben"
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr "Obloukovitá okna"
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr "Malá čtvercová okna"
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr "Pásová okna"
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr "Rozšířená, dělená okna"
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr "Dvoukřídlé"
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr "Celoskleněné, úzký rám"
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr "Prosklené v horní části"
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr "Dřevěné lamely"
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr "S bočním světlíkem"
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr "Barva okenic / rolet"
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr "Týká se okenic nebo rolet zvolených v poli „Stínění“."
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr "Venkovní jednotka klimatizace / tepelného čerpadla"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr "Není vidět"
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr "Na stěně, na konzole"
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr "Na zemi, na podstavci"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr "S lamelovým krytem"
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr "Na plochou střechu"

@@ -192,6 +192,20 @@ final class Definitions {
 		$f[] = array( 'id' => 'basement', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Pince / alagsor', 'autogrowehome' ), 'help' => '', 'default' => false, 'prompt' => 'partial basement' );
 		$f[] = array( 'id' => 'technical_room', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Gépészeti helyiség', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => '' );
 		$f[] = array( 'id' => 'chimney', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Kémény / kandalló', 'autogrowehome' ), 'help' => '', 'default' => false, 'prompt' => 'one chimney for a fireplace' );
+		$f[] = array_merge(
+			array( 'id' => 'chimney_type', 'category' => 'massing', 'type' => 'select', 'label' => __( 'Kémény típusa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'show_if' => array( 'field' => 'chimney', 'op' => '=', 'value' => true ), 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+							'auto' => array( __( 'A stílushoz illő', 'autogrowehome' ), 'chimney matching the style' ),
+							'brick' => array( __( 'Téglakémény', 'autogrowehome' ), 'brick chimney with a concrete cap' ),
+							'render' => array( __( 'Vakolt kémény', 'autogrowehome' ), 'rendered chimney with a metal cap' ),
+							'stone' => array( __( 'Kő kémény', 'autogrowehome' ), 'natural stone chimney' ),
+							'steel' => array( __( 'Rozsdamentes füstcső', 'autogrowehome' ), 'slim stainless steel flue' ),
+							'clad' => array( __( 'Fémlemez burkolt', 'autogrowehome' ), 'dark standing-seam clad chimney' ),
+							'wide' => array( __( 'Széles, kétfüstjáratú', 'autogrowehome' ), 'wide twin-flue chimney' ),
+				)
+			)
+		);
 		$f[] = array( 'id' => 'roof_storage', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Tető alatti tároló', 'autogrowehome' ), 'help' => '', 'default' => false, 'advanced' => true, 'prompt' => '' );
 		$f[] = array( 'id' => 'expandable', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Jövőbeni bővíthetőség', 'autogrowehome' ), 'help' => __( 'A tervvázlat jelöli a bővítési irányt.', 'autogrowehome' ), 'default' => false, 'advanced' => true, 'prompt' => '' );
 		$f[] = array( 'id' => 'ceiling_height', 'category' => 'massing', 'type' => 'number', 'label' => __( 'Általános belmagasság', 'autogrowehome' ), 'help' => '', 'default' => 2.8, 'min' => 2.4, 'max' => 5, 'step' => 0.05, 'unit' => 'm', 'advanced' => true, 'prompt' => '' );
@@ -231,6 +245,28 @@ final class Definitions {
 		$f[] = array( 'id' => 'roof_windows', 'category' => 'roof', 'type' => 'integer', 'label' => __( 'Tetősíkablakok száma', 'autogrowehome' ), 'help' => '', 'default' => 0, 'min' => 0, 'max' => 20, 'show_if' => array( 'field' => 'roof_type', 'op' => '!=', 'value' => 'flat' ), 'prompt' => '{value} roof windows in the roof plane' );
 		$f[] = array( 'id' => 'dormers', 'category' => 'roof', 'type' => 'integer', 'label' => __( 'Tetőablakok (felülvilágító / „kutyaól”)', 'autogrowehome' ), 'help' => '', 'default' => 0, 'min' => 0, 'max' => 8, 'advanced' => true, 'show_if' => array( 'field' => 'roof_type', 'op' => '!=', 'value' => 'flat' ), 'prompt' => '{value} dormer windows' );
 		$f[] = array( 'id' => 'roof_solar', 'category' => 'roof', 'type' => 'toggle', 'label' => __( 'Napelemek a tetőn', 'autogrowehome' ), 'help' => '', 'default' => false, 'prompt' => 'neatly integrated black solar panels on the roof' );
+		$f[] = array_merge(
+			array( 'id' => 'solar_type', 'category' => 'roof', 'type' => 'select', 'label' => __( 'Napelem típusa', 'autogrowehome' ), 'help' => '', 'default' => 'black_mono', 'show_if' => array( 'field' => 'roof_solar', 'op' => '=', 'value' => true ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+							'black_mono' => array( __( 'Fekete, keret nélküli (all-black)', 'autogrowehome' ), 'all-black monocrystalline solar panels' ),
+							'blue_poly' => array( __( 'Kék cellák, ezüst kerettel', 'autogrowehome' ), 'blue solar panels with silver frames' ),
+							'in_roof' => array( __( 'Tetőbe integrált', 'autogrowehome' ), 'in-roof integrated solar panels flush with the roof surface' ),
+							'solar_tile' => array( __( 'Napelemes cserép', 'autogrowehome' ), 'solar roof tiles' ),
+							'glass' => array( __( 'Üveg-üveg modul', 'autogrowehome' ), 'frameless glass-glass solar modules' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'solar_coverage', 'category' => 'roof', 'type' => 'select', 'label' => __( 'Napelemmező mérete', 'autogrowehome' ), 'help' => '', 'default' => 'medium', 'show_if' => array( 'field' => 'roof_solar', 'op' => '=', 'value' => true ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+							'small' => array( __( 'Kicsi (néhány panel)', 'autogrowehome' ), 'a small array of solar panels' ),
+							'medium' => array( __( 'Közepes', 'autogrowehome' ), 'a medium solar array' ),
+							'full' => array( __( 'Teljes tetősík', 'autogrowehome' ), 'solar panels covering most of the roof plane' ),
+				)
+			)
+		);
 		$f[] = array( 'id' => 'snow_guards', 'category' => 'roof', 'type' => 'toggle', 'label' => __( 'Hófogók', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => 'discreet snow guards' );
 		$f[] = array_merge(
 			array( 'id' => 'gutters', 'category' => 'roof', 'type' => 'select', 'label' => __( 'Ereszcsatorna és lefolyó', 'autogrowehome' ), 'help' => '', 'default' => 'anthracite', 'advanced' => true, 'prompt' => '{value} gutters and downpipes' ),
@@ -255,6 +291,19 @@ final class Definitions {
 			)
 		);
 		$f[] = array( 'id' => 'roof_ventilation', 'category' => 'roof', 'type' => 'toggle', 'label' => __( 'Látható tetőszellőzés', 'autogrowehome' ), 'help' => '', 'default' => false, 'advanced' => true, 'prompt' => 'small ridge ventilation elements' );
+		$f[] = array_merge(
+			array( 'id' => 'roof_vent_type', 'category' => 'roof', 'type' => 'select', 'label' => __( 'Tetőszellőző típusa', 'autogrowehome' ), 'help' => '', 'default' => 'tile_vent', 'show_if' => array( 'field' => 'roof_ventilation', 'op' => '=', 'value' => true ), 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+							'tile_vent' => array( __( 'Szellőzőcserép', 'autogrowehome' ), 'discreet vent tiles' ),
+							'ridge_vent' => array( __( 'Gerincszellőző', 'autogrowehome' ), 'continuous ridge vent' ),
+							'turbine' => array( __( 'Szélkerekes (turbina)', 'autogrowehome' ), 'a rotating turbine roof vent' ),
+							'mushroom' => array( __( 'Gomba alakú', 'autogrowehome' ), 'low mushroom roof vents' ),
+							'pipe' => array( __( 'Szellőzőcső kürtővel', 'autogrowehome' ), 'vent pipes with rain caps' ),
+							'solar_fan' => array( __( 'Napelemes ventilátor', 'autogrowehome' ), 'a solar-powered roof fan' ),
+				)
+			)
+		);
 		$f[] = array( 'id' => 'exposed_rafters', 'category' => 'roof', 'type' => 'toggle', 'label' => __( 'Látható tetőszerkezeti elemek', 'autogrowehome' ), 'help' => __( 'Pl. látszó szarufavégek, fa mennyezet a teraszon.', 'autogrowehome' ), 'default' => false, 'advanced' => true, 'prompt' => 'exposed timber rafter ends' );
 		$f[] = array( 'id' => 'roof_brand', 'category' => 'roof', 'type' => 'catalog', 'catalog' => 'roof_brand', 'label' => __( 'Tetőfedési márka', 'autogrowehome' ), 'help' => __( 'Az adminisztrátor által felvett gyártók közül.', 'autogrowehome' ), 'default' => 'bramac', 'show_if' => array( 'field' => 'roof_type', 'op' => '!=', 'value' => 'flat' ), 'prompt' => '' );
 		$f[] = array( 'id' => 'roof_product', 'category' => 'roof', 'type' => 'catalog', 'catalog' => 'roof_product', 'filter_by' => 'roof_brand', 'label' => __( 'Tetőcserép / termék', 'autogrowehome' ), 'help' => __( 'A katalógusban rögzített termékek közül. A gyári tételek színmintái tájékoztató jellegűek, gyártói ellenőrzésre várnak.', 'autogrowehome' ), 'default' => '', 'show_if' => array( 'field' => 'roof_type', 'op' => '!=', 'value' => 'flat' ), 'prompt' => 'roof covered with {value}' );
@@ -268,6 +317,19 @@ final class Definitions {
 					'glazed' => array( __( 'Mázas', 'autogrowehome' ), 'glazed' ),
 					'green'  => array( __( 'Zöldtető', 'autogrowehome' ), 'extensive green (sedum)' ),
 					'gravel' => array( __( 'Kavicsolt (lapostető)', 'autogrowehome' ), 'gravel ballast' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'ridge_tile', 'category' => 'roof', 'type' => 'select', 'label' => __( 'Gerinc / kúpcserép', 'autogrowehome' ), 'help' => '', 'default' => 'round', 'show_if' => array( 'field' => 'roof_type', 'op' => '!=', 'value' => 'flat' ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+							'round' => array( __( 'Kerek kúpcserép', 'autogrowehome' ), 'half-round ridge tiles' ),
+							'angular' => array( __( 'Szögletes kúpcserép', 'autogrowehome' ), 'angular ridge tiles' ),
+							'mortar' => array( __( 'Habarcsba rakott kúp', 'autogrowehome' ), 'mortar-bedded ridge tiles' ),
+							'dry' => array( __( 'Száraz gerinc, szellőző kúp', 'autogrowehome' ), 'dry-fixed ventilated ridge' ),
+							'metal' => array( __( 'Fém gerincléc', 'autogrowehome' ), 'a slim metal ridge cap' ),
+							'none' => array( __( 'Nem látszó, csupasz gerinc', 'autogrowehome' ), 'a clean ridge without visible caps' ),
 				)
 			)
 		);
@@ -355,6 +417,10 @@ final class Definitions {
 					'large'     => array( __( 'Nagy üvegfelületek', 'autogrowehome' ), 'large-format windows' ),
 					'panoramic' => array( __( 'Panorámaablakok', 'autogrowehome' ), 'floor-to-ceiling panoramic glazing' ),
 					'vertical'  => array( __( 'Álló, keskeny ablakok', 'autogrowehome' ), 'tall slender vertical windows' ),
+					'arched'    => array( __( 'Íves ablakok', 'autogrowehome' ), 'arched-top windows' ),
+					'square'    => array( __( 'Kis négyzetes ablakok', 'autogrowehome' ), 'small square windows' ),
+					'ribbon'    => array( __( 'Szalagablakok', 'autogrowehome' ), 'horizontal ribbon windows' ),
+					'bay'       => array( __( 'Szélesített, osztott ablakok', 'autogrowehome' ), 'wide multi-pane windows' ),
 				)
 			)
 		);
@@ -392,6 +458,11 @@ final class Definitions {
 					'wood'         => array( __( 'Fa', 'autogrowehome' ), 'solid oak' ),
 					'classic'      => array( __( 'Klasszikus, betétes', 'autogrowehome' ), 'classic panelled' ),
 					'pivot'        => array( __( 'Forgóajtó (pivot)', 'autogrowehome' ), 'oversized pivot' ),
+					'double'       => array( __( 'Kétszárnyú', 'autogrowehome' ), 'double-leaf' ),
+					'glass_full'   => array( __( 'Teljes üveg, keskeny kerettel', 'autogrowehome' ), 'full-glass slim-framed' ),
+					'half_glass'   => array( __( 'Felül üvegezett', 'autogrowehome' ), 'half-glazed' ),
+					'slat'         => array( __( 'Fa lamellás', 'autogrowehome' ), 'vertical timber slat' ),
+					'sidelight'    => array( __( 'Oldalvilágítóval', 'autogrowehome' ), 'solid with a full-height sidelight' ),
 				)
 			)
 		);
@@ -418,6 +489,7 @@ final class Definitions {
 				)
 			)
 		);
+		$f[] = array( 'id' => 'shutter_color', 'category' => 'openings', 'type' => 'color', 'label' => __( 'Spaletta / redőny színe', 'autogrowehome' ), 'help' => __( 'Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik.', 'autogrowehome' ), 'default' => '#3E4245', 'prompt' => 'shutters {color}' );
 		$f[] = array( 'id' => 'insect_screens', 'category' => 'openings', 'type' => 'toggle', 'label' => __( 'Szúnyoghálók', 'autogrowehome' ), 'help' => __( 'Igényként rögzül.', 'autogrowehome' ), 'default' => true, 'advanced' => true, 'prompt' => '' );
 
 		/* ---------------------------------------------------------------- Helyiségek */
@@ -799,6 +871,18 @@ final class Definitions {
 					'rainwater'   => array( __( 'Esővízhasznosítás', 'autogrowehome' ), '' ),
 					'smart_home'  => array( __( 'Okosotthon', 'autogrowehome' ), '' ),
 					'led'         => array( __( 'Energiatakarékos világítás', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'ac_units', 'category' => 'energy', 'type' => 'select', 'label' => __( 'Klíma / hőszivattyú külső egysége', 'autogrowehome' ), 'help' => '', 'default' => 'none', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+							'none' => array( __( 'Nem látszik', 'autogrowehome' ), '' ),
+							'wall' => array( __( 'Falra szerelt, konzolon', 'autogrowehome' ), 'a wall-bracket air-conditioning outdoor unit on the side wall' ),
+							'ground' => array( __( 'Földön álló, alapon', 'autogrowehome' ), 'a ground-standing heat-pump outdoor unit on a base' ),
+							'screened' => array( __( 'Lamellás takarással', 'autogrowehome' ), 'an outdoor unit hidden behind a timber slat screen' ),
+							'roof' => array( __( 'Lapostetőn', 'autogrowehome' ), 'an outdoor unit on the flat roof behind the parapet' ),
 				)
 			)
 		);

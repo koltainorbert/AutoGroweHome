@@ -6842,3 +6842,199 @@ msgstr "Vloer hal en gang"
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr "Badkamer, toilet, wasruimte, wellness."
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr "Type schoorsteen"
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr "Past bij de stijl"
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr "Bakstenen schoorsteen"
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr "Gepleisterde schoorsteen"
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr "Stenen schoorsteen"
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr "Roestvrijstalen rookkanaal"
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr "Bekleed met plaatmetaal"
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr "Breed, met twee kanalen"
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr "Type zonnepaneel"
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr "Zwart, zonder frame (all-black)"
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr "Blauwe cellen, zilveren frame"
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr "Dakgeïntegreerd"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr "Zonnedakpan"
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr "Glas-glasmodule"
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr "Grootte van het zonnepaneelveld"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr "Klein (enkele panelen)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr "Middel"
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr "Volledig dakvlak"
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr "Type dakventilatie"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr "Ventilatiepan"
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr "Nokventilator"
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr "Windturbine"
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr "Paddenstoelvormig"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr "Ventilatiebuis met kap"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr "Ventilator op zonne-energie"
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr "Nok / nokpan"
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr "Ronde nokpan"
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr "Hoekige nokpan"
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr "In mortel gelegde nokpan"
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr "Droge nok, geventileerde nokpan"
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr "Metalen nokprofiel"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr "Onzichtbare, kale nok"
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr "Boogramen"
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr "Kleine vierkante ramen"
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr "Bandramen"
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr "Brede, verdeelde ramen"
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr "Dubbele deur"
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr "Volledig glas, smal kozijn"
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr "Boven beglaasd"
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr "Houten lamellen"
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr "Met zijlicht"
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr "Kleur van luiken / rolluiken"
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr "Geldt voor de luiken of rolluiken die in het veld „Zonwering” zijn gekozen."
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr "Buitenunit airco / warmtepomp"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr "Niet zichtbaar"
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr "Aan de muur, op console"
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr "Op de grond, op voet"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr "Met lamellenscherm"
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr "Op het platte dak"

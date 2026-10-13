@@ -6842,3 +6842,199 @@ msgstr "Sol de l’entrée et du couloir"
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr "Salle de bains, WC, buanderie, espace bien-être."
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr "Type de cheminée"
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr "Assortie au style"
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr "Cheminée en briques"
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr "Cheminée enduite"
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr "Cheminée en pierre"
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr "Conduit en inox"
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr "Habillée de tôle"
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr "Large, à deux conduits"
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr "Type de panneau solaire"
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr "Noir, sans cadre (all-black)"
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr "Cellules bleues, cadre argenté"
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr "Intégré à la toiture"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr "Tuile solaire"
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr "Module verre-verre"
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr "Taille du champ solaire"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr "Petit (quelques panneaux)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr "Moyen"
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr "Tout le pan de toiture"
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr "Type de ventilation de toiture"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr "Tuile de ventilation"
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr "Ventilateur de faîtage"
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr "Éolienne de toiture"
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr "En forme de champignon"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr "Tuyau de ventilation avec chapeau"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr "Ventilateur solaire"
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr "Faîtage / tuile faîtière"
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr "Tuile faîtière ronde"
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr "Tuile faîtière anguleuse"
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr "Faîtière scellée au mortier"
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr "Faîtage à sec, faîtière ventilée"
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr "Profilé de faîtage métallique"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr "Faîtage nu, non visible"
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr "Fenêtres cintrées"
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr "Petites fenêtres carrées"
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr "Fenêtres en bandeau"
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr "Fenêtres larges à petits-bois"
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr "À deux battants"
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr "Tout verre, cadre étroit"
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr "Vitrée dans la partie haute"
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr "Lames de bois"
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr "Avec imposte latérale"
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr "Couleur des volets / stores"
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr "S'applique aux volets ou stores choisis dans le champ « Ombrage »."
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr "Unité extérieure de climatisation / pompe à chaleur"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr "Non visible"
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr "Fixée au mur sur console"
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr "Posée au sol sur socle"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr "Avec cache à lamelles"
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr "Sur le toit plat"

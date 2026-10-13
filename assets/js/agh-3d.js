@@ -234,7 +234,7 @@ function roofData(c, v, pl, type) {
 		mat: function () { return 'm'; }, def: function (k) { return k; },
 		poly3: function (p3, fill) { polys.push(p3); return { svg: '', depth: 0 }; },
 		plane: function (o, du, dv, poly) { polys.push(poly.map(function (q) { return [o[0] + du[0] * q[0] + dv[0] * q[1], o[1] + du[1] * q[0] + dv[1] * q[1], o[2] + du[2] * q[0] + dv[2] * q[1]]; })); return { svg: '', depth: 0 }; },
-		line: function (a, b, color, width) { lines.push({ a: a, b: b, color: color, width: width }); return ''; },
+		line: function (a, b, color, width, kind) { lines.push({ a: a, b: b, color: color, width: width, kind: kind || '' }); return ''; },
 		track: function () { return [0, 0]; }, depth: function () { return 0; }, visible: function () { return true; }, lit: function () { return 0; }
 	};
 	var r = SK()._roof(sc, v, pl, type);
@@ -406,7 +406,7 @@ function gablePoly(top, len, h) {
 }
 function holePath(o, st, c) {
 	var p = new THREE.Path();
-	var arch = st.arches && o.kind === 'win' && !o.gable;
+	var arch = (st.arches || c.window_style === 'arched') && o.kind === 'win' && !o.gable;
 	p.moveTo(o.x, o.y); p.lineTo(o.x + o.w, o.y);
 	if (arch) { var r = o.w / 2; p.lineTo(o.x + o.w, o.y + o.h); p.absellipse(o.x + r, o.y + o.h, r, Math.min(r, 0.4), 0, Math.PI, false); } else { p.lineTo(o.x + o.w, o.y + o.h); p.lineTo(o.x, o.y + o.h); }
 	p.lineTo(o.x, o.y);
@@ -492,9 +492,14 @@ House.prototype.opening = function (g, o, T, st) {
 	var arch = st.arches && o.kind === 'win' && !o.gable;
 	// reveal lining (lighter)
 	if (o.kind === 'door') {
-		var dm = c.entrance_door === 'wood' ? pbr('wood', { color: '#8A5A36' }, { normal: 1 }) : solid(col(c.entrance_door_color, '#2B2E31'), 0.45, 0.2);
+		var dt = c.entrance_door, dm = dt === 'wood' || dt === 'slat' ? pbr('wood', { color: '#8A5A36' }, { normal: 1 }) : solid(col(c.entrance_door_color, '#2B2E31'), 0.45, 0.2);
 		g.add(lbox(x0, y0, w0, x1, y1, w1, fm));
 		g.add(lbox(x0 + 0.06, y0, w0 + 0.01, x1 - 0.06, y1 - 0.06, w1 + 0.01, dm));
+		if (dt === 'double') { g.add(lbox(x0 + o.w / 2 - 0.02, y0, w1, x0 + o.w / 2 + 0.02, y1 - 0.06, w1 + 0.02, fm)); g.add(lbox(x0 + o.w / 2 + 0.09, y0 + o.h * 0.38, w1 + 0.02, x0 + o.w / 2 + 0.125, y0 + o.h * 0.38 + 0.45, w1 + 0.08, solid('#C9CCCF', 0.25, 1))); }
+		if (dt === 'glass_full') { g.add(lbox(x0 + 0.12, y0 + 0.12, w1, x1 - 0.12, y1 - 0.2, w1 + 0.012, gm, true)); }
+		if (dt === 'half_glass') { g.add(lbox(x0 + 0.14, y0 + o.h * 0.5, w1, x1 - 0.14, y1 - 0.22, w1 + 0.012, gm, true)); }
+		if (dt === 'sidelight') { g.add(lbox(x0 + o.w * 0.66, y0 + 0.12, w1, x1 - 0.12, y1 - 0.2, w1 + 0.012, gm, true)); g.add(lbox(x0 + o.w * 0.645, y0, w1, x0 + o.w * 0.665, y1 - 0.06, w1 + 0.02, fm)); }
+		if (dt === 'slat') { var sm = solid(shadeHex('#8A5A36', -0.25), 0.7); for (var sx = x0 + 0.1; sx < x1 - 0.12; sx += 0.13) { g.add(lbox(sx, y0 + 0.04, w1 + 0.01, sx + 0.07, y1 - 0.1, w1 + 0.045, sm)); } }
 		if (c.entrance_door === 'glass_strip') { g.add(lbox(x0 + o.w * 0.68, y0 + 0.15, w1, x0 + o.w * 0.84, y1 - 0.2, w1 + 0.015, gm, true)); }
 		if (c.entrance_door === 'classic') {
 			var pm = solid(shadeHex(col(c.entrance_door_color, '#2B2E31'), 0.12), 0.45, 0.2);
@@ -526,7 +531,7 @@ House.prototype.opening = function (g, o, T, st) {
 		var am = new THREE.Mesh(new THREE.ExtrudeGeometry(as, { depth: 0.02, bevelEnabled: false, curveSegments: 16 }), gm); am.position.z = w0 + fd * 0.45; g.add(am);
 		g.add(lbox(x0, y1 - 0.02, w0, x1, y1 + 0.03, w1, fm));
 	}
-	var mull = Math.max(1, Math.round(o.w / (c.window_style === 'panoramic' ? 1.3 : 1.1)));
+	var mull = Math.max(1, Math.round(o.w / ({ panoramic: 1.3, ribbon: 1.05, bay: 0.78, square: 1.3 }[c.window_style] || 1.1)));
 	for (var i = 1; i < mull; i++) { var mx = x0 + o.w * i / mull; g.add(lbox(mx - 0.03, y0, w0, mx + 0.03, y1, w1, fm)); }
 	if (c.window_divided || st.grid) {
 		var gx = Math.max(2, Math.round(o.w / 0.42)), gy = Math.max(2, Math.round(o.h / 0.5));
@@ -537,7 +542,7 @@ House.prototype.opening = function (g, o, T, st) {
 	if (!o.gable || true) { g.add(lbox(x0 - 0.06, y0 - 0.045, w1 - 0.02, x1 + 0.06, y0, T + 0.07, solid(shadeHex(col(c.window_frame_color, '#2F3235'), 0.3), 0.5, 0.4))); }
 	// shading
 	var sh = c.shading || [];
-	var shut = has(sh, 'spalettas') ? '#8A5A36' : (has(sh, 'shutters') ? ({ mediterranean: '#6B7A55', rustic: '#6B7A55', classic_burgher: '#ECE7DC', american_farm: '#24282B' }[c.arch_style] || '#3E4245') : null);
+	var shut = SK()._shutter(c);
 	if (shut && !o.gable && !o.corner) {
 		var lm = pbr('louvre', { color: shut }, { normal: 1.5 });
 		g.add(lbox(x0 - o.w * 0.5 - 0.04, y0, T, x0 - 0.04, y1, T + 0.04, lm));
@@ -560,7 +565,8 @@ House.prototype.frameRect = function (g, x0, y0, x1, y1, w0, w1, t, m) {
 
 House.prototype.pitchedRoof = function (v, rd, type) {
 	var c = this.c, rm = roofMat(c), soffit = solid(c.arch_style === 'japandi' || c.arch_style === 'alpine' || c.arch_style === 'rustic' ? '#8A6446' : '#E6E2DA', 0.85);
-	var self = this, ridgeM = solid(shadeHex(col(c.roof_color, '#3A3D40'), -0.15), 0.6, 0.1);
+	var self = this, rsp = SK()._ridge(c);
+	var ridgeM = rsp.metal ? solid('#8E9296', 0.35, 0.8) : (rsp.mortar ? solid('#8A857C', 0.9) : solid(shadeHex(col(c.roof_color, '#3A3D40'), rsp.shift || -0.15), 0.6, 0.1));
 	if (c.season === 'winter') { ridgeM = solid('#EEF2F6', 0.6); }
 	var P3 = rd.polys.map(function (p) { return p.map(function (q) { return X(q[0], q[1], q[2]); }); });
 	P3.forEach(function (pts) { var m = polyMesh(pts, [rm, soffit], { thick: 0.16 }); if (m) { m.position.y += 0.02; self.add(m); } });
@@ -575,12 +581,14 @@ House.prototype.pitchedRoof = function (v, rd, type) {
 	});
 	Object.keys(edges).forEach(function (kk) {
 		var e = edges[kk];
-		if (e.n >= 2 && (e.a.y > v.h + 0.3 || e.b.y > v.h + 0.3)) { var r = rod(e.a.clone().setY(e.a.y + 0.05), e.b.clone().setY(e.b.y + 0.05), 0.11, ridgeM, 8); if (r) { self.add(r); } }
+		if (e.n >= 2 && (e.a.y > v.h + 0.3 || e.b.y > v.h + 0.3)) { if (rsp.r > 0) { var r = rod(e.a.clone().setY(e.a.y + 0.05), e.b.clone().setY(e.b.y + 0.05), rsp.r, ridgeM, rsp.seg || 8); if (r) { self.add(r); } } }
 	});
 	// gutters, downpipes, barge boards, rafters, snow guards, vents
 	rd.lines.forEach(function (L) {
 		var a = X(L.a[0], L.a[1], L.a[2]), b = X(L.b[0], L.b[1], L.b[2]);
 		var m;
+		if (L.kind === 'x') { return; }
+		if (L.kind && L.kind.indexOf('vent:') === 0) { self.roofVent(a, b, L.kind.slice(5)); return; }
 		if (L.width === 0.17) {
 			m = solid(L.color, 0.35, L.color === '#B87333' ? 0.9 : 0.5);
 			self.add(rod(a.clone().setY(a.y - 0.1), b.clone().setY(b.y - 0.1), 0.075, m, 10));
@@ -594,6 +602,18 @@ House.prototype.pitchedRoof = function (v, rd, type) {
 		else if (L.width === 0.07) { self.add(rod(a, b, 0.025, solid('#C9CDD0', 0.3, 0.8), 6)); }
 		else { self.add(rod(a, b, L.width === 0.12 ? 0.18 : 0.09, solid(L.color, 0.5, 0.3), 8)); }
 	});
+};
+// Roof ventilation element at a ridge point (a); the ridge vent runs from a to b.
+House.prototype.roofVent = function (a, b, type) {
+	var dk = solid(shadeHex(col(this.c.roof_color, '#3A3D40'), -0.1), 0.6, 0.2), mt = solid('#B9BDC1', 0.3, 0.85), g = new THREE.Group(), self = this;
+	function cyl(r0, r1, h, mat, y) { var m = new THREE.Mesh(new THREE.CylinderGeometry(r0, r1, h, 16), mat); m.position.y = y; m.castShadow = true; g.add(m); return m; }
+	if (type === 'ridge_vent') { var rv = beam(a.clone().setY(a.y + 0.1), b.clone().setY(b.y + 0.1), 0.1, 0.16, solid('#2E3033', 0.5, 0.4)); if (rv) { this.add(rv); } return; }
+	if (type === 'turbine') { cyl(0.11, 0.11, 0.35, mt, 0.18); var tb = new THREE.Mesh(new THREE.SphereGeometry(0.25, 20, 14), mt); tb.scale.set(1, 0.85, 1); tb.position.y = 0.55; tb.castShadow = true; g.add(tb); cyl(0.26, 0.26, 0.03, mt, 0.42); }
+	else if (type === 'mushroom') { cyl(0.07, 0.07, 0.18, dk, 0.09); cyl(0.24, 0.1, 0.07, dk, 0.22); }
+	else if (type === 'pipe') { cyl(0.065, 0.065, 0.78, solid('#6A6E72', 0.5, 0.5), 0.39); cyl(0.0, 0.17, 0.12, dk, 0.84); }
+	else if (type === 'solar_fan') { var bx = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.12, 0.45), dk); bx.position.y = 0.06; g.add(bx); var sp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.025, 0.4), solid('#1B2636', 0.25, 0.4)); sp.position.y = 0.16; sp.rotation.x = -0.35; g.add(sp); cyl(0.14, 0.14, 0.1, mt, 0.05); }
+	else { var vt = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.38), dk); vt.position.y = 0.06; vt.castShadow = true; g.add(vt); var vh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.06, 0.06), solid('#1E2023', 0.6)); vh.position.set(0, 0.11, 0.1); g.add(vh); }
+	g.position.copy(a); g.position.y += 0.02; self.add(g);
 };
 House.prototype.flatRoof = function (v) {
 	var c = this.c, h = v.h, fasc = solid(shadeHex(col(c.facade_color, '#F2EFE9'), c.arch_style === 'high_tech' ? -0.05 : 0.05), 0.8);
@@ -614,20 +634,33 @@ House.prototype.flatRoof = function (v) {
 House.prototype.roofItems = function (v, type, info) {
 	var c = this.c, pl = this.pl, self = this, W = v.x1 - v.x0, D = v.y1 - v.y0;
 	var solar = c.roof_solar || has(c.energy, 'solar') || !!SK()._style(c).pv;
-	var panelM = pbr('solar', {}, { roughness: 0.6, metalness: 0.35, normal: 0.8, clearcoat: 1, physical: true });
-	var chimneyM = c.arch_style === 'classic_burgher' || c.arch_style === 'rustic' || c.facade_main === 'brick' ? pbr('brick', { color: '#9A4E35' }, { normal: 1.6 }) : pbr('render', { color: '#4A4D50', texture: 'fine' }, { normal: 0.6 });
+	var ss = SK()._solar(c);
+	var panelM = pbr('solar', { type: ss.t }, { roughness: ss.t === 'glass' ? 0.25 : 0.6, metalness: 0.35, normal: ss.tiles ? 1.2 : 0.8, clearcoat: 1, physical: true });
+	var panelEdge = ss.frame ? solid(ss.frame, 0.4, 0.8) : panelM, pLift = ss.flush ? 0.03 : 0.12, pThick = ss.flush ? 0.025 : 0.04;
 	function chimney(zTop) {
-		var cx = v.x0 + W * 0.7, cy = (v.y0 + v.y1) / 2 + 0.3, cw = 0.75;
-		self.add(box(cx, cy, v.h - 0.5, cx + cw, cy + cw, zTop, chimneyM));
-		self.add(box(cx - 0.06, cy - 0.06, zTop, cx + cw + 0.06, cy + cw + 0.06, zTop + 0.1, solid('#2E3033', 0.6)));
+		var cs = SK()._chimney(c), cx = v.x0 + W * 0.7, cy = (v.y0 + v.y1) / 2 + 0.3, zt = zTop - 1.0 + cs.up;
+		var mat = cs.mat === 'brick' ? pbr('brick', { color: cs.color }, { normal: 1.6 }) : (cs.mat === 'stone' ? pbr('stone', { color: cs.color }, { normal: 2 }) : (cs.metal ? solid(cs.color, 0.35, 0.75) : (cs.t === 'wide' ? pbr('render', { color: cs.color, texture: 'fine' }, { normal: 0.6 }) : pbr('render', { color: cs.color, texture: 'fine' }, { normal: 0.6 }))));
+		if (cs.t === 'steel') {
+			var fl = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, zt - (v.h - 0.2), 20), mat); fl.position.copy(X(cx + 0.16, cy + 0.16, (v.h - 0.2 + zt) / 2)); fl.castShadow = true; self.add(fl);
+			var rc = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.16, 20), solid(cs.cap, 0.35, 0.7)); rc.position.copy(X(cx + 0.16, cy + 0.16, zt + 0.08)); self.add(rc);
+			return;
+		}
+		self.add(box(cx, cy, v.h - 0.5, cx + cs.w, cy + cs.d, zt, mat));
+		self.add(box(cx - 0.06, cy - 0.06, zt, cx + cs.w + 0.06, cy + cs.d + 0.06, zt + 0.1, solid(cs.cap, 0.6)));
+		if (cs.twin) {
+			self.add(box(cx + cs.w / 2 - 0.03, cy - 0.04, zt, cx + cs.w / 2 + 0.03, cy + cs.d + 0.04, zt + 0.14, solid(cs.cap, 0.6)));
+			[0.25, 0.75].forEach(function (f) { var pot = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.3, 14), solid('#B8693F', 0.8)); pot.position.copy(X(cx + cs.w * f, cy + cs.d / 2, zt + 0.25)); pot.castShadow = true; self.add(pot); });
+		} else if (cs.t === 'clad') {
+			self.add(box(cx - 0.1, cy - 0.1, zt + 0.1, cx + cs.w + 0.1, cy + cs.d + 0.1, zt + 0.22, solid(cs.cap, 0.4, 0.6)));
+		}
 	}
 	if (type === 'flat') {
 		if (solar) {
 			var n = Math.max(1, Math.min(6, Math.floor((W - 1.2) / 2.1)));
 			for (var i = 0; i < n; i++) {
-				var x0 = v.x0 + 0.8 + i * 2.1, y0 = v.y0 + 1 + D * 0.3, z0 = v.flatTop + 0.15;
+				var x0 = v.x0 + 0.8 + i * 2.1, y0 = v.y0 + 1 + D * 0.3, z0 = v.flatTop + (ss.flush ? 0.05 : 0.15);
 				var pts = [X(x0, y0 + 1.1 * 0.85, z0), X(x0 + 1.7, y0 + 1.1 * 0.85, z0), X(x0 + 1.7, y0, z0 + 0.55), X(x0, y0, z0 + 0.55)];
-				this.add(polyMesh(pts, [panelM, solid('#B9BDC1', 0.4, 0.8)], { thick: 0.04 }));
+				this.add(polyMesh(pts, [panelM, panelEdge], { thick: 0.04 }));
 				this.add(box(x0 + 0.1, y0 + 0.05, v.flatTop, x0 + 0.16, y0 + 0.11, z0 + 0.5, solid('#9DA1A4', 0.4, 0.8)));
 			}
 		}
@@ -644,22 +677,19 @@ House.prototype.roofItems = function (v, type, info) {
 	function roofRect(u, s, w, hh, lift, mats, thick) {
 		return polyMesh([onRoof(u, s, lift), onRoof(u + w, s, lift), onRoof(u + w, s + hh, lift), onRoof(u, s + hh, lift)], mats, { thick: thick });
 	}
-	if (solar) {
-		var rows = Math.max(1, Math.min(3, Math.floor((slopeL - 0.8) / 1.8))), cols = Math.max(2, Math.floor((W - 2 * hipIn - 1.2) * 0.7 / 1.12));
-		var pw = cols * 1.12, sx = clamp(W * 0.42 - pw / 2, hipIn + 0.6, W - pw - 0.5 - hipIn);
-		for (var r = 0; r < rows; r++) { for (var q = 0; q < cols; q++) { this.add(roofRect(sx + q * 1.12 + 0.01, 0.6 + r * 1.75 + 0.01, 1.1, 1.73, 0.12, [panelM, solid('#B9BDC1', 0.4, 0.8)], 0.04)); } }
+	var lay = SK()._roofLayout(c, v, pl, slopeL, hipIn, solar);
+	if (lay.solar) {
+		var Ls = lay.solar;
+		for (var r = 0; r < Ls.rows; r++) { for (var q = 0; q < Ls.cols; q++) { this.add(roofRect(Ls.u0 + q * 1.12 + 0.01, Ls.s0 + r * 1.75 + 0.01, 1.1, 1.73, pLift, [panelM, panelEdge], pThick)); } }
 	}
-	var nw = clamp(num(c.roof_windows, 0) + (pl.attic && !num(c.roof_windows, 0) && !num(c.dormers, 0) ? 2 : 0), 0, 6);
-	for (var k = 0; k < nw; k++) {
-		var ux = hipIn + 0.4 + (W - 2 * hipIn - 1.6) * (nw === 1 ? 0.5 : k / (nw - 1));
-		if (solar) { ux = k % 2 ? W - hipIn - 1.4 : hipIn + 0.5; }
-		this.add(roofRect(ux, slopeL * 0.42, 0.78, 1.2, 0.08, [frameMat(c), frameMat(c)], 0.1));
-		this.add(roofRect(ux + 0.07, slopeL * 0.42 + 0.07, 0.64, 1.06, 0.1, [glassMat(c, this.night), frameMat(c)], 0.01));
-	}
-	var nd = clamp(num(c.dormers, 0), 0, 4);
+	lay.wins.forEach(function (ux) {
+		self.add(roofRect(ux, lay.winS, 0.78, 1.2, 0.08, [frameMat(c), frameMat(c)], 0.1));
+		self.add(roofRect(ux + 0.07, lay.winS + 0.07, 0.64, 1.06, 0.1, [glassMat(c, self.night), frameMat(c)], 0.01));
+	});
+	var nd = lay.dorm.length;
 	var wall = facadeMat(c, c.facade_main), rm = roofMat(c);
 	for (var dd = 0; dd < nd; dd++) {
-		var dw = 1.8, dx = v.x0 + hipIn + (W - 2 * hipIn) * (dd + 0.5) / nd - dw / 2, yd = v.y1 - 1.0, z0 = v.h + 1.0 * tp, hw = 1.35, yb = yd - (hw + 0.8) / tp;
+		var dw = 1.8, dx = v.x0 + lay.dorm[dd], yd = v.y1 - 1.0, z0 = v.h + 1.0 * tp, hw = 1.35, yb = yd - (hw + 0.8) / tp;
 		var front = new THREE.Shape(); front.moveTo(0, 0); front.lineTo(dw, 0); front.lineTo(dw, hw); front.lineTo(dw / 2, hw + 0.75); front.lineTo(0, hw); front.lineTo(0, 0);
 		var hole = new THREE.Path(); hole.moveTo(0.42, 0.18); hole.lineTo(1.38, 0.18); hole.lineTo(1.38, 1.18); hole.lineTo(0.42, 1.18); hole.lineTo(0.42, 0.18); front.holes.push(hole);
 		var fg = new THREE.Group(); fg.position.copy(X(dx, yd - 0.15, z0 - 0.3)); fg.position.y = z0 - 0.3;
@@ -776,7 +806,27 @@ House.prototype.extras = function () {
 	}
 	// building services on the ground
 	var en = c.energy || [];
-	if (has(en, 'heat_pump')) {
+	var acT = c.ac_units || 'none', acWhite = solid('#EDEFF0', 0.45, 0.2), acFan = solid('#5E6266', 0.5, 0.4);
+	if (acT !== 'none') {
+		var acFanAt = function (x, y, z, axis) { var fn = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.02, 24), acFan); if (axis === 'x') { fn.rotation.z = Math.PI / 2; } else { fn.rotation.x = Math.PI / 2; } fn.position.copy(X(x, y, z)); self.add(fn); };
+		if (acT === 'wall') {
+			var wy = D * 0.3, wz = pl.plinth + 2.0;
+			this.add(box(mainV.x1, wy, wz, mainV.x1 + 0.32, wy + 0.85, wz + 0.6, acWhite));
+			acFanAt(mainV.x1 + 0.33, wy + 0.4, wz + 0.3, 'x');
+			this.add(rod(X(mainV.x1, wy + 0.05, wz - 0.05), X(mainV.x1 + 0.28, wy + 0.05, wz - 0.05), 0.012, solid('#8C9196', 0.4, 0.8), 6));
+			this.add(box(mainV.x1, wy + 0.1, wz + 0.6, mainV.x1 + 0.02, wy + 0.78, wz + 0.64, solid('#9DA1A4', 0.5, 0.3)));
+		} else if (acT === 'roof' && c.roof_type === 'flat') {
+			var rz = (mainV.flatTop || mainV.h + 0.08);
+			this.add(box(mainV.x1 - 2.4, mainV.y0 + 1.0, rz, mainV.x1 - 1.4, mainV.y0 + 1.5, rz + 0.8, acWhite));
+			acFanAt(mainV.x1 - 1.9, mainV.y0 + 1.51, rz + 0.4, 'y');
+		} else {
+			this.add(box(mainV.x1 + 0.1, D * 0.35 - 0.1, 0, mainV.x1 + 0.9, D * 0.35 + 1.2, 0.05, solid('#B9B4AA', 0.9)));
+			this.add(box(mainV.x1 + 0.25, D * 0.35, 0.05, mainV.x1 + 0.75, D * 0.35 + 1.1, 0.95, acWhite));
+			acFanAt(mainV.x1 + 0.76, D * 0.35 + 0.55, 0.55, 'x');
+			if (acT === 'screened') { var scm = pbr('wood', { color: '#A97B52' }, { normal: 1 }); for (var sq = 0; sq < 9; sq++) { this.add(box(mainV.x1 + 0.9, D * 0.35 - 0.15 + sq * 0.15, 0, mainV.x1 + 0.97, D * 0.35 - 0.07 + sq * 0.15, 1.3, scm)); } this.add(box(mainV.x1 + 0.88, D * 0.35 - 0.15, 1.3, mainV.x1 + 0.99, D * 0.35 + 1.2, 1.35, scm)); }
+		}
+	}
+	if (has(en, 'heat_pump') && acT !== 'ground' && acT !== 'screened') {
 		this.add(box(mainV.x1 + 0.25, D * 0.35, 0.1, mainV.x1 + 0.75, D * 0.35 + 1.1, 0.95, solid('#EDEFF0', 0.45, 0.2)));
 		var fan = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.02, 24), solid('#5E6266', 0.5, 0.4)); fan.rotation.z = Math.PI / 2; fan.position.copy(X(mainV.x1 + 0.76, D * 0.35 + 0.55, 0.52)); this.add(fan);
 	}
@@ -854,10 +904,10 @@ House.prototype.site = function () {
 	flat(drive[0], garage !== 'none' ? this.garage.y1 : D * 0.45, drive[1], edge, 0.02, groundKind(c, dk));
 	if (gs === 'minimal' || gs === 'mediterranean') { flat(left + 0.8, mainV.y1 + 0.8, Math.max(left + 1.8, doorMid - 1.4), front - 0.8, 0.012, groundKind(c, 'gravel')); }
 	if (has(gf, 'pool')) {
-		var px0 = left + 1.2, py0 = mainV.y1 + 1.5;
-		flat(px0, py0, px0 + 3.4, py0 + 6.5, 0.06, groundKind(c, 'slabs'));
+		var pr = SK()._pool(mainV, left, right, front, back, plot, fence !== 'none'), px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
+		flat(px0, py0, px0 + poolW, py0 + pdp, 0.06, groundKind(c, 'slabs'));
 		var water = cached('water', function () { return new THREE.MeshPhysicalMaterial({ color: '#2D8FB0', roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
-		flat(px0 + 0.3, py0 + 0.3, px0 + 3.1, py0 + 6.2, 0.07, water);
+		flat(px0 + 0.3, py0 + 0.3, px0 + poolW - 0.3, py0 + pdp - 0.3, 0.07, water);
 	}
 	if (has(gf, 'flowerbeds') && season !== 'winter') {
 		flat(0.2, mainV.y1 + 1.0, Math.max(1.2, Math.min(3, doorMid - 1)), mainV.y1 + 1.8, 0.03, groundKind(c, 'soil'));

@@ -6842,3 +6842,199 @@ msgstr "Bodenbelag Diele und Flur"
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr "Bad, WC, Waschküche, Wellness."
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr "Schornsteintyp"
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr "Passend zum Stil"
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr "Ziegelschornstein"
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr "Verputzter Schornstein"
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr "Steinschornstein"
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr "Edelstahl-Abgasrohr"
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr "Mit Blech verkleidet"
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr "Breit, mit zwei Zügen"
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr "Solarmodultyp"
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr "Schwarz, rahmenlos (All-Black)"
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr "Blaue Zellen, silberner Rahmen"
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr "Dachintegriert"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr "Solardachziegel"
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr "Glas-Glas-Modul"
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr "Größe der Solaranlage"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr "Klein (einige Module)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr "Mittel"
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr "Gesamte Dachfläche"
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr "Typ der Dachentlüftung"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr "Lüftungsziegel"
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr "Firstlüfter"
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr "Windturbine"
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr "Pilzförmig"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr "Lüftungsrohr mit Aufsatz"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr "Solarbetriebener Lüfter"
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr "First / Firstziegel"
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr "Runder Firstziegel"
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr "Eckiger Firstziegel"
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr "Im Mörtelbett verlegter Firstziegel"
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr "Trockenfirst, belüfteter Firstziegel"
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr "Metall-Firstleiste"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr "Unsichtbarer, schlichter First"
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr "Bogenfenster"
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr "Kleine quadratische Fenster"
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr "Fensterbänder"
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr "Breite, geteilte Fenster"
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr "Zweiflügelig"
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr "Ganzglas, schmaler Rahmen"
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr "Oben verglast"
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr "Holzlamellen"
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr "Mit Seitenlicht"
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr "Farbe der Fensterläden / Rollläden"
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr "Gilt für die im Feld „Beschattung“ gewählten Fensterläden oder Rollläden."
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr "Außengerät der Klimaanlage / Wärmepumpe"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr "Nicht sichtbar"
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr "Wandmontage auf Konsole"
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr "Bodenstehend auf Sockel"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr "Mit Lamellenverkleidung"
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr "Auf dem Flachdach"

@@ -6842,3 +6842,199 @@ msgstr "Hall and corridor flooring"
 #: includes/Params/Definitions.php
 msgid "Fürdőszoba, WC, mosókonyha, wellness."
 msgstr "Bathroom, WC, laundry, wellness."
+
+#: includes/Params/Definitions.php
+msgid "Kémény típusa"
+msgstr "Chimney type"
+
+#: includes/Params/Definitions.php
+msgid "A stílushoz illő"
+msgstr "Matches the style"
+
+#: includes/Params/Definitions.php
+msgid "Téglakémény"
+msgstr "Brick chimney"
+
+#: includes/Params/Definitions.php
+msgid "Vakolt kémény"
+msgstr "Plastered chimney"
+
+#: includes/Params/Definitions.php
+msgid "Kő kémény"
+msgstr "Stone chimney"
+
+#: includes/Params/Definitions.php
+msgid "Rozsdamentes füstcső"
+msgstr "Stainless steel flue"
+
+#: includes/Params/Definitions.php
+msgid "Fémlemez burkolt"
+msgstr "Sheet-metal clad"
+
+#: includes/Params/Definitions.php
+msgid "Széles, kétfüstjáratú"
+msgstr "Wide, double-flue"
+
+#: includes/Params/Definitions.php
+msgid "Napelem típusa"
+msgstr "Solar panel type"
+
+#: includes/Params/Definitions.php
+msgid "Fekete, keret nélküli (all-black)"
+msgstr "Black, frameless (all-black)"
+
+#: includes/Params/Definitions.php
+msgid "Kék cellák, ezüst kerettel"
+msgstr "Blue cells, silver frame"
+
+#: includes/Params/Definitions.php
+msgid "Tetőbe integrált"
+msgstr "Roof-integrated"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes cserép"
+msgstr "Solar roof tile"
+
+#: includes/Params/Definitions.php
+msgid "Üveg-üveg modul"
+msgstr "Glass-glass module"
+
+#: includes/Params/Definitions.php
+msgid "Napelemmező mérete"
+msgstr "Solar array size"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (néhány panel)"
+msgstr "Small (a few panels)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes"
+msgstr "Medium"
+
+#: includes/Params/Definitions.php
+msgid "Teljes tetősík"
+msgstr "Full roof plane"
+
+#: includes/Params/Definitions.php
+msgid "Tetőszellőző típusa"
+msgstr "Roof vent type"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcserép"
+msgstr "Vent tile"
+
+#: includes/Params/Definitions.php
+msgid "Gerincszellőző"
+msgstr "Ridge vent"
+
+#: includes/Params/Definitions.php
+msgid "Szélkerekes (turbina)"
+msgstr "Wind turbine vent"
+
+#: includes/Params/Definitions.php
+msgid "Gomba alakú"
+msgstr "Mushroom-shaped"
+
+#: includes/Params/Definitions.php
+msgid "Szellőzőcső kürtővel"
+msgstr "Vent pipe with cowl"
+
+#: includes/Params/Definitions.php
+msgid "Napelemes ventilátor"
+msgstr "Solar-powered fan"
+
+#: includes/Params/Definitions.php
+msgid "Gerinc / kúpcserép"
+msgstr "Ridge / ridge tile"
+
+#: includes/Params/Definitions.php
+msgid "Kerek kúpcserép"
+msgstr "Round ridge tile"
+
+#: includes/Params/Definitions.php
+msgid "Szögletes kúpcserép"
+msgstr "Angular ridge tile"
+
+#: includes/Params/Definitions.php
+msgid "Habarcsba rakott kúp"
+msgstr "Mortar-bedded ridge tile"
+
+#: includes/Params/Definitions.php
+msgid "Száraz gerinc, szellőző kúp"
+msgstr "Dry ridge, ventilated ridge tile"
+
+#: includes/Params/Definitions.php
+msgid "Fém gerincléc"
+msgstr "Metal ridge cap"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszó, csupasz gerinc"
+msgstr "Hidden, bare ridge"
+
+#: includes/Params/Definitions.php
+msgid "Íves ablakok"
+msgstr "Arched windows"
+
+#: includes/Params/Definitions.php
+msgid "Kis négyzetes ablakok"
+msgstr "Small square windows"
+
+#: includes/Params/Definitions.php
+msgid "Szalagablakok"
+msgstr "Ribbon windows"
+
+#: includes/Params/Definitions.php
+msgid "Szélesített, osztott ablakok"
+msgstr "Wide, divided windows"
+
+#: includes/Params/Definitions.php
+msgid "Kétszárnyú"
+msgstr "Double-leaf"
+
+#: includes/Params/Definitions.php
+msgid "Teljes üveg, keskeny kerettel"
+msgstr "Full glass, narrow frame"
+
+#: includes/Params/Definitions.php
+msgid "Felül üvegezett"
+msgstr "Glazed at the top"
+
+#: includes/Params/Definitions.php
+msgid "Fa lamellás"
+msgstr "Wooden slats"
+
+#: includes/Params/Definitions.php
+msgid "Oldalvilágítóval"
+msgstr "With sidelight"
+
+#: includes/Params/Definitions.php
+msgid "Spaletta / redőny színe"
+msgstr "Shutter / roller blind colour"
+
+#: includes/Params/Definitions.php
+msgid "Az „Árnyékolás” mezőben választott spalettára, redőnyre vonatkozik."
+msgstr "Applies to the shutter or roller blind chosen in the “Shading” field."
+
+#: includes/Params/Definitions.php
+msgid "Klíma / hőszivattyú külső egysége"
+msgstr "AC / heat pump outdoor unit"
+
+#: includes/Params/Definitions.php
+msgid "Nem látszik"
+msgstr "Not visible"
+
+#: includes/Params/Definitions.php
+msgid "Falra szerelt, konzolon"
+msgstr "Wall-mounted on a bracket"
+
+#: includes/Params/Definitions.php
+msgid "Földön álló, alapon"
+msgstr "Ground-standing on a base"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás takarással"
+msgstr "With louvered screen"
+
+#: includes/Params/Definitions.php
+msgid "Lapostetőn"
+msgstr "On the flat roof"

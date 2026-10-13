@@ -306,7 +306,7 @@
 	// Front edge of paths and driveway: the fence line when there is a fence.
 	function siteEdge(c, front) { return c.fence && c.fence !== 'none' ? front - 0.4 : front; }
 	function doorPos(c, len) {
-		var w = c.entrance_door === 'pivot' ? 1.4 : 1.05;
+		var w = { pivot: 1.4, double: 1.7, sidelight: 1.7, glass_full: 1.2 }[c.entrance_door] || 1.05;
 		return { x: styleOf(c).sym ? len / 2 - w / 2 : clamp(len * 0.26, 0.8, len - w - 0.8), w: w, h: c.entrance_door === 'pivot' ? 2.6 : 2.3 };
 	}
 	function plan(c) {
@@ -368,6 +368,10 @@
 			case 'classic': return { w: 1.15, h: 1.45, sill: 0.95, gap: 1.3 };
 			case 'panoramic': return { w: 2.4, h: 2.45, sill: 0.05, gap: 0.5 };
 			case 'vertical': return { w: 0.75, h: 2.1, sill: 0.35, gap: 0.9 };
+			case 'arched': return { w: 1.1, h: 1.6, sill: 0.85, gap: 1.2 };
+			case 'square': return { w: 1.2, h: 1.2, sill: 1.0, gap: 1.1 };
+			case 'ribbon': return { w: 3.2, h: 0.95, sill: 1.15, gap: 0.8 };
+			case 'bay': return { w: 2.3, h: 1.55, sill: 0.8, gap: 0.8 };
 			default: return { w: 1.9, h: 1.65, sill: 0.6, gap: 1.0 };
 		}
 	}
@@ -391,7 +395,7 @@
 		var s = '';
 		if (st.trim) { var tc = st.trim === 'light' ? shade(col(c.facade_color, '#F2EFE9'), 0.35) : st.trim; s += '<rect x="' + f(x - 0.11) + '" y="' + f(y - 0.11) + '" width="' + f(w + 0.22) + '" height="' + f(h + 0.22) + '" fill="' + tc + '"/>'; }
 		if (st.lintel) { s += '<rect x="' + f(x - 0.16) + '" y="' + f(y + h + 0.02) + '" width="' + f(w + 0.32) + '" height="0.2" fill="' + st.lintel + '"/>'; }
-		if (st.arches && !(opt && opt.noArch)) { s += '<path d="M' + f(x) + ' ' + f(y + h - 0.01) + 'A' + f(w / 2) + ' ' + f(Math.min(w / 2, 0.55)) + ' 0 0 0 ' + f(x + w) + ' ' + f(y + h - 0.01) + 'Z" fill="' + fc + '"/><path d="M' + f(x + fr) + ' ' + f(y + h) + 'A' + f(w / 2 - fr) + ' ' + f(Math.min(w / 2, 0.55) - fr) + ' 0 0 0 ' + f(x + w - fr) + ' ' + f(y + h) + 'Z" fill="' + glass(sc) + '"/>'; }
+		if ((st.arches || c.window_style === 'arched') && !(opt && opt.noArch)) { s += '<path d="M' + f(x) + ' ' + f(y + h - 0.01) + 'A' + f(w / 2) + ' ' + f(Math.min(w / 2, 0.55)) + ' 0 0 0 ' + f(x + w) + ' ' + f(y + h - 0.01) + 'Z" fill="' + fc + '"/><path d="M' + f(x + fr) + ' ' + f(y + h) + 'A' + f(w / 2 - fr) + ' ' + f(Math.min(w / 2, 0.55) - fr) + ' 0 0 0 ' + f(x + w - fr) + ' ' + f(y + h) + 'Z" fill="' + glass(sc) + '"/>'; }
 		s += '<rect x="' + f(x) + '" y="' + f(y) + '" width="' + f(w) + '" height="' + f(h) + '" fill="' + fc + '"/>' +
 			'<rect x="' + f(x + fr) + '" y="' + f(y + fr) + '" width="' + f(w - 2 * fr) + '" height="' + f(h - 2 * fr) + '" fill="' + glass(sc) + '"/>';
 		if (mat === 'wood' || mat === 'wood_alu') { s += '<rect x="' + f(x + fr * 0.55) + '" y="' + f(y + fr * 0.55) + '" width="' + f(w - fr * 1.1) + '" height="' + f(h - fr * 1.1) + '" fill="none" stroke="#A8744A" stroke-width="' + f(fr * 0.45) + '"/>'; }
@@ -430,6 +434,11 @@
 		var s = '<rect x="' + f(x - 0.06) + '" y="0" width="' + f(w + 0.12) + '" height="' + f(h + 0.06) + '" fill="' + fc + '"/>';
 		if (t === 'wood') { s += '<rect x="' + f(x) + '" y="0" width="' + f(w) + '" height="' + f(h) + '" fill="' + sc.mat('wood', '#8A5A36') + '"/>'; }
 		else { s += '<rect x="' + f(x) + '" y="0" width="' + f(w) + '" height="' + f(h) + '" fill="' + dc + '"/>'; }
+		if (t === 'double') { s += '<rect x="' + f(x + w / 2 - 0.015) + '" y="0" width="0.03" height="' + f(h) + '" fill="' + fc + '"/><rect x="' + f(x + w / 2 - 0.2) + '" y="' + f(h * 0.38) + '" width="0.035" height="0.45" fill="#C9CCCF"/>'; }
+		if (t === 'glass_full') { s += '<rect x="' + f(x + 0.1) + '" y="0.1" width="' + f(w - 0.2) + '" height="' + f(h - 0.2) + '" fill="' + glass(sc) + '"/>'; }
+		if (t === 'half_glass') { s += '<rect x="' + f(x + 0.12) + '" y="' + f(h * 0.5) + '" width="' + f(w - 0.24) + '" height="' + f(h * 0.42) + '" fill="' + glass(sc) + '"/>'; }
+		if (t === 'slat') { for (var sl = x + 0.1; sl < x + w - 0.05; sl += 0.12) { s += '<rect x="' + f(sl) + '" y="0.04" width="0.07" height="' + f(h - 0.08) + '" fill="' + sc.mat('wood', '#8A5A36') + '"/>'; } }
+		if (t === 'sidelight') { s += '<rect x="' + f(x + w * 0.64) + '" y="0.1" width="' + f(w * 0.3) + '" height="' + f(h - 0.2) + '" fill="' + glass(sc) + '"/>'; }
 		if (t === 'glass_strip') { s += '<rect x="' + f(x + w * 0.68) + '" y="0.15" width="' + f(w * 0.16) + '" height="' + f(h - 0.3) + '" fill="' + glass(sc) + '"/>'; }
 		if (t === 'classic') {
 			s += '<rect x="' + f(x + 0.12) + '" y="0.2" width="' + f(w - 0.24) + '" height="' + f(h * 0.38) + '" fill="none" stroke="' + shade(dc, 0.18) + '" stroke-width="0.03"/>' +
@@ -440,9 +449,10 @@
 		return s;
 	}
 	function shutterColor(c) {
-		var sh = c.shading || [];
+		var sh = c.shading || [], own = c.shutter_color && String(c.shutter_color).toUpperCase() !== '#3E4245' ? c.shutter_color : null;
+		if (!has(sh, 'spalettas') && !has(sh, 'shutters')) { return null; }
+		if (own) { return own; }
 		if (has(sh, 'spalettas')) { return '#8A5A36'; }
-		if (!has(sh, 'shutters')) { return null; }
 		if (c.arch_style === 'mediterranean' || c.arch_style === 'rustic') { return '#6B7A55'; }
 		if (c.arch_style === 'classic_burgher' || c.arch_style === 'american_farm') { return c.arch_style === 'american_farm' ? '#24282B' : '#ECE7DC'; }
 		return '#3E4245';
@@ -700,11 +710,106 @@
 		var guards = '';
 		if (c.snow_guards && type !== 'shed') { guards += sc.line(W3(a0 + 0.7, b1 - 0.55, eZ + 0.55 * tp + 0.06), W3(a1 - 0.7, b1 - 0.55, eZ + 0.55 * tp + 0.06), '#C9CDD0', 0.07); }
 		if (c.roof_ventilation && type !== 'shed' && type !== 'pyramid') {
-			[Ac - L / 4, Ac + L / 4].forEach(function (a) { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.4), '#3A3D40', 0.22) + sc.line(W3(a - 0.16, Bc, zR + 0.42), W3(a + 0.16, Bc, zR + 0.42), '#3A3D40', 0.12); });
+			var vt = c.roof_vent_type || 'tile_vent', vc = '#3A3D40', vk = 'vent:' + vt;
+			[Ac - L / 4, Ac + L / 4].forEach(function (a) {
+				if (vt === 'ridge_vent') { return; }
+				if (vt === 'turbine') { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.5), '#B9BDC1', 0.2, vk) + sc.line(W3(a - 0.2, Bc, zR + 0.6), W3(a + 0.2, Bc, zR + 0.6), '#9DA1A4', 0.3, 'x'); }
+				else if (vt === 'mushroom') { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.16), vc, 0.12, vk) + sc.line(W3(a - 0.2, Bc, zR + 0.2), W3(a + 0.2, Bc, zR + 0.2), vc, 0.12, 'x'); }
+				else if (vt === 'pipe') { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.75), '#6A6E72', 0.1, vk) + sc.line(W3(a - 0.1, Bc, zR + 0.78), W3(a + 0.1, Bc, zR + 0.78), vc, 0.1, 'x'); }
+				else if (vt === 'solar_fan') { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.12), vc, 0.5, vk) + sc.line(W3(a - 0.25, Bc, zR + 0.16), W3(a + 0.25, Bc, zR + 0.16), '#1B2636', 0.4, 'x'); }
+				else { guards += sc.line(W3(a, Bc, zR), W3(a, Bc, zR + 0.4), vc, 0.22, vk) + sc.line(W3(a - 0.16, Bc, zR + 0.42), W3(a + 0.16, Bc, zR + 0.42), vc, 0.12, 'x'); }
+			});
+			if (vt === 'ridge_vent') { guards += sc.line(W3(A0 + 0.4, Bc, zR + 0.05), W3(A1 - 0.4, Bc, zR + 0.05), '#2E3033', 0.12, vk); }
+		}
+		var rsp = ridgeSpec(c);
+		if (rsp.r > 0 && type !== 'shed' && type !== 'pyramid') {
+			var rha = type === 'hip' && L > S ? S / 2 : 0, rcol = rsp.metal ? '#8E9296' : (rsp.mortar ? '#8A857C' : shade(col(c.roof_color, '#3A3D40'), rsp.shift));
+			guards += sc.line(W3(A0 + rha, Bc, zR + 0.04), W3(A1 - rha, Bc, zR + 0.04), rcol, rsp.r * 1.7, 'x');
 		}
 		if (guards) { P.push({ depth: 1e3, svg: guards }); }
 		out.frontZ = function (y) { return h + (Y1 - y) * tp; };
 		out.tp = tp;
+		return out;
+	}
+
+	// Appearance of the roof extras (shared with the 3D preview).
+	function solarSpec(c) {
+		var t = c.solar_type || 'black_mono';
+		return ({
+			black_mono: { t: t, cell: '#10141A', line: '#262C36', frame: '#14171B' },
+			blue_poly: { t: t, cell: '#1B2636', line: '#566A84', frame: '#B9BDC1' },
+			in_roof: { t: t, cell: '#151A21', line: '#2A3039', frame: null, flush: true },
+			solar_tile: { t: t, cell: '#1A212B', line: '#39414D', frame: null, flush: true, tiles: true },
+			glass: { t: t, cell: '#0C1016', line: '#222833', frame: null }
+		})[t] || { t: 'black_mono', cell: '#10141A', line: '#262C36', frame: '#14171B' };
+	}
+	function chimneySpec(c) {
+		var t = c.chimney_type || 'auto';
+		if (t === 'auto') { t = c.arch_style === 'classic_burgher' || c.arch_style === 'rustic' || c.facade_main === 'brick' ? 'brick' : 'render'; }
+		return ({
+			brick: { t: t, w: 0.75, d: 0.75, color: '#9A4E35', mat: 'brick', cap: '#2E3033', up: 1.0 },
+			render: { t: t, w: 0.75, d: 0.75, color: '#4A4D50', cap: '#2E3033', up: 1.0 },
+			stone: { t: t, w: 0.85, d: 0.8, color: '#8D8579', mat: 'stone', cap: '#55524D', up: 0.9 },
+			steel: { t: t, w: 0.32, d: 0.32, color: '#B9BDC1', cap: '#8E9296', up: 1.7, metal: true },
+			clad: { t: t, w: 0.7, d: 0.7, color: '#2F3236', cap: '#1E2023', up: 1.0, metal: true },
+			wide: { t: t, w: 1.35, d: 0.75, color: '#C9C1B4', cap: '#2E3033', up: 0.9, twin: true }
+		})[t];
+	}
+	// Ridge / hip cap: radius, cross-section segments and colour shift.
+	function ridgeSpec(c) {
+		return ({ round: { r: 0.11, seg: 8, shift: -0.15 }, angular: { r: 0.12, seg: 4, shift: -0.12 }, mortar: { r: 0.13, seg: 8, shift: 0.1, mortar: true },
+			dry: { r: 0.08, seg: 4, shift: -0.2, vented: true }, metal: { r: 0.05, seg: 6, shift: 0, metal: true }, none: { r: 0 } })[c.ridge_tile || 'round'] || { r: 0.11, seg: 8, shift: -0.15 };
+	}
+	// Pool footprint: inside the plot and the front fence, beside the house, otherwise in the back garden.
+	function poolRect(mainV, left, right, front, back, plot, fenceOn) {
+		var fy = front - (fenceOn ? 0.4 : 0) - 1.4, d = 6.5, w = 3.4;
+		var px0 = Math.max(left + 1.2, plot ? plot.x0 + 0.8 : -1e9), room = mainV.x0 - 0.9 - px0, y0, y1, x0;
+		if (room >= 2.4) {
+			w = Math.min(w, room); x0 = px0;
+			y1 = Math.min(mainV.y1 + 1.5 + d, fy); y0 = Math.max(mainV.y0 + 0.5, y1 - d);
+		} else {
+			x0 = clamp(mainV.x0 + 1.2, Math.max(left + 1.2, plot ? plot.x0 + 0.8 : -1e9), Math.min(right - 1.2, plot ? plot.x1 - 0.8 : 1e9) - w);
+			y1 = mainV.y0 - 1.2; y0 = Math.max(y1 - d, back + 0.8, plot && plot.yB !== null ? plot.yB + 0.8 : -1e9);
+		}
+		return { x0: x0, x1: x0 + w, y0: y0, y1: Math.max(y1, y0 + 1.5) };
+	}
+	// Layout of the front roof plane (ridge along x): dormers, the solar field and roof windows never overlap.
+	// u = distance from the volume's left edge, s = distance up the slope from the eave.
+	function roofLayout(c, v, pl, slopeL, hipIn, solar) {
+		var W = v.x1 - v.x0, a = hipIn + 0.5, b = W - hipIn - 0.5, nd = Math.round(clamp(num(c.dormers, 0), 0, 4)), free = [[a, b]], out = { dorm: [], solar: null, wins: [], winS: 0 };
+		for (var d = 0; d < nd; d++) {
+			var cx = hipIn + (W - 2 * hipIn) * (d + 0.5) / nd;
+			out.dorm.push(cx - 0.9);
+			free = free.reduce(function (acc, fi) {
+				var b0 = cx - 1.4, b1 = cx + 1.4;
+				if (b1 <= fi[0] || b0 >= fi[1]) { acc.push(fi); return acc; }
+				if (b0 - fi[0] > 0.3) { acc.push([fi[0], b0]); }
+				if (fi[1] - b1 > 0.3) { acc.push([b1, fi[1]]); }
+				return acc;
+			}, []);
+		}
+		free = free.filter(function (fi) { return fi[1] - fi[0] >= 0.9; });
+		if (solar && free.length) {
+			var bi = 0; free.forEach(function (fi, i) { if (fi[1] - fi[0] > free[bi][1] - free[bi][0]) { bi = i; } });
+			var big = free[bi], len = big[1] - big[0], cov = c.solar_coverage || 'medium';
+			var cols = Math.min(Math.floor(len / 1.12), Math.max(2, Math.floor(len * (cov === 'small' ? 0.4 : (cov === 'full' ? 1 : 0.7)) / 1.12)));
+			var rowsMax = Math.max(1, Math.min(3, Math.floor((slopeL - 0.8) / 1.8))), rows = cov === 'small' ? 1 : (cov === 'full' ? rowsMax : Math.min(2, rowsMax));
+			if (cols >= 1) {
+				var x0 = (big[0] + big[1]) / 2 - cols * 1.12 / 2;
+				out.solar = { u0: x0, cols: cols, rows: rows, pw: cols * 1.12, s0: 0.6 };
+				free.splice(bi, 1);
+				if (x0 - 0.2 - big[0] >= 0.9) { free.push([big[0], x0 - 0.2]); }
+				if (big[1] - (x0 + cols * 1.12 + 0.2) >= 0.9) { free.push([x0 + cols * 1.12 + 0.2, big[1]]); }
+			}
+		}
+		var want = Math.round(clamp(num(c.roof_windows, 0) + (pl.attic && !num(c.roof_windows, 0) && !nd ? 2 : 0), 0, 6)), slots = [];
+		free.sort(function (p, q) { return p[0] - q[0]; }).forEach(function (fi) {
+			var n = Math.floor((fi[1] - fi[0]) / 1.3);
+			for (var i = 0; i < n; i++) { slots.push(fi[0] + (fi[1] - fi[0]) * (i + 0.5) / n - 0.39); }
+		});
+		var take = Math.min(want, slots.length);
+		for (var k = 0; k < take; k++) { out.wins.push(slots[take === 1 ? Math.floor((slots.length - 1) / 2) : Math.round(k * (slots.length - 1) / (take - 1))]); }
+		out.winS = clamp(slopeL * 0.45 - 0.6, 0.8, Math.max(0.8, slopeL - 1.8));
 		return out;
 	}
 	// Roof-mounted items: solar panels, roof windows, dormers (front plane of a ridge-along-x roof), chimney.
@@ -713,20 +818,19 @@
 		var solar = c.roof_solar || has(c.energy, 'solar') || !!styleOf(c).pv;
 		var W = v.x1 - v.x0, D = v.y1 - v.y0;
 		function chimneyBox(zBase) {
-			var cx = v.x0 + W * 0.7, cy = (v.y0 + v.y1) / 2 + 0.3, cw = 0.75, zt = (roof.flatTop || v.h + roof.rise) + 1.0;
-			var cc = c.arch_style === 'classic_burgher' || c.arch_style === 'rustic' || c.facade_main === 'brick' ? '#9A4E35' : '#4A4D50';
-			var zf = zBase(cy + cw), zr0 = zBase(cy + cw), zr1 = zBase(cy);
-			var cfill = cc === '#9A4E35' ? sc.mat('brick', cc) : cc;
-			var fr = sc.plane([cx, cy + cw, 0], [1, 0, 0], [0, 0, 1], [[0, zf], [cw, zf], [cw, zt], [0, zt]], cfill);
-			var rs = sc.plane([cx + cw, cy + cw, 0], [0, -1, 0], [0, 0, 1], [[0, zr0], [cw, zr1], [cw, zt], [0, zt]], cfill);
-			var tpz = sc.plane([cx - 0.06, cy + cw + 0.06, zt], [1, 0, 0], [0, -1, 0], [[0, 0], [cw + 0.12, 0], [cw + 0.12, cw + 0.12], [0, cw + 0.12]], '#2E3033', '', { noShade: true });
+			var cs = chimneySpec(c), cx = v.x0 + W * 0.7, cy = (v.y0 + v.y1) / 2 + 0.3, cw = cs.w, cd = cs.d, zt = (roof.flatTop || v.h + roof.rise) + cs.up;
+			var zf = zBase(cy + cd), zr0 = zBase(cy + cd), zr1 = zBase(cy);
+			var cfill = cs.mat ? sc.mat(cs.mat, cs.color) : cs.color;
+			var fr = sc.plane([cx, cy + cd, 0], [1, 0, 0], [0, 0, 1], [[0, zf], [cw, zf], [cw, zt], [0, zt]], cfill, cs.twin ? '<path d="M' + f(cw / 2) + ' ' + f(zf) + 'V' + f(zt) + '" stroke="#2E3033" stroke-width="0.05"/>' : '');
+			var rs = sc.plane([cx + cw, cy + cd, 0], [0, -1, 0], [0, 0, 1], [[0, zr0], [cd, zr1], [cd, zt], [0, zt]], cfill);
+			var tpz = sc.plane([cx - 0.06, cy + cd + 0.06, zt], [1, 0, 0], [0, -1, 0], [[0, 0], [cw + 0.12, 0], [cw + 0.12, cd + 0.12], [0, cd + 0.12]], cs.cap, '', { noShade: true });
 			[fr, rs, tpz].forEach(function (r) { if (r) { r.depth += 50; items.push(r); } });
 		}
 		if (roof.flatTop) {
 			if (solar) {
 				var n = Math.max(1, Math.min(6, Math.floor((W - 1.2) / 2.1)));
 				for (var i = 0; i < n; i++) {
-					var r = sc.plane([v.x0 + 0.8 + i * 2.1, v.y0 + 1 + D * 0.3, roof.flatTop + 0.15], [1, 0, 0], norm([0, -0.85, 0.5]), [[0, 0], [1.7, 0], [1.7, 1.1], [0, 1.1]], '#1E2A3A', '<path d="M0.57 0v1.1M1.13 0v1.1M0 0.55h1.7" stroke="#5A6C82" stroke-width="0.03"/>');
+					var ss = solarSpec(c), r = sc.plane([v.x0 + 0.8 + i * 2.1, v.y0 + 1 + D * 0.3, roof.flatTop + (ss.flush ? 0.02 : 0.15)], [1, 0, 0], norm([0, -0.85, 0.5]), [[0, 0], [1.7, 0], [1.7, 1.1], [0, 1.1]], ss.cell, '<path d="M0.57 0v1.1M1.13 0v1.1M0 0.55h1.7" stroke="' + ss.line + '" stroke-width="0.03"/>');
 					if (r) { r.depth += 40; items.push(r); }
 				}
 			}
@@ -743,24 +847,18 @@
 			if (r) { r.depth += 40; items.push(r); }
 		}
 		var hipIn = c.roof_type === 'hip' || c.roof_type === 'pyramid' ? D / 2 : 0;
-		if (solar) {
-			var rows = Math.max(1, Math.min(3, Math.floor((slopeL - 0.8) / 1.8)));
-			var cols = Math.max(2, Math.floor((W - 2 * hipIn - 1.2) * 0.7 / 1.12));
-			var pw = cols * 1.12, x0 = clamp(W * 0.42 - pw / 2, hipIn + 0.6, W - pw - 0.5 - hipIn);
-			var inner = '';
-			for (var a = 1; a < cols; a++) { inner += '<path d="M' + f(a * 1.12) + ' 0V' + f(rows * 1.75) + '" stroke="#566A84" stroke-width="0.04"/>'; }
-			for (var b = 1; b < rows; b++) { inner += '<path d="M0 ' + f(b * 1.75) + 'H' + f(pw) + '" stroke="#566A84" stroke-width="0.04"/>'; }
-			onRoof(x0, 0.6, pw, rows * 1.75, '#1B2636', inner + '<polygon points="0,0 ' + f(pw * 0.4) + ',0 0,' + f(rows * 1.75) + '" fill="#9FB4CC" opacity="0.14"/>');
+		var lay = roofLayout(c, v, pl, slopeL, hipIn, solar);
+		if (lay.solar) {
+			var ss2 = solarSpec(c), L2 = lay.solar, inner = '';
+			for (var a = 1; a < L2.cols; a++) { inner += '<path d="M' + f(a * 1.12) + ' 0V' + f(L2.rows * 1.75) + '" stroke="' + ss2.line + '" stroke-width="0.04"/>'; }
+			for (var b = 1; b < L2.rows; b++) { inner += '<path d="M0 ' + f(b * 1.75) + 'H' + f(L2.pw) + '" stroke="' + ss2.line + '" stroke-width="0.04"/>'; }
+			if (ss2.tiles) { for (var tb = 1; tb < L2.rows * 5; tb++) { inner += '<path d="M0 ' + f(tb * 0.35) + 'H' + f(L2.pw) + '" stroke="' + ss2.line + '" stroke-width="0.02"/>'; } }
+			onRoof(L2.u0, L2.s0, L2.pw, L2.rows * 1.75, ss2.cell, inner + (ss2.frame ? '<rect width="' + f(L2.pw) + '" height="' + f(L2.rows * 1.75) + '" fill="none" stroke="' + ss2.frame + '" stroke-width="0.07"/>' : '') + '<polygon points="0,0 ' + f(L2.pw * 0.4) + ',0 0,' + f(L2.rows * 1.75) + '" fill="#9FB4CC" opacity="0.14"/>');
 		}
-		var nw = clamp(num(c.roof_windows, 0) + (pl.attic && !num(c.roof_windows, 0) && !num(c.dormers, 0) ? 2 : 0), 0, 6);
-		for (var k = 0; k < nw; k++) {
-			var ux = hipIn + 0.4 + (W - 2 * hipIn - 1.6) * (nw === 1 ? 0.5 : k / (nw - 1));
-			if (solar) { ux = k % 2 ? W - hipIn - 1.4 : hipIn + 0.5; }
-			onRoof(ux, slopeL * 0.42, 0.78, 1.2, '#2A2D30', '<rect x="0.07" y="0.07" width="0.64" height="1.06" fill="' + glass(sc) + '"/>');
-		}
-		var nd = clamp(num(c.dormers, 0), 0, 4);
+		lay.wins.forEach(function (ux) { onRoof(ux, lay.winS, 0.78, 1.2, '#2A2D30', '<rect x="0.07" y="0.07" width="0.64" height="1.06" fill="' + glass(sc) + '"/>'); });
+		var nd = lay.dorm.length;
 		for (var dd = 0; dd < nd; dd++) {
-			var dw = 1.8, dx = v.x0 + hipIn + (W - 2 * hipIn) * (dd + 0.5) / nd - dw / 2, yd = v.y1 - 1.0, z0 = roof.frontZ(yd), hw = 1.35, yb = yd - hw / tp;
+			var dw = 1.8, dx = v.x0 + lay.dorm[dd], yd = v.y1 - 1.0, z0 = roof.frontZ(yd), hw = 1.35, yb = yd - hw / tp;
 			var wall = col(c.facade_color, '#F2EFE9'), mat = roofMaterial(sc), parts = [];
 			[sc.plane([dx, yd, z0], [1, 0, 0], [0, 0, 1], [[0, 0], [dw, 0], [dw, hw], [dw / 2, hw + 0.75], [0, hw]], wall, windowSvg(sc, 0.42, 0.18, 0.96, 1.0, {})),
 				sc.poly3([[dx + dw, yd, z0], [dx + dw, yb, z0 + hw], [dx + dw, yd, z0 + hw]], wall, '', { normal: [1, 0, 0] }),
@@ -1051,7 +1149,18 @@
 		}
 		/* building services on the ground: heat pump, EV charger, rainwater tank */
 		var en = c.energy || [];
-		if (has(en, 'heat_pump')) {
+		var acT = c.ac_units || 'none';
+		if (acT !== 'none') {
+			var ac0 = { top: '#D9DCDE', front: '#EDEFF0', side: '#C9CDD0' }, fan = '<circle cx="0.55" cy="0.3" r="0.22" fill="#9EA4A9"/><circle cx="0.55" cy="0.3" r="0.06" fill="#5E6266"/>';
+			if (acT === 'wall') { box(sc, mainV.x1, D * 0.3, pl.plinth + 2.0, mainV.x1 + 0.32, D * 0.3 + 0.85, pl.plinth + 2.6, ac0, { side: fan }).forEach(function (r) { sc.push(r.depth + 1, r.svg); }); }
+			else if (acT === 'roof' && c.roof_type === 'flat') { box(sc, mainV.x1 - 2.2, mainV.y0 + 1.0, mainV.h + 0.1, mainV.x1 - 1.1, mainV.y0 + 1.9, mainV.h + 0.9, ac0, { side: fan }).forEach(function (r) { sc.push(r.depth + 1, r.svg); }); }
+			else if (acT === 'ground' || acT === 'screened' || acT === 'roof') {
+				box(sc, mainV.x1 + 0.1, D * 0.35 - 0.1, 0, mainV.x1 + 0.9, D * 0.35 + 1.2, 0.05, { top: '#B9B4AA', front: '#A9A49B', side: '#99948B' }).forEach(function (r) { sc.push(r.depth - 0.1, r.svg); });
+				box(sc, mainV.x1 + 0.25, D * 0.35, 0, mainV.x1 + 0.75, D * 0.35 + 1.1, 0.85, ac0, { side: '<circle cx="0.55" cy="0.45" r="0.3" fill="#9EA4A9"/><circle cx="0.55" cy="0.45" r="0.08" fill="#5E6266"/>' }).forEach(function (r) { sc.push(r.depth, r.svg); });
+				if (acT === 'screened') { for (var sq = 0; sq < 9; sq++) { box(sc, mainV.x1 + 0.9, D * 0.35 - 0.15 + sq * 0.15, 0, mainV.x1 + 0.97, D * 0.35 - 0.07 + sq * 0.15, 1.3, { top: '#B58A5E', front: '#A97B52', side: '#8A6446' }).forEach(function (r) { sc.push(r.depth + 0.2, r.svg); }); } }
+			}
+		}
+		if (has(en, 'heat_pump') && acT !== 'ground' && acT !== 'screened') {
 			box(sc, mainV.x1 + 0.25, D * 0.35, 0, mainV.x1 + 0.75, D * 0.35 + 1.1, 0.85, { top: '#D9DCDE', front: '#EDEFF0', side: '#C9CDD0' }, { side: '<circle cx="0.55" cy="0.45" r="0.3" fill="#9EA4A9"/><circle cx="0.55" cy="0.45" r="0.08" fill="#5E6266"/>' }).forEach(function (r) { sc.push(r.depth, r.svg); });
 		}
 		if (has(en, 'ev_charger')) {
@@ -1074,7 +1183,7 @@
 				if (pth) { groundSvg += pth.svg; }
 			}
 			if (has(gf, 'pool')) {
-				var px0 = left + 1.2, py0 = mainV.y1 + 1.5, pw2 = 3.4, pd = 6.5;
+				var pr = poolRect(mainV, left, right, front, back, plot, !!c.fence && c.fence !== 'none'), px0 = pr.x0, py0 = pr.y0, pw2 = pr.x1 - pr.x0, pd = pr.y1 - pr.y0;
 				var pool = sc.plane([px0, py0 + pd, 0.02], [1, 0, 0], [0, -1, 0], [[0, 0], [pw2, 0], [pw2, pd], [0, pd]], '#E9E4DA', '<rect x="0.25" y="0.25" width="' + f(pw2 - 0.5) + '" height="' + f(pd - 0.5) + '" fill="' + (L.dark ? '#1E5C7A' : '#5FB2CF') + '"/><rect x="0.25" y="' + f(pd * 0.55) + '" width="' + f(pw2 - 0.5) + '" height="' + f(pd * 0.1) + '" fill="#9FDBEA" opacity="0.5"/>', { noShade: true });
 				if (pool) { groundSvg += pool.svg; }
 			}
@@ -1302,7 +1411,8 @@
 		'roof_type', 'roof_pitch', 'roof_overhang', 'gable_finish', 'roof_windows', 'dormers', 'roof_solar', 'gutters', 'roof_product', 'roof_color', 'roof_surface',
 		'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'plinth_color', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number',
 		'window_style', 'window_frame_color', 'window_frame_material', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading',
-		'garden_style', 'garden_features', 'terrace_floor', 'driveway', 'fence', 'gate', 'neighbors', 'time_of_day', 'season', 'weather', 'camera', 'lens', 'night_lighting', 'energy'];
+		'garden_style', 'garden_features', 'terrace_floor', 'driveway', 'fence', 'gate', 'neighbors', 'time_of_day', 'season', 'weather', 'camera', 'lens', 'night_lighting', 'energy',
+		'chimney_type', 'solar_type', 'solar_coverage', 'roof_vent_type', 'ridge_tile', 'shutter_color', 'ac_units'];
 
 	// Whether changing a parameter shows on the sketch for this configuration (value: the multiselect item
 	// that was switched). Used by the tests; the designer itself compares the drawings before and after.
@@ -1331,6 +1441,12 @@
 			case 'night_lighting': return c.time_of_day === 'night' || c.time_of_day === 'blue';
 			case 'terrace_door': case 'terrace_floor': case 'outdoor_covered': return ta;
 			case 'arch_style': return c.arch_style !== 'custom' && c.arch_style !== 'modern_minimal';
+			case 'chimney_type': return !!c.chimney;
+			case 'solar_type': case 'solar_coverage': return !!c.roof_solar && (id === 'solar_type' || (pitched && c.roof_type !== 'shed' && c.roof_type !== 'pyramid'));
+			case 'roof_vent_type': return !!c.roof_ventilation && pitched && c.roof_type !== 'shed' && c.roof_type !== 'pyramid';
+			case 'ridge_tile': return pitched && c.roof_type !== 'shed';
+			case 'shutter_color': return (c.shading || []).some(function (m) { return m === 'shutters' || m === 'spalettas'; });
+			case 'ac_units': return true;
 			case 'energy': return VISUAL_ENERGY.indexOf(value) !== -1;
 			case 'garden_features': return ['robot_mower', 'outdoor_shower', 'irrigation'].indexOf(value) === -1 && !(value === 'garden_lights' && !lightFor(c).glow);
 			case 'shading': return value !== 'louvres' || c.levels === 'two' || c.levels === 'three';
@@ -1341,7 +1457,8 @@
 
 	var api = { render: render, swatch: swatch, palette: palette, vignette: vignette, visual: VISUAL, visibleFor: visibleFor, plan: plan,
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
-		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor };
+		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
+		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));
