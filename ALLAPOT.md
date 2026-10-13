@@ -1,22 +1,21 @@
 # ALLAPOT – AutoGroweHome (frissítve: 2026-10-13)
 
-**Verzió:** ügyfélplugin 1.5.0 (dist/autogrowehome-1.5.0.zip: profi belső terek, 243 képes tárgykártya; 1.4.0 belső nézet Kívül/Belül; 1.3.1 gyorsítás; 1.3.0 épületformák) · Licencközpont 1.0.0 (license-hub/) · Repó: github.com/koltainorbert/AutoGroweHome (main). Chat elején: repó bekötése, CLAUDE.md, tesztoldal `bin/test-wp.sh`.
+**Verzió:** ügyfélplugin 1.6.0 (dist/autogrowehome-1.6.0.zip: erkélyek, napelem szabad tetőrészeken, autók/emberek/állatok, bővebb belső tér, saját fotó, gyorsabb 3D; 1.5.0 profi belső terek; 1.4.0 belső nézet) · Licencközpont 1.0.0 (license-hub/) · Repó: github.com/koltainorbert/AutoGroweHome (main). Chat elején: repó bekötése, CLAUDE.md, tesztoldal `bin/test-wp.sh`.
 
-**Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 1865 szöveg, 0 hiba · vázlat 1247 rajz, 218 változat, 600 kert (0 hibás elhelyezés), 0 hiba · belső: 243 tárgykártya és 150 véletlen berendezett szoba, 0 hiba (szoba 70–146 rajzolási hívás) · felületi lefedettség 58 látható mező (2D+3D), 0 hiba, konzol 0 · 3D: 87–101 rajzolási hívás/ház (régen 1300–1900), hideg stílusváltás 15 stílusra 1,0 s (régen 8,5 s, tesztgép) · Licencközpont 40/40. A wizard.js és responsive.js E2E a kiinduló állapoton is időtúllépéssel áll le (elavult szelektor) – javítandó.
+**Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 1996 szöveg, 0 hiba · vázlat 1247 rajz, 600 kert, 0 hiba · felületi lefedettség 153 mező (63 látszik a 2D-n), 2D és 3D 0 hiba, konzol 0 · responsive, wizard, gen E2E rendben · 342 tárgykártya, 200 véletlen szoba, 512 ház- és 600 vázlatváltozat az új beállításokkal, 0 hiba · napelem: 384 tetőváltozat, 0 kilógó modul · SwiftShaderen 1.5.0 → 1.6.0: bútorkártyák 20–24 s → 15–18 s (újbóli látogatás 5,5–10 s), fürdőkártyák 7,6–11 s → 4,0–7,4 s · Licencközpont 40/40.
 
 **Döntések**
 - Minden változtatás automatikusan a repóba (teszt → commit → push main); minden új ZIP új verzió (bin/bump-version.sh, központnál bin/bump-hub-version.sh).
 - Két plugin: gyökér = ügyfélplugin; license-hub/ = licencszerver Norbi HTTPS-oldalára (Ed25519 {data, signature}). Saját oldalon: `AGH_OWNER_MODE`.
-- Stílus = 1. lépés; minden stílus saját tömegformát (massing), szintszámot, tetőt, anyagot javasol (Catalog::style_seed); DB v8 csak érintetlen (v1/v7) javaslatot frissít.
-- Tömegformák a közös `agh-sketch.js` volumes()-ban (z0 konzol, roofMap, round, glass, frame, veranda, balc, exo, terraceRoof); a 3D ugyanebből épít. Medence/terasz/bejárat/telek/kert közös függvények (_pool, _terrace, _entrance, _plot, _garden).
-- Előnézet 3D (three.js r170); 2D csak tartalék. Teljesítmény: mergeStatic (anyagonként 1 háló), textúrák workerben (agh-3d-gen.js + agh-3d-texw.js), egyszínű anyag semleges textúra × anyagszín, shadowMap.autoUpdate=false, kártyaképek csak láthatóra. Forrásnyelv magyar, 15 fordítás (bin/po-tools.py); útvonalak „/”-rel.
-- 1 kérés = 3 koncepció = 1 egység; BRAMAC magastetőnél kötelező.
-- Belső tér: agh-3d-int.js (tárgyépítők, szobák, `itemScene` a kártyaképekhez; `pick()` = „auto” a belső stílus szerint). Viewer `c._int` szoba, `c._item` tárgykártya; mezőn `'visual' => 'item'` = képes kártya. Kategóriák: Belsőépítészet, Bútorok, Világítás.
-- Licenc nélkül (nincs AGH_OWNER_MODE, nincs aktív Professional) Starter: 31 beállítás látszik a 123-ból – a tervező és az admin ezt kiírja.
+- Stílus = 1. lépés; stílusonként tömegforma, szintszám, tető, anyag javaslat (Catalog::style_seed).
+- Közös terv az `agh-sketch.js`-ben, a 3D ugyanebből épít: volumes, _solarFaces (napelem modulok a tetősíkon belül), _balconies/_balcMark (erkély + ajtók), _garden (növények, járművek, emberek, állatok), _pool, _terrace, _plot.
+- Előnézet 3D (three.js r170), 2D csak tartalék. Sebesség: egy WebGL-környezet, kártyaképek IndexedDB-ben, modul-előtöltés, árnyaló-előfordítás, mergeStatic, textúrák 4 workerben.
+- Belső tér: agh-3d-int.js (tárgyépítők, szobák, `itemScene` kártyaképek; `pick()` = „auto” a stílus szerint); további bútorok a falak szabad szakaszaira (hátsó, bal, jobb fal). Mezőn `'visual' => 'item'` = képes kártya. Új mezőtípus: `image` (saját fotó, ≤ 400 000 karakteres data URL, csak 3D-ben).
+- 1 kérés = 3 koncepció = 1 egység; BRAMAC magastetőnél kötelező. Licenc nélkül Starter: a beállítások egy része látszik.
 
 **Nyitott tételek**
 - Kézi szöveg külön a külsőhöz és a belsőhöz, beépítve a promptba.
 - Licencközpont telepítése Norbi oldalára → szerver URL + nyilvános kulcs az ügyfélpluginba.
-- htombau: 1.3.0 telepítése; 3D sebesség telefonon; Magnific/Anthropic kulcs, éles végigteszt.
-- GitHub repó NYILVÁNOS → privátra. Fordítások lektorálása (tömegformák, tetőelemek).
+- htombau: 1.6.0 telepítése; 3D sebesség telefonon (valódi GPU-n nem mérve); Magnific/Anthropic kulcs, éles végigteszt.
+- GitHub repó NYILVÁNOS → privátra. Fordítások lektorálása (új: járművek, erkély, belső tárgyak).
 - Fizetés → automatikus kulcskiadás; BRAMAC-katalógus, jogi szövegek; MySQL/SMTP/éles cron teszt.
