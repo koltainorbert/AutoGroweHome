@@ -897,6 +897,32 @@
 		return box;
 	}
 	// The 3D room finds every item a place; when it had to move or shrink something, one short note says what.
+	// A tap on a part of the model: the settings jump to the field that part belongs to, and it lights up.
+	// A piece with no setting of its own (a household item placed by its own card) only says its name.
+	function jumpToField(hit) {
+		if (!hit || !hit.field) { return; }
+		var f = S.fields[hit.field];
+		if (!f) {
+			// household items live on the "tárgyak" cards: open that field and name the piece
+			var host = S.fields[hit.item] ? hit.item : '';
+			ROOM_ITEMS.forEach(function (id) { if (!host) { ((S.fields[id] || {}).options || []).forEach(function (o) { if (o.value === hit.item && !host) { host = id; } }); } });
+			if (!host) { if (hit.item) { toast(itemLabel(hit.item) || hit.item, 'ok', 2000); } return; }
+			f = S.fields[host];
+		}
+		if (!f) { return; }
+		if (S.wiz) { return; }
+		if (S.search) { S.search = ''; if (els.searchInput) { els.searchInput.value = ''; } }
+		if (f.advanced && S.mode === 'simple') { setMode('detailed'); }
+		if (S.cat !== f.category) { S.cat = f.category; updateRail(); }
+		renderFields();
+		var el = els.fieldsList && els.fieldsList.querySelector('[data-field="' + f.id + '"]');
+		if (!el) { return; }
+		try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { el.scrollIntoView(); }
+		el.classList.remove('is-picked');
+		void el.offsetWidth;
+		el.classList.add('is-picked');
+		setTimeout(function () { el.classList.remove('is-picked'); }, 1600);
+	}
 	function fixNote() {
 		var v = A3 && A3.viewer(), rm = v && v.house && v.house.room;
 		if (!rm || S.view !== 'int' || !rm.fixes || !rm.fixes.length) { return; }
@@ -1398,7 +1424,7 @@
 		if (A3) {
 			// keep the live 3D canvas, replace everything else
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
-			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
+			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); A3.viewer().onPick = jumpToField; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
 			if (A3 && S.view === 'int') { box.appendChild(roomChips()); }
 			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
 		} else if (A3wait) {

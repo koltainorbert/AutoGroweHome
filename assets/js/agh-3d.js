@@ -362,7 +362,12 @@ function House(c, opts) {
 	this.lights = [];
 	this.night = c.time_of_day === 'night' || c.time_of_day === 'blue';
 }
-House.prototype.add = function (m, fit) { if (m) { (fit === false ? this.root : this.fit).add(m); } return m; };
+House.prototype.add = function (m, fit) {
+	// which setting this piece belongs to (a tap on the model jumps there); the innermost phase wins
+	if (m && this.tagNow && !m.userData.field) { m.userData.field = this.tagNow; }
+	if (m) { (fit === false ? this.root : this.fit).add(m); }
+	return m;
+};
 
 House.prototype.build = function () {
 	var c = this.c, K = SK(), pl = K.plan(c), vols = K._volumes(c, pl), self = this;
@@ -553,6 +558,10 @@ House.prototype.wallTech = function (g, F, T) {
 };
 // Window / door / terrace door inside a wall hole (face-local).
 House.prototype.opening = function (g, o, T, st) {
+	// the whole opening goes into its own group, so a tap on it finds the window (or the front door)
+	var og = new THREE.Group();
+	og.userData.field = o.kind === 'door' ? 'entrance_door' : 'window_style';
+	g.add(og); g = og;
 	var c = this.c, fm = frameMat(c), gm = glassMat(c, this.night), reveal = st.reveal ? 0.2 : 0.1, fd = 0.08;
 	var w0 = T - reveal - fd, w1 = T - reveal, mat = c.window_frame_material || 'aluminium';
 	var fr = { pvc: 0.09, aluminium: 0.05, wood: 0.075, wood_alu: 0.06 }[mat] || 0.05;
@@ -1458,6 +1467,18 @@ function Viewer(opts) {
 		// while the visitor drags: plain resolution, no ambient occlusion – full quality again when it settles
 		this.controls.addEventListener('start', function () { self.interacting = true; if (self.dprHi > 1) { self.setDPR(1); self.lowDPR = true; } self.loop(); });
 		this.controls.addEventListener('end', function () { self.interacting = false; self.settle = performance.now() + 900; self.loop(); });
+		// a tap on a part of the model: the designer jumps to the setting that part belongs to. Only a tap
+		// counts (under 6 px of movement), so turning the house keeps working, on a touch screen too.
+		var dn = null;
+		this.el.addEventListener('pointerdown', function (e) { dn = [e.clientX, e.clientY, Date.now()]; });
+		this.el.addEventListener('pointerup', function (e) {
+			if (!dn || !self.onPick) { return; }
+			var moved = Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1]), slow = Date.now() - dn[2] > 700;
+			dn = null;
+			if (moved > 6 || slow) { return; }
+			var hit = self.pickAt(e.clientX, e.clientY);
+			if (hit) { self.onPick(hit); }
+		});
 		if (this.quality === 'high') {
 			this.composer = new EffectComposer(r, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
 			this.composer.addPass(new RenderPass(this.scene, this.camera));
@@ -1547,6 +1568,7 @@ Viewer.prototype.update = function (cfg, mode) {
 	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini' }).build(); }
 	if (!inner) { this.landFor(c, mode); }
 	this.lampsToPool(this.house.root);
+	this.picks = this.thumb ? null : collectPicks(this.house.root);   // before the merge, while the pieces are still apart
 	mergeStatic(this.house.fit || this.house.root);
 	if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
 	this.scene.add(this.house.root);
@@ -1754,6 +1776,64 @@ function isShared(g) { for (var k in FOLIAGE) { if (FOLIAGE[k] === g) { return t
 /* ------------------------------------------------------------------ close-up scenes for option cards */
 // Option card for a facade material: a real house corner (two walls in light and shade) with a window,
 // plinth, eaves and a gravel strip – the material reads as on a building, not as a loose sample board.
+// Which setting a build phase belongs to: everything added inside it carries that field (the
+// innermost phase wins, so a roof vent beats the roof, and the roof beats the volume).
+(function () {
+	var PHASE = { volume: 'facade_main', wallDetails: 'facade_main', opening: 'window_style', pitchedRoof: 'roof_type', flatRoof: 'roof_type', roofItems: 'roof_type', snowGuard: 'snow_guards', roofVent: 'roof_vent_type', balconyDraw: 'balcony', frontExtras: 'entrance_canopy', furniture: 'garden_features', plant: 'tree_types', site: 'garden_style', extras: 'terrace_area', lamp: 'exterior_lighting' };
+	Object.keys(PHASE).forEach(function (name) {
+		var fn = House.prototype[name];
+		if (!fn) { return; }
+		House.prototype[name] = function () {
+			var prev = this.tagNow;
+			this.tagNow = PHASE[name];
+			try { return fn.apply(this, arguments); } finally { this.tagNow = prev; }
+		};
+	});
+})();
+/* ====================================================================== tap on a part of the model
+   Every piece knows which setting it belongs to (userData.field). The opaque meshes are merged after
+   the build, so the identity is kept as a list of world-space boxes, taken before the merge. A tap
+   picks the smallest box that holds the hit point: a window beats the wall, a wall beats the volume. */
+function collectPicks(root) {
+	var out = [], bx = new THREE.Box3();
+	root.updateMatrixWorld(true);
+	root.traverse(function (o) {
+		var f = o.userData && (o.userData.field || o.userData.item);
+		if (!f || o.userData.picked) { return; }
+		bx.setFromObject(o);
+		if (bx.isEmpty()) { return; }
+		var b = bx.clone(), s = b.getSize(new THREE.Vector3());
+		out.push({ field: o.userData.field || f, item: o.userData.item || '', box: b, vol: Math.max(0.001, s.x * s.y * s.z) });
+	});
+	return out;
+}
+// Which setting the point belongs to: the smallest box around it, else the nearest one within 0.4 m.
+function pickFromList(list, p) {
+	var best = null, bv = 1e9, near = null, nd = 0.4;
+	(list || []).forEach(function (q) {
+		if (q.box.containsPoint(p)) { if (q.vol < bv) { bv = q.vol; best = q; } return; }
+		var d = q.box.distanceToPoint(p);
+		if (d < nd) { nd = d; near = q; }
+	});
+	var hit = best || near;
+	return hit ? { field: hit.field, item: hit.item, point: p } : null;
+}
+// Screen point (CSS pixels) → the setting of the part under it.
+Viewer.prototype.pickAt = function (cx, cy) {
+	if (!this.picks || !this.picks.length || !this.el) { return null; }
+	var r = this.el.getBoundingClientRect();
+	if (!r.width || !r.height) { return null; }
+	var ndc = new THREE.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+	this.ray = this.ray || new THREE.Raycaster();
+	this.ray.setFromCamera(ndc, this.camera);
+	var hits = this.ray.intersectObject(this.scene, true).filter(function (h) { return h.object && h.object.visible && !h.object.isLine; });
+	// the first surface may belong to nothing (a ceiling seen from outside, glass, a curtain): keep going
+	for (var i = 0; i < hits.length && i < 6; i++) {
+		var p = pickFromList(this.picks, hits[i].point);
+		if (p) { return p; }
+	}
+	return null;
+};
 function facadeScene(c) {
 	var hs = new House(c, { mini: true }); hs.pl = SK().plan(c);
 	var g = new THREE.Group(), T = 0.3, L = 3.4, H = 2.75, D = 2.0, m = facadeMat(c, c.facade_main);

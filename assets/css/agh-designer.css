@@ -273,6 +273,10 @@
 
 /* fields */
 .agh-field { display: flex; flex-direction: column; gap: 6px; animation: agh-fade .25s; }
+/* a modellen megérintett elem beállítása: rövid kiemelés */
+.agh-field.is-picked { animation: agh-picked 1.5s ease-out; border-radius: 12px; }
+@keyframes agh-picked { 0% { box-shadow: 0 0 0 3px var(--agh-accent, #8A7CFF); background: color-mix(in srgb, var(--agh-accent, #8A7CFF) 12%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .agh-field.is-picked { animation: none; box-shadow: 0 0 0 2px var(--agh-accent, #8A7CFF); } }
 .agh-field-top { display: flex; align-items: baseline; gap: 6px; }
 .agh-label { font-weight: 600; font-size: 13px; }
 .agh-req { color: var(--agh-danger); }

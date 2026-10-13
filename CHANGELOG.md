@@ -14,6 +14,7 @@
 - Új bútorok: fali rejtett polc (három lebegő polc, rejtett LED-del, könyvekkel és dísztárgyakkal) és akvárium. Az akvárium mérete és formája választható (kicsi asztali, nagy szögletes, széles panoráma, gömb, henger, falba épített), a vize édesvízi növényes vagy tengeri korallos; világítással, növényekkel vagy korallokkal, kövekkel, halakkal és akváriumbútorral.
 - Háziállat a lakásban: a kutya és a macska mellé fekhely, tálak és macskának kaparófa is kerül.
 - Új teszt: `tests/e2e/rooms.js` – véletlen konfigurációkkal belső tereket épít és méri, hogy minden tárgy a szobán belül van-e. Mérve: 56 szoba, 311 tárgy, 0 kilógó, 0 ajtóban álló, 0 konzolhiba, és többszintes háznál 6/6 helyiségben megvan a lépcső.
+- Koppintás a modellre: a 3D előnézetben egy elemre kattintva (érintőképernyőn koppintva) a bal oldali beállítások arra a mezőre ugranak, és a mező felvillan. A ház minden része tudja, melyik beállításhoz tartozik: homlokzat, tető, ablak, bejárati ajtó, előtető, terasz, kert, fák, és belül minden bútor, tárgy, kép, radiátor, lépcső, háziállat. Ha a tárgynak nincs saját mezője, a „további bútorok”, „elektronika” vagy „háziállatok” mezőhöz ugrik. A forgatás nem változik: csak a 6 képpontnál kisebb elmozdulás számít koppintásnak. Új teszt: `tests/e2e/pick.js` (122 rész, 8 mező, kívül és belül is talál).
 - 29 új felirat 15 nyelven, az erkély súgója újrafogalmazva.
 
 ## 1.7.0 – 2026-10-13
