@@ -169,10 +169,10 @@ var GEN = {
 		var base = hex(o.color || '#B7865A'), pat = o.pattern || 'planks', grout = hex(o.grout || '#B8B1A7'), S = 2.4;
 		var woodPx = function (r, ly, lx, gseed) {
 			var c = hueJit(jit(base, 0.24, r), hash2(Math.floor(r * 999), 3, 3), 0.1);
-			var warp = fbm((lx + r * 3) % 1, (ly * 0.25 + r) % 1, 8, 3, gseed);
-			var ring = Math.sin((ly * 7 + warp * 6 + r * 11) * Math.PI) * 0.5 + 0.5;
-			var k = 0.84 + ring * 0.13 + (warp - 0.5) * 0.12;
-			return [c[0] * k, c[1] * k, c[2] * k, 0.75 + ring * 0.05, 0.5 + warp * 0.3];
+			var warp = fbm((lx + r * 3) % 1, (ly * 0.25 + r) % 1, 8, 3, gseed), fine = fbm((lx * 4 + r) % 1, ly % 1, 32, 2, gseed + 3);
+			var g2 = ly * 4 + warp * 1.4 + r * 11, f2 = g2 - Math.floor(g2), late = Math.pow(smooth(0.6, 1, f2), 2);
+			var k = 0.95 - late * 0.12 + (warp - 0.5) * 0.1 + (fine - 0.5) * 0.08;
+			return [c[0] * k, c[1] * k, c[2] * k, 0.75 + late * 0.04, 0.5 + warp * 0.25];
 		};
 		return { tw: S, th: S, w: 768, h: 768, fn: function (u, v) {
 			var x = u * S, y = v * S, r, n;
@@ -467,14 +467,177 @@ var GEN = {
 			}
 			return [0, 0, 0, 0, 1, 0];
 		} };
+	},
+
+	/* ---------------------------------------------------------------- interiors */
+	// furniture veneer: continuous grain, no joints (single tone, tinted)
+	veneer: function (o) {
+		var base = hex(o.color || '#BFBFBF'), q = o.cut === 'quarter';
+		return { tw: 0.9, th: 1.8, w: 512, h: 1024, fn: function (u, v) {
+			var warp = fbm(u, v, 4, 3, 41), cath = q ? 0 : Math.pow(Math.abs(Math.sin((u - 0.5) * Math.PI)), 1.5) * 0 + Math.cos((u - 0.5) * Math.PI * 2) * (0.5 + 0.5 * Math.sin(v * Math.PI * 2)) * 1.6;
+			var g = u * (q ? 36 : 22) + (warp - 0.5) * (q ? 0.8 : 1.6) + cath;
+			var f = g - Math.floor(g), late = Math.pow(smooth(0.55, 1, f), 3) + Math.pow(1 - smooth(0, 0.08, f), 2) * 0.6;
+			var streak = fbm(u * 8, v, 4, 3, 45), pore = vnoise(u * 256, v * 32, 32, 47) > 0.78 ? 1 : 0, fleck = q && vnoise(u * 64, v * 16, 16, 49) > 0.86 ? 1 : 0;
+			var k = 0.98 - late * 0.2 + (streak - 0.5) * 0.18 - pore * 0.06 + fleck * 0.08;
+			return [base[0] * k, base[1] * k * 0.99, base[2] * k * 0.97, 0.6 - late * 0.08 - pore * 0.25, 0.48 + streak * 0.2 + late * 0.08];
+		} };
+	},
+	// upholstery fabrics (tinted): linen weave, boucle loops, velvet, knitted wool
+	fabric: function (o) {
+		var base = hex(o.color || '#BFBFBF'), k = o.kind || 'linen';
+		return { tw: 0.12, th: 0.12, w: 512, h: 512, fn: function (u, v) {
+			var n = fbm(u, v, 6, 3, 51), r, hgt, rough = 0.95;
+			if (k === 'boucle') {
+				var w = worley(u, v, 36, 53, 1), w2 = worley(u, v, 72, 54, 1);
+				hgt = (1 - smooth(0, 0.62, w[0])) * 0.7 + (1 - smooth(0, 0.5, w2[0])) * 0.3;
+				r = 0.9 + hgt * 0.1 + (hash2(w[2], 1, 55) - 0.5) * 0.04;
+			} else if (k === 'velvet') {
+				hgt = fbm(u, v, 48, 2, 57) * 0.25; r = 0.9 + (n - 0.5) * 0.26 + hgt * 0.1; rough = 0.75;
+			} else if (k === 'wool') {
+				var a = Math.abs(Math.sin((u * 40 + Math.sin(v * 80 * Math.PI) * 0.18) * Math.PI));
+				hgt = a * 0.6 + fbm(u, v, 64, 2, 59) * 0.4; r = 0.84 + hgt * 0.16 + (n - 0.5) * 0.12;
+			} else {
+				var x = u * 48, y = v * 48, ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, over = (ix + iy) % 2 === 0;
+				var t = over ? Math.sin(fy * Math.PI) : Math.sin(fx * Math.PI), slub = fbm(u, v, 24, 2, 61);
+				hgt = t * 0.6 + slub * 0.4; r = 0.9 + t * 0.06 + (slub - 0.5) * 0.12 + (hash2(over ? ix : iy, 3, 63) - 0.5) * 0.04;
+			}
+			return [base[0] * r, base[1] * r, base[2] * r, hgt, rough];
+		} };
+	},
+	// pebble-grain leather (tinted)
+	leather: function (o) {
+		var base = hex(o.color || '#BFBFBF');
+		return { tw: 0.3, th: 0.3, w: 512, h: 512, fn: function (u, v) {
+			var w = worley(u, v, 110, 71, 1), crease = smooth(0, 0.18, w[1] - w[0]), n = fbm(u, v, 5, 3, 73);
+			var r = 0.9 + (n - 0.5) * 0.16 + crease * 0.04;
+			return [base[0] * r, base[1] * r, base[2] * r, crease * 0.6 + n * 0.2, 0.5 + (1 - crease) * 0.18 + n * 0.1];
+		} };
+	},
+	// rattan cane webbing with open holes (tinted)
+	rattan: function (o) {
+		var base = hex(o.color || '#BFBFBF'), N = 12;
+		return { tw: 0.12, th: 0.12, w: 256, h: 256, alpha: true, fn: function (u, v) {
+			var x = u * N, y = v * N, fx = x - Math.floor(x), fy = y - Math.floor(y);
+			var o1 = Math.min(Math.abs(fx - 0.5), Math.abs(fy - 0.5)), o2 = Math.min(Math.abs(fx - fy), Math.abs(fx + fy - 1));
+			var s = o1 < 0.085 ? 1 - o1 / 0.085 : (o2 < 0.06 ? 0.85 - o2 / 0.06 * 0.6 : 0);
+			if (s <= 0) { return [0, 0, 0, 0, 1, 0]; }
+			var g = fbm(u, v, 32, 2, 77), k = 0.78 + s * 0.2 + (g - 0.5) * 0.15;
+			return [base[0] * k, base[1] * k, base[2] * k, s, 0.6, 1];
+		} };
+	},
+	// polished marble slab: clouds and veins, no joints
+	marble: function (o) {
+		var base = hex(o.color || '#EEECE8'), vein = hex(o.vein || '#8E8A86');
+		return { tw: 1.6, th: 1.6, w: 1024, h: 1024, fn: function (u, v) {
+			var t1 = fbm(u, v, 3, 5, 81), t2 = fbm(u, v, 6, 4, 83), cloud = fbm(u, v, 4, 4, 85);
+			var a1 = Math.sin((u + v * 2 + t1 * 2.6) * Math.PI * 2), a2 = Math.sin((u * 3 - v + t2 * 3.2) * Math.PI * 2), a3 = Math.sin((u * 2 + v * 3 + t1 * 4 + t2 * 2) * Math.PI * 2);
+			var l1 = Math.exp(-Math.pow(a1 / 0.035, 2)), l2 = Math.exp(-Math.pow(a2 / 0.02, 2)) * smooth(0.45, 0.7, t2), l3 = Math.exp(-Math.pow(a3 / 0.06, 2)) * 0.25;
+			var c = mixc(base, mixc(base, vein, 0.3), smooth(0.4, 0.8, cloud) * 0.6);
+			c = mixc(c, vein, Math.min(1, l1 * 0.75 + l2 * 0.6 + l3));
+			return [c[0], c[1], c[2], 0.8 - l1 * 0.04, 0.1 + cloud * 0.08];
+		} };
+	},
+	// wall tiles: subway, square, hexagon, handmade zellige, fluted ribs, checkerboard
+	wtile: function (o) {
+		var base = hex(o.color || '#E8E5DF'), b2 = hex(o.color2 || '#2B2B2B'), grout = hex(o.grout || '#CFCAC2'), p = o.pattern || 'square', gl = o.glaze !== false;
+		var R = 0.06, HW = Math.sqrt(3) * R, TW = p === 'hex' ? HW * 10 : 1.2, TH = p === 'hex' ? R * 1.5 * 12 : 1.2;
+		return { tw: TW, th: TH, w: 768, h: 768, fn: function (u, v) {
+			var x = u * TW, y = v * TH, n = fbm(u, v, 24, 3, 3), ix, iy, e, r, c, rough = gl ? 0.16 : 0.55, hgt;
+			if (p === 'fluted') {
+				var s = o.size || 0.03, f = (x / s) % 1, prof = Math.sqrt(Math.max(0, 1 - Math.pow(f * 2 - 1, 2)));
+				return [base[0] * (0.9 + prof * 0.1), base[1] * (0.9 + prof * 0.1), base[2] * (0.9 + prof * 0.1), prof, 0.5];
+			}
+			if (p === 'hex') {
+				var row = Math.floor(y / (R * 1.5)), best = 9, bx = 0, by = 0, id = 0;
+				for (var dr = -1; dr <= 1; dr++) {
+					var rr = row + dr, off = (((rr % 2) + 2) % 2) * HW * 0.5, col = Math.round((x - off) / HW);
+					for (var dc = -1; dc <= 1; dc++) {
+						var cx = (col + dc) * HW + off, cy = rr * R * 1.5, dd = Math.hypot(x - cx, y - cy);
+						if (dd < best) { best = dd; bx = x - cx; by = y - cy; id = ((col + dc) % 10 + 10) % 10 + ((rr % 12) + 12) % 12 * 10; }
+					}
+				}
+				var ax = Math.abs(bx), ay = Math.abs(by); e = R * 0.866 - Math.max(ax, ax * 0.5 + ay * 0.866);
+				if (e < 0.0025) { return [grout[0], grout[1], grout[2], 0.1, 0.9]; }
+				r = hash2(id, 7, 11); c = jit(base, 0.08, r);
+				hgt = 0.8 + smooth(0, 0.004, e - 0.0025) * 0.15;
+				return [c[0] * (0.96 + n * 0.08), c[1] * (0.96 + n * 0.08), c[2] * (0.96 + n * 0.08), hgt, rough];
+			}
+			var tw = p === 'subway' ? 0.3 : (p === 'checker' ? 0.3 : (o.size || (p === 'zellige' ? 0.1 : 0.2))), th = p === 'subway' ? 0.075 : tw;
+			iy = Math.floor(y / th); var xo = p === 'subway' && iy % 2 ? tw / 2 : 0; ix = Math.floor((x + xo) / tw);
+			var fx = (x + xo) / tw - ix, fy = y / th - iy, gw = 0.0025;
+			e = Math.min(fx * tw, (1 - fx) * tw, fy * th, (1 - fy) * th);
+			if (e < gw) { return [grout[0], grout[1], grout[2], 0.1, 0.9]; }
+			r = hash2(ix, iy, 13);
+			c = p === 'checker' ? ((ix + iy) % 2 ? b2 : base) : jit(base, p === 'zellige' ? 0.28 : 0.05, r);
+			if (p === 'zellige') { c = hueJit(c, hash2(ix, iy, 17), 0.12); var pool = fbm(u, v, 40, 3, 19); c = mixc(c, [c[0] * 0.8, c[1] * 0.8, c[2] * 0.8], smooth(0.55, 0.8, pool) * 0.5); hgt = 0.7 + pool * 0.25 + smooth(0, 0.01, e - gw) * 0.1; }
+			else { hgt = 0.8 + smooth(0, p === 'subway' ? 0.008 : 0.003, e - gw) * 0.18; }
+			return [c[0] * (0.97 + n * 0.06), c[1] * (0.97 + n * 0.06), c[2] * (0.97 + n * 0.06), hgt, rough];
+		} };
+	},
+	// a painting or print (one picture, not tiled): abstract shapes, a line drawing, a landscape, geometry
+	art: function (o) {
+		var P = (o.p || ['#ECE5D8', '#C46A4A', '#2F4A5A', '#D9A75B']).map(hex), k = o.kind || 'abstract', sd = o.seed || 1;
+		return { tw: 1, th: 1, w: 512, h: 512, noTile: true, fn: function (u, v) {
+			var n = fbm(u, v, 5, 3, 91 + sd), canvas = fbm(u, v, 128, 2, 93), c = P[0];
+			if (k === 'abstract') {
+				var s1 = Math.hypot(u - 0.36 - (sd % 3) * 0.05, v - 0.58) < 0.25 + (n - 0.5) * 0.12;
+				var s2 = Math.hypot((u - 0.66) * 0.8, v - 0.32 - (sd % 2) * 0.06) < 0.2 + (n - 0.5) * 0.1;
+				var band = Math.abs(v - 0.18 - (n - 0.5) * 0.1) < 0.05;
+				if (s1) { c = P[1]; } if (s2) { c = s1 ? mixc(P[1], P[2], 0.6) : P[2]; } if (band) { c = P[3]; }
+				var brush = fbm(u * 4, v, 16, 3, 95 + sd); c = mixc(c, [c[0] * 0.85, c[1] * 0.85, c[2] * 0.85], brush * 0.5);
+			} else if (k === 'line') {
+				var cx = u - 0.5, cy = v - 0.5, a = Math.atan2(cy, cx), rr = Math.hypot(cx, cy);
+				var line = Math.abs(rr - 0.22 - Math.sin(a * 3 + sd) * 0.06 - Math.sin(a * 7) * 0.02) < 0.004 || Math.abs(cx * 0.6 + Math.sin(cy * 9 + sd) * 0.05) < 0.0035 && Math.abs(cy) < 0.3;
+				c = line ? P[2] : [0.95, 0.93, 0.89];
+				if (!line && Math.hypot(u - 0.62, v - 0.62) < 0.07) { c = mixc(c, P[1], 0.7); }
+			} else if (k === 'landscape') {
+				var sky = mixc(P[0], [0.85, 0.88, 0.9], v), h1 = 0.42 + Math.sin(u * 5 + sd) * 0.06 + (n - 0.5) * 0.06, h2 = 0.3 + Math.sin(u * 3 + 2 + sd) * 0.05, h3 = 0.16 + Math.sin(u * 7) * 0.03;
+				c = sky;
+				if (Math.hypot(u - 0.7, v - 0.72) < 0.07) { c = mixc(P[3], [1, 1, 1], 0.3); }
+				if (v < h1) { c = mixc(P[2], [0.8, 0.82, 0.84], 0.45); } if (v < h2) { c = mixc(P[2], P[0], 0.2); } if (v < h3) { c = mixc(P[1], [0.3, 0.25, 0.2], 0.4); }
+			} else {
+				var arch = (Math.abs(u - 0.38) < 0.16 && v < 0.55) || Math.hypot(u - 0.38, v - 0.55) < 0.16;
+				var sq = u > 0.55 && u < 0.85 && v > 0.2 && v < 0.5, dot = Math.hypot(u - 0.7, v - 0.72) < 0.09;
+				c = arch ? P[1] : (sq ? P[2] : (dot ? P[3] : P[0]));
+			}
+			var kk = 0.94 + canvas * 0.1;
+			return [c[0] * kk, c[1] * kk, c[2] * kk, canvas * 0.5, 0.85];
+		} };
+	},
+	// rug (one piece, not tiled): plain wool, berber diamonds, oriental medallion, stripes, jute weave
+	rug: function (o) {
+		var base = hex(o.color || '#D8CFC2'), acc = hex(o.accent || '#3A3633'), k = o.kind || 'plain';
+		return { tw: 1, th: 1, w: 512, h: 512, noTile: true, fn: function (u, v) {
+			var pile = fbm(u, v, 160, 2, 101), n = fbm(u, v, 6, 3, 103), c = base, t;
+			if (k === 'berber') {
+				var x = u * 8, y = v * 12, d1 = Math.abs(((x + y) % 2) - 1), d2 = Math.abs(((x - y + 120) % 2) - 1);
+				if (Math.min(d1, d2) < 0.05 + n * 0.03) { c = acc; }
+			} else if (k === 'oriental') {
+				var e = Math.min(u, 1 - u, v, 1 - v), dm = Math.abs(u - 0.5) + Math.abs(v - 0.5) * 0.8;
+				c = base;
+				if (e < 0.09) { c = acc; if (e > 0.03 && e < 0.07 && Math.sin((u + v) * 90) > 0.3) { c = mixc(acc, [0.85, 0.75, 0.55], 0.6); } }
+				else if (dm < 0.2) { c = mixc(acc, [0.85, 0.75, 0.55], dm < 0.1 ? 0.7 : 0.15); }
+				else if (Math.sin(u * 60) * Math.sin(v * 40) > 0.85) { c = mixc(base, acc, 0.5); }
+				t = 0.7 + n * 0.5; c = [c[0] * t, c[1] * t, c[2] * t];
+			} else if (k === 'stripe') {
+				if (Math.floor(v * 16) % 4 === 0) { c = acc; }
+			} else if (k === 'jute') {
+				var wx = u * 120, wy = v * 120, ox = Math.floor(wx), oy = Math.floor(wy), ov = (ox + Math.floor(oy / 2)) % 2;
+				t = 0.8 + (ov ? Math.sin((wx - ox) * Math.PI) : Math.sin((wy - oy) * Math.PI)) * 0.25; c = [base[0] * t, base[1] * t, base[2] * t];
+				return [c[0], c[1], c[2], t, 0.95];
+			}
+			var kk = 0.9 + pile * 0.16 + (n - 0.5) * 0.08;
+			return [c[0] * kk, c[1] * kk, c[2] * kk, pile, 0.98];
+		} };
 	}
 };
+
 
 
 // Materials whose colour map is "base colour × pattern": generated once in neutral grey and tinted by
 // the material colour, so a colour change never regenerates a texture.
 export var NEUTRAL = '#BFBFBF';
-export var TINT = { render: 1, wood: 1, woodh: 1, batten: 1, charred: 1, fibercement: 1, seam: 1, concrete: 1, panel: 1, tiles: 1, flattile: 1, slate: 1, shingle: 1, gravel: 1, pavers: 1, slabs: 1, deck: 1, louvre: 1, garagedoor: 1 };
+export var TINT = { veneer: 1, fabric: 1, leather: 1, rattan: 1, render: 1, wood: 1, woodh: 1, batten: 1, charred: 1, fibercement: 1, seam: 1, concrete: 1, panel: 1, tiles: 1, flattile: 1, slate: 1, shingle: 1, gravel: 1, pavers: 1, slabs: 1, deck: 1, louvre: 1, garagedoor: 1 };
 
 // Size and tiling of a material (cheap: no pixels).
 export function info(kind, opts, scale) {

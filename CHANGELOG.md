@@ -1,5 +1,15 @@
 # Változásnapló
 
+## 1.5.0 – 2026-10-13
+
+- Professzionális belső terek: új 3D belsőépítészeti könyvtár (külön modul, agh-3d-int.js). Minden bútor, szaniter és tárgy valódi formájú: párnás kanapék ülő- és háttámlapárnákkal, díszpárnákkal, plédekkel; ágyak matraccal, paplannal, párnákkal és éjjeliszekrénnyel; asztalok, székek, szekrények, polcok könyvekkel, vázák, gyertyák, szobanövények. Fizikai anyagok: szőtt kárpit csillogással (len, bouclé, bársony, gyapjú), bőr, furnér, márvány, travertin, mázas kerámia, króm, sárgaréz, inox, üveg, tükör.
+- Valósághű fürdőszoba és WC: beépített, szabadon álló, oroszlánlábú és fa áztatókád; walk-in, kabinos, fülkés és nyitott zuhany esőztető fejjel, termosztáttal, kézi zuhannyal, polcos nischével; pultra ültetett, pultba süllyesztett, egybeöntött, fali és talpas mosdó csaptelepekkel; függesztett, fa, fém lábú és álló mosdószekrény; fali, monoblokk, falhoz álló és okos WC nyomólappal; kerek, LED-es, szekrényes, boltíves és lekerekített tükör; törölközőszárító; 10 fali burkolat (köztük metró, hatszög, kézműves, bordázott, sakktábla).
+- Új beállítások 3 új kategóriában – Belsőépítészet: belső ajtók (7 fajta), kandalló (5), lépcső (5), függöny és árnyékoló (6), mennyezet (7, köztük kazettás, fa lamellás, látszóbeton); Bútorok: kanapé (6), fotel (5), dohányzóasztal (6), TV-fal (3), étkezőasztal (6), étkezőszékek (6), ágy (6), gardrób (6), szőnyeg (5), falikép és dekoráció (5), szobanövények (5); Világítás: függőlámpa (7), mennyezeti világítás (4), állólámpa (4). Konyha: felső szekrények, páraelszívó, bárszékek; a frontok, fogantyúk, munkalap, mosogató és hátfal képes választóval. Fürdő: kád, zuhany, mosdó, mosdószekrény, WC és tükör típusa, csaptelep grafit és réz színben. Falburkolat: bordázott panel, tégla, beton hatású, márványlap, díszcsempe.
+- A menüben minden tárgy képpel jelenik meg: minden opciókártyán a tárgy 3D képe a látogató saját színeivel és anyagaival (a „A stílus szerint” kártya a stílus választását mutatja). A szaniterek és a falburkolatok több választós képes kártyák.
+- A belső nézet a beállításokat követi: helyiségenként a stílushoz illő berendezés, a beállítás kiválasztásakor a megfelelő helyiség jelenik meg (kanapé → nappali, ágy → hálószoba, kád → fürdőszoba, lépcső → előtér). Beltéri fények és tükröződés (szobakörnyezet), éjjel világító lámpák.
+- A promptba helyiségenként bekerülnek a választott bútorok, szaniterek, lámpák és belsőépítészeti elemek.
+- 166 új felirat 15 nyelven.
+
 ## 1.4.0 – 2026-10-13
 
 - Belső nézet a 3D előnézetben: „Kívül / Belül” kapcsoló, alatta a ház helyiségei (a Helyiségek listából). Egy helyiség metszetes 3D-ben látszik a beállításokkal: padló (helyiségenként: nappali, háló, konyha, előtér, vizes), falszín és falburkolat, belső stílus, bútorstílus és -szín, konyha (elrendezés, frontok, munkalap, sziget), fürdő (burkolat, berendezés), világítás, függöny, mennyezet. 25 helyiségtípus.

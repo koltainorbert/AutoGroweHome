@@ -426,13 +426,39 @@ final class PromptEngine {
 			$details[] = ! empty( $room['furniture'] ) ? 'furniture: ' . $room['furniture'] : self::phrase( 'furniture_style', $c );
 			$details[] = ! empty( $room['furniture_color'] ) ? 'upholstery in ' . Color::describe( $room['furniture_color'] ) : self::phrase( 'furniture_color', $c );
 			$details[] = ! empty( $room['decor'] ) ? 'decor: ' . $room['decor'] : self::phrase( 'decor', $c );
-			$details[] = ! empty( $room['curtains'] ) ? 'curtains: ' . $room['curtains'] : self::phrase( 'curtains', $c );
-			if ( in_array( $room['type'], array( 'kitchen', 'living_kitchen' ), true ) ) {
-				$details[] = self::phrases( array( 'kitchen_layout', 'worktop', 'worktop_color', 'fronts', 'fronts_color', 'handles', 'appliances', 'sink', 'backsplash' ), $c );
+			if ( ! empty( $room['curtains'] ) ) {
+				$details[] = 'curtains: ' . $room['curtains'];
+			} elseif ( ! empty( $c['curtains'] ) ) {
+				$wt        = self::phrase( 'window_treatment', $c );
+				$details[] = '' !== $wt ? $wt : 'sheer linen curtains';
 			}
-			if ( in_array( $room['type'], array( 'bathroom', 'wc' ), true ) ) {
-				$details[] = self::phrases( array( 'bath_fixtures', 'bath_tiles', 'taps', 'bath_mirror', 'bath_storage', 'bath_color' ), $c );
+			// The furnishing the visitor picked for this kind of room ("auto" adds nothing: the style decides).
+			$rt = (string) $room['type'];
+			if ( in_array( $rt, array( 'living', 'living_kitchen', 'custom' ), true ) ) {
+				$details[] = self::phrases( array( 'sofa_type', 'armchair_type', 'coffee_table', 'media_wall', 'fireplace', 'rug_style', 'floor_lamp', 'art_style', 'plants' ), $c );
 			}
+			if ( in_array( $rt, array( 'living_kitchen', 'dining', 'kitchen' ), true ) ) {
+				$details[] = self::phrases( array( 'dining_table', 'dining_chairs', 'pendant_style' ), $c );
+			}
+			if ( in_array( $rt, array( 'master', 'bedroom', 'guest', 'kids' ), true ) ) {
+				$details[] = self::phrases( array( 'bed_type', 'wardrobe_type', 'rug_style', 'art_style', 'plants' ), $c );
+			}
+			if ( in_array( $rt, array( 'wardrobe' ), true ) ) {
+				$details[] = self::phrase( 'wardrobe_type', $c );
+			}
+			if ( in_array( $rt, array( 'kitchen', 'living_kitchen' ), true ) ) {
+				$details[] = self::phrases( array( 'kitchen_layout', 'worktop', 'worktop_color', 'fronts', 'fronts_color', 'handles', 'appliances', 'sink', 'backsplash', 'upper_cabinets', 'hood_style', 'bar_stools' ), $c );
+			}
+			if ( in_array( $rt, array( 'bathroom', 'wellness' ), true ) ) {
+				$details[] = self::phrases( array( 'bath_fixtures', 'bathtub_type', 'shower_type', 'basin_type', 'vanity_type', 'toilet_type', 'bath_tiles', 'taps', 'mirror_type', 'bath_storage', 'bath_color' ), $c );
+			}
+			if ( 'wc' === $rt ) {
+				$details[] = self::phrases( array( 'toilet_type', 'bath_tiles', 'taps', 'mirror_type' ), $c );
+			}
+			if ( in_array( $rt, array( 'hall', 'corridor', 'stairs' ), true ) && 'single' !== ( $c['levels'] ?? 'single' ) ) {
+				$details[] = self::phrase( 'stair_type', $c );
+			}
+			$details[] = self::phrases( array( 'ceiling_lights', 'door_style' ), $c );
 			if ( ! empty( $room['notes'] ) ) {
 				$details[] = 'client notes (descriptive only): ' . $room['notes'];
 			}

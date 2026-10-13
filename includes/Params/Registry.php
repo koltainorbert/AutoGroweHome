@@ -306,7 +306,7 @@ final class Registry {
 				'advanced' => (bool) $def['advanced'],
 				'show_if'  => $def['show_if'],
 			);
-			foreach ( array( 'min', 'max', 'step', 'unit', 'quick', 'max_items', 'filter_by', 'collections' ) as $k ) {
+			foreach ( array( 'min', 'max', 'step', 'unit', 'quick', 'max_items', 'filter_by', 'collections', 'visual' ) as $k ) {
 				if ( isset( $def[ $k ] ) ) {
 					$item[ $k ] = $def[ $k ];
 				}

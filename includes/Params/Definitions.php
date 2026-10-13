@@ -28,6 +28,9 @@ final class Definitions {
 			'openings' => array( 'label' => __( 'Nyílászárók', 'autogrowehome' ), 'icon' => 'window' ),
 			'rooms'    => array( 'label' => __( 'Helyiségek', 'autogrowehome' ), 'icon' => 'plan' ),
 			'interior' => array( 'label' => __( 'Belső tér', 'autogrowehome' ), 'icon' => 'sofa' ),
+			'architecture' => array( 'label' => __( 'Belsőépítészet', 'autogrowehome' ), 'icon' => 'door' ),
+			'furniture' => array( 'label' => __( 'Bútorok', 'autogrowehome' ), 'icon' => 'armchair' ),
+			'lighting' => array( 'label' => __( 'Világítás', 'autogrowehome' ), 'icon' => 'lamp' ),
 			'kitchen'  => array( 'label' => __( 'Konyha', 'autogrowehome' ), 'icon' => 'kitchen' ),
 			'bathroom' => array( 'label' => __( 'Fürdőszoba', 'autogrowehome' ), 'icon' => 'bath' ),
 			'surfaces' => array( 'label' => __( 'Burkolatok', 'autogrowehome' ), 'icon' => 'tiles' ),
@@ -540,18 +543,21 @@ final class Definitions {
 		$f[] = array( 'id' => 'interior_style_custom', 'category' => 'interior', 'type' => 'text', 'label' => __( 'Egyedi belső stílus', 'autogrowehome' ), 'help' => '', 'default' => '', 'max' => 200, 'show_if' => array( 'field' => 'interior_style', 'op' => '=', 'value' => 'custom' ), 'prompt' => 'interior described as: {value}' );
 		$f[] = array( 'id' => 'wall_color', 'category' => 'interior', 'type' => 'color', 'label' => __( 'Általános falszín', 'autogrowehome' ), 'help' => '', 'default' => '#F4F1EC', 'prompt' => 'walls painted {color}' );
 		$f[] = array_merge(
-			array( 'id' => 'ceiling', 'category' => 'interior', 'type' => 'select', 'label' => __( 'Mennyezet', 'autogrowehome' ), 'help' => '', 'default' => 'flat', 'advanced' => true, 'prompt' => '{value} ceiling' ),
+			array( 'id' => 'ceiling', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Mennyezet', 'autogrowehome' ), 'help' => '', 'default' => 'flat', 'advanced' => true, 'prompt' => '{value} ceiling' ),
 			self::opts(
 				array(
 					'flat'    => array( __( 'Sík, festett', 'autogrowehome' ), 'flat white' ),
 					'beams'   => array( __( 'Látszó gerendás', 'autogrowehome' ), 'exposed timber beam' ),
 					'vaulted' => array( __( 'Szarufáig nyitott', 'autogrowehome' ), 'vaulted open-to-rafters' ),
 					'cove'    => array( __( 'Rejtett fénysávos', 'autogrowehome' ), 'flat with recessed cove lighting' ),
+					'coffered'    => array( __( 'Kazettás', 'autogrowehome' ), 'coffered' ),
+					'slats'       => array( __( 'Fa lamellás', 'autogrowehome' ), 'wooden slatted' ),
+					'concrete'    => array( __( 'Látszóbeton', 'autogrowehome' ), 'exposed concrete' ),
 				)
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'lighting', 'category' => 'interior', 'type' => 'select', 'label' => __( 'Világítás jellege', 'autogrowehome' ), 'help' => '', 'default' => 'warm_layered', 'prompt' => '{value} lighting' ),
+			array( 'id' => 'lighting', 'category' => 'lighting', 'type' => 'select', 'label' => __( 'Világítás jellege', 'autogrowehome' ), 'help' => '', 'default' => 'warm_layered', 'prompt' => '{value} lighting' ),
 			self::opts(
 				array(
 					'warm_layered' => array( __( 'Meleg, rétegzett', 'autogrowehome' ), 'warm layered' ),
@@ -561,7 +567,7 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'furniture_style', 'category' => 'interior', 'type' => 'select', 'label' => __( 'Bútorozási stílus', 'autogrowehome' ), 'help' => '', 'default' => 'contemporary', 'prompt' => '{value} furniture' ),
+			array( 'id' => 'furniture_style', 'category' => 'interior', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Bútorozási stílus', 'autogrowehome' ), 'help' => '', 'default' => 'contemporary', 'prompt' => '{value} furniture' ),
 			self::opts(
 				array(
 					'contemporary' => array( __( 'Kortárs', 'autogrowehome' ), 'contemporary' ),
@@ -574,7 +580,256 @@ final class Definitions {
 		);
 		$f[] = array( 'id' => 'furniture_color', 'category' => 'interior', 'type' => 'color', 'label' => __( 'Bútorok fő színe', 'autogrowehome' ), 'help' => '', 'default' => '#D8CCBB', 'advanced' => true, 'prompt' => 'upholstery in {color}' );
 		$f[] = array( 'id' => 'decor', 'category' => 'interior', 'type' => 'toggle', 'label' => __( 'Dekoráció, növények', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => 'tasteful decor and indoor plants' );
-		$f[] = array( 'id' => 'curtains', 'category' => 'interior', 'type' => 'toggle', 'label' => __( 'Függönyök', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => 'sheer linen curtains' );
+		$f[] = array( 'id' => 'curtains', 'category' => 'architecture', 'type' => 'toggle', 'label' => __( 'Függönyök', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => 'sheer linen curtains' );
+		$f[] = array_merge(
+			array( 'id' => 'door_style', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Belső ajtók', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'   => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'flush'  => array( __( 'Sima, tokos', 'autogrowehome' ), 'flush interior doors with slim frames' ),
+					'panel'  => array( __( 'Kazettás, klasszikus', 'autogrowehome' ), 'classic panelled interior doors' ),
+					'glass'  => array( __( 'Üvegbetétes', 'autogrowehome' ), 'glazed interior doors' ),
+					'pocket' => array( __( 'Falba toló', 'autogrowehome' ), 'pocket sliding doors' ),
+					'barn'   => array( __( 'Pajtaajtó sínen', 'autogrowehome' ), 'a barn-style sliding door on a black rail' ),
+					'arched' => array( __( 'Boltíves', 'autogrowehome' ), 'arched doorways' ),
+					'hidden' => array( __( 'Rejtett, falsíkú', 'autogrowehome' ), 'concealed flush-to-wall doors' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'fireplace', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Kandalló', 'autogrowehome' ), 'help' => '', 'default' => 'none', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'none'       => array( __( 'Nincs', 'autogrowehome' ), '' ),
+					'linear'     => array( __( 'Beépített lineáris', 'autogrowehome' ), 'a built-in linear fireplace in a chimney breast' ),
+					'stove'      => array( __( 'Szabadon álló kályha', 'autogrowehome' ), 'a freestanding wood stove' ),
+					'mantel'     => array( __( 'Klasszikus kőkeretes', 'autogrowehome' ), 'a classic stone mantel fireplace' ),
+					'corner'     => array( __( 'Háromoldalú üveges', 'autogrowehome' ), 'a three-sided glass fireplace' ),
+					'bioethanol' => array( __( 'Bioetanolos', 'autogrowehome' ), 'a freestanding bioethanol fireplace' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'stair_type', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Lépcső', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'show_if' => array( 'field' => 'levels', 'op' => '!=', 'value' => 'single' ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'     => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'floating' => array( __( 'Lebegő, üvegkorláttal', 'autogrowehome' ), 'floating timber stairs with a glass balustrade' ),
+					'closed'   => array( __( 'Zárt, korlátos', 'autogrowehome' ), 'a closed timber staircase with balusters' ),
+					'spiral'   => array( __( 'Csigalépcső', 'autogrowehome' ), 'a spiral staircase' ),
+					'steel'    => array( __( 'Acél gerinces', 'autogrowehome' ), 'a steel spine staircase with timber treads' ),
+					'concrete' => array( __( 'Monolit beton', 'autogrowehome' ), 'a monolithic concrete staircase' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'window_treatment', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Függöny / árnyékoló típusa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'show_if' => array( 'field' => 'curtains', 'op' => '=', 'value' => true ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'     => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'drapes'   => array( __( 'Sötétítő és fátyolfüggöny', 'autogrowehome' ), 'floor-length drapes over sheer curtains' ),
+					'sheer'    => array( __( 'Fátyolfüggöny', 'autogrowehome' ), 'floor-length sheer linen curtains' ),
+					'roman'    => array( __( 'Római roló', 'autogrowehome' ), 'roman blinds' ),
+					'venetian' => array( __( 'Reluxa', 'autogrowehome' ), 'venetian blinds' ),
+					'roller'   => array( __( 'Roló', 'autogrowehome' ), 'roller blinds' ),
+					'shutters' => array( __( 'Belső zsalugáter', 'autogrowehome' ), 'interior plantation shutters' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'sofa_type', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Kanapé', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'         => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'straight'     => array( __( 'Egyenes, háromszemélyes', 'autogrowehome' ), 'a three-seat sofa' ),
+					'corner'       => array( __( 'L alakú sarokkanapé', 'autogrowehome' ), 'an L-shaped corner sofa' ),
+					'u_shape'      => array( __( 'U alakú ülőgarnitúra', 'autogrowehome' ), 'a U-shaped sectional sofa' ),
+					'modular'      => array( __( 'Alacsony, puha moduláris', 'autogrowehome' ), 'a low, deep modular sofa' ),
+					'chesterfield' => array( __( 'Chesterfield', 'autogrowehome' ), 'a tufted Chesterfield sofa' ),
+					'curved'       => array( __( 'Íves', 'autogrowehome' ), 'a curved sofa' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'armchair_type', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Fotel', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'     => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'lounge'   => array( __( 'Pihenőfotel lábtartóval', 'autogrowehome' ), 'a lounge chair with ottoman' ),
+					'wingback' => array( __( 'Füles fotel', 'autogrowehome' ), 'a wingback armchair' ),
+					'barrel'   => array( __( 'Kerek, hordó alakú', 'autogrowehome' ), 'a round barrel armchair' ),
+					'cane'     => array( __( 'Rattan betétes', 'autogrowehome' ), 'a timber armchair with cane panels' ),
+					'club'     => array( __( 'Bőr klubfotel', 'autogrowehome' ), 'a leather club chair' ),
+					'none'     => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'coffee_table', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Dohányzóasztal', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'       => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'wood'       => array( __( 'Tömörfa', 'autogrowehome' ), 'a solid wood coffee table' ),
+					'marble'     => array( __( 'Kerek márvány', 'autogrowehome' ), 'a round marble coffee table' ),
+					'nesting'    => array( __( 'Egymásba tolható pár', 'autogrowehome' ), 'a pair of nesting coffee tables' ),
+					'glass'      => array( __( 'Üveglapos', 'autogrowehome' ), 'a glass coffee table' ),
+					'travertine' => array( __( 'Travertin tömb', 'autogrowehome' ), 'a sculptural travertine coffee table' ),
+					'ottoman'    => array( __( 'Kárpitozott puff', 'autogrowehome' ), 'an upholstered ottoman with a tray' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'media_wall', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'TV-fal', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'     => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'lowboard' => array( __( 'Lebegő TV-szekrény', 'autogrowehome' ), 'a floating media console with a wall-mounted TV' ),
+					'built_in' => array( __( 'Beépített polcfal', 'autogrowehome' ), 'a built-in media wall with shelving' ),
+					'stone'    => array( __( 'Kőburkolatú', 'autogrowehome' ), 'a stone-clad TV wall' ),
+					'none'     => array( __( 'Nincs TV', 'autogrowehome' ), 'no television' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'dining_table', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Étkezőasztal', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'        => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'rect_wood'   => array( __( 'Téglalap, fa', 'autogrowehome' ), 'a rectangular wood dining table' ),
+					'round'       => array( __( 'Kerek, talpas', 'autogrowehome' ), 'a round pedestal dining table' ),
+					'oval_marble' => array( __( 'Ovális márvány', 'autogrowehome' ), 'an oval marble dining table' ),
+					'live_edge'   => array( __( 'Tömörfa, élszélű', 'autogrowehome' ), 'a live-edge solid wood dining table' ),
+					'trestle'     => array( __( 'Bakos, rusztikus', 'autogrowehome' ), 'a farmhouse trestle table' ),
+					'glass'       => array( __( 'Üveglapos', 'autogrowehome' ), 'a glass dining table' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'dining_chairs', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Étkezőszékek', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'        => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'upholstered' => array( __( 'Kárpitozott', 'autogrowehome' ), 'upholstered dining chairs' ),
+					'wishbone'    => array( __( 'Íves támlás fa, fonott ülés', 'autogrowehome' ), 'wishbone chairs with woven seats' ),
+					'metal'       => array( __( 'Fém kávéházi', 'autogrowehome' ), 'bistro metal chairs' ),
+					'cantilever'  => array( __( 'Szánkótalpas bőr', 'autogrowehome' ), 'cantilever chrome and leather chairs' ),
+					'windsor'     => array( __( 'Pálcás Windsor', 'autogrowehome' ), 'Windsor spindle chairs' ),
+					'bench'       => array( __( 'Pad és székek', 'autogrowehome' ), 'a bench and chairs' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'bed_type', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Ágy', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'        => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'upholstered' => array( __( 'Kárpitozott, magas fejvég', 'autogrowehome' ), 'an upholstered bed with a tall channel-tufted headboard' ),
+					'wood'        => array( __( 'Fa keretes', 'autogrowehome' ), 'a solid wood bed frame' ),
+					'platform'    => array( __( 'Alacsony, japán stílusú', 'autogrowehome' ), 'a low platform bed' ),
+					'canopy'      => array( __( 'Baldachinos', 'autogrowehome' ), 'a four-poster canopy bed' ),
+					'panel'       => array( __( 'Falpanel fejvég', 'autogrowehome' ), 'a wall-panel headboard with floating nightstands' ),
+					'metal'       => array( __( 'Fém keretes', 'autogrowehome' ), 'a metal bed frame' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'wardrobe_type', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Gardrób, szekrény', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'     => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'hinged'   => array( __( 'Nyíló ajtós', 'autogrowehome' ), 'a built-in wardrobe with hinged doors' ),
+					'sliding'  => array( __( 'Tolóajtós', 'autogrowehome' ), 'a sliding-door wardrobe' ),
+					'mirrored' => array( __( 'Tükrös tolóajtós', 'autogrowehome' ), 'a mirrored sliding wardrobe' ),
+					'open'     => array( __( 'Nyitott gardrób', 'autogrowehome' ), 'an open walk-in style wardrobe' ),
+					'glass'    => array( __( 'Üvegajtós, világított', 'autogrowehome' ), 'a lit glass-front wardrobe' ),
+					'fluted'   => array( __( 'Bordázott front', 'autogrowehome' ), 'a wardrobe with fluted fronts' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'rug_style', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Szőnyeg', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'     => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'plain'    => array( __( 'Egyszínű gyapjú', 'autogrowehome' ), 'a plain wool rug' ),
+					'berber'   => array( __( 'Berber mintás', 'autogrowehome' ), 'a Berber pattern rug' ),
+					'oriental' => array( __( 'Keleti mintás', 'autogrowehome' ), 'an oriental rug' ),
+					'round'    => array( __( 'Kerek', 'autogrowehome' ), 'a round rug' ),
+					'jute'     => array( __( 'Juta', 'autogrowehome' ), 'a jute rug' ),
+					'none'     => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'art_style', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Falikép, dekoráció', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'      => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'abstract'  => array( __( 'Absztrakt festmény', 'autogrowehome' ), 'abstract artwork' ),
+					'line'      => array( __( 'Vonalrajz', 'autogrowehome' ), 'minimal line art' ),
+					'landscape' => array( __( 'Tájkép', 'autogrowehome' ), 'a landscape painting' ),
+					'gallery'   => array( __( 'Képfal', 'autogrowehome' ), 'a gallery wall of framed prints' ),
+					'mirror'    => array( __( 'Nagy boltíves tükör', 'autogrowehome' ), 'a large arched mirror' ),
+					'none'      => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'plants', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Szobanövények', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'     => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'monstera' => array( __( 'Nagylevelű', 'autogrowehome' ), 'large-leaf indoor plants' ),
+					'fiddle'   => array( __( 'Hegedűlevelű fikusz', 'autogrowehome' ), 'a fiddle-leaf fig' ),
+					'olive'    => array( __( 'Olajfa', 'autogrowehome' ), 'a potted olive tree' ),
+					'snake'    => array( __( 'Anyósnyelv', 'autogrowehome' ), 'snake plants' ),
+					'palm'     => array( __( 'Pálma', 'autogrowehome' ), 'a potted palm' ),
+					'none'     => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'pendant_style', 'category' => 'lighting', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Függőlámpa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'       => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'globe'      => array( __( 'Opálüveg gömb', 'autogrowehome' ), 'opal glass globe pendants' ),
+					'dome'       => array( __( 'Fém kupola', 'autogrowehome' ), 'metal dome pendants' ),
+					'linear'     => array( __( 'Lineáris LED', 'autogrowehome' ), 'a linear LED pendant' ),
+					'cluster'    => array( __( 'Gömbcsoport', 'autogrowehome' ), 'a cluster of glass globe pendants' ),
+					'chandelier' => array( __( 'Csillár', 'autogrowehome' ), 'a chandelier' ),
+					'rattan'     => array( __( 'Rattan bura', 'autogrowehome' ), 'rattan pendant shades' ),
+					'paper'      => array( __( 'Papírlámpás', 'autogrowehome' ), 'paper lantern pendants' ),
+					'none'       => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'ceiling_lights', 'category' => 'lighting', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Mennyezeti világítás', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'  => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'spots' => array( __( 'Süllyesztett spotok', 'autogrowehome' ), 'recessed downlights' ),
+					'track' => array( __( 'Sínes spotok', 'autogrowehome' ), 'black track spotlights' ),
+					'cove'  => array( __( 'Rejtett LED-sáv', 'autogrowehome' ), 'hidden LED cove lighting' ),
+					'flush' => array( __( 'Mennyezeti lámpa', 'autogrowehome' ), 'a flush ceiling light' ),
+					'none'  => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'floor_lamp', 'category' => 'lighting', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Állólámpa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'   => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'arc'    => array( __( 'Íves', 'autogrowehome' ), 'an arc floor lamp' ),
+					'tripod' => array( __( 'Háromlábú', 'autogrowehome' ), 'a tripod floor lamp' ),
+					'globe'  => array( __( 'Gömb', 'autogrowehome' ), 'a globe floor lamp' ),
+					'column' => array( __( 'Papír oszlop', 'autogrowehome' ), 'a paper column floor lamp' ),
+					'none'   => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
 
 		/* ---------------------------------------------------------------- Konyha */
 		$f[] = array_merge(
@@ -590,7 +845,7 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'worktop', 'category' => 'kitchen', 'type' => 'select', 'label' => __( 'Munkalap anyaga', 'autogrowehome' ), 'help' => '', 'default' => 'quartz', 'prompt' => '{value} worktop' ),
+			array( 'id' => 'worktop', 'category' => 'kitchen', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Munkalap anyaga', 'autogrowehome' ), 'help' => '', 'default' => 'quartz', 'prompt' => '{value} worktop' ),
 			self::opts(
 				array(
 					'quartz'  => array( __( 'Kvarc kompozit', 'autogrowehome' ), 'quartz composite' ),
@@ -603,7 +858,7 @@ final class Definitions {
 		);
 		$f[] = array( 'id' => 'worktop_color', 'category' => 'kitchen', 'type' => 'color', 'label' => __( 'Munkalap színe', 'autogrowehome' ), 'help' => '', 'default' => '#EDEBE6', 'advanced' => true, 'prompt' => 'worktop colour {color}' );
 		$f[] = array_merge(
-			array( 'id' => 'fronts', 'category' => 'kitchen', 'type' => 'select', 'label' => __( 'Frontok', 'autogrowehome' ), 'help' => '', 'default' => 'matt_lacquer', 'prompt' => '{value} cabinet fronts' ),
+			array( 'id' => 'fronts', 'category' => 'kitchen', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Frontok', 'autogrowehome' ), 'help' => '', 'default' => 'matt_lacquer', 'prompt' => '{value} cabinet fronts' ),
 			self::opts(
 				array(
 					'matt_lacquer' => array( __( 'Matt lakk', 'autogrowehome' ), 'matte lacquer' ),
@@ -616,7 +871,7 @@ final class Definitions {
 		);
 		$f[] = array( 'id' => 'fronts_color', 'category' => 'kitchen', 'type' => 'color', 'label' => __( 'Frontok színe', 'autogrowehome' ), 'help' => '', 'default' => '#E9E4DC', 'prompt' => 'cabinet colour {color}' );
 		$f[] = array_merge(
-			array( 'id' => 'handles', 'category' => 'kitchen', 'type' => 'select', 'label' => __( 'Fogantyúk', 'autogrowehome' ), 'help' => '', 'default' => 'handleless', 'advanced' => true, 'prompt' => '{value}' ),
+			array( 'id' => 'handles', 'category' => 'kitchen', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Fogantyúk', 'autogrowehome' ), 'help' => '', 'default' => 'handleless', 'advanced' => true, 'prompt' => '{value}' ),
 			self::opts(
 				array(
 					'handleless' => array( __( 'Fogantyú nélküli', 'autogrowehome' ), 'handleless push-to-open' ),
@@ -642,7 +897,7 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'sink', 'category' => 'kitchen', 'type' => 'select', 'label' => __( 'Mosogató', 'autogrowehome' ), 'help' => '', 'default' => 'undermount', 'advanced' => true, 'prompt' => '{value} sink' ),
+			array( 'id' => 'sink', 'category' => 'kitchen', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Mosogató', 'autogrowehome' ), 'help' => '', 'default' => 'undermount', 'advanced' => true, 'prompt' => '{value} sink' ),
 			self::opts(
 				array(
 					'undermount' => array( __( 'Alulragasztott', 'autogrowehome' ), 'undermount' ),
@@ -652,7 +907,7 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'backsplash', 'category' => 'kitchen', 'type' => 'select', 'label' => __( 'Hátfal', 'autogrowehome' ), 'help' => '', 'default' => 'worktop_material', 'advanced' => true, 'prompt' => 'backsplash in {value}' ),
+			array( 'id' => 'backsplash', 'category' => 'kitchen', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Hátfal', 'autogrowehome' ), 'help' => '', 'default' => 'worktop_material', 'advanced' => true, 'prompt' => 'backsplash in {value}' ),
 			self::opts(
 				array(
 					'worktop_material' => array( __( 'Munkalappal egyező', 'autogrowehome' ), 'the same material as the worktop' ),
@@ -663,10 +918,48 @@ final class Definitions {
 			)
 		);
 		$f[] = array( 'id' => 'pantry_link', 'category' => 'kitchen', 'type' => 'toggle', 'label' => __( 'Kamrakapcsolat', 'autogrowehome' ), 'help' => __( 'A kamra a konyhából nyílik.', 'autogrowehome' ), 'default' => true, 'advanced' => true, 'prompt' => '' );
+		$f[] = array_merge(
+			array( 'id' => 'upper_cabinets', 'category' => 'kitchen', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Felső szekrények', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'   => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'closed' => array( __( 'Zárt', 'autogrowehome' ), 'closed upper cabinets' ),
+					'open'   => array( __( 'Nyitott polcok', 'autogrowehome' ), 'open shelving instead of upper cabinets' ),
+					'glass'  => array( __( 'Üveges vitrin', 'autogrowehome' ), 'glass-front upper cabinets' ),
+					'none'   => array( __( 'Nincs', 'autogrowehome' ), 'no upper cabinets' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'hood_style', 'category' => 'kitchen', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Páraelszívó', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'       => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'chimney'    => array( __( 'Kéményes, fali', 'autogrowehome' ), 'a chimney range hood' ),
+					'box'        => array( __( 'Doboz forma', 'autogrowehome' ), 'a box range hood' ),
+					'island'     => array( __( 'Sziget feletti', 'autogrowehome' ), 'an island hood' ),
+					'integrated' => array( __( 'Szekrénybe épített', 'autogrowehome' ), 'an integrated range hood' ),
+					'downdraft'  => array( __( 'Főzőlapba épített', 'autogrowehome' ), 'a downdraft extractor in the hob' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'bar_stools', 'category' => 'kitchen', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Bárszékek', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'        => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'wood'        => array( __( 'Fa', 'autogrowehome' ), 'wooden bar stools' ),
+					'metal'       => array( __( 'Fém', 'autogrowehome' ), 'metal bar stools' ),
+					'upholstered' => array( __( 'Kárpitozott', 'autogrowehome' ), 'upholstered counter stools' ),
+					'rattan'      => array( __( 'Rattan', 'autogrowehome' ), 'rattan counter stools' ),
+					'none'        => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
 
 		/* ---------------------------------------------------------------- Fürdő */
 		$f[] = array_merge(
-			array( 'id' => 'bath_fixtures', 'category' => 'bathroom', 'type' => 'multiselect', 'label' => __( 'Szaniterek', 'autogrowehome' ), 'help' => '', 'default' => array( 'walkin', 'double_basin', 'wc' ), 'prompt' => 'bathroom with {value}' ),
+			array( 'id' => 'bath_fixtures', 'category' => 'bathroom', 'type' => 'multiselect', 'visual' => 'item', 'label' => __( 'Szaniterek', 'autogrowehome' ), 'help' => '', 'default' => array( 'walkin', 'double_basin', 'wc' ), 'prompt' => 'bathroom with {value}' ),
 			self::opts(
 				array(
 					'bathtub'      => array( __( 'Kád', 'autogrowehome' ), 'a bathtub' ),
@@ -682,7 +975,7 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'bath_tiles', 'category' => 'bathroom', 'type' => 'select', 'label' => __( 'Burkolat', 'autogrowehome' ), 'help' => '', 'default' => 'large_stone', 'prompt' => '{value}' ),
+			array( 'id' => 'bath_tiles', 'category' => 'bathroom', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Burkolat', 'autogrowehome' ), 'help' => '', 'default' => 'large_stone', 'prompt' => '{value}' ),
 			self::opts(
 				array(
 					'large_stone' => array( __( 'Nagyméretű kőhatású lap', 'autogrowehome' ), 'large-format stone-look porcelain tiles' ),
@@ -690,23 +983,107 @@ final class Definitions {
 					'terrazzo'    => array( __( 'Terrazzo', 'autogrowehome' ), 'terrazzo' ),
 					'marble'      => array( __( 'Márványhatás', 'autogrowehome' ), 'marble-look porcelain' ),
 					'zellige'     => array( __( 'Kézműves csempe', 'autogrowehome' ), 'handmade glazed tiles' ),
+					'subway'      => array( __( 'Metró csempe', 'autogrowehome' ), 'glossy subway tiles' ),
+					'hexagon'     => array( __( 'Hatszögletű', 'autogrowehome' ), 'hexagon tiles' ),
+					'fluted'      => array( __( 'Bordázott', 'autogrowehome' ), 'fluted tiles' ),
+					'checker'     => array( __( 'Sakktábla', 'autogrowehome' ), 'black and white checkerboard tiles' ),
+					'wood_look'   => array( __( 'Fahatású', 'autogrowehome' ), 'wood-look porcelain tiles' ),
 				)
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'taps', 'category' => 'bathroom', 'type' => 'select', 'label' => __( 'Csaptelepek', 'autogrowehome' ), 'help' => '', 'default' => 'black', 'prompt' => '{value} taps and fittings' ),
+			array( 'id' => 'taps', 'category' => 'bathroom', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Csaptelepek', 'autogrowehome' ), 'help' => '', 'default' => 'black', 'prompt' => '{value} taps and fittings' ),
 			self::opts(
 				array(
 					'chrome'  => array( __( 'Króm', 'autogrowehome' ), 'chrome' ),
 					'black'   => array( __( 'Matt fekete', 'autogrowehome' ), 'matte black' ),
 					'brass'   => array( __( 'Szálcsiszolt arany', 'autogrowehome' ), 'brushed brass' ),
 					'steel'   => array( __( 'Inox', 'autogrowehome' ), 'brushed steel' ),
+					'gunmetal'    => array( __( 'Grafit', 'autogrowehome' ), 'gunmetal' ),
+					'copper'      => array( __( 'Réz', 'autogrowehome' ), 'copper' ),
 				)
 			)
 		);
-		$f[] = array( 'id' => 'bath_mirror', 'category' => 'bathroom', 'type' => 'toggle', 'label' => __( 'Világító tükör', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => 'backlit mirror' );
+		$f[] = array( 'id' => 'bath_mirror', 'category' => 'bathroom', 'type' => 'toggle', 'label' => __( 'Tükör', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => '' );
 		$f[] = array( 'id' => 'bath_storage', 'category' => 'bathroom', 'type' => 'toggle', 'label' => __( 'Rejtett tárolók, fülkék', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => 'recessed storage niches' );
 		$f[] = array( 'id' => 'bath_color', 'category' => 'bathroom', 'type' => 'color', 'label' => __( 'Fürdő fő színe', 'autogrowehome' ), 'help' => '', 'default' => '#D9D4CC', 'advanced' => true, 'prompt' => 'bathroom palette around {color}' );
+		$f[] = array_merge(
+			array( 'id' => 'bathtub_type', 'category' => 'bathroom', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Kád', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'         => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'built_in'     => array( __( 'Beépített', 'autogrowehome' ), 'a built-in bathtub' ),
+					'freestanding' => array( __( 'Szabadon álló ovális', 'autogrowehome' ), 'a freestanding oval bathtub' ),
+					'clawfoot'     => array( __( 'Oroszlánlábú', 'autogrowehome' ), 'a clawfoot roll-top bathtub' ),
+					'japanese'     => array( __( 'Fa áztatókád', 'autogrowehome' ), 'a Japanese wooden soaking tub' ),
+					'none'         => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'shower_type', 'category' => 'bathroom', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Zuhany', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'      => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'walkin'    => array( __( 'Walk-in üvegfallal', 'autogrowehome' ), 'a walk-in shower with a glass screen' ),
+					'enclosure' => array( __( 'Zuhanykabin', 'autogrowehome' ), 'a glass shower enclosure' ),
+					'niche'     => array( __( 'Fülkés, üvegajtós', 'autogrowehome' ), 'a shower niche with a glass door' ),
+					'wetroom'   => array( __( 'Nyitott, padlószintű', 'autogrowehome' ), 'an open wet-room shower' ),
+					'none'      => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'basin_type', 'category' => 'bathroom', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Mosdó típusa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'       => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'vessel'     => array( __( 'Pultra ültetett', 'autogrowehome' ), 'a countertop vessel basin' ),
+					'undermount' => array( __( 'Pultba süllyesztett', 'autogrowehome' ), 'an undermount basin' ),
+					'integrated' => array( __( 'Egybeöntött pult', 'autogrowehome' ), 'an integrated solid-surface basin' ),
+					'wall_hung'  => array( __( 'Fali', 'autogrowehome' ), 'a wall-hung basin' ),
+					'pedestal'   => array( __( 'Álló, talpas', 'autogrowehome' ), 'a pedestal basin' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'vanity_type', 'category' => 'bathroom', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Mosdószekrény', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'      => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'floating'  => array( __( 'Függesztett fiókos', 'autogrowehome' ), 'a floating vanity with drawers' ),
+					'wood'      => array( __( 'Fa pult nyitott polccal', 'autogrowehome' ), 'a timber vanity top with an open shelf' ),
+					'washstand' => array( __( 'Fém lábú kőpult', 'autogrowehome' ), 'a metal-framed stone washstand' ),
+					'floor'     => array( __( 'Álló szekrényes', 'autogrowehome' ), 'a freestanding vanity cabinet' ),
+					'none'      => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'toilet_type', 'category' => 'bathroom', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'WC típusa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'         => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'wall_hung'    => array( __( 'Fali, rejtett tartállyal', 'autogrowehome' ), 'a wall-hung toilet with a concealed cistern' ),
+					'floor'        => array( __( 'Álló monoblokk', 'autogrowehome' ), 'a close-coupled toilet' ),
+					'back_to_wall' => array( __( 'Falhoz álló', 'autogrowehome' ), 'a back-to-wall toilet' ),
+					'smart'        => array( __( 'Okos WC (bidé funkció)', 'autogrowehome' ), 'a smart shower toilet' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'mirror_type', 'category' => 'bathroom', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Tükör típusa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'show_if' => array( 'field' => 'bath_mirror', 'op' => '=', 'value' => true ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'    => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'round'   => array( __( 'Kerek, fémkeretes', 'autogrowehome' ), 'a round metal-framed mirror' ),
+					'led'     => array( __( 'LED háttérvilágítású', 'autogrowehome' ), 'a backlit LED mirror' ),
+					'cabinet' => array( __( 'Tükrös szekrény', 'autogrowehome' ), 'a mirror cabinet' ),
+					'arched'  => array( __( 'Boltíves', 'autogrowehome' ), 'an arched mirror' ),
+					'pill'    => array( __( 'Lekerekített', 'autogrowehome' ), 'a pill-shaped mirror' ),
+				)
+			)
+		);
 
 		/* ---------------------------------------------------------------- Burkolatok */
 		$f[] = array_merge(
@@ -792,7 +1169,7 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'wall_finish', 'category' => 'surfaces', 'type' => 'multiselect', 'label' => __( 'Falburkolatok', 'autogrowehome' ), 'help' => '', 'default' => array(), 'advanced' => true, 'prompt' => 'feature walls with {value}' ),
+			array( 'id' => 'wall_finish', 'category' => 'surfaces', 'type' => 'multiselect', 'visual' => 'item', 'label' => __( 'Falburkolatok', 'autogrowehome' ), 'help' => '', 'default' => array(), 'advanced' => true, 'prompt' => 'feature walls with {value}' ),
 			self::opts(
 				array(
 					'slats'     => array( __( 'Fa lamellás panel', 'autogrowehome' ), 'vertical oak slat panels' ),
@@ -800,6 +1177,11 @@ final class Definitions {
 					'stone'     => array( __( 'Kőburkolat', 'autogrowehome' ), 'stone cladding' ),
 					'panels'    => array( __( 'Dekoratív falpanel', 'autogrowehome' ), 'decorative wall panels' ),
 					'limewash'  => array( __( 'Mészfesték hatás', 'autogrowehome' ), 'limewash plaster' ),
+					'fluted'      => array( __( 'Bordázott panel', 'autogrowehome' ), 'fluted wall panels' ),
+					'brick'       => array( __( 'Tégla', 'autogrowehome' ), 'exposed brick' ),
+					'concrete'    => array( __( 'Beton hatású', 'autogrowehome' ), 'concrete-effect plaster' ),
+					'marble'      => array( __( 'Márványlap', 'autogrowehome' ), 'book-matched marble cladding' ),
+					'tiles'       => array( __( 'Díszcsempe', 'autogrowehome' ), 'decorative glazed tiles' ),
 				)
 			)
 		);

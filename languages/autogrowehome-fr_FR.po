@@ -7178,3 +7178,667 @@ msgstr "Vue intérieure"
 #: includes/Frontend/Strings.php
 msgid "Megnézem belülről"
 msgstr "Voir l'intérieur"
+
+#: includes/Params/Definitions.php
+msgid "Belsőépítészet"
+msgstr "Architecture intérieure"
+
+#: includes/Params/Definitions.php
+msgid "Belső ajtók"
+msgstr "Portes intérieures"
+
+#: includes/Params/Definitions.php
+msgid "Kandalló"
+msgstr "Cheminée"
+
+#: includes/Params/Definitions.php
+msgid "Lépcső"
+msgstr "Escalier"
+
+#: includes/Params/Definitions.php
+msgid "Függöny / árnyékoló típusa"
+msgstr "Type de rideau / store"
+
+#: includes/Params/Definitions.php
+msgid "Kanapé"
+msgstr "Canapé"
+
+#: includes/Params/Definitions.php
+msgid "Fotel"
+msgstr "Fauteuil"
+
+#: includes/Params/Definitions.php
+msgid "Dohányzóasztal"
+msgstr "Table basse"
+
+#: includes/Params/Definitions.php
+msgid "TV-fal"
+msgstr "Mur TV"
+
+#: includes/Params/Definitions.php
+msgid "Étkezőasztal"
+msgstr "Table à manger"
+
+#: includes/Params/Definitions.php
+msgid "Étkezőszékek"
+msgstr "Chaises de salle à manger"
+
+#: includes/Params/Definitions.php
+msgid "Ágy"
+msgstr "Lit"
+
+#: includes/Params/Definitions.php
+msgid "Gardrób, szekrény"
+msgstr "Armoire"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyeg"
+msgstr "Tapis"
+
+#: includes/Params/Definitions.php
+msgid "Falikép, dekoráció"
+msgstr "Tableaux, déco"
+
+#: includes/Params/Definitions.php
+msgid "Szobanövények"
+msgstr "Plantes d'intérieur"
+
+#: includes/Params/Definitions.php
+msgid "Függőlámpa"
+msgstr "Suspension"
+
+#: includes/Params/Definitions.php
+msgid "Mennyezeti világítás"
+msgstr "Éclairage au plafond"
+
+#: includes/Params/Definitions.php
+msgid "Állólámpa"
+msgstr "Lampadaire"
+
+#: includes/Params/Definitions.php
+msgid "Felső szekrények"
+msgstr "Meubles hauts"
+
+#: includes/Params/Definitions.php
+msgid "Páraelszívó"
+msgstr "Hotte"
+
+#: includes/Params/Definitions.php
+msgid "Bárszékek"
+msgstr "Tabourets de bar"
+
+#: includes/Params/Definitions.php
+msgid "Zuhany"
+msgstr "Douche"
+
+#: includes/Params/Definitions.php
+msgid "Mosdó típusa"
+msgstr "Type de vasque"
+
+#: includes/Params/Definitions.php
+msgid "Mosdószekrény"
+msgstr "Meuble vasque"
+
+#: includes/Params/Definitions.php
+msgid "WC típusa"
+msgstr "Type de WC"
+
+#: includes/Params/Definitions.php
+msgid "Tükör típusa"
+msgstr "Type de miroir"
+
+#: includes/Params/Definitions.php
+msgid "Kazettás"
+msgstr "À caissons"
+
+#: includes/Params/Definitions.php
+msgid "Sima, tokos"
+msgstr "Lisse avec huisserie"
+
+#: includes/Params/Definitions.php
+msgid "Kazettás, klasszikus"
+msgstr "À panneaux, classique"
+
+#: includes/Params/Definitions.php
+msgid "Üvegbetétes"
+msgstr "Vitrée"
+
+#: includes/Params/Definitions.php
+msgid "Falba toló"
+msgstr "Coulissante à galandage"
+
+#: includes/Params/Definitions.php
+msgid "Pajtaajtó sínen"
+msgstr "Porte de grange sur rail"
+
+#: includes/Params/Definitions.php
+msgid "Boltíves"
+msgstr "Cintrée"
+
+#: includes/Params/Definitions.php
+msgid "Rejtett, falsíkú"
+msgstr "Invisible, affleurante"
+
+#: includes/Params/Definitions.php
+msgid "Beépített lineáris"
+msgstr "Linéaire encastrée"
+
+#: includes/Params/Definitions.php
+msgid "Szabadon álló kályha"
+msgstr "Poêle isolé"
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus kőkeretes"
+msgstr "Classique à manteau de pierre"
+
+#: includes/Params/Definitions.php
+msgid "Háromoldalú üveges"
+msgstr "Vitrée sur trois côtés"
+
+#: includes/Params/Definitions.php
+msgid "Bioetanolos"
+msgstr "Au bioéthanol"
+
+#: includes/Params/Definitions.php
+msgid "Lebegő, üvegkorláttal"
+msgstr "Suspendu, garde-corps en verre"
+
+#: includes/Params/Definitions.php
+msgid "Zárt, korlátos"
+msgstr "Fermé, avec rampe"
+
+#: includes/Params/Definitions.php
+msgid "Csigalépcső"
+msgstr "Escalier en colimaçon"
+
+#: includes/Params/Definitions.php
+msgid "Acél gerinces"
+msgstr "Limon central en acier"
+
+#: includes/Params/Definitions.php
+msgid "Monolit beton"
+msgstr "Béton monolithe"
+
+#: includes/Params/Definitions.php
+msgid "Sötétítő és fátyolfüggöny"
+msgstr "Rideaux et voilages"
+
+#: includes/Params/Definitions.php
+msgid "Fátyolfüggöny"
+msgstr "Voilages"
+
+#: includes/Params/Definitions.php
+msgid "Római roló"
+msgstr "Store bateau"
+
+#: includes/Params/Definitions.php
+msgid "Reluxa"
+msgstr "Store vénitien"
+
+#: includes/Params/Definitions.php
+msgid "Roló"
+msgstr "Store enrouleur"
+
+#: includes/Params/Definitions.php
+msgid "Belső zsalugáter"
+msgstr "Volets intérieurs"
+
+#: includes/Params/Definitions.php
+msgid "Egyenes, háromszemélyes"
+msgstr "Droit trois places"
+
+#: includes/Params/Definitions.php
+msgid "L alakú sarokkanapé"
+msgstr "Canapé d'angle en L"
+
+#: includes/Params/Definitions.php
+msgid "U alakú ülőgarnitúra"
+msgstr "Canapé en U"
+
+#: includes/Params/Definitions.php
+msgid "Alacsony, puha moduláris"
+msgstr "Modulable bas et moelleux"
+
+#: includes/Params/Definitions.php
+msgid "Chesterfield"
+msgstr "Chesterfield"
+
+#: includes/Params/Definitions.php
+msgid "Íves"
+msgstr "Incurvé"
+
+#: includes/Params/Definitions.php
+msgid "Pihenőfotel lábtartóval"
+msgstr "Fauteuil lounge avec ottoman"
+
+#: includes/Params/Definitions.php
+msgid "Füles fotel"
+msgstr "Fauteuil à oreilles"
+
+#: includes/Params/Definitions.php
+msgid "Kerek, hordó alakú"
+msgstr "Rond, en tonneau"
+
+#: includes/Params/Definitions.php
+msgid "Rattan betétes"
+msgstr "Cannage"
+
+#: includes/Params/Definitions.php
+msgid "Bőr klubfotel"
+msgstr "Fauteuil club en cuir"
+
+#: includes/Params/Definitions.php
+msgid "Kerek márvány"
+msgstr "Ronde en marbre"
+
+#: includes/Params/Definitions.php
+msgid "Egymásba tolható pár"
+msgstr "Tables gigognes"
+
+#: includes/Params/Definitions.php
+msgid "Üveglapos"
+msgstr "Plateau en verre"
+
+#: includes/Params/Definitions.php
+msgid "Travertin tömb"
+msgstr "Bloc de travertin"
+
+#: includes/Params/Definitions.php
+msgid "Kárpitozott puff"
+msgstr "Pouf capitonné"
+
+#: includes/Params/Definitions.php
+msgid "Lebegő TV-szekrény"
+msgstr "Meuble TV suspendu"
+
+#: includes/Params/Definitions.php
+msgid "Beépített polcfal"
+msgstr "Bibliothèque encastrée"
+
+#: includes/Params/Definitions.php
+msgid "Kőburkolatú"
+msgstr "Habillé de pierre"
+
+#: includes/Params/Definitions.php
+msgid "Nincs TV"
+msgstr "Sans télévision"
+
+#: includes/Params/Definitions.php
+msgid "Téglalap, fa"
+msgstr "Rectangulaire en bois"
+
+#: includes/Params/Definitions.php
+msgid "Kerek, talpas"
+msgstr "Ronde sur pied central"
+
+#: includes/Params/Definitions.php
+msgid "Ovális márvány"
+msgstr "Ovale en marbre"
+
+#: includes/Params/Definitions.php
+msgid "Tömörfa, élszélű"
+msgstr "Bois massif bord naturel"
+
+#: includes/Params/Definitions.php
+msgid "Bakos, rusztikus"
+msgstr "Rustique à tréteaux"
+
+#: includes/Params/Definitions.php
+msgid "Kárpitozott"
+msgstr "Rembourrées"
+
+#: includes/Params/Definitions.php
+msgid "Íves támlás fa, fonott ülés"
+msgstr "Dossier courbé, assise tressée"
+
+#: includes/Params/Definitions.php
+msgid "Fém kávéházi"
+msgstr "Bistrot en métal"
+
+#: includes/Params/Definitions.php
+msgid "Szánkótalpas bőr"
+msgstr "Cantilever en cuir"
+
+#: includes/Params/Definitions.php
+msgid "Pálcás Windsor"
+msgstr "Windsor à fuseaux"
+
+#: includes/Params/Definitions.php
+msgid "Pad és székek"
+msgstr "Banc et chaises"
+
+#: includes/Params/Definitions.php
+msgid "Kárpitozott, magas fejvég"
+msgstr "Rembourré, haute tête de lit"
+
+#: includes/Params/Definitions.php
+msgid "Fa keretes"
+msgstr "Cadre en bois"
+
+#: includes/Params/Definitions.php
+msgid "Alacsony, japán stílusú"
+msgstr "Bas, style japonais"
+
+#: includes/Params/Definitions.php
+msgid "Baldachinos"
+msgstr "À baldaquin"
+
+#: includes/Params/Definitions.php
+msgid "Falpanel fejvég"
+msgstr "Tête de lit panneau mural"
+
+#: includes/Params/Definitions.php
+msgid "Fém keretes"
+msgstr "Cadre en métal"
+
+#: includes/Params/Definitions.php
+msgid "Nyíló ajtós"
+msgstr "Portes battantes"
+
+#: includes/Params/Definitions.php
+msgid "Tolóajtós"
+msgstr "Portes coulissantes"
+
+#: includes/Params/Definitions.php
+msgid "Tükrös tolóajtós"
+msgstr "Coulissantes miroir"
+
+#: includes/Params/Definitions.php
+msgid "Nyitott gardrób"
+msgstr "Dressing ouvert"
+
+#: includes/Params/Definitions.php
+msgid "Üvegajtós, világított"
+msgstr "Portes vitrées éclairées"
+
+#: includes/Params/Definitions.php
+msgid "Bordázott front"
+msgstr "Façades cannelées"
+
+#: includes/Params/Definitions.php
+msgid "Egyszínű gyapjú"
+msgstr "Laine unie"
+
+#: includes/Params/Definitions.php
+msgid "Berber mintás"
+msgstr "Motif berbère"
+
+#: includes/Params/Definitions.php
+msgid "Keleti mintás"
+msgstr "Oriental"
+
+#: includes/Params/Definitions.php
+msgid "Kerek"
+msgstr "Rond"
+
+#: includes/Params/Definitions.php
+msgid "Juta"
+msgstr "Jute"
+
+#: includes/Params/Definitions.php
+msgid "Absztrakt festmény"
+msgstr "Peinture abstraite"
+
+#: includes/Params/Definitions.php
+msgid "Vonalrajz"
+msgstr "Dessin au trait"
+
+#: includes/Params/Definitions.php
+msgid "Tájkép"
+msgstr "Paysage"
+
+#: includes/Params/Definitions.php
+msgid "Képfal"
+msgstr "Mur de cadres"
+
+#: includes/Params/Definitions.php
+msgid "Nagy boltíves tükör"
+msgstr "Grand miroir arqué"
+
+#: includes/Params/Definitions.php
+msgid "Nagylevelű"
+msgstr "À grandes feuilles"
+
+#: includes/Params/Definitions.php
+msgid "Hegedűlevelű fikusz"
+msgstr "Figuier lyre"
+
+#: includes/Params/Definitions.php
+msgid "Olajfa"
+msgstr "Olivier"
+
+#: includes/Params/Definitions.php
+msgid "Anyósnyelv"
+msgstr "Sansevière"
+
+#: includes/Params/Definitions.php
+msgid "Pálma"
+msgstr "Palmier"
+
+#: includes/Params/Definitions.php
+msgid "Opálüveg gömb"
+msgstr "Globe en verre opalin"
+
+#: includes/Params/Definitions.php
+msgid "Fém kupola"
+msgstr "Dôme en métal"
+
+#: includes/Params/Definitions.php
+msgid "Lineáris LED"
+msgstr "LED linéaire"
+
+#: includes/Params/Definitions.php
+msgid "Gömbcsoport"
+msgstr "Grappe de globes"
+
+#: includes/Params/Definitions.php
+msgid "Csillár"
+msgstr "Lustre"
+
+#: includes/Params/Definitions.php
+msgid "Rattan bura"
+msgstr "Abat-jour en rotin"
+
+#: includes/Params/Definitions.php
+msgid "Papírlámpás"
+msgstr "Lanterne en papier"
+
+#: includes/Params/Definitions.php
+msgid "Süllyesztett spotok"
+msgstr "Spots encastrés"
+
+#: includes/Params/Definitions.php
+msgid "Sínes spotok"
+msgstr "Spots sur rail"
+
+#: includes/Params/Definitions.php
+msgid "Rejtett LED-sáv"
+msgstr "Bandeau LED caché"
+
+#: includes/Params/Definitions.php
+msgid "Mennyezeti lámpa"
+msgstr "Plafonnier"
+
+#: includes/Params/Definitions.php
+msgid "Háromlábú"
+msgstr "Trépied"
+
+#: includes/Params/Definitions.php
+msgid "Gömb"
+msgstr "Globe"
+
+#: includes/Params/Definitions.php
+msgid "Papír oszlop"
+msgstr "Colonne en papier"
+
+#: includes/Params/Definitions.php
+msgid "Zárt"
+msgstr "Fermés"
+
+#: includes/Params/Definitions.php
+msgid "Nyitott polcok"
+msgstr "Étagères ouvertes"
+
+#: includes/Params/Definitions.php
+msgid "Üveges vitrin"
+msgstr "Vitrines vitrées"
+
+#: includes/Params/Definitions.php
+msgid "Kéményes, fali"
+msgstr "Hotte murale pyramidale"
+
+#: includes/Params/Definitions.php
+msgid "Doboz forma"
+msgstr "Hotte caisson"
+
+#: includes/Params/Definitions.php
+msgid "Sziget feletti"
+msgstr "Hotte îlot"
+
+#: includes/Params/Definitions.php
+msgid "Szekrénybe épített"
+msgstr "Intégrée au meuble"
+
+#: includes/Params/Definitions.php
+msgid "Főzőlapba épített"
+msgstr "Intégrée à la plaque"
+
+#: includes/Params/Definitions.php
+msgid "Rattan"
+msgstr "Rotin"
+
+#: includes/Params/Definitions.php
+msgid "Beépített"
+msgstr "Encastrée"
+
+#: includes/Params/Definitions.php
+msgid "Szabadon álló ovális"
+msgstr "Îlot ovale"
+
+#: includes/Params/Definitions.php
+msgid "Oroszlánlábú"
+msgstr "Sur pieds de lion"
+
+#: includes/Params/Definitions.php
+msgid "Fa áztatókád"
+msgstr "Bain japonais en bois"
+
+#: includes/Params/Definitions.php
+msgid "Walk-in üvegfallal"
+msgstr "Douche italienne avec paroi"
+
+#: includes/Params/Definitions.php
+msgid "Fülkés, üvegajtós"
+msgstr "Niche avec porte vitrée"
+
+#: includes/Params/Definitions.php
+msgid "Nyitott, padlószintű"
+msgstr "Ouverte, de plain-pied"
+
+#: includes/Params/Definitions.php
+msgid "Pultra ültetett"
+msgstr "Vasque à poser"
+
+#: includes/Params/Definitions.php
+msgid "Pultba süllyesztett"
+msgstr "Sous plan"
+
+#: includes/Params/Definitions.php
+msgid "Egybeöntött pult"
+msgstr "Plan vasque intégré"
+
+#: includes/Params/Definitions.php
+msgid "Fali"
+msgstr "Suspendu"
+
+#: includes/Params/Definitions.php
+msgid "Álló, talpas"
+msgstr "Sur colonne"
+
+#: includes/Params/Definitions.php
+msgid "Függesztett fiókos"
+msgstr "Suspendu à tiroirs"
+
+#: includes/Params/Definitions.php
+msgid "Fa pult nyitott polccal"
+msgstr "Plan bois avec étagère"
+
+#: includes/Params/Definitions.php
+msgid "Fém lábú kőpult"
+msgstr "Plan pierre sur piétement métal"
+
+#: includes/Params/Definitions.php
+msgid "Álló szekrényes"
+msgstr "Meuble sur pieds"
+
+#: includes/Params/Definitions.php
+msgid "Fali, rejtett tartállyal"
+msgstr "Suspendu, bâti-support"
+
+#: includes/Params/Definitions.php
+msgid "Álló monoblokk"
+msgstr "WC à poser"
+
+#: includes/Params/Definitions.php
+msgid "Falhoz álló"
+msgstr "Posé contre le mur"
+
+#: includes/Params/Definitions.php
+msgid "Okos WC (bidé funkció)"
+msgstr "WC lavant"
+
+#: includes/Params/Definitions.php
+msgid "Kerek, fémkeretes"
+msgstr "Rond, cadre métal"
+
+#: includes/Params/Definitions.php
+msgid "LED háttérvilágítású"
+msgstr "Rétroéclairé LED"
+
+#: includes/Params/Definitions.php
+msgid "Tükrös szekrény"
+msgstr "Armoire de toilette"
+
+#: includes/Params/Definitions.php
+msgid "Lekerekített"
+msgstr "Arrondi"
+
+#: includes/Params/Definitions.php
+msgid "Grafit"
+msgstr "Gun metal"
+
+#: includes/Params/Definitions.php
+msgid "Metró csempe"
+msgstr "Carreaux métro"
+
+#: includes/Params/Definitions.php
+msgid "Hatszögletű"
+msgstr "Hexagonal"
+
+#: includes/Params/Definitions.php
+msgid "Bordázott"
+msgstr "Cannelé"
+
+#: includes/Params/Definitions.php
+msgid "Sakktábla"
+msgstr "Damier"
+
+#: includes/Params/Definitions.php
+msgid "Fahatású"
+msgstr "Effet bois"
+
+#: includes/Params/Definitions.php
+msgid "Bordázott panel"
+msgstr "Panneaux cannelés"
+
+#: includes/Params/Definitions.php
+msgid "Beton hatású"
+msgstr "Effet béton"
+
+#: includes/Params/Definitions.php
+msgid "Márványlap"
+msgstr "Plaques de marbre"
+
+#: includes/Params/Definitions.php
+msgid "Díszcsempe"
+msgstr "Carreaux décoratifs"

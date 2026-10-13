@@ -129,6 +129,9 @@
 		tree: ['#5E9A4B', '<path class="d" d="M9 4a5 5 0 015 5 4 4 0 01-1 7H6a4 4 0 01-1-7.8A5 5 0 019 4z"/><path d="M9 4a5 5 0 015 5 4 4 0 01-1 7H6a4 4 0 01-1-7.8A5 5 0 019 4z"/><path d="M9 21v-9M9 15l-2-2M9 13l2-2"/><path d="M18 21v-5M18 16l-2.5-1M18 7l3.5 9h-7z"/><path d="M2 21h20"/>'],
 		bolt: ['#D3A12C', '<path class="d" d="M3 13l4-6h14l-4 6z"/><path d="M3 13l4-6h14l-4 6zM8.4 13l2.6-6M13.6 13L16.4 7M5 10h14"/><path d="M10 13v4M8 21l2-4 2 4"/><path d="M19 15.5l-2.2 3h2.2l-2.2 3"/>'],
 		camera: ['#7A6BC4', '<path class="d" d="M3 8h18v12H3z"/><path d="M3 8h4l1.6-2.5h6.8L17 8h4v12H3z"/><circle cx="12" cy="14" r="3.6"/><path d="M12 10.4V8.8M15.6 14h1.6"/><circle cx="18.5" cy="10.5" r=".2"/>'],
+		door: ['#7C8D6A', '<path class="d" d="M6 3h11v18H6z"/><path d="M4 21h16"/><rect x="6" y="3" width="11" height="18" rx="0.8"/><path d="M9 7h5v4H9zM9 14h5v4H9"/><circle cx="14.6" cy="12.2" r="0.9"/>'],
+		armchair: ['#9C6B8E', '<path class="d" d="M6 11h12v5H6z"/><path d="M6 11V7.5A2.5 2.5 0 018.5 5h7A2.5 2.5 0 0118 7.5V11"/><path d="M4 11.5a2 2 0 014 0V15h8v-3.5a2 2 0 014 0V18H4z"/><path d="M6 18v2M18 18v2"/>'],
+		lamp: ['#D49A3A', '<path class="d" d="M8 3h8l3 7H5z"/><path d="M8 3h8l3 7H5z"/><path d="M12 10v9M8 21h8"/><path d="M10 13.5h4"/>'],
 		pen: ['#8A8F96', '<path class="d" d="M4 20l1-4L16.5 4.5l3 3L8 19z"/><path d="M4 20l1-4L16.5 4.5l3 3L8 19z"/><path d="M14.5 6.5l3 3M5 16l3 3"/><path d="M12 20h8" stroke-dasharray="1.6 1.6"/>']
 	};
 	function catIcon(name) {
@@ -737,6 +740,7 @@
 				});
 				break;
 			case 'multiselect':
+				if (f.visual === 'item' && (A3 || A3wait)) { ctl = multiCards(f, v); break; }
 				ctl = h('div', { class: 'agh-quick', role: 'group', 'aria-label': f.label });
 				var arr = Array.isArray(v) ? v.slice() : [];
 				(f.options || []).forEach(function (o) {
@@ -771,6 +775,19 @@
 		return wrap;
 	}
 
+	// Several choices as picture cards (each card switches its item on or off).
+	function multiCards(f, v) {
+		var box = h('div', { class: 'agh-cards', role: 'group', 'aria-label': f.label }), arr = Array.isArray(v) ? v : [];
+		(f.options || []).forEach(function (o) {
+			var on = arr.indexOf(o.value) !== -1;
+			box.appendChild(h('button', { type: 'button', class: 'agh-card-opt', 'aria-pressed': on ? 'true' : 'false', onclick: function () {
+				var cur = Array.isArray(S.config[f.id]) ? S.config[f.id].slice() : [], i = cur.indexOf(o.value);
+				if (i === -1) { if (f.max_items && cur.length >= f.max_items) { toast(tf('max_items', f.max_items), 'warn'); return; } cur.push(o.value); } else { cur.splice(i, 1); }
+				setValue(f.id, cur, true);
+			} }, cardVisual(f.id, o.value), h('span', { class: 'agh-card-label', text: o.label })));
+		});
+		return box;
+	}
 	function renderNumber(f, v) {
 		var box = h('div', { style: { display: 'flex', 'flex-direction': 'column', gap: '8px' } });
 		var min = f.min !== undefined ? f.min : 0, max = f.max !== undefined ? f.max : 100000, step = f.step || 1;
@@ -889,7 +906,7 @@
 	function cardVisual(field, value) {
 		var el = h('span', { class: 'agh-card-vis', 'aria-hidden': 'true', 'data-field': field, 'data-value': value });
 		el._mk = function () { if (el._svg === undefined) { el._svg = cardSvg(field, value); } return el._svg; };
-		var thumbs = THUMB_FIELDS[field] && lsGet('agh_3d_thumbs', true) !== false;
+		var thumbs = thumbMode(field) && lsGet('agh_3d_thumbs', true) !== false;
 		if (thumbs && A3wait) { el.classList.add('is-wait'); }
 		else if (!(thumbs && A3)) { el.innerHTML = el._mk(); }
 		cardThumb(el, field, value);
@@ -920,11 +937,15 @@
 	// Rendered 3D picture for a card (when the 3D preview is available); cached per configuration.
 	var THUMBS = {};
 	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', massing: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', floor_bedrooms: 'floor', floor_kitchen: 'floor', floor_entry: 'floor', floor_wet: 'floor', garden_style: 'full', time_of_day: 'full' };
+	// Settings a single-item picture depends on (the rest of the configuration does not change it).
+	var ITEM_KEYS = ['interior_style', 'furniture_style', 'furniture_color', 'wall_color', 'floor_main', 'floor_color', 'floor_bedrooms', 'floor_kitchen', 'floor_wet', 'grout_color', 'bath_tiles', 'taps', 'bath_color', 'bath_fixtures', 'fronts', 'fronts_color', 'handles', 'worktop', 'worktop_color', 'sink', 'backsplash', 'appliances', 'vanity_type', 'basin_type', 'toilet_type', 'ceiling', 'ceiling_lights', 'window_frame_color', 'window_frame_material', 'glazing', 'skirting', 'wall_finish', 'curtains'];
+	function thumbMode(field) { return THUMB_FIELDS[field] || ((S.fields[field] || {}).visual === 'item' ? 'item' : null); }
 	function cardThumb(el, field, value) {
-		var mode = THUMB_FIELDS[field];
+		var mode = thumbMode(field);
 		if (!A3 || !mode || lsGet('agh_3d_thumbs', true) === false) { return; }
 		var cfg = clone(S.config);
 		cfg[field] = value;
+		if (mode === 'item') { cfg = {}; ITEM_KEYS.forEach(function (k) { if (S.config[k] !== undefined) { cfg[k] = S.config[k]; } }); cfg._item = { field: field, value: value }; }
 		// per-room floors show their material in the same room scene ("same" = the main floor)
 		if (mode === 'floor' && field !== 'floor_main') { cfg.floor_main = value === 'same' ? S.config.floor_main : value; }
 		if (mode === 'mini') { cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; if (field === 'footprint') { cfg.camera = 'elevated'; cfg.property_type = 'detached'; } if (field === 'window_style') { cfg.camera = 'frontal'; } }
@@ -945,7 +966,7 @@
 		var alive = function () { return el._key === key && document.body.contains(el); };
 		whenVisible(el, function () {
 			if (!alive()) { return; }
-			A3.thumb(cfg, 360, 240, mode === 'full' ? 'full' : mode, alive).then(function (url) { if (url) { THUMBS[key] = url; } if (alive()) { put(url); } });
+			A3.thumb(cfg, 360, 240, mode === 'full' ? 'full' : (mode === 'item' ? 'mini' : mode), alive).then(function (url) { if (url) { THUMBS[key] = url; } if (alive()) { put(url); } });
 		});
 	}
 	// Runs fn once the element is (nearly) on screen – pictures of cards nobody looks at are never made.
@@ -1279,7 +1300,7 @@
 	}
 	/* Interior view: the preview shows one room of the house (cut-away), chosen by the visitor or by the
 	 * setting being changed (kitchen settings → kitchen, bathroom → bathroom, bedroom floor → bedroom …). */
-	var INT_CATS = ['interior', 'kitchen', 'bathroom', 'surfaces', 'rooms'], EXT_CATS = ['style', 'massing', 'roof', 'facade', 'openings', 'garden', 'energy'];
+	var INT_CATS = ['interior', 'architecture', 'furniture', 'lighting', 'kitchen', 'bathroom', 'surfaces', 'rooms'], EXT_CATS = ['style', 'massing', 'roof', 'facade', 'openings', 'garden', 'energy'];
 	var ROOM_ORDER = ['living_kitchen', 'living', 'kitchen', 'dining', 'master', 'bedroom', 'kids', 'guest', 'bathroom', 'office', 'hall', 'wc', 'laundry', 'wardrobe'];
 	function roomList() {
 		var out = [], seen = {};
@@ -1304,10 +1325,11 @@
 	// Which room shows a setting best (null: the current one).
 	function roomTypesFor(id) {
 		var f = S.fields[id] || {};
-		if (f.category === 'kitchen' || id === 'floor_kitchen') { return ['kitchen', 'living_kitchen']; }
-		if (f.category === 'bathroom' || id === 'floor_wet') { return ['bathroom', 'wc', 'wellness']; }
-		if (id === 'floor_bedrooms') { return ['master', 'bedroom', 'guest', 'kids']; }
-		if (id === 'floor_entry') { return ['hall', 'corridor']; }
+		var LIV = ['living', 'living_kitchen'], BED = ['master', 'bedroom', 'guest', 'kids'];
+		var MAP = { sofa_type: LIV, armchair_type: LIV, coffee_table: LIV, media_wall: LIV, fireplace: LIV, floor_lamp: LIV, dining_table: ['dining', 'living_kitchen', 'kitchen'], dining_chairs: ['dining', 'living_kitchen', 'kitchen'], pendant_style: ['dining', 'living_kitchen', 'kitchen', 'living'], bed_type: BED, wardrobe_type: BED.concat(['wardrobe']), floor_bedrooms: BED, toilet_type: ['bathroom', 'wc'], stair_type: ['stairs', 'hall', 'corridor'], floor_entry: ['hall', 'corridor'], floor_kitchen: ['kitchen', 'living_kitchen'], floor_wet: ['bathroom', 'wc', 'wellness'] };
+		if (MAP[id]) { return MAP[id]; }
+		if (f.category === 'kitchen') { return ['kitchen', 'living_kitchen']; }
+		if (f.category === 'bathroom') { return ['bathroom', 'wellness', 'wc']; }
 		return null;
 	}
 	function autoView(id, cat) {
@@ -1315,7 +1337,7 @@
 		var ct = cat || (S.fields[id] || {}).category;
 		if (INT_CATS.indexOf(ct) !== -1) {
 			S.view = 'int';
-			var types = id ? roomTypesFor(id) : (ct === 'kitchen' ? ['kitchen', 'living_kitchen'] : (ct === 'bathroom' ? ['bathroom', 'wc'] : null));
+			var types = id ? roomTypesFor(id) : ({ kitchen: ['kitchen', 'living_kitchen'], bathroom: ['bathroom', 'wc'], furniture: ['living', 'living_kitchen', 'dining', 'master', 'bedroom', 'guest', 'kids'] }[ct] || null);
 			var cur = curRoom();
 			if (types && types.indexOf(cur.type) === -1) {
 				var r = roomList().filter(function (q) { return types.indexOf(q.type) !== -1; })[0];
