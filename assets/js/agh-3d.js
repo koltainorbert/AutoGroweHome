@@ -20,6 +20,8 @@ import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
 import { texture, setAnisotropy, onTexture, texturesReady, TINT, NEUTRAL, imageTexture, onImage } from './agh-3d-tex.js';
 // interiors (furnished rooms, studio shots of single items) – loaded with the same version query as this file
 const INT = await import('./agh-3d-int.js' + new URL(import.meta.url).search);
+// surroundings: terrain, landscape, street, neighbours
+const LAND = await import('./agh-3d-land.js' + new URL(import.meta.url).search);
 
 var D2R = Math.PI / 180;
 var SK = function () { return window.AGH_Sketch; };
@@ -120,10 +122,6 @@ function roofMat(c) {
 	}
 	if (SK()._style(c).seam) { return pbr('seam', { color: base }, { metalness: 0.5, normal: 1.2, roughness: rough }); }
 	return pbr('tiles', { color: base }, Object.assign({ normal: 2.2, roughness: rough }, gl));
-}
-function groundVC(c) {
-	var base = groundKind(c, 'meadow');
-	return cached(base.userData.key + '|vc', function () { var m = base.clone(); m.vertexColors = true; return m; });
 }
 function groundKind(c, k) {
 	var s = c.season;
@@ -1141,14 +1139,6 @@ House.prototype.site = function () {
 			self.add(box(gx, fyy - 0.03, 0.05, gx + 1.2, fyy + 0.03, 0.11, gm), false);
 		}
 	}
-	if (c.neighbors) {
-		[[left - 9, back + 2], [right + 2, back + 3]].forEach(function (q) {
-			var nm = solid('#D8D3CB', 0.9), nr = solid('#8C5A48', 0.8);
-			self.add(box(q[0], q[1] - 7, 0, q[0] + 8, q[1], 5.6, nm), false);
-			self.add(polyMesh([X(q[0] - 0.4, q[1] + 0.4, 5.6), X(q[0] + 8.4, q[1] + 0.4, 5.6), X(q[0] + 8.4, q[1] - 3.5, 8.6), X(q[0] - 0.4, q[1] - 3.5, 8.6)], [nr, nr], { thick: 0.15 }), false);
-			self.add(polyMesh([X(q[0] + 8.4, q[1] - 7.4, 5.6), X(q[0] - 0.4, q[1] - 7.4, 5.6), X(q[0] - 0.4, q[1] - 3.5, 8.6), X(q[0] + 8.4, q[1] - 3.5, 8.6)], [nr, nr], { thick: 0.15 }), false);
-		});
-	}
 };
 
 /* ------------------------------------------------------------------ vegetation */
@@ -1417,15 +1407,9 @@ function Viewer(opts) {
 	// every shader – never changes and no shader has to be compiled again when lamps come or go.
 	this.pool = [];
 	for (var li = 0; li < 4; li++) { var pli = new THREE.PointLight('#FFC98A', 0, 6, 2); this.scene.add(pli); this.pool.push(pli); }
-	// surrounding meadow
-	var gg = new THREE.PlaneGeometry(900, 900, 150, 150), uv = gg.attributes.uv, cols = [], gp = gg.attributes.position;
-	for (var i = 0; i < uv.count; i++) {
-		uv.setXY(i, uv.getX(i) * 900, uv.getY(i) * 900);
-		var x = gp.getX(i), y = gp.getY(i), n = 0.5 + 0.25 * Math.sin(x * 0.11 + Math.sin(y * 0.07) * 2) + 0.2 * Math.sin(y * 0.13 + Math.cos(x * 0.05) * 3) + 0.1 * Math.sin((x + y) * 0.31);
-		var k = 0.78 + n * 0.32; cols.push(k * (0.97 + n * 0.06), k, k * (0.95 - n * 0.05));
-	}
-	gg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
-	this.ground = new THREE.Mesh(gg, solid('#7A8F55', 1)); this.ground.rotation.x = -Math.PI / 2; this.ground.receiveShadow = true; this.scene.add(this.ground);
+	// the land around the plot (terrain, water, woods, neighbours): set per landscape in landFor()
+	this.ground = new THREE.Mesh(new THREE.BufferGeometry(), solid('#7A8F55', 1)); this.ground.receiveShadow = true; this.scene.add(this.ground);
+	this.water = null; this.hood = new THREE.Group(); this.scene.add(this.hood); this.landKey = ''; this.hoodList = null;
 	this.treeline = new THREE.Group(); this.scene.add(this.treeline);
 	this.house = null; this.camKey = ''; this.dirty = true;
 	this.el = r.domElement; this.el.className = 'agh-3d-canvas';
@@ -1511,13 +1495,13 @@ Viewer.prototype.update = function (cfg, mode) {
 	// indoors the light bounces off floors and walls, not off a lawn: a warm neutral ground colour
 	this.hemi.groundColor.set(c._int || c._item || mode === 'interior' ? (night ? '#5E5246' : '#D2CABD') : '#5B6B45');
 	this.scene.environmentIntensity = night ? 1.2 : (c.time_of_day === 'blue' ? 1.2 : (overcast ? 1.6 : 0.9));
-	this.ground.material = groundVC(c);
 	var hz = overcast ? (night ? '#151A26' : (c.time_of_day === 'blue' ? '#5C6175' : '#C9CDD2')) : (SKYCOL[c.time_of_day] || SKYCOL.golden).hor;
 	// interior view: one room as a cut-away, without the meadow, the tree line and the haze
 	var inner = !!c._int || !!c._item || mode === 'interior';
 	// indoors practically no haze – but the same kind of fog, so the shaders stay the same
-	this.scene.fog = new THREE.FogExp2(hz, inner ? 0.000001 : (overcast ? 0.0075 : 0.0045));
-	this.ground.visible = !inner; this.treeline.visible = !inner;
+	this.scene.fog = new THREE.FogExp2(hz, inner ? 0.000001 : (overcast ? 0.0032 : 0.0017));
+	this.ground.visible = !inner; this.treeline.visible = !inner; this.hood.visible = !inner && !c._item && mode !== 'facade' && mode !== 'floor';
+	if (this.water) { this.water.visible = !inner; }
 	// rebuild the house
 	if (this.house) { this.scene.remove(this.house.root); disposeTree(this.house.root); }
 	if (mode === 'facade') { this.house = facadeScene(c); }
@@ -1525,12 +1509,12 @@ Viewer.prototype.update = function (cfg, mode) {
 	else if (c._item) { this.house = INT.itemScene(c, c._item); }
 	else if (inner) { this.house = INT.interiorScene(c, c._int || { type: 'living' }); }
 	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini' }).build(); }
+	if (!inner) { this.landFor(c, mode); }
 	this.lampsToPool(this.house.root);
 	mergeStatic(this.house.fit || this.house.root);
 	if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
 	this.scene.add(this.house.root);
 	this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
-	this.treelineFor(c);
 	// new shaders are compiled in the background (parallel compile where the GPU driver offers it):
 	// the previous picture stays until they are ready instead of the page freezing
 	var self = this;
@@ -1543,26 +1527,31 @@ Viewer.prototype.update = function (cfg, mode) {
 	this.camKey = key;
 	this.requestRender();
 };
-// A ring of distant trees and hedgerows: depth and a horizon instead of an endless lawn.
-Viewer.prototype.treelineFor = function (c) {
-	var key = (c.season || 'summer') + (this.thumb ? 't' : '');
-	if (this.treelineKey === key) { return; }
-	this.treelineKey = key;
-	while (this.treeline.children.length) { this.treeline.remove(this.treeline.children[0]); }
-	var s = 77; function r() { s = (s * 16807) % 2147483647; return s / 2147483647; }
-	var n = this.thumb ? 160 : 360, winter = c.season === 'winter';
-	var crowns = new THREE.InstancedMesh(canopyGeo('sphere', 48, 3), leafMat(c, 'broad', false), n);
-	var trunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.18, 0.28, 1, 6), solid('#4A3B2E', 1), n);
-	var m = new THREE.Matrix4(), q = new THREE.Quaternion();
-	for (var i = 0; i < n; i++) {
-		// forest edge behind and beside the plot; the street side stays open
-		var a = Math.PI + (r() - 0.5) * Math.PI * 1.45, d = 105 + r() * 70 + Math.pow(r(), 3) * 60, hgt = 8 + r() * 9;
-		var x = Math.cos(a) * d * 1.35, z = Math.sin(a) * d, sx = hgt * (0.32 + r() * 0.16);
-		m.compose(new THREE.Vector3(x, hgt * 0.62, z), q, new THREE.Vector3(sx, hgt * 0.38, sx)); crowns.setMatrixAt(i, m);
-		m.compose(new THREE.Vector3(x, hgt * 0.3, z), q, new THREE.Vector3(1, hgt * 0.6, 1)); trunks.setMatrixAt(i, m);
+// The land around the plot for the chosen (or the style's) landscape: terrain with fields, rock, snow
+// and water, woods of the matching species, the street in front and – when asked for – the neighbours.
+// Terrain and woods are rebuilt only when the landscape, the season or the street line changes.
+Viewer.prototype.landFor = function (c, mode) {
+	var k = LAND.landKind(c), hs = this.house, pb = hs && hs.plotBox, night = c.time_of_day === 'night' || c.time_of_day === 'blue';
+	if (pb) { LAND.setRoad(pb.front); }
+	var key = [k, c.season || 'summer', pb ? Math.round(pb.front / 10) : 2, this.thumb ? 't' : ''].join('|');
+	this.ground.material = LAND.terrainMat(c);
+	if (key !== this.landKey) {
+		this.landKey = key;
+		this.ground.geometry = LAND.terrainGeo(k, c.season);
+		if (this.water) { this.scene.remove(this.water); this.water.geometry.dispose(); this.water = null; }
+		this.water = LAND.water(k); if (this.water) { this.scene.add(this.water); }
+		while (this.treeline.children.length) { this.treeline.remove(this.treeline.children[0]); }
+		this.treeline.add(LAND.woods(c, k, this.thumb));
 	}
-	void winter; // winter: the leaf texture turns to a bare, grey-brown twig colour
-	this.treeline.add(crowns); this.treeline.add(trunks);
+	// the street belongs to this house (built and disposed with it); not under the close-up option cards
+	var full = pb && !(this.o.mini || mode === 'mini' || mode === 'facade' || mode === 'floor');
+	if (full) { hs.root.add(LAND.street(c, pb, hs.gardenPlan, k, night)); }
+	while (this.hood.children.length) { this.hood.remove(this.hood.children[0]); }
+	if (full && c.neighbors && !this.thumb) {
+		var list = LAND.neighbours(c, k, night);
+		LAND.placeNeighbours(list, pb, k);
+		list.forEach(function (o) { this.hood.add(o.root); }, this);
+	}
 };
 Viewer.prototype.fitCamera = function (reset) {
 	if (!this.house) { return; }
@@ -1653,6 +1642,9 @@ Viewer.prototype.signature = function () {
 			parts.push(mats.map(function (m) { return m.userData.key || m.type; }).join('+') + '@' + g.attributes.position.count + ':' + v.toArray().map(function (x) { return x.toFixed(2); }) + (o.isInstancedMesh ? '#' + o.count : ''));
 		});
 	}
+	// the surroundings: landscape and the neighbouring houses where they stand
+	parts.push(this.landKey || '');
+	if (this.hood && this.hood.visible) { this.hood.children.forEach(function (o) { parts.push('N' + o.position.toArray().map(function (x) { return x.toFixed(1); }) + ':' + o.rotation.y.toFixed(2)); }); }
 	var s = parts.join(';'), h = 2166136261;
 	for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
 	return (h >>> 0).toString(16) + ':' + parts.length;
@@ -1821,6 +1813,7 @@ function bathTileMat(c) {
 }
 
 INT.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, boxGeo: boxGeo, box: box, X: X, House: House, shadeHex: shadeHex, col: col, num: num, clamp: clamp, has: has, SK: SK, canopyGeo: canopyGeo, leafMat: leafMat, frameMat: frameMat, glassMat: glassMat, roomFloorMat: roomFloorMat, roomFloorKey: roomFloorKey, bathTileMat: bathTileMat, imageTexture: imageTexture, onImage: onImage });
+LAND.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, box: box, House: House, groundKind: groundKind, canopyGeo: canopyGeo, leafMat: leafMat, mergeStatic: mergeStatic });
 
 /* ------------------------------------------------------------------ public API */
 // Option-card pictures: drawn by the live preview's renderer into an off-screen target (same WebGL

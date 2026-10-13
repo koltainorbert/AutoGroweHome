@@ -8366,3 +8366,86 @@ msgstr "Impossible de lire l’image."
 #: includes/Quote/Summary.php
 msgid "feltöltve"
 msgstr "téléversée"
+
+#: includes/Params/Definitions.php
+msgid "Tárgyak helyiségenként"
+msgstr "Objets par pièce"
+
+#: includes/Frontend/Strings.php
+msgid "Újrakezdés"
+msgstr "Recommencer"
+
+#: includes/Frontend/Strings.php
+msgid "Újrakezded a tervezést?"
+msgstr "Recommencer la conception ?"
+
+#: includes/Frontend/Strings.php
+msgid "A mostani beállítások törlődnek, és az alapértékekkel indulsz újra."
+msgstr "Les réglages actuels seront effacés et vous recommencerez avec les valeurs par défaut."
+
+#: includes/Frontend/Strings.php
+msgid "Igen, újrakezdem"
+msgstr "Oui, recommencer"
+
+#: includes/Frontend/Strings.php
+msgid "Új tervezés indult."
+msgstr "Une nouvelle conception a commencé."
+
+#. translators: %1$s: room name
+#: includes/Frontend/Strings.php
+msgid "Ebbe a helyiségbe kerül: %1$s"
+msgstr "Va dans cette pièce : %1$s"
+
+#: includes/Frontend/Strings.php
+msgid "Mindegyik a hozzá illő helyiségbe kerül."
+msgstr "Chacun va dans une pièce adaptée."
+
+#: includes/Frontend/Strings.php
+msgid "Helyiség választása"
+msgstr "Choisir une pièce"
+
+#. translators: %1$s: items with their rooms
+#: includes/Frontend/Strings.php
+msgid "Máshol: %1$s"
+msgstr "Ailleurs : %1$s"
+
+#. translators: %1$s: list of items
+#: includes/Frontend/Strings.php
+msgid "Megoldva: %1$s – áthelyezve, hogy elférjen és látsszon."
+msgstr "Résolu : %1$s – déplacé pour qu’il tienne et soit visible."
+
+#: includes/Params/Definitions.php
+msgid "Környezet, táj"
+msgstr "Environnement, paysage"
+
+#: includes/Params/Definitions.php
+msgid "A ház körüli terep, növényzet és háttér. „A stílushoz illő”: alpesi stílusnál hegyvidék, mediterránnál tengerpart, skandinávnál tópart."
+msgstr "Le terrain, la végétation et l’arrière-plan autour de la maison. « Selon le style » : montagne pour le style alpin, côte pour le méditerranéen, rive de lac pour le scandinave."
+
+#: includes/Params/Definitions.php
+msgid "Kertvárosi utca"
+msgstr "Rue de banlieue"
+
+#: includes/Params/Definitions.php
+msgid "Síkság, szántóföldek"
+msgstr "Plaine, champs"
+
+#: includes/Params/Definitions.php
+msgid "Dombvidék"
+msgstr "Collines"
+
+#: includes/Params/Definitions.php
+msgid "Hegyvidék"
+msgstr "Montagne"
+
+#: includes/Params/Definitions.php
+msgid "Erdő szélén"
+msgstr "Lisière de forêt"
+
+#: includes/Params/Definitions.php
+msgid "Tópart"
+msgstr "Bord de lac"
+
+#: includes/Params/Definitions.php
+msgid "Tengerpart"
+msgstr "Bord de mer"

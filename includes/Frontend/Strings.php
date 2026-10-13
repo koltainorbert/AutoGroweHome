@@ -248,6 +248,19 @@ final class Strings {
 			'image_change'           => __( 'Másik kép', 'autogrowehome' ),
 			'image_remove'           => __( 'Kép törlése', 'autogrowehome' ),
 			'image_error'            => __( 'A kép nem olvasható.', 'autogrowehome' ),
+			'restart'                => __( 'Újrakezdés', 'autogrowehome' ),
+			'restart_title'          => __( 'Újrakezded a tervezést?', 'autogrowehome' ),
+			'restart_text'           => __( 'A mostani beállítások törlődnek, és az alapértékekkel indulsz újra.', 'autogrowehome' ),
+			'restart_go'             => __( 'Igen, újrakezdem', 'autogrowehome' ),
+			'restart_done'           => __( 'Új tervezés indult.', 'autogrowehome' ),
+			/* translators: %1$s: room name */
+			'items_here'             => __( 'Ebbe a helyiségbe kerül: %1$s', 'autogrowehome' ),
+			'items_auto'             => __( 'Mindegyik a hozzá illő helyiségbe kerül.', 'autogrowehome' ),
+			'items_pick_room'        => __( 'Helyiség választása', 'autogrowehome' ),
+			/* translators: %1$s: items with their rooms */
+			'items_elsewhere'        => __( 'Máshol: %1$s', 'autogrowehome' ),
+			/* translators: %1$s: list of items */
+			'fixed_items'            => __( 'Megoldva: %1$s – áthelyezve, hogy elférjen és látsszon.', 'autogrowehome' ),
 			'sketch_reset_view'      => __( 'Nézet visszaállítása', 'autogrowehome' ),
 			'style_pack_offer'       => __( 'A(z) „%1$s” stílushoz javasolt beállításcsomag is tartozik.', 'autogrowehome' ),
 			'sum_checks'             => __( 'Ellenőrzés', 'autogrowehome' ),

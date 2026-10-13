@@ -8368,3 +8368,86 @@ msgstr "Не удаётся прочитать изображение."
 #: includes/Quote/Summary.php
 msgid "feltöltve"
 msgstr "загружено"
+
+#: includes/Params/Definitions.php
+msgid "Tárgyak helyiségenként"
+msgstr "Предметы по комнатам"
+
+#: includes/Frontend/Strings.php
+msgid "Újrakezdés"
+msgstr "Начать заново"
+
+#: includes/Frontend/Strings.php
+msgid "Újrakezded a tervezést?"
+msgstr "Начать проект заново?"
+
+#: includes/Frontend/Strings.php
+msgid "A mostani beállítások törlődnek, és az alapértékekkel indulsz újra."
+msgstr "Текущие настройки будут удалены, и вы начнёте заново со значениями по умолчанию."
+
+#: includes/Frontend/Strings.php
+msgid "Igen, újrakezdem"
+msgstr "Да, начать заново"
+
+#: includes/Frontend/Strings.php
+msgid "Új tervezés indult."
+msgstr "Начат новый проект."
+
+#. translators: %1$s: room name
+#: includes/Frontend/Strings.php
+msgid "Ebbe a helyiségbe kerül: %1$s"
+msgstr "Будет в этой комнате: %1$s"
+
+#: includes/Frontend/Strings.php
+msgid "Mindegyik a hozzá illő helyiségbe kerül."
+msgstr "Каждый попадает в подходящую комнату."
+
+#: includes/Frontend/Strings.php
+msgid "Helyiség választása"
+msgstr "Выбрать комнату"
+
+#. translators: %1$s: items with their rooms
+#: includes/Frontend/Strings.php
+msgid "Máshol: %1$s"
+msgstr "В других местах: %1$s"
+
+#. translators: %1$s: list of items
+#: includes/Frontend/Strings.php
+msgid "Megoldva: %1$s – áthelyezve, hogy elférjen és látsszon."
+msgstr "Исправлено: %1$s – перемещено, чтобы поместилось и было видно."
+
+#: includes/Params/Definitions.php
+msgid "Környezet, táj"
+msgstr "Окружение, ландшафт"
+
+#: includes/Params/Definitions.php
+msgid "A ház körüli terep, növényzet és háttér. „A stílushoz illő”: alpesi stílusnál hegyvidék, mediterránnál tengerpart, skandinávnál tópart."
+msgstr "Рельеф, растительность и фон вокруг дома. «По стилю»: горы для альпийского стиля, побережье для средиземноморского, берег озера для скандинавского."
+
+#: includes/Params/Definitions.php
+msgid "Kertvárosi utca"
+msgstr "Улица пригорода"
+
+#: includes/Params/Definitions.php
+msgid "Síkság, szántóföldek"
+msgstr "Равнина, поля"
+
+#: includes/Params/Definitions.php
+msgid "Dombvidék"
+msgstr "Холмы"
+
+#: includes/Params/Definitions.php
+msgid "Hegyvidék"
+msgstr "Горы"
+
+#: includes/Params/Definitions.php
+msgid "Erdő szélén"
+msgstr "Опушка леса"
+
+#: includes/Params/Definitions.php
+msgid "Tópart"
+msgstr "Берег озера"
+
+#: includes/Params/Definitions.php
+msgid "Tengerpart"
+msgstr "Морское побережье"

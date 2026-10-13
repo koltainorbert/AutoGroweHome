@@ -1,5 +1,16 @@
 # Változásnapló
 
+## 1.7.0 – 2026-10-13
+
+- Tárgyak helyiségenként: a további bútorok, az elektronika és a háziállatok a belső nézetben az éppen nézett helyiségbe kerülnek (vagy onnan ki); a kártyák fölött látszik, melyik helyiségre hatnak, és mi áll máshol. Külső nézetből egy új tárgy a hozzá illő helyiségbe kerül, és a nézet oda vált. Egy tárgy több helyiségben is lehet; a prompt helyiségenként ezt írja le. Új mező: `room_items` (szerveroldali ellenőrzéssel).
+- Önjavító berendezés: minden tárgy a szobán belül, az ajtó előtti sáv szabadon, a kivágott (jobb és első) falon nem áll semmi háttal; ha kell, a padlóra kerül a kamera felé fordítva, vagy a legkisebb átfedésű helyre. Ha a 3D valamit áthelyezett, egy rövid üzenet mondja meg, mit („Megoldva: …”). Mérve: 300 véletlen szoba, 628 tárgy, 0 lóg ki a szobából, 0 áll az ajtóban (a vizes helyiségek 82 szerelvényével együtt).
+- Nappali: a kandalló és a TV mindig látható falra kerül (nyitott konyhánál a hátsó falra, a kanapé feléjük fordul); a TV a kéménytest előlapján, nem benne. Háló: a TV az ágy végénél alacsony konzolon; a szőnyeg az ágy előtt, nem félig alatta. Fürdő: zuhany, mosdó, WC, bidé és törölközőszárító szabad falszakaszokon, sosem az ajtó elé; szűk fürdőben kisebb zuhany, végül zuhany a kád fölött. WC-ben bidé is.
+- Környezet és táj: új beállítás (Kertvárosi utca, Síkság, Dombvidék, Hegyvidék, Erdő szélén, Tópart, Tengerpart, vagy a stílushoz illő – pl. alpesi → hegyvidék, mediterrán → tengerpart, skandináv → tópart). Domborzat 2,4 km-es körzetben szántóföldekkel, sövénysorokkal, sziklával, hóval, homokos parttal, tóval vagy tengerrel; a tájhoz illő erdők (fenyő, lombos, nyír, nyár, olajfa, ciprus), a távoli fák egyszerűsítve; utca járdával, szegéllyel, útburkolati jellel, utcafákkal és lámpákkal (vidéken keskeny út); kevesebb köd. A prompt is a tájat írja.
+- Szomszédok: valódi házak a stílus családjából, de mindegyik más (méret, szintszám, tető, anyag, színek), saját kerttel, sövénnyel, beállóval, fákkal – kertvárosban kétoldalt és az utca túloldalán, vidéken néhány tanya.
+- Újrakezdés gomb (fejléc, mobilmenü): megerősítés után alapértékekkel indul az új tervezés. A böngésző Vissza gombja bezárja a tervezőt; a bezárás nem kérdez; egy régi, hibás piszkozat nem zárja ki a látogatót (eldobja, és alapértékekkel nyit).
+- Mérve (szoftveres GPU, SwiftShader): egy szoba felépítése tárgyakkal legfeljebb 108 ms; egy táj első felépítése 120–215 ms, utána egy beállítás változása 15–57 ms; 8 szomszédház első felépítése 99 ms.
+- 20 új felirat 15 nyelven.
+
 ## 1.6.0 – 2026-10-13
 
 - Gyorsabb 3D: egyetlen WebGL-környezet az élő előnézetnek és a kártyaképeknek; a kártyaképek a böngésző tárában (IndexedDB) maradnak, a következő látogatáskor azonnal megvannak; a 3D modulok már a gomb felé mozduló egérre vagy tétlen időben letöltődnek; a belső jelenetek árnyalói előre lefordulnak; kevesebb anyagfajta, állandó lámpakészlet, 4 textúra-szál. Mérés (szoftveres GPU, SwiftShader, 1.5.0 → 1.6.0): bútorkártyák első megnyitáskor 20–24 s → 15–18 s, újbóli látogatáskor 21–23 s → 5,5–10 s; fürdőkártyák 7,6–11 s → 4,0–7,4 s; egy beállítás átrajzolása 1,1 s → 0,65 s.

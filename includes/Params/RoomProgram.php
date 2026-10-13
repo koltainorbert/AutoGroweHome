@@ -180,4 +180,96 @@ final class RoomProgram {
 		$v = is_numeric( $v ) ? (float) $v : $min;
 		return round( max( $min, min( $max, $v ) ), 2 );
 	}
+	/**
+	 * Where every household item (extra furniture, electronics, pets) stands: room id => item values.
+	 * The visitor's own placement ("room_items") first – an item may stand in several rooms –, every item
+	 * not placed yet goes to one fitting room. Mirrors roomItems() of assets/js/agh-sketch.js.
+	 */
+	public static function item_rooms( array $c ): array {
+		$rooms = array();
+		foreach ( (array) ( $c['rooms'] ?? array() ) as $r ) {
+			if ( is_array( $r ) && ! empty( $r['type'] ) ) {
+				$id = (string) ( ! empty( $r['id'] ) ? $r['id'] : $r['type'] );
+				if ( ! isset( $rooms[ $id ] ) ) {
+					$rooms[ $id ] = (string) $r['type'];
+				}
+			}
+		}
+		if ( ! $rooms ) {
+			foreach ( array( 'living_kitchen', 'master', 'bathroom' ) as $tp ) {
+				$rooms[ 'virtual:' . $tp ] = $tp;
+			}
+		}
+		$all  = array_merge( (array) ( $c['extra_furniture'] ?? array() ), (array) ( $c['electronics'] ?? array() ), (array) ( $c['pets'] ?? array() ) );
+		$out  = array();
+		$done = array();
+		$put  = static function ( string $id, string $k ) use ( &$out, &$done ) {
+			$out[ $id ] = $out[ $id ] ?? array();
+			if ( ! in_array( $k, $out[ $id ], true ) ) {
+				$out[ $id ][] = $k;
+			}
+			$done[ $k ] = true;
+		};
+		$ex = $c['room_items'] ?? null;
+		if ( is_array( $ex ) ) {
+			foreach ( $ex as $id => $items ) {
+				$id = (string) $id;
+				if ( ! isset( $rooms[ $id ] ) || ! is_array( $items ) ) {
+					continue;
+				}
+				foreach ( $items as $k ) {
+					if ( in_array( $k, $all, true ) ) {
+						$put( $id, (string) $k );
+					}
+				}
+			}
+		}
+		$liv  = array( 'living', 'living_kitchen' );
+		$home = array(
+			'bookshelf'     => array( 'living', 'living_kitchen', 'office', 'kids' ),
+			'sideboard'     => array( 'dining', 'living', 'living_kitchen' ),
+			'desk'          => array( 'office', 'kids', 'bedroom', 'guest', 'master' ),
+			'reading'       => array( 'living', 'living_kitchen', 'master', 'bedroom' ),
+			'piano'         => array( 'living', 'living_kitchen', 'dining' ),
+			'bar_cart'      => array( 'living', 'living_kitchen', 'dining' ),
+			'bench'         => array( 'hall', 'master', 'bedroom' ),
+			'plant_stand'   => array( 'living', 'living_kitchen', 'dining', 'hall' ),
+			'floor_mirror'  => array( 'master', 'bedroom', 'hall', 'wardrobe' ),
+			'chest'         => array( 'master', 'bedroom', 'guest', 'kids', 'hall' ),
+			'vitrine'       => array( 'dining', 'living', 'living_kitchen' ),
+			'pouf'          => array( 'living', 'living_kitchen', 'master', 'bedroom' ),
+			'computer'      => array( 'office', 'kids', 'bedroom', 'guest', 'master' ),
+			'laptop'        => array( 'office', 'living', 'living_kitchen', 'master' ),
+			'smart_panel'   => array( 'hall', 'living', 'living_kitchen' ),
+			'robot_vacuum'  => $liv,
+			'smart_speaker' => array_merge( $liv, array( 'kitchen' ) ),
+		);
+		foreach ( $all as $k ) {
+			$k = (string) $k;
+			if ( isset( $done[ $k ] ) ) {
+				continue;
+			}
+			$target = null;
+			foreach ( $home[ $k ] ?? $liv as $tp ) {
+				$hit = array_search( $tp, $rooms, true );
+				if ( false !== $hit ) {
+					$target = (string) $hit;
+					break;
+				}
+			}
+			if ( null === $target ) {
+				foreach ( $rooms as $id => $tp ) {
+					if ( in_array( $tp, $liv, true ) ) {
+						$target = (string) $id;
+						break;
+					}
+				}
+			}
+			if ( null === $target ) {
+				$target = (string) array_key_first( $rooms );
+			}
+			$put( $target, $k );
+		}
+		return $out;
+	}
 }

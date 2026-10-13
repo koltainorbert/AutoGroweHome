@@ -370,6 +370,12 @@ final class PromptEngine {
 		$facade   = self::phrases( array( 'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'facade_texture', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number' ), $c );
 		$openings = self::phrases( array( 'window_style', 'window_frame_material', 'window_frame_color', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading' ), $c );
 		$garden   = self::phrases( array( 'garden_style', 'garden_features', 'garden_density', 'tree_types', 'terrace_area', 'terrace_floor', 'driveway', 'fence', 'gate', 'garage', 'entrance_canopy', 'outdoor_covered', 'exterior_steps', 'balcony', 'neighbors', 'orientation' ), $c );
+		// the surroundings: the chosen landscape, or the one that suits the style (as in the 3D view)
+		$cl = $c;
+		if ( 'auto' === ( $c['landscape'] ?? 'auto' ) ) {
+			$cl['landscape'] = Definitions::landscape_for_style( (string) ( $c['arch_style'] ?? '' ) );
+		}
+		$garden = self::join_phrases( $garden, self::phrase( 'landscape', $cl ) );
 		// balcony details only with a balcony on an upper floor; vehicles, people and pets around the house
 		if ( ! empty( $c['balcony'] ) && 'single' !== ( $c['levels'] ?? 'single' ) ) {
 			$garden = self::join_phrases( $garden, self::phrases( array( 'balcony_type', 'balcony_place', 'balcony_size' ), $c ) );
@@ -454,7 +460,7 @@ final class PromptEngine {
 			// The furnishing the visitor picked for this kind of room ("auto" adds nothing: the style decides).
 			$rt = (string) $room['type'];
 			if ( in_array( $rt, array( 'living', 'living_kitchen', 'custom' ), true ) ) {
-				$details[] = self::phrases( array( 'sofa_type', 'armchair_type', 'coffee_table', 'media_wall', 'fireplace', 'rug_style', 'rug_tone', 'floor_lamp', 'art_style', 'plants', 'plant_amount', 'electronics', 'people', 'pets' ), $c );
+				$details[] = self::phrases( array( 'sofa_type', 'armchair_type', 'coffee_table', 'media_wall', 'fireplace', 'rug_style', 'rug_tone', 'floor_lamp', 'art_style', 'plants', 'plant_amount', 'people' ), $c );
 			}
 			if ( in_array( $rt, array( 'living_kitchen', 'dining', 'kitchen' ), true ) ) {
 				$details[] = self::phrases( array( 'dining_table', 'dining_chairs', 'pendant_style' ), $c );
@@ -478,9 +484,13 @@ final class PromptEngine {
 				$details[] = self::phrase( 'stair_type', $c );
 			}
 			$details[] = self::phrases( array( 'ceiling_lights', 'door_style', 'thresholds' ), $c );
-			if ( in_array( $rt, array( 'living', 'living_kitchen', 'dining', 'master', 'bedroom', 'guest', 'kids', 'office', 'hall', 'custom' ), true ) ) {
-				$details[] = self::phrase( 'extra_furniture', $c );
+			// the household items standing in this very room (the visitor's placement, else a fitting room)
+			$ri = RoomProgram::item_rooms( $c )[ (string) ( $room['id'] ?? $room['type'] ) ] ?? array();
+			$cr = $c;
+			foreach ( array( 'extra_furniture', 'electronics', 'pets' ) as $src ) {
+				$cr[ $src ] = array_values( array_intersect( (array) ( $c[ $src ] ?? array() ), $ri ) );
 			}
+			$details[] = self::phrases( array( 'extra_furniture', 'electronics', 'pets' ), $cr );
 			if ( ! empty( $room['notes'] ) ) {
 				$details[] = 'client notes (descriptive only): ' . $room['notes'];
 			}

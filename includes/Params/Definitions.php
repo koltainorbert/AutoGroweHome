@@ -957,6 +957,9 @@ final class Definitions {
 				)
 			)
 		);
+		// Which room each household item stands in (room id => item values). The item cards of the furniture,
+		// electronics and pets fields edit it in the interior view; items not placed go to a fitting room.
+		$f[] = array( 'id' => 'room_items', 'category' => 'furniture', 'type' => 'roomitems', 'label' => __( 'Tárgyak helyiségenként', 'autogrowehome' ), 'help' => '', 'default' => array(), 'prompt' => '' );
 		$f[] = array_merge(
 			array( 'id' => 'pendant_style', 'category' => 'lighting', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Függőlámpa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
 			self::opts(
@@ -1564,6 +1567,22 @@ final class Definitions {
 				)
 			)
 		);
+		// The land around the house in the 3D view and the images ("auto": the one that suits the style).
+		$f[] = array_merge(
+			array( 'id' => 'landscape', 'category' => 'scene', 'type' => 'cards', 'label' => __( 'Környezet, táj', 'autogrowehome' ), 'help' => __( 'A ház körüli terep, növényzet és háttér. „A stílushoz illő”: alpesi stílusnál hegyvidék, mediterránnál tengerpart, skandinávnál tópart.', 'autogrowehome' ), 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'      => array( __( 'A stílushoz illő', 'autogrowehome' ), '' ),
+					'suburb'    => array( __( 'Kertvárosi utca', 'autogrowehome' ), 'on a leafy suburban street with neighbouring houses and street trees' ),
+					'plain'     => array( __( 'Síkság, szántóföldek', 'autogrowehome' ), 'in open flat countryside with patchwork fields and hedgerows' ),
+					'hills'     => array( __( 'Dombvidék', 'autogrowehome' ), 'among rolling green hills with scattered woods' ),
+					'mountains' => array( __( 'Hegyvidék', 'autogrowehome' ), 'in an alpine valley with forested slopes and snow-capped peaks' ),
+					'forest'    => array( __( 'Erdő szélén', 'autogrowehome' ), 'at the edge of a mixed forest' ),
+					'lake'      => array( __( 'Tópart', 'autogrowehome' ), 'near a calm lake with forested shores' ),
+					'sea'       => array( __( 'Tengerpart', 'autogrowehome' ), 'on a sunny coast with a sea view, olive and cypress trees' ),
+				)
+			)
+		);
 		$f[] = array_merge(
 			array( 'id' => 'weather', 'category' => 'scene', 'type' => 'select', 'label' => __( 'Időjárás, felhőzet', 'autogrowehome' ), 'help' => '', 'default' => 'few_clouds', 'prompt' => '{value}' ),
 			self::opts(
@@ -1622,6 +1641,15 @@ final class Definitions {
 	/**
 	 * Room types: value => [label, prompt noun, default area m², render by default, zone (day|night|wet|service|circulation), min area].
 	 */
+	/**
+	 * The landscape that suits an architectural style (used when "landscape" is "auto"; the 3D view
+	 * agh-3d-land.js uses the same table).
+	 */
+	public static function landscape_for_style( string $style ): string {
+		$map = array( 'modern_minimal' => 'suburb', 'contemporary_lux' => 'hills', 'mediterranean' => 'sea', 'scandinavian' => 'lake', 'bauhaus' => 'suburb', 'japandi' => 'hills', 'classic_burgher' => 'suburb', 'rustic' => 'plain', 'modern_farmhouse' => 'plain', 'american_farm' => 'plain', 'alpine' => 'mountains', 'industrial' => 'suburb', 'organic_modern' => 'forest', 'high_tech' => 'suburb', 'passive' => 'forest' );
+		return $map[ $style ] ?? 'hills';
+	}
+
 	public static function room_types(): array {
 		return array(
 			'living'    => array( __( 'Nappali', 'autogrowehome' ), 'living room', 30, true, 'day', 12 ),

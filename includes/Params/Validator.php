@@ -110,6 +110,29 @@ final class Validator {
 				// A small picture chosen in the browser (downscaled there to a JPEG/PNG/WebP data URL).
 				$v = is_string( $value ) ? trim( $value ) : '';
 				return ( strlen( $v ) <= 400000 && preg_match( '#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$#', $v ) ) ? $v : '';
+			case 'roomitems':
+				// room id => household items (only values of the furniture, electronics and pets fields)
+				$fields = Registry::fields();
+				$ok     = array();
+				foreach ( array( 'extra_furniture', 'electronics', 'pets' ) as $src ) {
+					$ok += (array) ( $fields[ $src ]['options'] ?? array() );
+				}
+				$out = array();
+				foreach ( is_array( $value ) ? array_slice( $value, 0, 60, true ) : array() as $room => $items ) {
+					$room = (string) $room;
+					if ( ! preg_match( '/^[A-Za-z0-9_:\-]{1,64}$/', $room ) || ! is_array( $items ) ) {
+						continue;
+					}
+					$list = array();
+					foreach ( $items as $it ) {
+						$it = is_scalar( $it ) ? (string) $it : '';
+						if ( isset( $ok[ $it ] ) && ! in_array( $it, $list, true ) ) {
+							$list[] = $it;
+						}
+					}
+					$out[ $room ] = $list;
+				}
+				return $out;
 			case 'catalog':
 				$v = is_scalar( $value ) ? sanitize_key( (string) $value ) : '';
 				return ( '' === $v || Catalog::exists( $def['catalog'], $v ) ) ? $v : '';

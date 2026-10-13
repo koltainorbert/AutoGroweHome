@@ -97,6 +97,7 @@
 		error: '<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>',
 		search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
 		plus: '<path d="M12 5v14M5 12h14"/>',
+		restart: '<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4.5v4h4"/>',
 		trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
 		chev: '<path d="M9 6l6 6-6 6"/>',
 		left: '<path d="M15 6l-6 6 6 6"/>',
@@ -281,7 +282,16 @@
 		var p = S.boot ? Promise.resolve(S.boot) : loadBoot();
 		p.then(function () {
 			if (!S.config) { initConfig(); }
-			build();
+			// a draft kept in this browser that no longer builds (e.g. from an older version) never locks the
+			// visitor out: it is dropped and the designer starts from the defaults
+			try { build(); } catch (e) {
+				try { window.localStorage.removeItem(LS_KEY); } catch (e2) { /* storage unavailable */ }
+				if (root) { root.remove(); } root = null;
+				S.config = null; S.explicit = {}; S.projectId = null; S.styleApplied = null; S.autoRoof = '';
+				initConfig(); build();
+			}
+			// the browser's Back button closes the designer instead of leaving the page
+			try { if (window.history && history.pushState) { history.pushState({ aghOpen: 1 }, ''); S.histPushed = true; window.addEventListener('popstate', onPop); } } catch (e) { S.histPushed = false; }
 			event('popup_open');
 			if (S.projectId) { loadProject(S.projectId, true); }
 			if (!S.wiz && S.boot.layout.tour && !lsGet('agh_tour_done', false)) { setTimeout(showTour, 400); }
@@ -328,12 +338,11 @@
 		return h('div', { class: 'agh-3d-wait', role: 'status' }, h('span', null, h('i', { class: 'agh-spinner' }), t('loading_3d')));
 	}
 
-	function close(force) {
-		if (!force && S.dirty) {
-			confirmDialog(t('unsaved_title'), t('unsaved_text'), t('close_anyway'), function () { close(true); });
-			return;
-		}
+	// Closing never blocks: the settings stay in this browser (Új tervezés starts afresh).
+	function close() {
 		stopPoll();
+		window.removeEventListener('popstate', onPop);
+		if (S.histPushed) { S.histPushed = false; try { history.back(); } catch (e) { /* no history */ } }
 		closeMenu(false);
 		document.removeEventListener('keydown', onKey);
 		if (root) { root.remove(); }
@@ -342,12 +351,29 @@
 		if (S.lastFocus && S.lastFocus.focus) { S.lastFocus.focus(); }
 	}
 
+	function onPop() { if (root) { S.histPushed = false; close(); } }
+	// Új tervezés: forget the settings kept in this browser and start from the defaults (saved projects stay).
+	function restart() {
+		confirmDialog(t('restart_title'), t('restart_text'), t('restart_go'), function () {
+			try { window.localStorage.removeItem(LS_KEY); } catch (e) { /* storage unavailable */ }
+			stopPoll(); closeMenu(false);
+			S.config = null; S.explicit = {}; S.projectId = null; S.project = null; S.autoRoof = ''; S.styleApplied = null;
+			S.roomId = null; S.view = 'design'; S.dirty = false; S.lastChange = null; S.cat = 'basics'; S.search = ''; S.tab = 'params'; S.fixKey = null;
+			document.removeEventListener('keydown', onKey);
+			if (root) { root.remove(); }
+			root = null;
+			initConfig();
+			build();
+			event('restart');
+			toast(t('restart_done'), 'ok');
+		});
+	}
 	function onKey(e) {
 		if (e.key === 'Escape') {
 			if (menuOpen()) { closeMenu(true); return; }
 			var top = root.querySelector('.agh-lightbox, .agh-dialog-wrap');
 			if (top) { top.remove(); return; }
-			close(false);
+			close();
 		}
 		if (e.key === 'Tab') { trapFocus(e); }
 		if (S.view === 'gallery' && root.querySelector('.agh-lightbox')) {
@@ -386,7 +412,7 @@
 		root = h('div', { class: 'agh-root agh-overlay' + (S.boot.brand.animations ? '' : ' agh-noanim'), role: 'dialog', 'aria-modal': 'true', 'aria-label': S.boot.brand.name, 'data-shadow': S.boot.brand.shadow || 'soft' });
 		S.theme = initialTheme();
 		root.setAttribute('data-theme', S.theme);
-		root.addEventListener('mousedown', function (e) { if (e.target === root) { close(false); } });
+		root.addEventListener('mousedown', function (e) { if (e.target === root) { close(); } });
 
 		shell = h('div', { class: 'agh-shell is-tab-' + S.tab, 'data-actionbar': S.boot.layout.action_bar });
 		if (S.boot.brand.background) { shell.setAttribute('data-bg', '1'); shell.style.setProperty('--agh-bg-img', 'url("' + S.boot.brand.background.replace(/"/g, '') + '")'); }
@@ -444,6 +470,7 @@
 		tools.appendChild(els.wizBtn);
 		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', onclick: showPresets }, icon('layers', 'agh-ico-s'), t('presets')));
 		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', onclick: showProjects }, icon('folder', 'agh-ico-s'), t('my_projects')));
+		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', 'data-agh-restart': '1', onclick: restart }, icon('restart', 'agh-ico-s'), t('restart')));
 		if (S.boot.languages && S.boot.languages.length > 1) {
 			var sel = h('select', { class: 'agh-select agh-hide-m', 'aria-label': t('language'), style: { width: 'auto', 'min-height': '36px', 'border-radius': '999px' }, onchange: function (e) { switchLang(e.target.value); } });
 			S.boot.languages.forEach(function (l) { sel.appendChild(h('option', { value: l.code, selected: l.code === S.locale ? 'selected' : null, text: l.label })); });
@@ -455,7 +482,7 @@
 		els.themeBtn = h('button', { type: 'button', class: 'agh-iconbtn', onclick: function () { setTheme(S.theme === 'dark' ? 'light' : 'dark'); } });
 		tools.appendChild(els.themeBtn);
 		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn agh-hide-m', 'aria-label': t('help'), title: t('help'), onclick: showTour }, icon('help')));
-		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), title: t('close'), onclick: function () { close(false); } }, icon('close')));
+		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), title: t('close'), onclick: function () { close(); } }, icon('close')));
 		var header = h('header', { class: 'agh-header' }, brand, h('div', { class: 'agh-header-spacer' }), mode, tools, buildMenu());
 		updateWizardToggles();
 		setTimeout(function () { setTheme(S.theme); }, 0);
@@ -479,6 +506,7 @@
 		m.appendChild(els.wizItem);
 		m.appendChild(item('layers', t('presets'), showPresets));
 		m.appendChild(item('folder', t('my_projects'), showProjects));
+		m.appendChild(item('restart', t('restart'), restart));
 		m.appendChild(item('help', t('help'), showTour));
 		if (S.boot.languages && S.boot.languages.length > 1) {
 			var sel = h('select', { class: 'agh-select', id: 'agh-hmenu-lang', onchange: function (e) { closeMenu(false); switchLang(e.target.value); } });
@@ -571,6 +599,7 @@
 	function catFields(cat) {
 		var q = S.search.trim().toLowerCase();
 		return S.boot.schema.fields.filter(function (f) {
+			if (f.type === 'roomitems') { return false; }
 			if (q) { return (f.label + ' ' + (f.help || '')).toLowerCase().indexOf(q) !== -1; }
 			if (f.category !== cat) { return false; }
 			if (S.mode === 'simple' && f.advanced) { return false; }
@@ -640,7 +669,7 @@
 		if (!fields.length) { list.appendChild(h('p', { class: 'agh-muted', text: t('no_fields') })); }
 		fields.forEach(function (f) { list.appendChild(renderField(f)); });
 		if (!S.search && S.mode === 'simple') {
-			var hidden = S.boot.schema.fields.filter(function (f) { return f.category === S.cat && f.advanced && visible(f); }).length;
+			var hidden = S.boot.schema.fields.filter(function (f) { return f.category === S.cat && f.advanced && f.type !== 'roomitems' && visible(f); }).length;
 			if (hidden) { list.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', onclick: function () { setMode('detailed'); } }, icon('sliders', 'agh-ico-s'), tf('show_advanced', hidden))); }
 		}
 		if (S.cat === 'custom' && !S.search) { list.appendChild(renderInterpret()); }
@@ -746,12 +775,14 @@
 				});
 				break;
 			case 'multiselect':
+				if (ROOM_ITEMS.indexOf(f.id) !== -1) { wrap.appendChild(roomItemsHint(f)); }
 				if (f.visual === 'item' && (A3 || A3wait)) { ctl = multiCards(f, v); break; }
 				ctl = h('div', { class: 'agh-quick', role: 'group', 'aria-label': f.label });
 				var arr = Array.isArray(v) ? v.slice() : [];
 				(f.options || []).forEach(function (o) {
-					var on = arr.indexOf(o.value) !== -1;
+					var on = ROOM_ITEMS.indexOf(f.id) !== -1 ? itemOn(f.id, o.value) : arr.indexOf(o.value) !== -1;
 					ctl.appendChild(h('button', { type: 'button', class: 'agh-chip', 'aria-pressed': on ? 'true' : 'false', onclick: function (e) {
+						if (ROOM_ITEMS.indexOf(f.id) !== -1) { toggleRoomItem(f, o.value); return; }
 						var cur = Array.isArray(S.config[f.id]) ? S.config[f.id].slice() : [];
 						var i = cur.indexOf(o.value);
 						if (i === -1) {
@@ -811,11 +842,77 @@
 		});
 		return box;
 	}
+	/* Household items (extra furniture, electronics, pets) stand in rooms. In the interior view a card puts
+	 * its item into the room on screen or takes it out of there; elsewhere a new item goes to a fitting
+	 * room (shown right away) and switching one off takes it out of every room. The fields themselves keep
+	 * every item that stands somewhere; room_items keeps where. */
+	var ROOM_ITEMS = ['extra_furniture', 'electronics', 'pets'];
+	function sketchRooms() { var K = window.AGH_Sketch; return K && K._roomsOf ? K._roomsOf(S.config) : []; }
+	function itemMap(c) { var K = window.AGH_Sketch; return K && K._roomItems ? K._roomItems(c || S.config, sketchRooms()) : {}; }
+	function perRoom() { return S.view === 'int' && !!(A3 || A3wait); }
+	function itemOn(fid, val) {
+		var map = itemMap();
+		if (perRoom()) { return (map[curRoom().id] || []).indexOf(val) !== -1; }
+		return Object.keys(map).some(function (id) { return map[id].indexOf(val) !== -1; });
+	}
+	function roomName(id) { var r = roomList().filter(function (q) { return q.id === id; })[0]; if (r) { return r.name; } var tp = String(id).indexOf('virtual:') === 0 ? String(id).slice(8) : id; return roomType(tp).label || tp; }
+	function toggleRoomItem(f, val) {
+		var map = itemMap(), next = {}, room = perRoom() ? curRoom().id : null;
+		Object.keys(map).forEach(function (id) { next[id] = map[id].slice(); });
+		var inAny = Object.keys(next).some(function (id) { return next[id].indexOf(val) !== -1; });
+		if (!room && inAny) { Object.keys(next).forEach(function (id) { next[id] = next[id].filter(function (k) { return k !== val; }); }); }
+		else {
+			if (!room) {
+				// the fitting room for a new item, and the interior view shows it there (pets stay in the garden view)
+				var tmp = {}; Object.keys(S.config).forEach(function (k) { tmp[k] = S.config[k]; }); tmp[f.id] = (S.config[f.id] || []).concat([val]); tmp.room_items = next;
+				var m2 = itemMap(tmp); room = Object.keys(m2).filter(function (id) { return m2[id].indexOf(val) !== -1; })[0] || (curRoom() || {}).id;
+				if (f.id !== 'pets' && A3) { S.view = 'int'; S.roomId = room; }
+			}
+			var here = next[room] = next[room] || [], i = here.indexOf(val);
+			if (i === -1) {
+				if (f.max_items && here.length >= f.max_items) { toast(tf('max_items', f.max_items), 'warn'); return; }
+				here.push(val);
+			} else { here.splice(i, 1); }
+		}
+		var all = {}; Object.keys(next).forEach(function (id) { next[id].forEach(function (k) { all[k] = 1; }); if (!next[id].length) { delete next[id]; } });
+		ROOM_ITEMS.forEach(function (id2) {
+			var arr = ((S.fields[id2] || {}).options || []).map(function (o) { return o.value; }).filter(function (x) { return all[x]; });
+			if (JSON.stringify(arr) !== JSON.stringify(S.config[id2] || [])) { S.config[id2] = arr; S.explicit[id2] = true; }
+		});
+		setValue('room_items', next, true);
+	}
+	// One line above the item cards: which room the cards act on, and what of this kind stands elsewhere.
+	function roomItemsHint(f) {
+		var map = itemMap(), opts = {}, here = perRoom() ? curRoom().id : null, other = [];
+		(f.options || []).forEach(function (o) { opts[o.value] = o.label; });
+		Object.keys(map).forEach(function (id) { if (id === here) { return; } map[id].forEach(function (k) { if (opts[k]) { other.push(opts[k] + ' – ' + roomName(id)); } }); });
+		var box = h('div', { class: 'agh-help agh-items-hint' });
+		box.appendChild(h('span', { text: here ? tf('items_here', roomName(here)) : t('items_auto') }));
+		if (!here && A3 && f.id !== 'pets') { box.appendChild(h('button', { type: 'button', class: 'agh-linkbtn', onclick: function () { setView('int'); } }, t('items_pick_room'))); }
+		if (other.length) { box.appendChild(h('span', { class: 'agh-items-other', text: tf('items_elsewhere', other.join(', ')) })); }
+		return box;
+	}
+	// The 3D room finds every item a place; when it had to move or shrink something, one short note says what.
+	function fixNote() {
+		var v = A3 && A3.viewer(), rm = v && v.house && v.house.room;
+		if (!rm || S.view !== 'int' || !rm.fixes || !rm.fixes.length) { return; }
+		var key = (curRoom() || {}).id + '|' + rm.fixes.join(',');
+		if (S.fixKey === key) { return; }
+		S.fixKey = key;
+		var names = rm.fixes.map(itemLabel).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+		if (names.length) { toast(tf('fixed_items', names.join(', ')), 'ok', 4000); }
+	}
+	function itemLabel(k) {
+		if (S.fields[k]) { return S.fields[k].label; }
+		var hit = ''; ROOM_ITEMS.forEach(function (id) { ((S.fields[id] || {}).options || []).forEach(function (o) { if (o.value === k && !hit) { hit = o.label; } }); });
+		return hit;
+	}
 	function multiCards(f, v) {
 		var box = h('div', { class: 'agh-cards', role: 'group', 'aria-label': f.label }), arr = Array.isArray(v) ? v : [];
 		(f.options || []).forEach(function (o) {
-			var on = arr.indexOf(o.value) !== -1;
+			var on = ROOM_ITEMS.indexOf(f.id) !== -1 ? itemOn(f.id, o.value) : arr.indexOf(o.value) !== -1;
 			box.appendChild(h('button', { type: 'button', class: 'agh-card-opt', 'aria-pressed': on ? 'true' : 'false', onclick: function () {
+				if (ROOM_ITEMS.indexOf(f.id) !== -1) { toggleRoomItem(f, o.value); return; }
 				var cur = Array.isArray(S.config[f.id]) ? S.config[f.id].slice() : [], i = cur.indexOf(o.value);
 				if (i === -1) { if (f.max_items && cur.length >= f.max_items) { toast(tf('max_items', f.max_items), 'warn'); return; } cur.push(o.value); } else { cur.splice(i, 1); }
 				setValue(f.id, cur, true);
@@ -971,7 +1068,7 @@
 	}
 	// Rendered 3D picture for a card (when the 3D preview is available); cached per configuration.
 	var THUMBS = {};
-	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', massing: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', floor_bedrooms: 'floor', floor_kitchen: 'floor', floor_entry: 'floor', floor_wet: 'floor', garden_style: 'full', time_of_day: 'full' };
+	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', massing: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', floor_bedrooms: 'floor', floor_kitchen: 'floor', floor_entry: 'floor', floor_wet: 'floor', garden_style: 'full', time_of_day: 'full', landscape: 'full' };
 	// Settings a single-item picture depends on (the rest of the configuration does not change it).
 	var ITEM_KEYS = ['interior_style', 'furniture_style', 'furniture_color', 'wall_color', 'floor_main', 'floor_color', 'floor_bedrooms', 'floor_kitchen', 'floor_wet', 'grout_color', 'bath_tiles', 'taps', 'bath_color', 'bath_fixtures', 'fronts', 'fronts_color', 'handles', 'worktop', 'worktop_color', 'sink', 'backsplash', 'appliances', 'vanity_type', 'basin_type', 'toilet_type', 'ceiling', 'ceiling_lights', 'window_frame_color', 'window_frame_material', 'glazing', 'skirting', 'wall_finish', 'curtains', 'car_color', 'curtain_fabric', 'curtain_tone', 'rug_tone', 'window_treatment'];
 	function thumbMode(field) { return THUMB_FIELDS[field] || ((S.fields[field] || {}).visual === 'item' ? 'item' : null); }
@@ -987,6 +1084,7 @@
 		if (mode === 'facade') { cfg.time_of_day = 'golden'; cfg.weather = 'clear'; cfg.camera = 'three_quarter'; }
 		if (mode === 'floor') { cfg.time_of_day = 'midday'; cfg.camera = 'elevated'; }
 		if (field === 'garden_style') { cfg.garden_features = ['lawn', 'trees', 'paths', 'hedge', 'flowerbeds']; cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; cfg.camera = 'elevated'; }
+		if (field === 'landscape') { cfg.time_of_day = 'midday'; cfg.weather = 'clear'; }
 		var key = mode + '|' + JSON.stringify(cfg, function (k, x) { return k === 'art_photo' && x ? 'img' + x.length + ':' + x.slice(-40) : x; });
 		el._key = key;
 		var put = function (url) {
@@ -1296,7 +1394,7 @@
 		if (A3) {
 			// keep the live 3D canvas, replace everything else
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
-			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
+			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
 			if (A3 && S.view === 'int') { box.appendChild(roomChips()); }
 			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
 		} else if (A3wait) {
@@ -1361,16 +1459,16 @@
 	function roomTypesFor(id) {
 		var f = S.fields[id] || {};
 		var LIV = ['living', 'living_kitchen'], BED = ['master', 'bedroom', 'guest', 'kids'];
-		var MAP = { sofa_type: LIV, armchair_type: LIV, coffee_table: LIV, media_wall: LIV, fireplace: LIV, floor_lamp: LIV, dining_table: ['dining', 'living_kitchen', 'kitchen'], dining_chairs: ['dining', 'living_kitchen', 'kitchen'], pendant_style: ['dining', 'living_kitchen', 'kitchen', 'living'], bed_type: BED, wardrobe_type: BED.concat(['wardrobe']), floor_bedrooms: BED, toilet_type: ['bathroom', 'wc'], stair_type: ['stairs', 'hall', 'corridor'], floor_entry: ['hall', 'corridor'], floor_kitchen: ['kitchen', 'living_kitchen'], floor_wet: ['bathroom', 'wc', 'wellness'], electronics: LIV, art_photo: LIV.concat(BED) };
+		var MAP = { sofa_type: LIV, armchair_type: LIV, coffee_table: LIV, media_wall: LIV, fireplace: LIV, floor_lamp: LIV, dining_table: ['dining', 'living_kitchen', 'kitchen'], dining_chairs: ['dining', 'living_kitchen', 'kitchen'], pendant_style: ['dining', 'living_kitchen', 'kitchen', 'living'], bed_type: BED, wardrobe_type: BED.concat(['wardrobe']), floor_bedrooms: BED, toilet_type: ['bathroom', 'wc'], stair_type: ['stairs', 'hall', 'corridor'], floor_entry: ['hall', 'corridor'], floor_kitchen: ['kitchen', 'living_kitchen'], floor_wet: ['bathroom', 'wc', 'wellness'], art_photo: LIV.concat(BED) };
 		if (MAP[id]) { return MAP[id]; }
 		if (f.category === 'kitchen') { return ['kitchen', 'living_kitchen']; }
 		if (f.category === 'bathroom') { return ['bathroom', 'wellness', 'wc']; }
 		return null;
 	}
 	function autoView(id, cat) {
-		if (!A3) { return; }
+		if (!A3 || id === 'room_items') { return; }
 		var ct = cat || (S.fields[id] || {}).category;
-		if (id === 'vehicles' || id === 'car_color') { S.view = 'ext'; return; }
+		if (id === 'vehicles' || id === 'car_color' || id === 'landscape') { S.view = 'ext'; return; }
 		if (INT_CATS.indexOf(ct) !== -1) {
 			S.view = 'int';
 			var types = id ? roomTypesFor(id) : ({ kitchen: ['kitchen', 'living_kitchen'], bathroom: ['bathroom', 'wc'], furniture: ['living', 'living_kitchen', 'dining', 'master', 'bedroom', 'guest', 'kids'] }[ct] || null);
@@ -1386,6 +1484,7 @@
 		if (roomId) { S.roomId = roomId; }
 		renderPreviewOnly();
 		updateWizardSide();
+		if (els.fieldsList && els.fieldsList.querySelector('[data-field="extra_furniture"], [data-field="electronics"], [data-field="pets"]')) { renderFields(); }
 	}
 	function viewSwitch() {
 		return h('div', { class: 'agh-3d-view', role: 'group', 'aria-label': t('view_switch') },
@@ -1918,7 +2017,7 @@
 		d = info;
 		var inWizard = {};
 		WIZ.forEach(function (st) { st.fields.forEach(function (id) { inWizard[id] = true; }); });
-		var more = S.boot.schema.fields.filter(function (f) { return !inWizard[f.id] && visible(f); }).length;
+		var more = S.boot.schema.fields.filter(function (f) { return !inWizard[f.id] && f.type !== 'roomitems' && visible(f); }).length;
 		d.appendChild(h('div', { class: 'agh-wiz-more' },
 			h('p', { text: tf('wiz_more', more) }),
 			h('button', { type: 'button', class: 'agh-btn', onclick: function () { exitWizard(false); } }, icon('sliders', 'agh-ico-s'), t('wiz_to_designer'))));

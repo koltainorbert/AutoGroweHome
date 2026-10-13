@@ -118,8 +118,9 @@ final class Frontend {
 				$out[] = AGH_URL . 'assets/js/' . $rel;
 			}
 		}
-		// The interiors are imported with the same version query as agh-3d.js.
+		// The interiors and the surroundings are imported with the same version query as agh-3d.js.
 		$out[] = AGH_URL . 'assets/js/agh-3d-int.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) );
+		$out[] = AGH_URL . 'assets/js/agh-3d-land.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) );
 		return $out;
 	}
 

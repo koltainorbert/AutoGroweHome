@@ -8368,3 +8368,86 @@ msgstr "Slika se ne može pročitati."
 #: includes/Quote/Summary.php
 msgid "feltöltve"
 msgstr "učitano"
+
+#: includes/Params/Definitions.php
+msgid "Tárgyak helyiségenként"
+msgstr "Predmeti po prostorijama"
+
+#: includes/Frontend/Strings.php
+msgid "Újrakezdés"
+msgstr "Počni ispočetka"
+
+#: includes/Frontend/Strings.php
+msgid "Újrakezded a tervezést?"
+msgstr "Početi projekt ispočetka?"
+
+#: includes/Frontend/Strings.php
+msgid "A mostani beállítások törlődnek, és az alapértékekkel indulsz újra."
+msgstr "Trenutne postavke bit će obrisane i počinjete ponovno sa zadanim vrijednostima."
+
+#: includes/Frontend/Strings.php
+msgid "Igen, újrakezdem"
+msgstr "Da, počni ispočetka"
+
+#: includes/Frontend/Strings.php
+msgid "Új tervezés indult."
+msgstr "Započet je novi projekt."
+
+#. translators: %1$s: room name
+#: includes/Frontend/Strings.php
+msgid "Ebbe a helyiségbe kerül: %1$s"
+msgstr "Ide u ovu prostoriju: %1$s"
+
+#: includes/Frontend/Strings.php
+msgid "Mindegyik a hozzá illő helyiségbe kerül."
+msgstr "Svaki ide u odgovarajuću prostoriju."
+
+#: includes/Frontend/Strings.php
+msgid "Helyiség választása"
+msgstr "Odaberi prostoriju"
+
+#. translators: %1$s: items with their rooms
+#: includes/Frontend/Strings.php
+msgid "Máshol: %1$s"
+msgstr "Drugdje: %1$s"
+
+#. translators: %1$s: list of items
+#: includes/Frontend/Strings.php
+msgid "Megoldva: %1$s – áthelyezve, hogy elférjen és látsszon."
+msgstr "Riješeno: %1$s – premješteno da stane i bude vidljivo."
+
+#: includes/Params/Definitions.php
+msgid "Környezet, táj"
+msgstr "Okolina, krajolik"
+
+#: includes/Params/Definitions.php
+msgid "A ház körüli terep, növényzet és háttér. „A stílushoz illő”: alpesi stílusnál hegyvidék, mediterránnál tengerpart, skandinávnál tópart."
+msgstr "Teren, zelenilo i pozadina oko kuće. „Prema stilu”: planine za alpski stil, obala za mediteranski, obala jezera za skandinavski."
+
+#: includes/Params/Definitions.php
+msgid "Kertvárosi utca"
+msgstr "Prigradska ulica"
+
+#: includes/Params/Definitions.php
+msgid "Síkság, szántóföldek"
+msgstr "Ravnica, polja"
+
+#: includes/Params/Definitions.php
+msgid "Dombvidék"
+msgstr "Brežuljci"
+
+#: includes/Params/Definitions.php
+msgid "Hegyvidék"
+msgstr "Planine"
+
+#: includes/Params/Definitions.php
+msgid "Erdő szélén"
+msgstr "Rub šume"
+
+#: includes/Params/Definitions.php
+msgid "Tópart"
+msgstr "Obala jezera"
+
+#: includes/Params/Definitions.php
+msgid "Tengerpart"
+msgstr "Morska obala"

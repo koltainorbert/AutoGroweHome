@@ -15,6 +15,7 @@ use AutoGroweHome\Ai\Providers;
 use AutoGroweHome\Catalog\Catalog;
 use AutoGroweHome\Frontend\I18n;
 use AutoGroweHome\Params\Registry;
+use AutoGroweHome\Params\RoomProgram;
 use AutoGroweHome\Params\Validator;
 use AutoGroweHome\Prompt\Color;
 use AutoGroweHome\Prompt\DefaultModules;
@@ -143,6 +144,10 @@ final class Planner {
 				continue;
 			}
 			$v = $c[ $id ];
+			if ( 'roomitems' === $def['type'] ) {
+				$out['room_items'] = RoomProgram::item_rooms( $c );
+				continue;
+			}
 			if ( 'rooms' === $def['type'] ) {
 				$out['rooms'] = array_map(
 					static fn( $r ) => array( 'id' => $r['id'], 'type' => $r['type'], 'name' => $r['name'], 'area' => $r['area'], 'level' => $r['level'] ),
@@ -329,7 +334,7 @@ final class Planner {
 		}
 		$schema_fields = array();
 		foreach ( Registry::fields() as $id => $def ) {
-			if ( ! empty( $def['hidden'] ) || in_array( $def['type'], array( 'rooms', 'textarea' ), true ) || in_array( $id, array( 'project_name', 'house_name' ), true ) ) {
+			if ( ! empty( $def['hidden'] ) || in_array( $def['type'], array( 'rooms', 'roomitems', 'image', 'textarea' ), true ) || in_array( $id, array( 'project_name', 'house_name' ), true ) ) {
 				continue;
 			}
 			$f = array( 'id' => $id, 'type' => 'catalog' === $def['type'] ? 'select' : $def['type'], 'label' => $def['label'] );

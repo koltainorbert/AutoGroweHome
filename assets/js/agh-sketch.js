@@ -1381,6 +1381,43 @@
 	function rowKindOf(gs) { return { formal: 'topiary', mediterranean: 'lavender', cottage: 'shrub', minimal: 'grass', natural: 'shrub' }[gs] || 'shrub'; }
 	var PEOPLE = { couple: [['man', 'stand'], ['woman', 'stand']], family: [['man', 'stand'], ['woman', 'walk'], ['child', 'walk'], ['child', 'stand']], guests: [['man', 'stand'], ['woman', 'stand'], ['man', 'walk'], ['woman', 'stand'], ['woman', 'walk']] };
 
+	/* ------------------------------------------------------------------ household items per room */
+	// The rooms of the design (ids as in the designer); without a room programme the three rooms shown first.
+	function roomsOf(c) {
+		var out = [], seen = {};
+		(Array.isArray(c.rooms) ? c.rooms : []).forEach(function (r) { if (r && r.type) { var id = String(r.id || r.type); if (!seen[id]) { seen[id] = 1; out.push({ id: id, type: r.type }); } } });
+		if (!out.length) { ['living_kitchen', 'master', 'bathroom'].forEach(function (tp) { out.push({ id: 'virtual:' + tp, type: tp }); }); }
+		return out;
+	}
+	function mainRoom(rooms) { return rooms.filter(function (r) { return r.type === 'living' || r.type === 'living_kitchen'; })[0] || rooms[0] || null; }
+	// Where each household item goes when the visitor has not placed it: one fitting room.
+	var ITEM_HOME = { bookshelf: ['living', 'living_kitchen', 'office', 'kids'], sideboard: ['dining', 'living', 'living_kitchen'], desk: ['office', 'kids', 'bedroom', 'guest', 'master'], reading: ['living', 'living_kitchen', 'master', 'bedroom'],
+		piano: ['living', 'living_kitchen', 'dining'], bar_cart: ['living', 'living_kitchen', 'dining'], bench: ['hall', 'master', 'bedroom'], plant_stand: ['living', 'living_kitchen', 'dining', 'hall'], floor_mirror: ['master', 'bedroom', 'hall', 'wardrobe'],
+		chest: ['master', 'bedroom', 'guest', 'kids', 'hall'], vitrine: ['dining', 'living', 'living_kitchen'], pouf: ['living', 'living_kitchen', 'master', 'bedroom'],
+		tv: ['living', 'living_kitchen'], soundbar: ['living', 'living_kitchen'], speakers: ['living', 'living_kitchen'], console: ['living', 'living_kitchen'], projector: ['living', 'living_kitchen'], robot_vacuum: ['living', 'living_kitchen'], smart_speaker: ['living', 'living_kitchen', 'kitchen'],
+		computer: ['office', 'kids', 'bedroom', 'guest', 'master'], laptop: ['office', 'living', 'living_kitchen', 'master'], smart_panel: ['hall', 'living', 'living_kitchen'], dog_large: ['living', 'living_kitchen'], dog_small: ['living', 'living_kitchen'], cat: ['living', 'living_kitchen'] };
+	// Household items per room id: the visitor's own placement (room_items), else one fitting room per selected item.
+	function roomItems(c, rooms) {
+		var out = {}, done = {}, all = [].concat(c.extra_furniture || [], c.electronics || [], c.pets || []), ex = c.room_items;
+		var put = function (id, k) { if ((out[id] = out[id] || []).indexOf(k) === -1) { out[id].push(k); } done[k] = 1; };
+		// the visitor's own placement (an item may stand in several rooms); rooms that are gone are ignored
+		if (ex && typeof ex === 'object' && !Array.isArray(ex)) {
+			Object.keys(ex).forEach(function (id) {
+				if (!Array.isArray(ex[id]) || !rooms.some(function (q) { return q.id === id; })) { return; }
+				ex[id].forEach(function (k) { if (all.indexOf(k) !== -1) { put(id, k); } });
+			});
+		}
+		// whatever is not placed yet goes to one fitting room
+		all.forEach(function (k) {
+			if (done[k]) { return; }
+			var pref = ITEM_HOME[k] || ['living', 'living_kitchen'], r = null;
+			for (var i = 0; i < pref.length && !r; i++) { r = rooms.filter(function (q) { return q.type === pref[i]; })[0] || null; }
+			r = r || mainRoom(rooms);
+			if (r) { put(r.id, k); }
+		});
+		return out;
+	}
+
 	// Which roof planes carry the solar panels: 'front' / 'back' / 'both' long planes, or 'all' planes (hip ends
 	// and the other roofs too). 'auto': the garden side, unless that faces north.
 	function solarPlace(c) { var p = c.solar_place || 'auto'; return p === 'auto' ? (c.orientation === 'north' ? 'back' : 'front') : p; }
@@ -2220,7 +2257,7 @@
 	var api = { render: render, swatch: swatch, palette: palette, vignette: vignette, visual: VISUAL, visibleFor: visibleFor, plan: plan,
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
 		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
-		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _solarFaces: solarFaces, _balconies: balconies, _balcMark: balcMark, _vehicles: vehicleList, _balconyType: balconyType, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
+		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _solarFaces: solarFaces, _balconies: balconies, _balcMark: balcMark, _vehicles: vehicleList, _roomsOf: roomsOf, _roomItems: roomItems, _mainRoom: mainRoom, _balconyType: balconyType, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
 		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }

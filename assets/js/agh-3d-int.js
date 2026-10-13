@@ -944,7 +944,7 @@ function flames(g, m, x0, x1, y, z) {
 	if (m.night) { var p = new THREE.PointLight('#FF9A4A', 2.5, 5, 2); p.position.set((x0 + x1) / 2, y + 0.3, z + 0.3); g.add(p); }
 }
 function logs(g, x, y, z) { var lm = L.solid('#4A3426', 0.95); [[-0.12, 0.05], [0.12, -0.04], [0, 0.0]].forEach(function (q, i) { var l = M(new THREE.CylinderGeometry(0.05, 0.055, 0.42, 12), lm); l.rotation.z = Math.PI / 2; l.rotation.y = q[1] * 3; at(l, x + q[0] * 0.3, y + 0.05 + (i === 2 ? 0.07 : 0), z); g.add(l); }); }
-export function fireplace(m, type, H) {
+export function fireplace(m, type, H, tvAbove) {
 	var g = G(); H = H || 2.7;
 	if (type === 'none') { return g; }
 	if (type === 'stove') {
@@ -975,7 +975,7 @@ export function fireplace(m, type, H) {
 		BX(g, -0.5, 0.0, 0.2, 0.5, 0.8, 0.252, L.solid('#121212', 0.9));
 		RB(g, -0.9, 0, 0.25, 0.9, 0.03, 0.75, 0.004, st, 1);
 		logs(g, 0, 0, 0.12); flames(g, m, -0.3, 0.3, 0.08, 0.14);
-		var mg = G(); mg.position.set(0, 0, 0.0); g.add(mg); picture(mg, m, 'landscape', 0, 1.45, 1.0, 0.75, 6, m.brass);
+		if (!tvAbove) { var mg = G(); mg.position.set(0, 0, 0.0); g.add(mg); picture(mg, m, 'landscape', 0, 1.45, 1.0, 0.75, 6, m.brass); }
 		candle(g, m, -0.6, 1.22, 0.15); candle(g, m, -0.5, 1.22, 0.18); vase(g, m, 0.6, 1.22, 0.15, 1);
 		return g;
 	}
@@ -1803,11 +1803,18 @@ function ceiling(g, m, type, W, D, H, lights, full) {
 	else if (lights === 'track') { var tz = Math.min(1.2, D * 0.4); BX(g, 0.4, H - 0.04, tz - 0.02, W - 0.4, H, tz + 0.02, m.black); for (var tx = 0.8; tx < W - 0.5; tx += Math.max(0.8, (W - 1.2) / 4)) { ROD(g, [tx, H - 0.04, tz], [tx, H - 0.1, tz], 0.006, m.black); var cyl = M(new THREE.CylinderGeometry(0.035, 0.035, 0.14, 20), m.black); cyl.position.set(tx, H - 0.13, tz + 0.04); cyl.rotation.x = 0.6; g.add(cyl); } if (m.night) { var pt = new THREE.PointLight('#FFE0B8', 3, 7, 2); pt.position.set(W / 2, H - 0.4, tz + 0.3); g.add(pt); } }
 	else if (lights === 'flush') { LA(g, [[0, 0], [0.2, 0], [0.22, 0.03], [0.2, 0.06], [0, 0.07]], m.opal, W / 2, H - 0.07, D / 2, 40); if (m.night) { var pf = new THREE.PointLight('#FFE0B8', 3, 7, 2); pf.position.set(W / 2, H - 0.3, D / 2); g.add(pf); } }
 }
+// The household items a room can hold: size [width, height with decor, depth] of the extra pieces, the devices, the pets.
+var XSIZE = { bookshelf: [1.2, 2.1, 0.36], sideboard: [1.7, 1.15, 0.47], desk: [1.4, 1.3, 1.3], reading: [1.7, 1.6, 1.2], piano: [1.5, 1.25, 1.15], bar_cart: [0.8, 1.0, 0.5], bench: [1.4, 0.5, 0.4], plant_stand: [1.0, 1.2, 0.35], floor_mirror: [0.7, 1.7, 0.3], chest: [1.1, 1.25, 0.5], vitrine: [0.9, 1.9, 0.44], pouf: [0.6, 0.38, 0.6] };
+var ELK = ['tv', 'soundbar', 'speakers', 'console', 'projector', 'computer', 'laptop', 'smart_speaker', 'robot_vacuum', 'smart_panel'], PETK = ['dog_large', 'dog_small', 'cat'];
 export function interiorScene(c, room) {
 	if (room) {
 		c = Object.assign({}, c);
 		['interior_style', 'wall_color', 'furniture_color', 'ceiling_height'].forEach(function (k) { if (room[k]) { c[k] = room[k]; } });
 	}
+	// this room's household items (the visitor's own assignment, or one fitting room per item); people only in the main living room
+	var K0 = L.SK(), rooms0 = K0._roomsOf(c), rid = room ? room.id || ((rooms0.filter(function (q) { return q.type === room.type; })[0] || {}).id) || 'virtual:' + room.type : '', RI = rid ? (K0._roomItems(c, rooms0)[rid] || []) : [], main0 = K0._mainRoom(rooms0);
+	c = Object.assign({}, c, { extra_furniture: RI.filter(function (k) { return !!XSIZE[k]; }), electronics: RI.filter(function (k) { return ELK.indexOf(k) !== -1; }), pets: RI.filter(function (k) { return PETK.indexOf(k) !== -1; }) });
+	var hostsPeople = !rid || !main0 || main0.id === rid;
 	var hs = new L.House(c, { mini: true }), K = L.SK(), m = Mats(c, room);
 	var type = room && room.type ? room.type : 'living', kind = roomKind(type), night = m.night;
 	var area = L.clamp(L.num(room && room.area, 0) || ({ living: 30, living_kitchen: 45, dining: 14, kitchen: 12, bed: 14, kids: 12, office: 10, wardrobe: 6, bath: 7, wc: 2.5, laundry: 5, hall: 7, stairs: 8 }[kind] || 14), 2.5, 90);
@@ -1826,13 +1833,14 @@ export function interiorScene(c, room) {
 	g.add(L.box(0, 0, -0.02, W, D, 0.0, L.roomFloorMat(c, L.roomFloorKey(c, type))));
 	// what stands where: blocking stretches on the back (x) and left (y measured from the front corner) walls
 	var occB = [], occL = [], ws = K._win(c), winW = Math.max(ws.w, 1.0), pano = c.window_style === 'panoramic';
-	var door = { u: 0.3, w: 0.9, style: pick(c, 'door_style') };
+	var door = { u: wet && D < 2.6 ? 0.12 : 0.3, w: wet && D < 2.0 ? 0.8 : 0.9, style: pick(c, 'door_style') }, hasTV = false, rightFeat = null, fixes = [];
 	occL.push([0, door.u + door.w + (door.style === 'barn' ? 1.1 : 0.15)]);
 	var lights = pick(c, 'ceiling_lights'), pend = pick(c, 'pendant_style'), deco = c.decor !== false;
 	var art = pick(c, 'art_style'), plantK = pick(c, 'plants');
 	function P(obj, x, y, rot) { return place(R, obj, x, y, rot); }
 	function onLeft(obj, y, depth) { return P(obj, depth || 0, y, 90); }   // origin on the left wall, facing +x
-	function cornerPlant(x, y, s) { if (deco && plantK !== 'none' && (c.plant_amount !== 'few' || kind === 'living' || kind === 'living_kitchen')) { P(plant(m, plantK, s || 1), x, y, 0); } }
+	function cornerPlant(x, y, s) { if (deco && plantK !== 'none' && (c.plant_amount !== 'few' || kind === 'living' || kind === 'living_kitchen')) { P(tag(plant(m, plantK, s || 1), 'plants'), x, y, 0); } }
+	function tag(obj, key) { obj.userData.item = key; return obj; }
 	function pendantAt(x, y, type2, len) { if (type2 !== 'none' && c.lighting !== 'minimal') { var p = pendant(m, type2, H, len); p.position.set(x, 0, y); R.add(p); } }
 	var backArt = null;
 	if (kind === 'living' || kind === 'living_kitchen' || kind === 'dining') {
@@ -1848,37 +1856,61 @@ export function interiorScene(c, room) {
 			if (pick(c, 'rug_style') !== 'none') { P(rug(m, pick(c, 'rug_style'), tl + 1.4, 2.6), W / 2, D / 2, 0); }
 			P(diningSet(m, dt, pick(c, 'dining_chairs'), n, tl), W / 2, D / 2, 0);
 			pendantAt(W / 2, D / 2, pend, tl * 0.75);
-			var sb = G(); RB(sb, -0.8, 0.12, 0, 0.8, 0.8, 0.45, 0.006, m.wood, 1); legs4(sb, 1.5, 0.4, 0.12, 0.03, m.legs, 'taper'); vase(sb, m, -0.45, 0.8, 0.22, 1.2); bowl(sb, m, 0.4, 0.8, 0.22, 0.12); candle(sb, m, 0.1, 0.8, 0.2);
+			var sb = G(), sbl = G(); RB(sb, -0.8, 0.12, 0, 0.8, 0.8, 0.45, 0.006, m.wood, 1); sbl.position.z = 0.225; legs4(sbl, 1.5, 0.4, 0.12, 0.03, m.legs, 'taper'); sb.add(sbl); vase(sb, m, -0.45, 0.8, 0.22, 1.2); bowl(sb, m, 0.4, 0.8, 0.22, 0.12); candle(sb, m, 0.1, 0.8, 0.2);
 			if (D > 2.6) { onLeft(sb, D / 2 + 0.2); occL.push([D / 2 - 0.6, D / 2 + 1.0]); var al = artwork(m, art === 'mirror' ? 'mirror' : art, 1.2); al.position.y = 0.2; onLeft(al, D / 2 + 0.2); }
 			cornerPlant(W - 0.45, 0.45, 1.1);
 		} else {
 			var sType = pick(c, 'sofa_type'), avail = W - lx - 0.5, sw = L.clamp(avail - 1.1, 1.7, sType === 'u_shape' ? 3.2 : 2.8);
 			if (sType === 'u_shape' && avail < 3.0) { sType = 'corner'; }
 			var sx = lx + 0.25 + Math.max(0, (avail - sw - 0.9) / 2) + sw / 2, sd = sType === 'modular' ? 1.05 : 0.95, front = 0.02 + sd + (sType === 'corner' || sType === 'u_shape' ? 0.8 : 0) + (sType === 'curved' ? 0.1 : 0);
-			var tableY = Math.min(D - 0.9, (sType === 'corner' || sType === 'u_shape' ? 0.02 + sd + 0.55 : front + 0.45) + 0.32);
+			// fireplace and TV: on the left wall of a living room; next to an open kitchen (or with no room at
+			// the left wall) on the back wall, with the sofa turned towards them – both walls are in view
+			var fp = c.fireplace || 'none', mw = pick(c, 'media_wall'), wantFeat = fp !== 'none' || mw !== 'none';
+			var spanL = D - (door.u + door.w + 0.3) - 0.2, cy2 = 0.2 + spanL / 2, span = spanL;
+			var leftOK = kind === 'living' && spanL > 2.0, faceBack = wantFeat && !leftOK && D >= 3.6;
+			var sofaC = 0.02 + sd / 2, sofaRot = 0, tableY = Math.min(D - 0.9, (sType === 'corner' || sType === 'u_shape' ? 0.02 + sd + 0.55 : front + 0.45) + 0.32);
+			if (faceBack) { var fd = 0.8; sofaC = Math.min(D - sd / 2 - 0.1, fd + 1.75 + sd / 2); sofaRot = 180; tableY = (fd + sofaC - sd / 2) / 2 + 0.05; }
 			var rs = pick(c, 'rug_style');
-			if (rs !== 'none') { P(rug(m, rs, Math.min(sw + 0.8, W - lx - 0.2), Math.min(2.4, D - 0.4)), sx, Math.min(tableY, D / 2 + 0.4), 0); }
-			P(sofa(m, sType, sw), sx, 0.02 + sd / 2, 0);
-			occB.push([sx - sw / 2, sx + sw / 2, 0.86]);
-			P(coffeeTable(m, pick(c, 'coffee_table')), sx, tableY, 0);
-			var ac = pick(c, 'armchair_type');
-			if (ac !== 'none' && sx + sw / 2 + 1.1 < W - 0.1) { P(armchair(m, ac), Math.min(W - 0.55, sx + sw / 2 + 0.75), tableY + (ac === 'lounge' ? 0.2 : 0.3), -60); }
-			else if (ac !== 'none' && D > 4.4) { P(armchair(m, ac), sx + sw * 0.3, Math.min(D - 0.6, tableY + 1.2), 180); }
-			P(sideTable(m, c.lighting !== 'minimal' && pick(c, 'floor_lamp') === 'none'), sx - sw / 2 - 0.32, 0.4, 0);
+			if (rs !== 'none') { P(tag(rug(m, rs, Math.min(sw + 0.8, W - lx - 0.2), Math.min(2.4, D - 0.4)), 'rug_style'), sx, faceBack ? tableY : Math.min(tableY, D / 2 + 0.4), 0); }
+			P(tag(sofa(m, sType, sw), 'sofa_type'), sx, sofaC, sofaRot);
+			if (!faceBack) { occB.push([sx - sw / 2, sx + sw / 2, 0.86]); }
+			P(tag(coffeeTable(m, pick(c, 'coffee_table')), 'coffee_table'), sx, tableY, 0);
+			P(sideTable(m, c.lighting !== 'minimal' && pick(c, 'floor_lamp') === 'none'), sx - sw / 2 - 0.32, faceBack ? sofaC : 0.4, 0);
 			var fl = pick(c, 'floor_lamp');
-			if (fl === 'arc') { var bx = sx - sw / 2 - 0.3, by = 0.3, dx = sx - bx, dz = tableY - by; var al2 = floorLamp(m, 'arc'); al2.scale.setScalar(Math.min(1, Math.hypot(dx, dz) / 1.6)); al2.position.set(bx, 0, by); al2.rotation.y = Math.atan2(-dz, dx); R.add(al2); }
-			else if (fl !== 'none' && c.lighting !== 'minimal') { P(floorLamp(m, fl), Math.min(W - 0.35, sx + sw / 2 + 0.3), 0.3, 0); }
+			if (fl === 'arc' && !faceBack) { var bx = sx - sw / 2 - 0.3, by = 0.3, dx = sx - bx, dz = tableY - by; var al2 = floorLamp(m, 'arc'); al2.scale.setScalar(Math.min(1, Math.hypot(dx, dz) / 1.6)); al2.position.set(bx, 0, by); al2.rotation.y = Math.atan2(-dz, dx); R.add(al2); }
+			else if (fl !== 'none' && c.lighting !== 'minimal') { P(tag(floorLamp(m, fl === 'arc' ? 'tripod' : fl), 'floor_lamp'), Math.min(W - 0.35, sx + sw / 2 + 0.3), faceBack ? sofaC + 0.2 : 0.3, 0); }
 			if (pend !== 'none' && c.lighting === 'statement') { pendantAt(sx, tableY, pend); }
-			// the far side wall: fireplace (with the TV above) or the media wall
-			var fp = c.fireplace || 'none', mw = pick(c, 'media_wall');
-			if (kind === 'living' && D > 2.8) {
-				var span = D - (door.u + door.w + 0.3) - 0.2, cy2 = 0.2 + span / 2;
-				if (fp !== 'none') { var fpG = fireplace(m, fp, H); onLeft(fpG, cy2, fp === 'stove' || fp === 'bioethanol' ? 0.3 : 0); occL.push([D - cy2 - 1.1, D - cy2 + 1.1]); if (mw !== 'none' && fp !== 'stove' && fp !== 'mantel') { var tvg = G(); RB(tvg, -0.72, 1.35, 0, 0.72, 2.18, 0.03, 0.004, m.dark, 1); BX(tvg, -0.71, 1.36, 0.03, 0.71, 2.17, 0.032, m.screen); onLeft(tvg, cy2, fp === 'linear' || fp === 'corner' ? 0.36 : 0); } }
-				else if (mw !== 'none') { var mwg = mediaWall(m, mw, Math.min(2.8, span), H); onLeft(mwg, cy2); occL.push([D - cy2 - 1.5, D - cy2 + 1.5]); }
-			} else if (kind === 'living_kitchen' && fp !== 'none' && W - lx > 4.5) {
-				P(fireplace(m, fp === 'linear' || fp === 'mantel' ? 'bioethanol' : fp, H), Math.min(W - 0.7, sx + sw / 2 + 0.9), Math.min(D - 0.6, tableY + 1.3), 180);
+			// the TV hangs on the face of the chimney breast (linear 0.35 m, three-sided 0.57 m deep), else on the wall
+			var tvDepth = function (f) { return f === 'corner' ? 0.59 : (f === 'stove' || f === 'bioethanol' || f === 'mantel' ? 0.03 : 0.37); };
+			var tvAt = function (put, depth) { var tvg = tag(G(), 'media_wall'); RB(tvg, -0.72, 1.35, 0, 0.72, 2.18, 0.03, 0.004, m.dark, 1); BX(tvg, -0.71, 1.36, 0.03, 0.71, 2.17, 0.032, m.screen); put(tvg, depth); hasTV = true; };
+			if (leftOK && wantFeat) {
+				var onL = function (y) { return function (o, depth) { onLeft(o, y, depth || 0); }; };
+				if (fp !== 'none' && mw !== 'none' && (fp === 'stove' || fp === 'mantel') && spanL > 4.6) {
+					// a stove or a mantel with the TV wall beside it
+					var yF = cy2 - 1.15, yM = cy2 + 1.15, mwB = tag(mediaWall(m, mw === 'stone' ? 'lowboard' : mw, 2.2, H), 'media_wall');
+					onLeft(tag(fireplace(m, fp, H), 'fireplace'), yF, fp === 'stove' ? 0.3 : 0); onLeft(mwB, yM); hasTV = true;
+					occL.push([D - cy2 - 2.3, D - cy2 + 2.3]);
+				} else if (fp !== 'none') {
+					var yS = fp === 'stove' && mw !== 'none' ? cy2 - 0.55 : cy2;
+					onLeft(tag(fireplace(m, fp, H, mw !== 'none'), 'fireplace'), yS, fp === 'stove' || fp === 'bioethanol' ? 0.3 : 0);
+					occL.push([D - cy2 - 1.1, D - cy2 + 1.1]);
+					if (mw !== 'none') { tvAt(onL(fp === 'stove' ? cy2 + 0.55 : cy2), tvDepth(fp)); }
+				} else { var wm3 = Math.min(2.8, spanL), mwg = tag(mediaWall(m, mw, wm3, H), 'media_wall'); onLeft(mwg, cy2); occL.push([D - cy2 - wm3 / 2, D - cy2 + wm3 / 2]); hasTV = true; }
+			} else if (faceBack) {
+				var onB = function (o, depth) { P(o, sx, depth || 0, 0); };
+				if (fp !== 'none') {
+					onB(tag(fireplace(m, fp, H, mw !== 'none'), 'fireplace'), fp === 'stove' || fp === 'bioethanol' ? 0.3 : 0.02);
+					if (mw !== 'none') { tvAt(function (o, d2) { P(o, sx + (fp === 'stove' ? 0.9 : 0), d2, 0); }, tvDepth(fp)); }
+				} else { var wb = Math.min(2.6, avail - 0.2); onB(tag(mediaWall(m, mw, wb, H), 'media_wall'), 0.02); hasTV = true; }
+				occB.push([sx - 1.4, sx + 1.4, 9]);
+			} else if (fp !== 'none') {
+				P(tag(fireplace(m, 'bioethanol', H), 'fireplace'), Math.min(W - 0.7, sx + sw / 2 + 0.9), Math.min(D - 0.6, tableY + 1.3), 180);
 			}
-			if (deco) { backArt = [sx, sw]; }
+			// armchair: beside the sofa, turned to the table
+			var ac = pick(c, 'armchair_type');
+			if (ac !== 'none' && sx + sw / 2 + 1.1 < W - 0.1) { P(tag(armchair(m, ac), 'armchair_type'), Math.min(W - 0.55, sx + sw / 2 + 0.75), faceBack ? tableY : tableY + (ac === 'lounge' ? 0.2 : 0.3), faceBack ? -90 : -60); }
+			else if (ac !== 'none' && !faceBack) { P(tag(armchair(m, ac), 'armchair_type'), sx + sw * 0.3, Math.min(D - 0.55, tableY + 1.15), 180); }
+			if (deco && !faceBack) { backArt = [sx, sw]; }
 			cornerPlant(W - 0.42, 0.42, 1.15);
 		}
 	} else if (kind === 'kitchen') {
@@ -1888,7 +1920,7 @@ export function interiorScene(c, room) {
 		var dbl = type === 'master' || type === 'guest' || (kind === 'bed' && W > 3.2), bt = pick(c, 'bed_type'), bw2 = dbl ? 1.8 : 0.9;
 		if (kind === 'kids') { bt = bt === 'canopy' || bt === 'platform' || bt === 'metal' || bt === 'wood' ? bt : 'wood'; }
 		var bx2 = W / 2 + (W > 3.4 ? 0.25 : 0);
-		var rs2 = pick(c, 'rug_style'); if (rs2 !== 'none') { P(rug(m, rs2, bw2 + 1.2, 1.6), bx2, 1.85, 0); }
+		var rs2 = pick(c, 'rug_style'), foot = 2.25; if (rs2 !== 'none') { if (D - foot > 1.0) { var rd2 = Math.min(1.6, D - foot - 0.15); P(tag(rug(m, rs2, bw2 + 0.9, rd2), 'rug_style'), bx2, foot + 0.05 + rd2 / 2, 0); } else { P(tag(rug(m, rs2, bw2 + 1.3, Math.min(D - 0.2, foot + 0.4)), 'rug_style'), bx2, Math.min(D - 0.2, foot + 0.4) / 2 + 0.05, 0); } }
 		P(bed(m, bt, dbl), bx2, 1.05, 0);
 		occB.push([bx2 - bw2 / 2 - (bt === 'panel' ? 1.05 : 0.65), bx2 + bw2 / 2 + (bt === 'panel' ? 1.05 : 0.65), bt === 'canopy' ? 9 : 1.35]);
 		if (pend !== 'none' && c.lighting === 'statement') { pendantAt(bx2, 1.4, pend); }
@@ -1910,7 +1942,7 @@ export function interiorScene(c, room) {
 		P(wardrobe(m, pick(c, 'wardrobe_type'), W - 0.1, H - 0.15), W / 2, 0.33, 0); occB.push([0, W, 9]);
 		if (D > 2.2) { var wg2 = wardrobe(m, 'open', Math.min(D - 1.5, 2.2), H - 0.15); wg2.rotation.y = Math.PI / 2; wg2.position.set(0.31, 0, 0.7 + Math.min(D - 1.5, 2.2) / 2); R.add(wg2); }
 		RB(R, W / 2 - 0.4, 0.0, D * 0.55, W / 2 + 0.4, 0.45, D * 0.55 + 0.6, 0.08, m.fab, 3);
-	} else if (wet) { bathroomIn(R, m, c, kind, W, D, H, occB, occL); }
+	} else if (wet) { bathroomIn(R, m, c, kind, W, D, H, occB, occL, door, fixes); }
 	else if (kind === 'laundry') {
 		var wm = L.solid('#F4F4F2', 0.4), lg = G();
 		[0.35, 1.0].forEach(function (x) { RB(lg, x - 0.3, 0, 0, x + 0.3, 0.85, 0.6, 0.02, wm, 2); var dr = M(new THREE.CylinderGeometry(0.2, 0.2, 0.02, 32), glass('#3A4248', 0.7)); dr.rotation.x = Math.PI / 2; at(dr, x, 0.45, 0.61); lg.add(dr); var rim = M(new THREE.TorusGeometry(0.2, 0.02, 8, 40), m.steel); at(rim, x, 0.45, 0.61); lg.add(rim); });
@@ -1932,90 +1964,181 @@ export function interiorScene(c, room) {
 		cornerPlant(W - 0.38, 0.4, 1.0);
 		pendantAt(W / 2, D / 2, pend === 'linear' ? 'globe' : pend);
 	}
-	// ---- what the household added: more furniture, devices, plants, people and pets
-	var EL = Array.isArray(c.electronics) ? c.electronics : [], XF = Array.isArray(c.extra_furniture) ? c.extra_furniture : [];
+	// ---- this room's own household items (extra furniture, devices, pets), people, more plants. Every
+	// item gets a place – at a wall where nothing stands, else on the free floor – and a self-check below
+	// keeps everything inside the room, out of the doorway and clear of the windows.
+	var EL = c.electronics || [], XF = c.extra_furniture || [], PETS = c.pets || [];
 	var living = kind === 'living' || kind === 'living_kitchen', amount = c.plant_amount || 'normal';
-	var takenB = [], takenL = [[D - Math.min(D, 1.1), D]];
-	if (living && typeof sx === 'number') { takenB.push([sx - sw / 2 - 0.62, sx - sw / 2], [sx + sw / 2, sx + sw / 2 + 0.6]); }
-	takenB.push([W - 0.9, W]);
-	// the right wall (x = W, y from the back): free but for the corner plant and an armchair near it
-	var takenR = [[0, 0.95]];
-	if (living && typeof sx === 'number' && sx + sw / 2 + 1.1 < W - 0.1) { takenR.push([tableY - 0.6, tableY + 1.2]); }
+	var doorZ = [0, D - door.u - door.w - 0.05, 0.95, D - door.u + 0.05];
+	var takenB = [[W - 0.9, W]], takenL = [[D - Math.min(D, 1.1), D]], takenR = [[0, 0.95]], takenF = [[0, Math.min(W, door.w + 0.1)], [W - 0.6, W]];
+	if (living && typeof sx === 'number' && !sofaRot) { takenB.push([sx - sw / 2 - 0.62, sx - sw / 2], [sx + sw / 2, sx + sw / 2 + 0.6]); }
 	if (kind === 'bed' || kind === 'kids') { takenR.push([Math.min(D - 0.4, 2.6) - 0.45, Math.min(D - 0.4, 2.6) + 0.45]); if (D > 3.6 && W > 3.0) { takenR.push([D - 1.7, D]); } }
-	if (kind === 'office' || kind === 'dining' || kind === 'hall') { takenR.push([0, 0.95]); }
-	// the stretch of a wall (back: along x; left: u from the front corner) nearest to `prefer` that fits w
-	function freeAt(occ, taken, len, w, prefer) {
-		var best = null;
+	// footprints of what stands in the room now (rugs and things hanging from the ceiling do not count)
+	var bx3 = new THREE.Box3();
+	function footprints() {
+		var out = [];
+		hs.root.updateMatrixWorld(true);
+		R.children.forEach(function (o) { bx3.setFromObject(o); if (bx3.isEmpty() || bx3.max.y < 0.06 || bx3.min.y > 1.3) { return; } out.push([bx3.min.x, bx3.min.z, bx3.max.x, bx3.max.z]); });
+		return out;
+	}
+	function hits(r, fps, mg) { return fps.some(function (f) { return r[0] < f[2] + mg && r[2] > f[0] - mg && r[1] < f[3] + mg && r[3] > f[1] - mg; }); }
+	function inDoor(r) { return r[0] < doorZ[2] && r[2] > doorZ[0] && r[1] < doorZ[3] && r[3] > doorZ[1]; }
+	// candidate centres along a wall (free stretches, nearest to `prefer` first)
+	function spots(occ, taken, len, w, prefer) {
+		var c2 = [];
 		freeSpans(occ.map(function (o) { return [o[0], o[1]]; }).concat(taken), len, w + 0.1).forEach(function (sp) {
-			var x = L.clamp(prefer, sp[0] + w / 2 + 0.05, sp[1] - w / 2 - 0.05);
-			if (x - w / 2 < sp[0] || x + w / 2 > sp[1]) { return; }
-			if (best === null || Math.abs(x - prefer) < Math.abs(best - prefer)) { best = x; }
+			[L.clamp(prefer, sp[0] + w / 2 + 0.05, sp[1] - w / 2 - 0.05), sp[0] + w / 2 + 0.05, sp[1] - w / 2 - 0.05].forEach(function (x) { if (x - w / 2 >= sp[0] - 1e-6 && x + w / 2 <= sp[1] + 1e-6) { c2.push(x); } });
 		});
-		return best;
+		return c2.sort(function (a, b) { return Math.abs(a - prefer) - Math.abs(b - prefer); });
 	}
-	var placedX = [];
-	function onBack(obj, w, h, prefer) { var x = freeAt(occB, takenB, W, w, prefer); if (x === null) { return false; } placedX.push('B' + x.toFixed(1)); P(obj, x, 0.02, 0); occB.push([x - w / 2, x + w / 2, h]); takenB.push([x - w / 2, x + w / 2]); return true; }
-	function onRight(obj, w, prefer) { var y = freeAt([], takenR, D - 1.1, w, prefer); if (y === null) { return false; } placedX.push('R' + y.toFixed(1)); P(obj, W - 0.02, y, -90); takenR.push([y - w / 2, y + w / 2]); return true; }
-	function onLeftWall(obj, w, prefer) { var u = freeAt(occL, takenL, D, w, prefer); if (u === null) { return false; } placedX.push('L' + u.toFixed(1)); onLeft(obj, D - u, 0.02); occL.push([u - w / 2, u + w / 2]); takenL.push([u - w / 2, u + w / 2]); return true; }
-	var XROOMS = { bookshelf: ['living', 'living_kitchen', 'kids', 'office'], sideboard: ['living', 'living_kitchen', 'dining'], desk: ['bed', 'kids', 'living'], reading: ['living', 'bed', 'office'], piano: ['living', 'living_kitchen', 'dining'], bar_cart: ['living', 'living_kitchen', 'dining'], bench: ['bed'], plant_stand: ['living', 'dining', 'office', 'hall'], floor_mirror: ['bed', 'hall', 'wardrobe'], chest: ['bed', 'hall', 'kids'], vitrine: ['dining', 'living'], pouf: ['living', 'bed', 'kids'] };
-	var XSIZE = { bookshelf: [1.2, 2.1], sideboard: [1.7, 0.82], desk: [1.4, 0.76], reading: [1.7, 1.6], piano: [1.5, 1.25], bar_cart: [0.8, 0.9], bench: [1.4, 0.5], plant_stand: [1.0, 1.2], floor_mirror: [0.7, 1.7], chest: [1.1, 0.95], vitrine: [0.9, 1.9], pouf: [0.6, 0.38] };
-	XF.forEach(function (k, i) {
-		if (!XROOMS[k] || XROOMS[k].indexOf(kind) === -1) { return; }
-		var sz = XSIZE[k];
-		if (k === 'pouf') { if (living && typeof sx === 'number') { P(extraPiece(m, k), Math.max(0.5, sx - sw / 2 + 0.2), Math.min(D - 0.5, tableY + 0.75), 0); } else if (kind === 'bed' || kind === 'kids') { P(extraPiece(m, k), Math.min(W - 0.5, W * 0.5 + 1.3), Math.min(D - 0.5, 2.6), 0); } return; }
-		if (k === 'bench') { var bb = extraPiece(m, 'bench'); bb.children[0].position.z = 0; P(bb, typeof bx2 === 'number' ? bx2 : W / 2, Math.min(D - 0.4, 2.42), 0); return; }
-		// tall pieces prefer the left wall, low ones the back wall (a window can sit above them)
-		var obj = extraPiece(m, k);
-		if (sz[1] >= 1.0) { if (!onLeftWall(obj, sz[0], D * 0.5) && !onRight(obj, sz[0], D * 0.55)) { onBack(obj, sz[0], sz[1], W * 0.7); } }
-		else if (!onBack(obj, sz[0], sz[1], W * (0.75 - i * 0.1)) && !onRight(obj, sz[0], D * 0.5)) { onLeftWall(obj, sz[0], D * 0.45); }
-	});
-	// devices
-	if (living && typeof sx === 'number') {
-		var hasTV = kind === 'living' && D > 2.8 && mw !== 'none' && fp !== 'stove' && fp !== 'mantel';
-		if (EL.indexOf('tv') !== -1 && !hasTV && kind === 'living' && D > 2.8 && fp === 'none') { var tvw = mediaWall(m, 'lowboard', Math.min(2.8, span), H); onLeft(tvw, cy2); occL.push([D - cy2 - 1.2, D - cy2 + 1.2]); hasTV = true; }
-		if (EL.indexOf('projector') !== -1) {
-			place(R, electronic(m, 'projector'), sx, Math.min(D - 0.5, tableY + 0.4), 90, H - 0.36);
-			if (kind === 'living' && D > 2.8) { onLeft(electronic(m, hasTV ? 'screen_up' : 'screen', H), cy2, 0.0); }
+	// put a piece (back on the wall, depth d) at the back, left or right wall; false when nowhere fits
+	function atWall(side, obj, w, d, h, prefer) {
+		var fps = footprints(), list = side === 'B' ? spots(occB, takenB, W, w, prefer) : (side === 'L' ? spots(occL, takenL, D, w, prefer) : (side === 'F' ? spots([], takenF, W, w, prefer) : spots([], takenR, D - 1.0, w, prefer)));
+		for (var i = 0; i < list.length; i++) {
+			var x = list[i], r = side === 'B' ? [x - w / 2, 0.02, x + w / 2, 0.02 + d] : (side === 'L' ? [0.02, D - x - w / 2, 0.02 + d, D - x + w / 2] : (side === 'F' ? [x - w / 2, D - 0.02 - d, x + w / 2, D - 0.02] : [W - 0.02 - d, x - w / 2, W - 0.02, x + w / 2]));
+			if (hits(r, fps, 0.03) || inDoor(r)) { continue; }
+			if (side === 'B') { P(obj, x, 0.02, 0); occB.push([x - w / 2, x + w / 2, h]); takenB.push([x - w / 2, x + w / 2]); }
+			else if (side === 'L') { onLeft(obj, D - x, 0.02); occL.push([x - w / 2, x + w / 2]); takenL.push([x - w / 2, x + w / 2]); }
+			else if (side === 'F') { P(obj, x, D - 0.02, 180); takenF.push([x - w / 2, x + w / 2]); }
+			else { P(obj, W - 0.02, x, -90); takenR.push([x - w / 2, x + w / 2]); }
+			return true;
 		}
-		if (EL.indexOf('smart_speaker') !== -1) { place(R, electronic(m, 'smart_speaker'), sx - sw / 2 - 0.24, 0.48, 0, 0.525); }
-		if (EL.indexOf('laptop') !== -1) { place(R, electronic(m, 'laptop'), sx + sw * 0.18, 0.02 + sd * 0.5, -15, 0.44); }
-		if (EL.indexOf('robot_vacuum') !== -1) { place(R, electronic(m, 'robot_vacuum'), Math.max(0.4, sx - sw / 2 + 0.25), Math.min(D - 0.4, tableY + 1.05), 0); }
+		return false;
 	}
-	if (kind === 'office' && EL.indexOf('laptop') !== -1) { place(R, electronic(m, 'laptop'), Math.max(1.0, W * 0.45) + 0.45, 0.32, -10, 0.76); }
-	if (EL.indexOf('smart_panel') !== -1 && !wet && D > 1.8) { onLeft(electronic(m, 'smart_panel'), Math.max(0.3, D - (door.u + door.w + 0.28)), 0); }
+	// a free spot on the floor, turned towards the camera (the right and the front walls are cut away):
+	// low pieces towards the front right, tall ones towards the back right, so nothing hides the room or a TV.
+	// `strict`: false when nothing is free; otherwise the spot that overlaps the least is taken (and reported)
+	function onFloor(obj, w, d, tall, strict) {
+		var fps = footprints(), best = null, bs = 1e9, rots = [30, 0, 90];
+		for (var ri = 0; ri < rots.length && !best; ri++) {
+			var rot = rots[ri], cs = Math.cos(rot * D2R), sn = Math.sin(rot * D2R);
+			var ex = [[-w / 2, 0], [w / 2, 0], [w / 2, d], [-w / 2, d]].map(function (q) { return [q[0] * cs + q[1] * sn, -q[0] * sn + q[1] * cs]; });
+			var ax0 = Math.min.apply(null, ex.map(function (q) { return q[0]; })), ax1 = Math.max.apply(null, ex.map(function (q) { return q[0]; })), az0 = Math.min.apply(null, ex.map(function (q) { return q[1]; })), az1 = Math.max.apply(null, ex.map(function (q) { return q[1]; }));
+			for (var y = 0.1; y <= D; y += 0.1) {
+				for (var x = 0.1; x <= W; x += 0.1) {
+					var r = [x + ax0, y + az0, x + ax1, y + az1];
+					if (r[0] < 0.05 || r[2] > W - 0.05 || r[1] < 0.05 || r[3] > D - 0.05 || hits(r, fps, 0.06) || inDoor(r)) { continue; }
+					var sc = tall ? (W - r[2]) + r[1] : Math.abs(W - 0.3 - r[2]) * 0.8 + Math.abs(D - 0.35 - r[3]);
+					if (sc < bs) { bs = sc; best = [x, y, rot]; }
+				}
+			}
+		}
+		if (best) { P(obj, best[0], best[1], best[2]); return true; }
+		if (strict) { return false; }
+		// nothing free: the spot overlapping the least, inside the room and out of the doorway
+		var lo = 1e9;
+		for (var y2 = 0.05 + d / 2; y2 <= D - d / 2 - 0.05; y2 += 0.1) {
+			for (var x2 = 0.05 + w / 2; x2 <= W - w / 2 - 0.05; x2 += 0.1) {
+				var r2 = [x2 - w / 2, y2 - d / 2, x2 + w / 2, y2 + d / 2], ov = 0;
+				if (inDoor(r2)) { continue; }
+				fps.forEach(function (f) { ov += Math.max(0, Math.min(r2[2], f[2]) - Math.max(r2[0], f[0])) * Math.max(0, Math.min(r2[3], f[3]) - Math.max(r2[1], f[1])); });
+				ov += 0.01 * (Math.abs(W - x2) + Math.abs(D - y2));
+				if (ov < lo) { lo = ov; best = [x2, y2 - d / 2]; }
+			}
+		}
+		P(obj, best ? best[0] : W / 2, best ? best[1] : Math.max(0.3, D / 2 - d / 2), 0); fixes.push(obj.userData.item || '');
+		return true;
+	}
+	function putPiece(obj, w, d, h, sides, prefer) {
+		for (var i = 0; i < sides.length; i++) { if (sides[i] !== 'R' && sides[i] !== 'F' && atWall(sides[i], obj, w, d, h, sides[i] === 'B' ? W * prefer : D * prefer)) { return; } }
+		if (onFloor(obj, w, d, h >= 1.2, true) || atWall('F', obj, w, d, h, W * prefer)) { return; }
+		onFloor(obj, w, d, h >= 1.2);
+	}
+	// devices: a TV set wherever a TV, soundbar, console or speakers were asked for and there is none
+	if (['tv', 'soundbar', 'console', 'speakers'].some(function (k) { return EL.indexOf(k) !== -1; }) && !hasTV) {
+		var bedR = (kind === 'bed' || kind === 'kids') && typeof bx2 === 'number', tvW = bedR ? 1.6 : 2.2, tvSet;
+		if (bedR) {
+			// at the foot of the bed a low console with the TV on a pedestal (screen 0.62–1.32 m): it faces the
+			// bed, and from the camera's side its back stays low enough not to hide the room
+			tvSet = tag(G(), 'tv'); RB(tvSet, -0.8, 0.1, 0, 0.8, 0.5, 0.42, 0.006, m.wood, 1); var tlg = G(); tlg.position.z = 0.21; legs4(tlg, 1.5, 0.36, 0.1, 0.02, m.legs, 'taper'); tvSet.add(tlg);
+			RB(tvSet, -0.22, 0.5, 0.1, 0.22, 0.52, 0.3, 0.004, m.dark, 1); ROD(tvSet, [0, 0.52, 0.2], [0, 0.64, 0.2], 0.025, m.dark);
+			RB(tvSet, -0.62, 0.62, 0.17, 0.62, 1.32, 0.21, 0.004, m.dark, 1); BX(tvSet, -0.615, 0.626, 0.21, 0.615, 1.314, 0.212, m.screen);
+		} else { tvSet = tag(mediaWall(m, 'lowboard', tvW, H), 'tv'); }
+		if (!(bedR && atWall('F', tvSet, tvW, 0.45, 1.3, bx2))) { putPiece(tvSet, tvW, 0.45, bedR ? 1.3 : 1.9, ['L', 'B'], 0.5); } hasTV = true;
+	}
+	XF.forEach(function (k, i) {
+		var sz = XSIZE[k]; if (!sz) { return; }
+		var obj = tag(extraPiece(m, k), k);
+		if (k === 'pouf') { if (living && typeof sx === 'number') { P(obj, Math.max(0.5, sx - sw / 2 + 0.2), Math.min(D - 0.5, tableY + 0.75), 0); } else { onFloor(obj, 0.6, 0.6); } return; }
+		if (k === 'bench' && (kind === 'bed' || kind === 'kids') && typeof bx2 === 'number' && D - 2.25 > 0.5) { obj.children[0].position.z = 0; P(obj, bx2, Math.min(D - 0.3, 2.4), 0); return; }
+		// tall pieces prefer the side walls, low ones the back wall (a window may sit above them)
+		putPiece(obj, sz[0], sz[2], sz[1], sz[1] >= 1.0 ? ['L', 'R', 'B'] : ['B', 'R', 'L'], sz[1] >= 1.0 ? 0.5 : 0.75 - i * 0.1);
+	});
+	if (EL.indexOf('projector') !== -1) {
+		place(R, tag(electronic(m, 'projector'), 'projector'), living && typeof sx === 'number' ? sx : W / 2, living && typeof tableY === 'number' ? Math.min(D - 0.5, tableY + 0.4) : D / 2, 90, H - 0.36);
+		if (!hasTV) { putPiece(tag(electronic(m, 'screen', H), 'projector'), 2.0, 0.08, 2.5, ['L', 'R', 'B'], 0.5); }
+	}
+	if (EL.indexOf('computer') !== -1 && kind !== 'office') { var pcd = tag(extraPiece(m, 'desk'), 'computer'), pc2 = electronic(m, 'computer'); pc2.position.set(0, 0.76, 0.18); pcd.add(pc2); putPiece(pcd, 1.4, 1.3, 1.3, ['B', 'R', 'L'], 0.4); }
+	if (EL.indexOf('laptop') !== -1) {
+		if (living && typeof sx === 'number') { place(R, tag(electronic(m, 'laptop'), 'laptop'), sx + sw * 0.18, sofaRot ? sofaC : 0.02 + sd * 0.5, sofaRot ? 165 : -15, 0.44); }
+		else if (kind === 'office') { place(R, tag(electronic(m, 'laptop'), 'laptop'), Math.max(1.0, W * 0.45) + 0.45, 0.32, -10, 0.76); }
+		else if ((kind === 'bed' || kind === 'kids') && typeof bx2 === 'number') { place(R, tag(electronic(m, 'laptop'), 'laptop'), bx2 + 0.25, 1.35, 20, 0.6); }
+		else if (kind === 'dining') { place(R, tag(electronic(m, 'laptop'), 'laptop'), W / 2 + 0.3, D / 2 - 0.1, 10, 0.76); }
+		else { var lt = tag(sideTable(m, false), 'laptop'), lp = electronic(m, 'laptop'); lp.position.set(0, 0.525, 0); lp.scale.setScalar(0.9); lt.add(lp); putPiece(lt, 0.5, 0.5, 0.6, ['B', 'R'], 0.5); }
+	}
+	if (EL.indexOf('smart_speaker') !== -1) {
+		if (living && typeof sx === 'number') { place(R, tag(electronic(m, 'smart_speaker'), 'smart_speaker'), sx - sw / 2 - 0.24, sofaRot ? sofaC + 0.08 : 0.48, 0, 0.525); }
+		else { var st4 = tag(sideTable(m, false), 'smart_speaker'), sp4 = electronic(m, 'smart_speaker'); sp4.position.set(0, 0.525, 0); st4.add(sp4); putPiece(st4, 0.5, 0.5, 0.7, ['B', 'R'], 0.85); }
+	}
+	if (EL.indexOf('robot_vacuum') !== -1) { onFloor(tag(electronic(m, 'robot_vacuum'), 'robot_vacuum'), 0.4, 0.4); }
+	if (EL.indexOf('smart_panel') !== -1) { onLeft(tag(electronic(m, 'smart_panel'), 'smart_panel'), Math.max(0.3, D - (door.u + door.w + 0.28)), 0); }
 	// plants: fewer, or many more (an urban jungle) than the one in the corner
 	if (deco && plantK !== 'none' && amount === 'jungle' && !wet) {
 		var kinds2 = [plantK, 'snake', 'pothos', 'monstera', 'fiddle', 'palm'], n3 = living ? 4 : 2;
 		for (var pi = 0, put = 0; pi < 8 && put < n3; pi++) {
-			var pk = kinds2[(pi + 1) % kinds2.length], pw3 = pk === 'pothos' || pk === 'snake' ? 0.5 : 0.7, po = plant(m, pk, pk === 'fiddle' || pk === 'palm' ? 1.0 : 0.9);
-			if (pi % 2 === 0) { var xb = freeAt(occB, takenB, W, pw3, pi < 2 ? 0.5 : W * 0.35); if (xb !== null) { P(po, xb, 0.38, pi * 40); takenB.push([xb - pw3 / 2, xb + pw3 / 2]); put++; } }
-			else { var ul = freeAt(occL, takenL, D, pw3, D * 0.6); if (ul !== null) { P(po, 0.38, D - ul, pi * 40); takenL.push([ul - pw3 / 2, ul + pw3 / 2]); put++; } }
+			var pk = kinds2[(pi + 1) % kinds2.length], pw3 = pk === 'pothos' || pk === 'snake' || pk === 'cactus' ? 0.55 : 0.85, po = tag(plant(m, pk, pk === 'fiddle' || pk === 'palm' ? 1.0 : 0.9), 'plants');
+			po.rotation.y = pi * 0.7;
+			var c2p = po; var wrap2 = G(); c2p.position.z = pw3 / 2; wrap2.add(c2p); tag(wrap2, 'plants');
+			if (atWall(pi % 2 ? 'L' : 'B', wrap2, pw3, pw3, 0.5, pi % 2 ? D * 0.6 : (pi < 2 ? 0.5 : W * 0.35)) || atWall(pi % 2 ? 'B' : 'L', wrap2, pw3, pw3, 0.5, pi % 2 ? W * 0.3 : D * 0.5)) { put++; }
 		}
 	}
-	// people and pets
-	var WHO = { couple: [['man', 'sit'], ['woman', 'sit']], family: [['man', 'sit'], ['woman', 'stand'], ['child', 'walk'], ['child', 'stand']], guests: [['man', 'sit'], ['woman', 'sit'], ['woman', 'stand'], ['man', 'stand']] }[c.people] || [];
-	var PETS = Array.isArray(c.pets) ? c.pets : [];
+	// people (only in the main living room) and this room's pets
+	var WHO = hostsPeople ? ({ couple: [['man', 'sit'], ['woman', 'sit']], family: [['man', 'sit'], ['woman', 'stand'], ['child', 'walk'], ['child', 'stand']], guests: [['man', 'sit'], ['woman', 'sit'], ['woman', 'stand'], ['man', 'stand']] }[c.people] || []) : [];
 	if (living && typeof sx === 'number') {
-		var seats = [sx - sw * 0.22, sx + sw * 0.22], si = 0, st2 = 0;
+		var seats = [sx - sw * 0.22, sx + sw * 0.22], si = 0, st2 = 0, seatY = sofaRot ? sofaC + 0.02 : 0.02 + sd * 0.48;
 		WHO.forEach(function (w2, i) {
-			if (w2[1] === 'sit' && si < 2) { P(person(m, w2[0], 'sit', 3 + i * 5), seats[si++], 0.02 + sd * 0.48, 0); return; }
+			if (w2[1] === 'sit' && si < 2) { P(person(m, w2[0], 'sit', 3 + i * 5), seats[si++], seatY, sofaRot); return; }
 			var px = w2[0] === 'child' ? sx - 0.55 + st2 * 0.9 : Math.min(W - 0.45, sx + sw / 2 + 0.35 - st2 * 0.6), py = w2[0] === 'child' ? Math.min(D - 0.4, tableY + 0.85) : Math.min(D - 0.45, tableY + 1.15);
 			P(person(m, w2[0], w2[1], 7 + i * 3), px, py, w2[0] === 'child' ? 160 + st2 * 50 : -150); st2++;
 		});
-		PETS.forEach(function (k, i) {
-			if (k === 'cat') { place(R, cat(m, 11, 'lie'), sx + sw / 2 - 0.35, 0.02 + sd * 0.45, -70, 0.45); return; }
-			P(dog(m, k === 'dog_small' ? 'small' : 'large', 5 + i, k === 'dog_large' ? 'lie' : 'stand'), Math.min(W - 0.6, sx + 0.75 - i * 0.4), Math.min(D - 0.4, tableY + 0.7 + i * 0.25), 200 + i * 40);
+	} else if (WHO.length) {
+		WHO.slice(0, kind === 'kitchen' || kind === 'dining' ? 2 : 1).forEach(function (w2, i) { onFloor(person(m, w2[0], 'stand', 4 + i * 7), 0.5, 0.4); });
+	}
+	PETS.forEach(function (k, i) {
+		if (k === 'cat') {
+			if (living && typeof sx === 'number' && !sofaRot) { place(R, tag(cat(m, 11, 'lie'), 'cat'), sx + sw / 2 - 0.35, 0.02 + sd * 0.45, -70, 0.45); }
+			else if ((kind === 'bed' || kind === 'kids') && typeof bx2 === 'number') { place(R, tag(cat(m, 13, 'lie'), 'cat'), bx2 + 0.35, 1.9, 30, 0.58); }
+			else { onFloor(tag(cat(m, 13, 'sit'), 'cat'), 0.4, 0.4); }
+			return;
+		}
+		var dg = tag(dog(m, k === 'dog_small' ? 'small' : 'large', 5 + i, k === 'dog_large' ? 'lie' : 'stand'), k);
+		if (living && typeof sx === 'number' && !sofaRot) { P(dg, Math.min(W - 0.6, sx + 0.75 - i * 0.4), Math.min(D - 0.4, tableY + 0.7 + i * 0.25), 200 + i * 40); }
+		else { var pb = G(); pb.add(petBed(m)); dg.rotation.y = 1; pb.add(dg); tag(pb, k); if (!onFloor(pb, 0.95, 0.95, false, true)) { pb.remove(dg); dg.rotation.y = 0; tag(dg, k); onFloor(dg, 0.45, k === 'dog_small' ? 0.5 : 0.95); } }
+	});
+	// self-check: whatever pokes out of the room is moved (or shrunk) back in, nothing stands in the doorway
+	(function () {
+		hs.root.updateMatrixWorld(true);
+		R.children.slice().forEach(function (o) {
+			bx3.setFromObject(o);
+			if (bx3.isEmpty() || bx3.max.y < 0.06 || bx3.min.y > 1.3) { return; }
+			var w = bx3.max.x - bx3.min.x, d = bx3.max.z - bx3.min.z, k = 1, dx = 0, dz = 0;
+			if (w > W + 0.01 || d > D + 0.01 || bx3.max.y > H + 0.02) { k = Math.min(1, (W - 0.04) / w, (D - 0.04) / d, H / bx3.max.y); o.scale.multiplyScalar(k); o.updateMatrixWorld(true); bx3.setFromObject(o); }
+			if (bx3.min.x < -0.005) { dx = -bx3.min.x + 0.01; } else if (bx3.max.x > W + 0.005) { dx = W - bx3.max.x - 0.01; }
+			if (bx3.min.z < -0.005) { dz = -bx3.min.z + 0.01; } else if (bx3.max.z > D + 0.005) { dz = D - bx3.max.z - 0.01; }
+			var r = [bx3.min.x + dx, bx3.min.z + dz, bx3.max.x + dx, bx3.max.z + dz];
+			if (inDoor(r) && r[3] - r[1] < 2.5) { var mx = doorZ[2] + 0.02 - r[0]; if (r[2] + mx < W - 0.01) { dx += mx; } else { dz += doorZ[1] - 0.02 - r[3]; } }
+			if (Math.abs(dx) > 0.004 || Math.abs(dz) > 0.004 || k < 0.999) { o.position.x += dx; o.position.z += dz; if (o.userData.item) { fixes.push(o.userData.item); } }
 		});
-	} else if (WHO.length && (kind === 'kitchen' || kind === 'dining')) {
-		P(person(m, WHO[0][0] === 'child' ? 'woman' : WHO[0][0], 'stand', 4), kind === 'kitchen' ? W / 2 : Math.min(W - 0.5, W / 2 + 1.3), kind === 'kitchen' ? Math.min(D - 0.5, 1.25) : D / 2 + 0.2, kind === 'kitchen' ? 180 : -110);
-	} else if (kind === 'kids' && WHO.some(function (w2) { return w2[0] === 'child'; })) {
-		P(person(m, 'child', 'stand', 21), W / 2 - 0.4, Math.min(D - 0.5, 2.3), 20);
-	}
-	if (PETS.length && (kind === 'bed' || kind === 'hall')) {
-		var pk2 = PETS[0];
-		if (pk2 === 'cat') { if (kind === 'bed') { place(R, cat(m, 13, 'lie'), (typeof bx2 === 'number' ? bx2 : W / 2) + 0.35, 1.9, 30, 0.58); } }
-		else { P(petBed(m), W - 0.75, Math.min(D - 0.6, 1.6), 0); P(dog(m, pk2 === 'dog_small' ? 'small' : 'large', 6, 'lie'), W - 0.75, Math.min(D - 0.6, 1.6), 60); }
-	}
+		// windows keep clear of what actually stands at the walls
+		hs.root.updateMatrixWorld(true);
+		var sillMin = wet ? 1.2 : 0.9;
+		R.children.forEach(function (o) {
+			bx3.setFromObject(o);
+			if (bx3.isEmpty() || bx3.max.y < 0.06 || bx3.min.y > 1.3) { return; }
+			if (bx3.min.z < 0.75) { occB.push([bx3.min.x, bx3.max.x, bx3.max.y]); }
+			if (bx3.min.x < 0.75 && bx3.max.y > sillMin - 0.05) { occL.push([D - bx3.max.z, D - bx3.min.z]); }
+		});
+	})();
 	// walls: back (y = 0), left (x = 0), right (x = W), front (y = D) – windows in the free stretches, the door on the left
 	var winSill = wet ? Math.min(1.55, H - 0.95) : (pano ? 0.05 : L.clamp(ws.sill, 0.5, 1.0)), winH = wet ? 0.75 : Math.min(pano ? H - 0.35 : Math.max(ws.h, 1.3), H - 0.7);
 	var lowB = occB.filter(function (o) { return o[2] < 1.0; }), hiB = occB.filter(function (o) { return o[2] >= 1.0; });
@@ -2076,7 +2199,7 @@ export function interiorScene(c, room) {
 	// sizes for the camera: the room box (an invisible frame)
 	var fit = new THREE.Mesh(L.boxGeo(W + 0.4, H * 0.75, D + 0.4), new THREE.MeshBasicMaterial({ visible: false }));
 	fit.position.copy(L.X(W / 2, D / 2, H * 0.35)); hs.add(fit);
-	hs.room = { W: W, D: D, H: H, kind: kind, extra: placedX };
+	hs.room = { W: W, D: D, H: H, kind: kind, door: [D - door.u - door.w, D - door.u], fixes: fixes.filter(function (k, i) { return k && fixes.indexOf(k) === i; }) };
 	return hs;
 }
 // Kitchen in a room: runs along the back wall (and the left wall), island in front.
@@ -2101,44 +2224,96 @@ function kitchenIn(R, m, c, x0, x1, D, H, layout, occB, occL) {
 	}
 }
 // Bathroom / WC: shower in the back left corner, vanity and toilet along the back wall, tub on the right.
-function bathroomIn(R, m, c, kind, W, D, H, occB, occL) {
+function bathroomIn(R, m, c, kind, W, D, H, occB, occL, door, fixes) {
 	var fx = c.bath_fixtures || ['walkin', 'double_basin', 'wc'], has = function (v) { return fx.indexOf(v) !== -1; };
+	var dz0 = D - door.u - door.w - 0.12;   // the left wall is free from the back corner up to here (the door follows)
 	if (kind === 'wc') {
-		var t = toilet(m, pick(c, 'toilet_type') === 'smart' ? 'wall_hung' : pick(c, 'toilet_type')); t.position.set(0.5, 0, 0); R.add(t);
-		var bxw = Math.max(1.1, W - 0.38), hb = vanity(m, 'none', 'wall_hung', 1, 0.5); hb.scale.setScalar(0.8); hb.position.set(bxw, 0, 0); R.add(hb);
-		var mi = bathMirror(m, pick(c, 'mirror_type') === 'cabinet' ? 'round' : pick(c, 'mirror_type'), 0.45); mi.position.set(bxw, 0, 0); R.add(mi);
+		// the toilet at the far end of the back wall, the hand basin near the door side (the doorway stays free)
+		var t = toilet(m, pick(c, 'toilet_type') === 'smart' ? 'wall_hung' : pick(c, 'toilet_type')); t.userData.item = 'toilet_type'; t.position.set(W - 0.45, 0, 0); R.add(t);
+		if (has('bidet') && W >= 2.3) { var bd0 = toilet(m, 'wall_hung', true); bd0.userData.item = 'bath_fixtures'; bd0.position.set(W - 1.1, 0, 0); R.add(bd0); }
+		var bxw = Math.min(0.42, W - (has('bidet') && W >= 2.3 ? 1.7 : 1.05)), hb = vanity(m, 'none', 'wall_hung', 1, 0.5); hb.scale.setScalar(0.8);
+		if (bxw < 0.3 && dz0 > 0.75) { hb.rotation.y = Math.PI / 2; hb.position.set(0, 0, Math.min(dz0 - 0.25, 0.55)); occL.push([D - 0.9, D - 0.2]); } else { hb.position.set(Math.max(0.3, bxw), 0, 0); }
+		R.add(hb);
+		var mi = bathMirror(m, pick(c, 'mirror_type') === 'cabinet' ? 'round' : pick(c, 'mirror_type'), 0.45); mi.position.copy(hb.position); mi.rotation.y = hb.rotation.y; R.add(mi);
 		occB.push([0.15, W, 2.0]);
-		if (c.decor !== false) { var pl = plant(m, 'snake', 0.6); pl.position.set(W - 0.3, 0, 0.3); R.add(pl); }
+		if (c.decor !== false && D > 1.4) { var pl = plant(m, 'snake', 0.6); pl.position.set(W - 0.28, 0, D - 0.3); R.add(pl); }
 		return;
 	}
 	var shT = pick(c, 'shower_type'), tubT = pick(c, 'bathtub_type'), nb = has('double_basin') ? 2 : (has('basin') || !has('double_basin') ? 1 : 0);
-	var sw = shT === 'none' ? 0 : (W > 3.0 ? 1.2 : 1.0), sd = shT === 'none' ? 0 : 1.0;
+	var wantWC = has('wc') || !fx.length, wantBd = has('bidet'), wantTR = has('towel_rail'), vt = pick(c, 'vanity_type'), bt = pick(c, 'basin_type');
+	var tubW = 0, tubZ = 0, tubFree = (tubT === 'freestanding' || tubT === 'clawfoot') && W >= 2.8 && D >= 2.6;
+	if (tubT !== 'none') { tubW = tubFree ? 0 : (tubT === 'japanese' ? 0.8 : 0.86); tubZ = tubFree ? Math.min(D - 1.1, 1.5) + 0.9 : 0.05 + (tubT === 'japanese' ? 1.2 : 1.76); }
+	// Fixture plan: the back wall (shower | basins | toilet | bidet | tub) first; what does not fit goes to the left
+	// wall between the shower and the door, then to the front and the right wall (both cut away in the view, so
+	// the fixture shows from behind) – never into the door swing. A tight room gets a smaller shower and basin.
+	function alloc(sw) {
+		var sd = sw ? Math.min(1.0, sw) : 0, tubFront = tubT !== 'none' && tubZ > D - 0.75;
+		var S = {
+			B: [sw ? sw + 0.15 : 0.12, W - (tubW ? tubW + 0.12 : 0.15)],
+			L: [sd ? sd + 0.15 : 0.15, dz0],
+			F: [door.w + 0.12, W - (tubFront ? (tubFree ? 1.3 : tubW + 0.12) : 0.15)],
+			R: [tubT !== 'none' ? tubZ + 0.12 : 0.75, D - 0.75]
+		};
+		var put = [], fail = [], vw = nb > 1 ? 1.5 : 0.9, n2 = nb;
+		var need = function () { return (n2 ? vw + 0.1 : 0) + (wantWC ? 0.75 : 0) + (wantBd ? 0.65 : 0); }, room = S.B[1] - S.B[0], onB = { wc: wantWC, bidet: wantBd, basin: !!n2 };
+		if (n2 > 1 && need() > room) { vw = Math.max(1.1, vw - (need() - room)); if (need() > room) { n2 = 1; vw = 0.9; } }
+		if (n2 && need() > room) { vw = Math.max(0.6, vw - (need() - room)); }
+		if (need() > room && wantBd) { onB.bidet = false; }
+		var need2 = function () { return (onB.basin ? vw + 0.1 : 0) + (onB.wc ? 0.75 : 0) + (onB.bidet ? 0.65 : 0); };
+		if (need2() > room && wantWC) { onB.wc = false; }
+		if (need2() > room && n2) { onB.basin = false; vw = 0.55; }
+		var cur = { B: S.B[0], L: S.L[0], F: S.F[0], R: S.R[0] };
+		function slot(key, w, order) {
+			for (var i = 0; i < order.length; i++) { var k = order[i]; if (cur[k] + w <= S[k][1] + 0.02) { put.push([key, k, cur[k] + w / 2, w]); cur[k] += w; return true; } }
+			fail.push([key, w]); return false;
+		}
+		if (n2) { slot('basin', vw + 0.1, onB.basin ? ['B'] : ['L', 'F', 'R']); }
+		if (wantWC) { slot('wc', 0.75, onB.wc ? ['B'] : ['L', 'F', 'R']); }
+		if (wantBd) { slot('bidet', 0.65, onB.bidet ? ['B'] : ['L', 'F', 'R', 'B']); }
+		if (wantTR) { slot('rail', 0.6, ['L', 'B', 'F', 'R']); }
+		return { sw: sw, sd: sd, put: put, fail: fail, vw: vw, nb: n2, S: S, cur: cur };
+	}
+	var plan = alloc(shT === 'none' ? 0 : (W > 3.0 ? 1.2 : 1.0));
+	if (plan.fail.length && plan.sw > 0.9) { var p2 = alloc(0.9); if (p2.fail.length < plan.fail.length) { plan = p2; } }
+	// still no room for the toilet or the basin: the shower moves over the tub (a glass screen and a rain head)
+	var bad = function (p) { return p.fail.filter(function (f) { return f[0] === 'wc' || f[0] === 'basin'; }).length; }, merged = false;
+	if (bad(plan) && tubT !== 'none' && shT !== 'none' && !tubFree) { var p3 = alloc(0); if (bad(p3) < bad(plan)) { plan = p3; merged = true; } }
+	var sw = plan.sw, sd = plan.sd;
 	if (sw) { var sh = shower(m, shT, sw, sd, H, m.tile); R.add(sh); occB.push([0, sw + 0.1, 9]); occL.push([D - sd - 0.1, D]); }
-	var tubW = 0;
 	if (tubT !== 'none') {
-		var tub = bathtub(m, tubT), free = tubT === 'freestanding' || tubT === 'clawfoot';
-		if (free && W >= 2.8 && D >= 2.6) { tub.rotation.y = Math.PI / 2; tub.position.set(W - 0.75, 0, Math.min(D - 1.1, 1.5)); }
-		else { tub.rotation.y = Math.PI / 2; tub.position.set(W - (tubT === 'japanese' ? 0.42 : 0.43), 0, 0.05 + (tubT === 'japanese' ? 0.6 : 0.88)); tubW = tubT === 'japanese' ? 0.8 : 0.86; }
+		var tub = bathtub(m, tubT); tub.rotation.y = Math.PI / 2;
+		if (tubFree) { tub.position.set(W - 0.75, 0, tubZ - 0.9); } else { tub.position.set(W - (tubT === 'japanese' ? 0.42 : 0.43), 0, 0.05 + (tubT === 'japanese' ? 0.6 : 0.88)); }
 		R.add(tub);
+		if (merged) { var fm = finMat(m.c), cx2 = W - tubW / 2; ROD(R, [cx2, 2.15, 0], [cx2, 2.15, 0.38], 0.011, fm); RB(R, cx2 - 0.16, 2.12, 0.3, cx2 + 0.16, 2.14, 0.62, 0.01, fm, 2); add(R, at(M(L.boxGeo(0.008, 1.4, 0.8), glass('#E6F0F2', 0.18), false), W - tubW + 0.03, 1.3, 0.45)); }
 	}
-	var vt = pick(c, 'vanity_type'), bt = pick(c, 'basin_type'), vw = nb > 1 ? Math.min(1.5, W - sw - tubW - 0.9) : 0.9;
-	if (vw < 1.1 && nb > 1) { nb = 1; vw = 0.9; }
-	var vx = sw + 0.3 + vw / 2;
-	if (nb) {
-		var v = vanity(m, vt, bt, nb, vw); v.position.set(vx, 0, 0); R.add(v);
-		var mt = pick(c, 'mirror_type'); if (c.bath_mirror !== false && mt !== 'none') { (nb > 1 && mt !== 'led' && mt !== 'cabinet' ? [-vw / 4, vw / 4] : [0]).forEach(function (dx) { var mi2 = bathMirror(m, mt, nb > 1 && mt !== 'led' && mt !== 'cabinet' ? vw / 2 - 0.1 : vw); mi2.position.set(vx + dx, 0, 0); R.add(mi2); }); }
-		occB.push([vx - vw / 2, vx + vw / 2, 2.0]);
-		if (c.decor !== false) { RB(R, vx - 0.35, 0, 0.6, vx + 0.35, 0.012, 1.05, 0.006, m.linenWhite, 1); }
+	// what found no wall at all goes where the most room is left (the self-check keeps it inside the room)
+	plan.fail.forEach(function (f) { var best = 'B', bl = -9; ['B', 'L', 'F', 'R'].forEach(function (k) { var l = plan.S[k][1] - plan.cur[k]; if (l > bl) { bl = l; best = k; } }); plan.put.push([f[0], best, plan.cur[best] + f[1] / 2, f[1]]); plan.cur[best] += f[1]; fixes.push(f[0] === 'wc' ? 'toilet_type' : 'bath_fixtures'); });
+	var mt = pick(c, 'mirror_type'), corner = false;
+	plan.put.forEach(function (q) {
+		var key = q[0], side = q[1], ctr = q[2], w = q[3], obj, h = 1.2, mir = null;
+		if (key === 'basin') {
+			var vw = w - 0.1, n2 = plan.nb;
+			obj = vw < 0.6 ? vanity(m, 'none', 'wall_hung', 1, 0.5) : vanity(m, vt, bt, n2, vw); h = 2.0;
+			if (vw < 0.6) { obj.scale.setScalar(0.85); }
+			if (c.bath_mirror !== false && mt !== 'none' && (side === 'B' || side === 'L')) {
+				mir = G(); (n2 > 1 && mt !== 'led' && mt !== 'cabinet' ? [-vw / 4, vw / 4] : [0]).forEach(function (dx) { var mi2 = bathMirror(m, mt, n2 > 1 && mt !== 'led' && mt !== 'cabinet' ? vw / 2 - 0.1 : Math.min(vw, 0.9)); mi2.position.x = dx; mir.add(mi2); });
+			}
+			if (c.decor !== false && side === 'B') { RB(R, ctr - 0.35, 0, 0.6, ctr + 0.35, 0.012, 1.05, 0.006, m.linenWhite, 1); }
+		} else if (key === 'wc') { obj = toilet(m, pick(c, 'toilet_type')); obj.userData.item = 'toilet_type'; }
+		else if (key === 'bidet') { obj = toilet(m, 'wall_hung', true); obj.userData.item = 'bath_fixtures'; }
+		else { obj = towelRail(m); obj.userData.item = 'bath_fixtures'; }
+		[obj, mir].forEach(function (o) {
+			if (!o) { return; }
+			if (side === 'B') { o.position.set(ctr, 0, 0); } else if (side === 'L') { o.rotation.y = Math.PI / 2; o.position.set(0, 0, ctr); } else if (side === 'F') { o.rotation.y = Math.PI; o.position.set(ctr, 0, D); } else { o.rotation.y = -Math.PI / 2; o.position.set(W, 0, ctr); }
+			R.add(o);
+		});
+		if (side === 'B') { occB.push([ctr - w / 2, ctr + w / 2, h]); } else if (side === 'L') { occL.push([D - ctr - w / 2, D - ctr + w / 2]); }
+		if ((side === 'F' && ctr + w / 2 > W - 0.8) || (side === 'R' && ctr + w / 2 > D - 0.8)) { corner = true; }
+	});
+	if (c.decor !== false && !corner) {
+		var pl2 = plant(m, pick(c, 'plants') === 'monstera' || pick(c, 'plants') === 'palm' ? pick(c, 'plants') : 'snake', 0.7); pl2.position.set(W - 0.35, 0, D - 0.4); R.add(pl2);
+		if (D - 0.95 - 0.25 > tubZ) { var stl = G(); CY(stl, 0, 0, 0, 0.17, 0.15, 0.45, m.oak, 24); towel(stl, m.linenWhite, 0, 0.47, 0, 0.3, 0); stl.position.set(W - 0.4, 0, D - 0.95); R.add(stl); }
 	}
-	var tx = vx + vw / 2 + 0.55, wcT = pick(c, 'toilet_type');
-	if (has('wc') || !fx.length) {
-		var tl = toilet(m, wcT);
-		if (tx + 0.3 < W - tubW - 0.05) { tl.position.set(tx, 0, 0); occB.push([tx - 0.3, tx + 0.3, 1.2]); if (has('bidet') && tx + 0.95 < W - tubW) { var bd = toilet(m, 'wall_hung', true); bd.position.set(tx + 0.6, 0, 0); R.add(bd); } }
-		else { tl.rotation.y = Math.PI / 2; tl.position.set(0, 0, Math.min(D - 1.5, sd + 0.55)); occL.push([D - sd - 1.0, D - sd - 0.1]); }
-		R.add(tl);
-	}
-	if (has('towel_rail')) { var tr = towelRail(m); tr.rotation.y = Math.PI / 2; var ty = Math.min(D - 1.6, sd + 1.35); if (ty > sd + 0.5) { tr.position.set(0, 0, ty); R.add(tr); occL.push([D - ty - 0.3, D - ty + 0.3]); } }
-	if (c.decor !== false) { var pl2 = plant(m, pick(c, 'plants') === 'monstera' || pick(c, 'plants') === 'palm' ? pick(c, 'plants') : 'snake', 0.7); pl2.position.set(W - 0.35, 0, D - 0.4); R.add(pl2); var stl = G(); CY(stl, 0, 0, 0, 0.17, 0.15, 0.45, m.oak, 24); towel(stl, m.linenWhite, 0, 0.47, 0, 0.3, 0); stl.position.set(W - 0.4, 0, D - 0.95); R.add(stl); }
 }
 
 // A flat four-cornered face (three.js points, counter-clockwise seen from the front).
