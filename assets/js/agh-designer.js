@@ -313,7 +313,7 @@
 		if (!root) { return; }
 		renderPreviewOnly();
 		if (S.wiz) { updateWizardSide(); }
-		Array.prototype.forEach.call(root.querySelectorAll('.agh-card-vis.is-wait'), function (el) { el.classList.remove('is-wait'); el.innerHTML = el._svg || ''; });
+		Array.prototype.forEach.call(root.querySelectorAll('.agh-card-vis.is-wait'), function (el) { el.classList.remove('is-wait'); el.innerHTML = el._mk ? el._mk() : (el._svg || ''); });
 	}
 	function waitBox() {
 		return h('div', { class: 'agh-3d-wait', role: 'status' }, h('span', null, h('i', { class: 'agh-spinner' }), t('loading_3d')));
@@ -861,6 +861,15 @@
 	// swatch, an interior palette, a landscape vignette or a kitchen plan – every option looks different.
 	var visSeq = 0;
 	function cardVisual(field, value) {
+		var el = h('span', { class: 'agh-card-vis', 'aria-hidden': 'true', 'data-field': field, 'data-value': value });
+		el._mk = function () { if (el._svg === undefined) { el._svg = cardSvg(field, value); } return el._svg; };
+		var thumbs = THUMB_FIELDS[field] && lsGet('agh_3d_thumbs', true) !== false;
+		if (thumbs && A3wait) { el.classList.add('is-wait'); }
+		else if (!(thumbs && A3)) { el.innerHTML = el._mk(); }
+		cardThumb(el, field, value);
+		return el;
+	}
+	function cardSvg(field, value) {
 		var K = window.AGH_Sketch, svg = '', id = 'cv' + (++visSeq) + '_';
 		if (K) {
 			var cfg = {};
@@ -880,12 +889,7 @@
 		}
 		if (!svg && field === 'kitchen_layout') { svg = kitchenPlan(value); }
 		if (!svg) { svg = monogram(field, value); }
-		var el = h('span', { class: 'agh-card-vis', 'aria-hidden': 'true', 'data-field': field, 'data-value': value });
-		el._svg = svg;
-		if (A3wait && THUMB_FIELDS[field] && lsGet('agh_3d_thumbs', true) !== false) { el.classList.add('is-wait'); }
-		else { el.innerHTML = svg; }
-		cardThumb(el, field, value);
-		return el;
+		return svg;
 	}
 	// Rendered 3D picture for a card (when the 3D preview is available); cached per configuration.
 	var THUMBS = {};
@@ -902,15 +906,33 @@
 		if (mode === 'floor') { cfg.time_of_day = 'midday'; cfg.camera = 'elevated'; }
 		if (field === 'garden_style') { cfg.garden_features = ['lawn', 'trees', 'paths', 'hedge', 'flowerbeds']; cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; cfg.camera = 'elevated'; }
 		var key = mode + '|' + JSON.stringify(cfg);
+		el._key = key;
 		var put = function (url) {
+			if (el._key !== key) { return; }
 			el.classList.remove('is-wait');
 			if (url) { el.innerHTML = ''; el.appendChild(h('img', { src: url, alt: '', decoding: 'async' })); }
-			else if (!el.firstChild) { el.innerHTML = el._svg || ''; }
+			else if (!el.firstChild) { el.innerHTML = el._mk ? el._mk() : ''; }
 		};
 		if (THUMBS[key]) { put(THUMBS[key]); return; }
 		// Placeholder until the rendered picture is ready (no 2D flash before it).
 		if (!el.querySelector('img')) { el.innerHTML = ''; el.classList.add('is-wait'); }
-		A3.thumb(cfg, 360, 240, mode === 'full' ? 'full' : mode).then(function (url) { if (url) { THUMBS[key] = url; } put(url); });
+		var alive = function () { return el._key === key && document.body.contains(el); };
+		whenVisible(el, function () {
+			if (!alive()) { return; }
+			A3.thumb(cfg, 360, 240, mode === 'full' ? 'full' : mode, alive).then(function (url) { if (url) { THUMBS[key] = url; } if (alive()) { put(url); } });
+		});
+	}
+	// Runs fn once the element is (nearly) on screen – pictures of cards nobody looks at are never made.
+	var visIO = null;
+	function whenVisible(el, fn) {
+		if (!window.IntersectionObserver) { fn(); return; }
+		if (!visIO) {
+			visIO = new IntersectionObserver(function (es) {
+				es.forEach(function (e) { if (e.isIntersecting) { visIO.unobserve(e.target); var f = e.target._onVis; e.target._onVis = null; if (f) { f(); } } });
+			}, { rootMargin: '150px' });
+		}
+		el._onVis = fn;
+		visIO.observe(el);
 	}
 	function refreshCardThumbs() {
 		Array.prototype.forEach.call(document.querySelectorAll('.agh-card-vis[data-field]'), function (el) { cardThumb(el, el.getAttribute('data-field'), el.getAttribute('data-value')); });
@@ -1183,14 +1205,14 @@
 		var oldFig = box.querySelector('.agh-preview-style');
 		var keep = o && oldFig && oldFig.getAttribute('data-src') === (o.thumb || o.image) ? oldFig : null;
 		if (keep) { keep.parentNode.removeChild(keep); }
-		var svg = previewSvg(c);
-		box._aghSk = svg.replace(/agh\d+_/g, '');
+		var svg = A3 || A3wait ? '' : previewSvg(c);
+		box._aghSk = svg ? svg.replace(/agh\d+_/g, '') : null;
 		box.classList.remove('has-photo');
 		box.classList.add('has-sketch');
 		if (A3) {
 			// keep the live 3D canvas, replace everything else
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
-			try { A3.attach(box, c); box.classList.add('has-3d'); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); box.innerHTML = svg; }
+			try { A3.attach(box, c); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
 			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
 		} else if (A3wait) {
 			clear(box);
@@ -1984,14 +2006,18 @@
 		var cfg = Object.assign(clone(S.boot.defaults), clone(values || {}));
 		cfg.time_of_day = 'golden'; cfg.weather = 'clear'; cfg.season = 'summer'; cfg.camera = 'three_quarter';
 		var el = h('span', { class: 'agh-card-vis agh-preset-vis', 'aria-hidden': 'true' });
-		var svg = window.AGH_Sketch ? window.AGH_Sketch.render(cfg, { mini: true, id: 'pv' + (++visSeq) + '_', fit: 'xMidYMid meet' }) : '';
+		var svg = function () { return window.AGH_Sketch ? window.AGH_Sketch.render(cfg, { mini: true, id: 'pv' + (++visSeq) + '_', fit: 'xMidYMid meet' }) : ''; };
 		var key = 'preset|' + JSON.stringify(cfg);
-		var put = function (url) { el.classList.remove('is-wait'); el.innerHTML = ''; if (url) { el.appendChild(h('img', { src: url, alt: '', decoding: 'async' })); } else { el.innerHTML = svg; } addPhoto(); };
+		var put = function (url) { el.classList.remove('is-wait'); el.innerHTML = ''; if (url) { el.appendChild(h('img', { src: url, alt: '', decoding: 'async' })); } else { el.innerHTML = svg(); } addPhoto(); };
 		function addPhoto() { if (photo) { el.appendChild(h('img', { class: 'agh-preset-photo', src: photo, alt: '', decoding: 'async' })); } }
 		if (A3 && lsGet('agh_3d_thumbs', true) !== false) {
 			if (THUMBS[key]) { put(THUMBS[key]); }
-			else { el.classList.add('is-wait'); A3.thumb(cfg, 360, 240, 'mini').then(function (url) { if (url) { THUMBS[key] = url; } put(url); }); }
-		} else { el.innerHTML = svg; addPhoto(); }
+			else {
+				el.classList.add('is-wait');
+				var alive = function () { return document.body.contains(el); };
+				whenVisible(el, function () { A3.thumb(cfg, 360, 240, 'mini', alive).then(function (url) { if (url) { THUMBS[key] = url; } if (alive()) { put(url); } }); });
+			}
+		} else { el.innerHTML = svg(); addPhoto(); }
 		return el;
 	}
 	function presetCard(p, onApply, extra) {

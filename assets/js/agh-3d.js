@@ -17,7 +17,7 @@ import { EffectComposer } from './vendor/three/jsm/postprocessing/EffectComposer
 import { RenderPass } from './vendor/three/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from './vendor/three/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
-import { texture, setAnisotropy } from './agh-3d-tex.js';
+import { texture, setAnisotropy, onTexture, texturesReady, TINT, NEUTRAL } from './agh-3d-tex.js';
 
 var D2R = Math.PI / 180;
 var SK = function () { return window.AGH_Sketch; };
@@ -39,16 +39,20 @@ function solid(color, rough, metal, extra) {
 		return m;
 	});
 }
+var NEUTRAL_LIN = new THREE.Color(NEUTRAL).r;
 function pbr(kind, opts, params) {
 	params = params || {};
 	var key = 'p' + kind + JSON.stringify(opts || {}) + JSON.stringify(params);
 	return cached(key, function () {
-		var t = texture(kind, opts || {});
+		// single-tone materials: one neutral texture per pattern, the colour comes from the material
+		var tint = TINT[kind] && opts && /^#[0-9a-f]{6}$/i.test(opts.color || '');
+		var t = texture(kind, tint ? Object.assign({}, opts, { color: NEUTRAL }) : (opts || {}));
 		var P = params.physical ? THREE.MeshPhysicalMaterial : THREE.MeshStandardMaterial;
 		var m = new P({ map: t.map, normalMap: t.normalMap, roughnessMap: t.roughnessMap, roughness: params.roughness === undefined ? 1 : params.roughness, metalness: params.metalness || 0 });
 		m.normalScale = new THREE.Vector2(params.normal || 1, params.normal || 1);
 		if (t.alpha) { m.alphaTest = 0.5; m.side = THREE.DoubleSide; }
 		if (params.clearcoat) { m.clearcoat = params.clearcoat; m.clearcoatRoughness = 0.15; }
+		if (tint) { m.color = new THREE.Color(opts.color).multiplyScalar(1 / NEUTRAL_LIN); }
 		if (params.color) { m.color = new THREE.Color(params.color); }
 		return m;
 	});
@@ -1291,8 +1295,11 @@ function Viewer(opts) {
 	var coarse = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
 	this.quality = opts.quality || (this.thumb ? 'thumb' : (coarse ? 'medium' : 'high'));
 	var r = this.renderer = new THREE.WebGLRenderer({ antialias: this.quality !== 'high', alpha: false, preserveDrawingBuffer: !!this.thumb, powerPreference: 'high-performance' });
-	r.setPixelRatio(this.thumb ? 1 : Math.min(window.devicePixelRatio || 1, this.quality === 'high' ? 2 : 1.5));
+	this.dprHi = this.thumb ? 1 : Math.min(window.devicePixelRatio || 1, this.quality === 'high' ? 1.5 : 1.25);
+	r.setPixelRatio(this.dprHi);
 	r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+	// the sun moves with the house, not with the camera: shadows are drawn only when the scene changes
+	r.shadowMap.autoUpdate = false; r.shadowMap.needsUpdate = true;
 	r.toneMapping = THREE.NeutralToneMapping; r.outputColorSpace = THREE.SRGBColorSpace;
 	setAnisotropy(Math.min(8, r.capabilities.getMaxAnisotropy()));
 	this.scene = new THREE.Scene();
@@ -1321,7 +1328,8 @@ function Viewer(opts) {
 		this.controls.maxPolarAngle = 88 * D2R; this.controls.minPolarAngle = 15 * D2R;
 		var self = this;
 		this.controls.addEventListener('change', function () { self.requestRender(); });
-		this.controls.addEventListener('start', function () { self.interacting = true; self.loop(); });
+		// while the visitor drags: plain resolution, no ambient occlusion – full quality again when it settles
+		this.controls.addEventListener('start', function () { self.interacting = true; if (self.dprHi > 1) { self.setDPR(1); self.lowDPR = true; } self.loop(); });
 		this.controls.addEventListener('end', function () { self.interacting = false; self.settle = performance.now() + 900; self.loop(); });
 		if (this.quality === 'high') {
 			this.composer = new EffectComposer(r, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
@@ -1336,6 +1344,11 @@ function Viewer(opts) {
 		}
 	}
 }
+Viewer.prototype.setDPR = function (pr) {
+	if (Math.abs(this.renderer.getPixelRatio() - pr) < 0.01) { return; }
+	this.renderer.setPixelRatio(pr);
+	if (this.composer) { this.composer.setPixelRatio(pr); }
+};
 Viewer.prototype.setSize = function (w, h) {
 	w = Math.max(1, Math.round(w)); h = Math.max(1, Math.round(h));
 	if (this.w === w && this.h === h) { return; }
@@ -1348,7 +1361,9 @@ Viewer.prototype.setSize = function (w, h) {
 	this.requestRender();
 };
 Viewer.prototype.update = function (cfg, mode) {
-	var c = cfg || {};
+	var c = cfg || {}, memo = JSON.stringify(c) + '|' + (mode || '');
+	if (memo === this.memo && this.house) { this.requestRender(); return; }
+	this.memo = memo;
 	this.c = c;
 	var night = c.time_of_day === 'night', t = TOD[c.time_of_day] || TOD.golden, overcast = c.weather === 'overcast';
 	this.env.apply(this.scene, c);
@@ -1368,7 +1383,10 @@ Viewer.prototype.update = function (cfg, mode) {
 	if (mode === 'facade') { this.house = facadeScene(c); }
 	else if (mode === 'floor') { this.house = floorScene(c); }
 	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini' }).build(); }
+	mergeStatic(this.house.fit || this.house.root);
+	if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
 	this.scene.add(this.house.root);
+	this.renderer.shadowMap.needsUpdate = true;
 	this.treelineFor(c);
 	var key = [c.camera, c.lens, mode].join('|');
 	this.fitCamera(key !== this.camKey);
@@ -1383,7 +1401,7 @@ Viewer.prototype.treelineFor = function (c) {
 	while (this.treeline.children.length) { this.treeline.remove(this.treeline.children[0]); }
 	var s = 77; function r() { s = (s * 16807) % 2147483647; return s / 2147483647; }
 	var n = this.thumb ? 160 : 360, winter = c.season === 'winter';
-	var crowns = new THREE.InstancedMesh(canopyGeo('sphere', 110, 3), leafMat(c, 'broad', false), n);
+	var crowns = new THREE.InstancedMesh(canopyGeo('sphere', 48, 3), leafMat(c, 'broad', false), n);
 	var trunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.18, 0.28, 1, 6), solid('#4A3B2E', 1), n);
 	var m = new THREE.Matrix4(), q = new THREE.Quaternion();
 	for (var i = 0; i < n; i++) {
@@ -1442,7 +1460,8 @@ Viewer.prototype.loop = function () {
 	(function tick() {
 		if (self.disposed) { return; }
 		self.controls.update(); self.render();
-		if (self.interacting || performance.now() < (self.settle || 0)) { requestAnimationFrame(tick); } else { self.looping = false; }
+		if (self.interacting || performance.now() < (self.settle || 0)) { requestAnimationFrame(tick); }
+		else { self.looping = false; if (self.lowDPR) { self.lowDPR = false; self.setDPR(self.dprHi); self.render(); } }
 	})();
 };
 // The canvas is stretched to its box by CSS; if the box changed since the last frame (a re-rendered
@@ -1485,6 +1504,63 @@ Viewer.prototype.dispose = function () {
 	if (this.house) { disposeTree(this.house.root); }
 	this.renderer.dispose();
 };
+// Draw-call diet: the static meshes of a group that share a material (and shadow flags) are baked into
+// one mesh each. Transparent, instanced, vertex-coloured meshes and meshes carrying lights stay as they are.
+function mergeStatic(group, skip) {
+	group.updateMatrixWorld(true);
+	var inv = new THREE.Matrix4().copy(group.matrixWorld).invert(), buckets = {}, order = [], kill = [];
+	function hasLight(o) { var f = false; o.traverse(function (q) { if (q.isLight) { f = true; } }); return f; }
+	function take(ch, mats) {
+		var m4 = new THREE.Matrix4().multiplyMatrices(inv, ch.matrixWorld);
+		var g = ch.geometry.index ? ch.geometry.toNonIndexed() : ch.geometry.clone();
+		g.applyMatrix4(m4);
+		if (!g.attributes.normal) { g.computeVertexNormals(); }
+		var cnt = g.attributes.position.count, flip = m4.determinant() < 0;
+		var ranges = Array.isArray(ch.material) && g.groups.length ? g.groups.map(function (gr) { return [gr.start, Math.min(cnt, gr.start + gr.count), gr.materialIndex]; }) : [[0, cnt, 0]];
+		ranges.forEach(function (r) {
+			var mat = mats[r[2]] || mats[0];
+			if (!mat || r[1] <= r[0]) { return; }
+			var key = mat.uuid + (ch.castShadow ? 'c' : '') + (ch.receiveShadow ? 'r' : '');
+			if (!buckets[key]) { buckets[key] = { mat: mat, cast: ch.castShadow, recv: ch.receiveShadow, parts: [], n: 0 }; order.push(key); }
+			buckets[key].parts.push({ g: g, a: r[0], b: r[1], flip: flip }); buckets[key].n += r[1] - r[0];
+		});
+		kill.push(ch);
+	}
+	(function walk(o) {
+		o.children.slice().forEach(function (ch) {
+			if (ch === skip) { return; }
+			if (ch.isMesh && !ch.isInstancedMesh && !ch.isSkinnedMesh && ch.geometry && ch.geometry.attributes.position && !hasLight(ch)) {
+				var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
+				if (!mats.some(function (m) { return !m || m.transparent || m.transmission > 0 || m.vertexColors; })) { take(ch, mats); return; }
+			}
+			walk(ch);
+		});
+	})(group);
+	if (kill.length < 2) { return; }
+	order.forEach(function (key) {
+		var B = buckets[key], n = B.n, pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2), o = 0;
+		B.parts.forEach(function (p) {
+			var P = p.g.attributes.position.array, N = p.g.attributes.normal.array, U = p.g.attributes.uv ? p.g.attributes.uv.array : null, len = p.b - p.a;
+			pos.set(P.subarray(p.a * 3, p.b * 3), o * 3); nor.set(N.subarray(p.a * 3, p.b * 3), o * 3);
+			if (U) { uv.set(U.subarray(p.a * 2, p.b * 2), o * 2); }
+			if (p.flip) {
+				// mirrored transform: restore the winding (swap the 2nd and 3rd vertex of every triangle)
+				for (var t = o; t + 2 < o + len; t += 3) {
+					for (var k = 0; k < 3; k++) { var a1 = (t + 1) * 3 + k, a2 = (t + 2) * 3 + k, q = pos[a1]; pos[a1] = pos[a2]; pos[a2] = q; q = nor[a1]; nor[a1] = nor[a2]; nor[a2] = q; }
+					for (var k2 = 0; k2 < 2; k2++) { var b1 = (t + 1) * 2 + k2, b2 = (t + 2) * 2 + k2, q2 = uv[b1]; uv[b1] = uv[b2]; uv[b2] = q2; }
+				}
+			}
+			o += len;
+		});
+		var geo = new THREE.BufferGeometry();
+		geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+		var mesh = new THREE.Mesh(geo, B.mat); mesh.castShadow = B.cast; mesh.receiveShadow = B.recv; mesh.name = 'merged';
+		group.add(mesh);
+	});
+	kill.forEach(function (ch) { if (ch.parent) { ch.parent.remove(ch); } if (!ch.geometry.userData.shared && !isShared(ch.geometry)) { ch.geometry.dispose(); } });
+	// empty helper groups left behind
+	(function prune(o) { o.children.slice().forEach(function (ch) { prune(ch); if (ch.isGroup && !ch.children.length && ch !== skip) { o.remove(ch); } }); })(group);
+}
 function disposeTree(root) { root.traverse(function (o) { if (o.geometry && !o.geometry.userData.shared && !isShared(o.geometry)) { o.geometry.dispose(); } }); }
 function isShared(g) { for (var k in FOLIAGE) { if (FOLIAGE[k] === g) { return true; } } return false; }
 
@@ -1562,16 +1638,19 @@ function sharedThumb() {
 }
 // Renders one configuration into an image (option cards). Queued so the UI stays responsive.
 var queue = Promise.resolve();
-function thumb(cfg, w, h, mode) {
+function thumb(cfg, w, h, mode, alive) {
 	queue = queue.then(function () {
 		return new Promise(function (res) {
 			var go = function () {
+				if (alive && !alive()) { res(''); return; }
 				try {
 					var v = sharedThumb();
 					v.setSize(w, h);
 					v.update(cfg, mode || 'mini');
-					v.render();
-					res(v.el.toDataURL('image/jpeg', 0.86));
+					// the pixels of new materials come from the texture workers
+					texturesReady().then(function () {
+						try { v.renderer.shadowMap.needsUpdate = true; v.render(); res(v.el.toDataURL('image/jpeg', 0.86)); } catch (e) { res(''); }
+					});
 				} catch (e) { res(''); }
 			};
 			if (window.requestIdleCallback) { window.requestIdleCallback(go, { timeout: 200 }); } else { setTimeout(go, 0); }
@@ -1598,6 +1677,12 @@ function attach(container, cfg, opts) {
 	live.update(cfg);
 	return live;
 }
-var api = { attach: attach, thumb: thumb, supported: supported, viewer: function () { return live; }, version: 'r170-1' };
+// A texture arrived from a worker: redraw the live preview (and its shadows: foliage cards cast them).
+var texTimer = 0;
+onTexture(function () {
+	if (texTimer) { return; }
+	texTimer = setTimeout(function () { texTimer = 0; if (live && !live.disposed) { live.renderer.shadowMap.needsUpdate = true; live.requestRender(); } }, 90);
+});
+var api = { attach: attach, thumb: thumb, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, version: 'r170-2' };
 window.AGH_3D = api;
 export default api;

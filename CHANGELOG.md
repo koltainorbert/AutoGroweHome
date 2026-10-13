@@ -1,5 +1,15 @@
 # Változásnapló
 
+## 1.3.1 – 2026-10-13
+
+### Gyorsítás (3D előnézet és tervező)
+- Rajzolási hívások egy házra kb. 1300–2500 helyett 70–100: az azonos anyagú statikus elemek egy hálóvá olvadnak össze.
+- Az anyagtextúrák háttérszálon (Web Worker) készülnek, a felület nem akad meg; az egyszínű anyagok (vakolat, fa, tető, burkolat stb.) egyszer, semleges színben készülnek, a szín az anyagból jön – színváltáskor nincs újragenerálás. Stílusváltás hidegen kb. 9× gyorsabb (mérés: 15 stílus összesen 8,5 s → 1,0 s a tesztgépen).
+- Árnyék csak akkor számolódik újra, ha a jelenet változik (forgatáskor nem); forgatás közben egyszerűsített felbontás, elengedéskor teljes minőség; a felbontás felső határa 1,5×.
+- Ugyanarra a beállításra nincs második házépítés (varázslóban kattintásonként 2 helyett 1); a 2D vázlat nem rajzolódik feleslegesen a 3D mellett.
+- Opciókártyák és presetek 3D képe csak a képernyőn látható kártyákra készül, az elavult kérések kimaradnak.
+- Távoli fasor kevesebb háromszöggel.
+
 ## 1.3.0 – 2026-10-13
 
 ### Stílusonként saját épületforma
