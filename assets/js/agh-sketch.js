@@ -526,7 +526,12 @@
 		var td = clamp(ta / 6, 2.4, 5), fp = frontPlan(c, mainV, vols), off = mainV.x0 + fp.off, mlen = fp.len;
 		var tdw = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
 		var tcx = fp.tdoor ? off + fp.tdoor.x + fp.tdoor.w / 2 : off + mlen * 0.62;
-		var fi = fp.free.filter(function (q) { return off + q[0] <= tcx + 1e-6 && off + q[1] >= tcx - 1e-6; })[0] || [0, mlen];
+		var fi = fp.free.filter(function (q) { return off + q[0] <= tcx + 1e-6 && off + q[1] >= tcx - 1e-6; })[0];
+		if (!fi) {
+			// no terrace door in a free part of the wall: the terrace takes the widest free part
+			fi = fp.free.reduce(function (a, q) { return !a || q[1] - q[0] > a[1] - a[0] ? q : a; }, null) || [0, mlen];
+			tcx = off + (fi[0] + fi[1]) / 2;
+		}
 		var fx0 = off + fi[0], fx1 = off + fi[1], fln = Math.max(0.5, fx1 - fx0);
 		var tw = clamp(ta / td, Math.min(tdw + 0.8, fln), fln), x0 = clamp(tcx - tw / 2, fx0, fx1 - tw);
 		return { x0: x0, x1: x0 + tw, y0: mainV.y1, y1: mainV.y1 + td };
@@ -541,9 +546,6 @@
 		if (has(gf, 'shed') || has(gf, 'playground')) { R(ext.right - 3.6, ext.back + 1, ext.right - 1, ext.back + 8.6, 0.3); }
 		if (has(gf, 'firepit')) { R(ext.left + 2.8, my + 2.8, ext.left + 4.2, my + 4.2, 0.3); }
 		if (!ter && (has(gf, 'pergola') || has(c.shading, 'pergola') || has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen'))) { R(ext.left + 1.3, my + 2.1, ext.left + 4.4, my + 4.9, 0.3); }
-		if (has(gf, 'trees') || !c.garden_features) {
-			[[ext.left + 2.2, ext.back + 2.5], [ext.right - 2.5, ext.back + 3], [ext.left + 1.6, ext.front - 2.2], [ext.right - 1.8, ext.front - 1.6]].forEach(function (q) { R(q[0], q[1], q[0], q[1], 1.3); });
-		}
 		return out;
 	}
 	// Pool footprint: inside the plot and the fence, clear of the house and the garden areas; preferably
@@ -572,6 +574,135 @@
 		}
 		var fw = 2.4, fd = 3.4, fx = clamp(bb.x0, L, R - fw), fy = clamp(bb.y0 - 1.2 - fd, B, F - fd);
 		return { x0: fx, y0: fy, x1: fx + fw, y1: fy + fd };
+	}
+	// Garden plan shared by the 2D sketch and the 3D preview. Everything stays inside the plot (or the
+	// scene when no plot is given); plants never stand on paved or built surfaces (house, porch, terrace,
+	// path, driveway, garage, pool, steps) and never on one another.
+	function gardenLayout(c, vols, pl, ext, plot, gar, ter, fenceY) {
+		var gf = c.garden_features || [], gs = c.garden_style || 'natural', season = c.season || 'summer', st = styleOf(c);
+		var mainV = vols[0], my = mainV.y1, ent = entranceAt(c, vols), doorMid = ent.x, bb = siteBox(vols), D = pl.D;
+		var A = plot ? { x0: plot.x0 + 0.25, x1: plot.x1 - 0.25, y0: (plot.yB !== null ? plot.yB : ext.back + 0.4) + 0.25, y1: plot.yF - 0.25 } : { x0: ext.left + 0.4, x1: ext.right - 0.4, y0: ext.back + 0.4, y1: ext.front - 0.4 };
+		var out = { area: A, lawn: plot ? { x0: plot.x0, x1: plot.x1, y0: plot.yB !== null ? plot.yB : ext.back, y1: plot.yF } : { x0: ext.left, x1: ext.right, y0: ext.back, y1: ext.front },
+			fence: null, flats: [], plants: [], lights: [], shed: null, playground: null, firepit: null, pergola: null, furniture: null, hedge: null, pool: null, path: null, drive: null, gravel: null, ent: ent };
+		var pathOn = has(gf, 'paths') || !c.garden_features, edge = fenceY;
+		if (pathOn) { out.path = { x0: doorMid - 0.6, y0: ent.y, x1: doorMid + 0.6, y1: edge }; }
+		out.drive = gar ? { x0: gar.x0, y0: gar.y1, x1: gar.x1, y1: edge } : { x0: bb.x1 + 0.8, y0: D * 0.45, x1: bb.x1 + 3.8, y1: edge };
+		// built and paved surfaces
+		var hard = [];
+		var H = function (r, m) { if (r) { hard.push([r.x0 - m, r.y0 - m, r.x1 + m, r.y1 + m]); } };
+		vols.forEach(function (v) { var e = (v.ext || 0) + 0.35; hard.push([v.x0 - e, v.y0 - e, v.x1 + e, v.y1 + e]); if (v.porch || (v.main && st.porch)) { hard.push([v.x0, v.y1, v.x1, v.y1 + 2.6]); } if (v.veranda) { hard.push([v.x0, v.y1, v.x1, v.y1 + 1.8]); } if (v.frame) { hard.push([v.x0 - 0.5, v.y1, v.x1 + 0.5, v.y1 + 1.8]); } });
+		H(gar, 0.3); H(out.drive, 0.15); H(ter, 0.25); H(out.path, 0.15);
+		hard.push([doorMid - 1.3, ent.y, doorMid + 1.3, ent.y + 1.6]);
+		if ((c.ac_units || 'none') !== 'none' || has(c.energy, 'heat_pump')) { hard.push([mainV.x1, D * 0.35 - 0.4, mainV.x1 + 1.2, D * 0.35 + 1.5]); }
+		if (has(gf, 'pool')) {
+			out.pool = poolRect(c, vols, ext, plot, fenceY, siteAvoid(c, vols, ext, gar, ter, doorMid, ent.y));
+			H(out.pool, 0.6);
+		}
+		var placed = [];
+		function inA(x0, y0, x1, y1) { return x0 >= A.x0 - 1e-6 && x1 <= A.x1 + 1e-6 && y0 >= A.y0 - 1e-6 && y1 <= A.y1 + 1e-6; }
+		function rectFree(x0, y0, x1, y1) {
+			if (!inA(x0, y0, x1, y1)) { return false; }
+			for (var i = 0; i < hard.length; i++) { var h = hard[i]; if (x0 < h[2] && x1 > h[0] && y0 < h[3] && y1 > h[1]) { return false; } }
+			for (var j = 0; j < placed.length; j++) { var p = placed[j]; if (x0 < p.x + p.r && x1 > p.x - p.r && y0 < p.y + p.r && y1 > p.y - p.r) { return false; } }
+			return true;
+		}
+		function ptFree(x, y, r) {
+			if (!inA(x - r, y - r, x + r, y + r)) { return false; }
+			for (var i = 0; i < hard.length; i++) { var h = hard[i]; var dx = Math.max(h[0] - x, 0, x - h[2]), dy = Math.max(h[1] - y, 0, y - h[3]); if (dx * dx + dy * dy < r * r) { return false; } }
+			for (var j = 0; j < placed.length; j++) { var p = placed[j]; var d = Math.sqrt((p.x - x) * (p.x - x) + (p.y - y) * (p.y - y)); if (d < (p.r + r) * 0.85) { return false; } }
+			return true;
+		}
+		// first free spot at (x, y) or within `reach` metres of it
+		function spot(x, y, r, reach) {
+			if (ptFree(x, y, r)) { return [x, y]; }
+			for (var d = 0.6; d <= (reach || 0) + 1e-6; d += 0.6) {
+				for (var k = 0; k < 16; k++) { var a = k * Math.PI / 8, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d; if (ptFree(px, py, r)) { return [px, py]; } }
+			}
+			return null;
+		}
+		function rspot(x0, y0, w, d, reach) {
+			if (rectFree(x0, y0, x0 + w, y0 + d)) { return { x0: x0, y0: y0, x1: x0 + w, y1: y0 + d }; }
+			for (var s = 0.5; s <= (reach || 0) + 1e-6; s += 0.5) {
+				var tries = [[s, 0], [-s, 0], [0, s], [0, -s], [s, s], [-s, s], [s, -s], [-s, -s]];
+				for (var k = 0; k < tries.length; k++) { var a = x0 + tries[k][0], b = y0 + tries[k][1]; if (rectFree(a, b, a + w, b + d)) { return { x0: a, y0: b, x1: a + w, y1: b + d }; } }
+			}
+			return null;
+		}
+		function plantR(kind, size) {
+			if (kind === 'grass' || kind === 'lavender' || kind === 'flower') { return 0.35; }
+			if (kind === 'shrub' || kind === 'topiary') { return Math.max(0.4, size * 0.42); }
+			if (kind === 'cypress') { return 0.55; }
+			return clamp(size * 0.28, 0.6, 2.2);
+		}
+		function plant(kind, x, y, size, seed, reach) {
+			var r = plantR(kind, size), p = spot(x, y, r, reach);
+			if (!p) { return false; }
+			out.plants.push({ kind: kind, x: p[0], y: p[1], size: size, seed: seed });
+			placed.push({ x: p[0], y: p[1], r: r });
+			return true;
+		}
+		function claim(rc, m) { if (rc) { hard.push([rc.x0 - (m || 0), rc.y0 - (m || 0), rc.x1 + (m || 0), rc.y1 + (m || 0)]); } return rc; }
+		// structures first (they need the most room), then beds, then planting
+		if (has(gf, 'hedge')) { out.hedge = { x0: A.x0, y0: A.y0, x1: A.x1, y1: A.y0 + 0.9 }; placed.push({ x: (A.x0 + A.x1) / 2, y: A.y0 + 0.45, r: 0.45 }); hard.push([A.x0, A.y0, A.x1, A.y0 + 0.9]); }
+		var by = A.y0 + (out.hedge ? 1.1 : 0.3);
+		if (has(gf, 'shed')) { out.shed = claim(rspot(A.x1 - 2.4, by, 2.2, 1.8, 3) || rspot(A.x0 + 0.2, by, 2.2, 1.8, 3), 0.2); }
+		if (has(gf, 'playground') && season !== 'winter') { out.playground = claim(rspot(A.x1 - 2.7, by + 2.4, 2.5, 2.5, 3) || rspot(A.x0 + 0.2, by + 2.4, 2.5, 2.5, 3), 0.1); }
+		if (has(gf, 'firepit')) { var fp = spot(A.x0 + 3.2, my + 3.5, 0.9, 3); if (fp) { out.firepit = { x: fp[0], y: fp[1] }; hard.push([fp[0] - 0.9, fp[1] - 0.9, fp[0] + 0.9, fp[1] + 0.9]); } }
+		if (!ter && (has(gf, 'pergola') || has(c.shading, 'pergola'))) { out.pergola = claim(rspot(A.x0 + 1.1, my + 2.2, 3.0, 2.6, 3), 0.2); }
+		if (!ter && (has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen'))) {
+			var fx = out.pergola ? out.pergola.x0 + 0.6 : A.x0 + 1.7, fy = out.pergola ? out.pergola.y0 + 0.6 : my + 2.8;
+			var fr = out.pergola ? { x0: fx, y0: fy, x1: fx + 2, y1: fy + 2 } : claim(rspot(fx, fy, 2.0, 2.0, 3), 0.1);
+			if (fr) { out.furniture = { x: fr.x0, y: fr.y0, kitchen: has(gf, 'outdoor_kitchen') }; }
+		}
+		if (gs === 'minimal' || gs === 'mediterranean') {
+			var g0 = { x0: A.x0 + 0.5, y0: my + 0.8, x1: Math.max(A.x0 + 1.5, doorMid - 1.4), y1: A.y1 - 0.5 };
+			var clash = [out.pool, ter, out.pergola, out.furniture].some(function (r) { return r && g0.x0 < r.x1 && g0.x1 > r.x0 && g0.y0 < r.y1 && g0.y1 > r.y0; });
+			if (!clash && g0.x1 - g0.x0 > 0.8 && g0.y1 - g0.y0 > 0.8) { out.gravel = g0; }
+		}
+		if (has(gf, 'flowerbeds') && season !== 'winter') {
+			var bx0 = Math.max(A.x0, mainV.x0 + 0.2), bx1 = Math.min(mainV.x0 + 3, doorMid - 1.2);
+			if (bx1 - bx0 >= 0.9) {
+				var bed = rspot(bx0, my + 1.0, bx1 - bx0, 0.8, 4);
+				if (bed) {
+					out.flats.push({ kind: 'soil', x0: bed.x0, y0: bed.y0, x1: bed.x1, y1: bed.y1 });
+					for (var fb = 0; bed.x0 + 0.3 + fb * 0.42 < bed.x1 - 0.15; fb++) { out.plants.push({ kind: 'flower', x: bed.x0 + 0.3 + fb * 0.42, y: (bed.y0 + bed.y1) / 2, size: 0.5, seed: fb }); }
+					claim(bed, 0.1);
+				}
+			}
+		}
+		if (out.playground) { out.flats.push({ kind: 'sand', x0: out.playground.x0, y0: out.playground.y0, x1: out.playground.x1, y1: out.playground.y1 }); }
+		var kinds = { natural: ['deciduous', 'deciduous', 'conifer', 'multistem', 'shrub'], formal: ['topiary', 'topiary', 'cypress', 'deciduous', 'topiary'], minimal: ['multistem', 'grass', 'grass', 'multistem', 'grass'], cottage: ['fruit', 'deciduous', 'shrub', 'fruit', 'shrub'], mediterranean: ['olive', 'cypress', 'cypress', 'olive', 'lavender'] }[gs] || ['deciduous'];
+		if (gs === 'mediterranean') { [[A.x0 + 0.9, my + 0.8], [A.x0 + 2.3, my + 0.8]].forEach(function (q, i) { plant('cypress', q[0], q[1], 4.5, 7 + i, 1.8); }); }
+		if (gs === 'formal') { [[A.x0 + 1.1, my + 1], [A.x1 - 1.1, my + 1]].forEach(function (q, i) { plant('cypress', q[0], q[1], 3.6, 9 + i, 1.8); }); }
+		if (has(gf, 'trees') || !c.garden_features) {
+			[[A.x0 + 1.9, A.y0 + 2.2, 7.5], [A.x1 - 2.2, A.y0 + 2.7, 8], [A.x0 + 1.3, A.y1 - 1.9, 6], [A.x1 - 1.5, A.y1 - 1.3, 5.5], [doorMid - 2.2, my + 1.4, 1.1]].forEach(function (sp, i) {
+				var k = kinds[i % kinds.length], sz = k === 'grass' || k === 'lavender' || k === 'shrub' || k === 'topiary' ? (i === 4 ? 1.0 : 1.6) : sp[2];
+				plant(k, sp[0], sp[1], sz, 11 + i * 7, i === 4 ? 1.2 : 3);
+			});
+		}
+		var rowKind = { formal: 'topiary', mediterranean: 'lavender', cottage: 'shrub', minimal: 'grass', natural: 'shrub' }[gs] || 'shrub';
+		if (gs !== 'natural' || has(gf, 'flowerbeds')) {
+			var step = gs === 'formal' ? 1.3 : (gs === 'minimal' ? 1.8 : 0.95), ri = 0, rsz = gs === 'formal' ? 1.15 : (gs === 'minimal' ? 1.2 : 0.95);
+			for (var py = ent.y + 1.6; py < A.y1 - 0.6; py += step) {
+				[-1.15, 1.15].forEach(function (dx) { ri++; if (gs === 'natural' && (ri * 7919) % 10 < 4) { return; } plant(rowKind, doorMid + dx, py, rsz, 101 + ri, 0); });
+			}
+		}
+		if (has(gf, 'garden_lights')) {
+			[[doorMid - 1.2, edge - 1.5], [doorMid + 1.2, edge - 3.5], [A.x0 + 2.7, my + 2]].forEach(function (q) { var p = spot(q[0], q[1], 0.2, 1.2); if (p) { out.lights.push(p); placed.push({ x: p[0], y: p[1], r: 0.2 }); } });
+		}
+		// fence: front with openings, sides and back along the plot
+		if (c.fence && c.fence !== 'none') {
+			var f = { y: fenceY, x0: plot ? plot.x0 : ext.left + 0.6, x1: plot ? plot.x1 : ext.right - 0.6, sides: [], back: null };
+			if (plot) {
+				var yb = plot.yB !== null ? plot.yB : ext.back + 0.6;
+				f.sides = [[plot.x0, yb, fenceY], [plot.x1, yb, fenceY]];
+				if (plot.yB !== null) { f.back = [plot.x0, plot.x1, plot.yB]; }
+			}
+			f.gaps = [[out.drive.x0 - 0.15, out.drive.x1 + 0.15]];
+			if (pathOn || c.gate !== false) { f.gaps.push([doorMid - 0.6, doorMid + 0.6]); }
+			out.fence = f;
+		}
+		return out;
 	}
 	// Massing signatures drawn around a volume: frame, veranda, balconies, exoskeleton, roof-terrace railing.
 	function deco2d(sc, v, pl, type, roof) {
@@ -1456,100 +1587,80 @@
 			sc.push(sc.depth([mainV.x1 + 0.45, mainV.y1 - 0.5, 0]) + 0.5, '<rect x="' + f(rw[0] - 0.32) + '" y="' + f(rw[1] - 1.15) + '" width="0.64" height="1.15" rx="0.14" fill="#5C6B5A"/><rect x="' + f(rw[0] - 0.32) + '" y="' + f(rw[1] - 0.9) + '" width="0.64" height="0.06" fill="#4A5748"/>');
 		}
 
-		/* garden: path, pool, trees, hedges, fence */
+		/* garden: path, pool, trees, hedges, fence – the shared garden plan (inside the plot, nothing on paving) */
 		if (!mini) {
-			var gf = c.garden_features || [];
-			var ent = entranceAt(c, vols), doorMid = ent.x, entY = ent.y;
-			if (has(gf, 'paths') || !c.garden_features) {
-				var pathFill = sc.mat('slabs', season === 'winter' ? '#D5DADD' : '#C9C2B6');
-				var wEdge = siteEdge(c, front, plot);
-				var pth = sc.plane([doorMid - 0.6, wEdge, 0.012], [1, 0, 0], [0, -1, 0], [[0, 0], [1.2, 0], [1.2, wEdge - entY], [0, wEdge - entY]], pathFill, '', { noShade: true });
+			var gf = c.garden_features || [], fenceY = siteEdge(c, front, plot);
+			var garR = garage !== 'none' ? { x0: gx0, x1: gx0 + gW, y0: (garage === 'separate' ? D * 0.8 : Math.min(D, gD)) - gD, y1: garage === 'separate' ? D * 0.8 : Math.min(D, gD) } : null;
+			var G = gardenLayout(c, vols, pl, { left: left, right: right, front: front, back: back }, plot, garR, ta > 0 ? terraceRect(c, mainV, vols, ta) : null, fenceY);
+			var doorMid = G.ent.x;
+			if (G.path) {
+				var pathFill = sc.mat('slabs', season === 'winter' ? '#D5DADD' : '#C9C2B6'), P0 = G.path;
+				var pth = sc.plane([P0.x0, P0.y1, 0.012], [1, 0, 0], [0, -1, 0], [[0, 0], [P0.x1 - P0.x0, 0], [P0.x1 - P0.x0, P0.y1 - P0.y0], [0, P0.y1 - P0.y0]], pathFill, '', { noShade: true });
 				if (pth) { groundSvg += pth.svg; }
 			}
-			if (has(gf, 'pool')) {
-				var pr = poolRect(c, vols, { left: left, right: right, front: front, back: back }, plot, siteEdge(c, front, plot), siteAvoid(c, vols, { left: left, right: right, front: front, back: back }, garage !== 'none' ? { x0: gx0, x1: gx0 + gW, y0: (garage === 'separate' ? D * 0.8 : Math.min(D, gD)) - gD, y1: garage === 'separate' ? D * 0.8 : Math.min(D, gD) } : null, ta > 0 ? terraceRect(c, mainV, vols, ta) : null, doorMid, entY)), px0 = pr.x0, py0 = pr.y0, pw2 = pr.x1 - pr.x0, pd = pr.y1 - pr.y0;
+			if (G.pool) {
+				var px0 = G.pool.x0, py0 = G.pool.y0, pw2 = G.pool.x1 - G.pool.x0, pd = G.pool.y1 - G.pool.y0;
 				var pool = sc.plane([px0, py0 + pd, 0.02], [1, 0, 0], [0, -1, 0], [[0, 0], [pw2, 0], [pw2, pd], [0, pd]], '#E9E4DA', '<rect x="0.25" y="0.25" width="' + f(pw2 - 0.5) + '" height="' + f(pd - 0.5) + '" fill="' + (L.dark ? '#1E5C7A' : '#5FB2CF') + '"/><rect x="0.25" y="' + f(pd * 0.55) + '" width="' + f(pw2 - 0.5) + '" height="' + f(pd * 0.1) + '" fill="#9FDBEA" opacity="0.5"/>', { noShade: true });
 				if (pool) { groundSvg += pool.svg; }
 			}
-			if (has(gf, 'flowerbeds') && season !== 'winter') {
-				var fb = sc.plane([0.2, mainV.y1 + 1.0, 0.015], [1, 0, 0], [0, -1, 0], [[0, 0], [Math.min(3, doorMid - 1), 0], [Math.min(3, doorMid - 1), 0.8], [0, 0.8]], '#6B4F3A', '<circle cx="0.4" cy="0.4" r="0.18" fill="#E26D8A"/><circle cx="1.1" cy="0.35" r="0.18" fill="#F2C14E"/><circle cx="1.8" cy="0.45" r="0.18" fill="#C06FD1"/><circle cx="2.5" cy="0.4" r="0.18" fill="#FFFFFF"/>', { noShade: true });
-				if (fb) { groundSvg += fb.svg; }
-			}
-			// trees by garden style
-			var gs = c.garden_style || 'natural';
-			var kinds = { natural: ['deciduous', 'deciduous', 'conifer', 'multistem', 'shrub'], formal: ['topiary', 'topiary', 'cypress', 'deciduous', 'topiary'], minimal: ['multistem', 'grass', 'grass', 'multistem', 'grass'], cottage: ['fruit', 'deciduous', 'shrub', 'fruit', 'shrub'], mediterranean: ['olive', 'cypress', 'cypress', 'olive', 'lavender'] }[gs] || ['deciduous'];
-			// style-specific planting along the front path and the plot edge
-			var rowKind = { formal: 'topiary', mediterranean: 'lavender', cottage: 'shrub', minimal: 'grass', natural: 'shrub' }[gs] || 'shrub';
-			if (gs === 'minimal' || gs === 'mediterranean') {
-				var gp = sc.plane([left + 0.8, front - 0.8, 0.008], [1, 0, 0], [0, -1, 0], [[0, 0], [Math.max(1, doorMid - 1.4 - left - 0.8), 0], [Math.max(1, doorMid - 1.4 - left - 0.8), front - mainV.y1 - 1.6], [0, front - mainV.y1 - 1.6]], sc.mat('gravel', '#A9A49B'), '', { noShade: true, edge: false });
+			if (G.gravel) {
+				var g1 = G.gravel, gp = sc.plane([g1.x0, g1.y1, 0.008], [1, 0, 0], [0, -1, 0], [[0, 0], [g1.x1 - g1.x0, 0], [g1.x1 - g1.x0, g1.y1 - g1.y0], [0, g1.y1 - g1.y0]], sc.mat('gravel', '#A9A49B'), '', { noShade: true, edge: false });
 				if (gp) { groundSvg += gp.svg; }
 			}
-			if (gs !== 'natural' || has(gf, 'flowerbeds')) {
-				var rr2 = rng(31), step = gs === 'formal' ? 1.3 : (gs === 'minimal' ? 1.8 : 0.95);
-				for (var py = mainV.y1 + 1.6; py < front - 0.9; py += step) {
-					[-1.15, 1.15].forEach(function (dx) {
-						if (gs === 'natural' && rr2() < 0.4) { return; }
-						var k = rowKind, sz = gs === 'formal' ? 1.15 : (gs === 'minimal' ? 1.2 : 0.95);
-						sc.push(sc.depth([doorMid + dx, py, 0]), treeSvg(sc, doorMid + dx, py, k, sz, 101 + Math.round(py * 13 + dx * 7)));
-					});
-				}
+			G.flats.forEach(function (fl2) {
+				var w2 = fl2.x1 - fl2.x0, d2 = fl2.y1 - fl2.y0, inner3 = '';
+				if (fl2.kind === 'soil') { for (var fc = 0; fc * 0.7 + 0.4 < w2; fc++) { inner3 += '<circle cx="' + f(0.4 + fc * 0.7) + '" cy="' + f(d2 / 2) + '" r="0.18" fill="' + ['#E26D8A', '#F2C14E', '#C06FD1', '#FFFFFF'][fc % 4] + '"/>'; } }
+				var fp2 = sc.plane([fl2.x0, fl2.y1, 0.015], [1, 0, 0], [0, -1, 0], [[0, 0], [w2, 0], [w2, d2], [0, d2]], fl2.kind === 'soil' ? '#6B4F3A' : '#D9C79E', inner3, { noShade: true });
+				if (fp2) { groundSvg += fp2.svg; }
+			});
+			G.plants.forEach(function (p) { if (p.kind !== 'flower') { sc.push(sc.depth([p.x, p.y, 0]), treeSvg(sc, p.x, p.y, p.kind, p.size, p.seed)); } });
+			if (G.hedge) { for (var hx = G.hedge.x0 + 0.5; hx < G.hedge.x1 - 0.4; hx += 1.1) { sc.push(sc.depth([hx, G.hedge.y0 + 0.45, 0]), treeSvg(sc, hx, G.hedge.y0 + 0.45, 'topiary', 1.4, 3 + Math.round(hx * 10))); } }
+			if (G.shed) { box(sc, G.shed.x0 + 0.1, G.shed.y0 + 0.1, 0, G.shed.x1 - 0.1, G.shed.y1 - 0.1, 2.3, { top: '#5A4636', front: sc.mat('wood', '#9A7048') }).forEach(function (r) { sc.push(r.depth, r.svg); }); }
+			if (G.firepit) {
+				var fpp = sc.track([G.firepit.x, G.firepit.y, 0]);
+				sc.push(sc.depth([G.firepit.x, G.firepit.y, 0]), '<ellipse cx="' + f(fpp[0]) + '" cy="' + f(fpp[1]) + '" rx="0.7" ry="0.3" fill="#5A5550"/><ellipse cx="' + f(fpp[0]) + '" cy="' + f(fpp[1] - 0.2) + '" rx="0.35" ry="0.3" fill="#F28C38" opacity="' + (L.glow ? 0.95 : 0.7) + '"/>');
 			}
-			if (gs === 'mediterranean') { [[left + 1.2, mainV.y1 + 0.8], [left + 2.6, mainV.y1 + 0.8]].forEach(function (q) { sc.push(sc.depth([q[0], q[1], 0]), treeSvg(sc, q[0], q[1], 'cypress', 4.5, 7)); }); }
-			if (gs === 'formal') { [[left + 1.4, mainV.y1 + 1], [right - 1.4, mainV.y1 + 1]].forEach(function (q) { sc.push(sc.depth([q[0], q[1], 0]), treeSvg(sc, q[0], q[1], 'cypress', 3.6, 9)); }); }
-			var spots = [[left + 2.2, back + 2.5, 7.5], [right - 2.5, back + 3, 8], [left + 1.6, front - 2.2, 6], [right - 1.8, front - 1.6, 5.5], [doorMid - 2.2, mainV.y1 + 1.4, 1.1]];
-			if (has(gf, 'trees') || !c.garden_features) {
-				spots.forEach(function (sp, i) {
-					var k = kinds[i % kinds.length];
-					var sz = k === 'grass' || k === 'lavender' || k === 'shrub' || k === 'topiary' ? (i === 4 ? 1.0 : 1.6) : sp[2];
-					sc.push(sc.depth([sp[0], sp[1], 0]), treeSvg(sc, sp[0], sp[1], k, sz, 11 + i * 7));
-				});
-			}
-			if (has(gf, 'hedge')) {
-				for (var hx = left + 0.5; hx < right - 0.5; hx += 1.1) { sc.push(sc.depth([hx, back + 0.6, 0]), treeSvg(sc, hx, back + 0.6, 'topiary', 1.4, 3 + Math.round(hx * 10))); }
-			}
-			if (has(gf, 'shed')) {
-				box(sc, right - 3.4, back + 1.2, 0, right - 1.2, back + 3, 2.3, { top: '#5A4636', front: sc.mat('wood', '#9A7048') }).forEach(function (r) { sc.push(r.depth, r.svg); });
-			}
-			if (has(gf, 'playground') && season !== 'winter') {
-				var pg = sc.plane([right - 3.5, back + 6, 0.01], [1, 0, 0], [0, -1, 0], [[0, 0], [2.5, 0], [2.5, 2.5], [0, 2.5]], '#D9C79E', '', { noShade: true });
-				if (pg) { groundSvg += pg.svg; }
-			}
-			if (has(gf, 'firepit')) {
-				var fp = sc.track([left + 3.5, mainV.y1 + 3.5, 0]);
-				sc.push(sc.depth([left + 3.5, mainV.y1 + 3.5, 0]), '<ellipse cx="' + f(fp[0]) + '" cy="' + f(fp[1]) + '" rx="0.7" ry="0.3" fill="#5A5550"/><ellipse cx="' + f(fp[0]) + '" cy="' + f(fp[1] - 0.2) + '" rx="0.35" ry="0.3" fill="#F28C38" opacity="' + (L.glow ? 0.95 : 0.7) + '"/>');
-			}
-			if (ta <= 0 && (has(gf, 'pergola') || has(c.shading, 'pergola'))) {
-				var pgx = left + 1.4, pgy = mainV.y1 + 2.2, pgc = '#8A6A4C';
+			if (G.pergola) {
+				var pgx = G.pergola.x0, pgy = G.pergola.y0, pgc = '#8A6A4C';
 				[[pgx, pgy], [pgx + 2.8, pgy], [pgx, pgy + 2.4], [pgx + 2.8, pgy + 2.4]].forEach(function (q) { box(sc, q[0], q[1], 0, q[0] + 0.14, q[1] + 0.14, 2.5, { top: pgc, front: pgc, side: shade(pgc, -0.2) }).forEach(function (r) { sc.push(r.depth, r.svg); }); });
 				var pgb = ''; for (var pb = 0; pb < 3; pb += 0.45) { pgb += '<rect x="' + f(pb) + '" y="0" width="0.08" height="2.6" fill="' + pgc + '"/>'; }
 				var pgt = sc.plane([pgx, pgy + 2.55, 2.5], [1, 0, 0], [0, -1, 0], [[0, 0], [2.95, 0], [2.95, 2.6], [0, 2.6]], 'none', pgb, { noShade: true, edge: false });
 				if (pgt) { sc.push(sc.depth([pgx + 1.4, pgy + 1.2, 0]) + 1, pgt.svg); }
 			}
-			if (ta <= 0 && (has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen'))) {
-				box(sc, left + 2, mainV.y1 + 2.8, 0, left + 3.6, mainV.y1 + 3.7, 0.75, { top: has(gf, 'outdoor_kitchen') ? '#BFC3C6' : '#E7E1D6', front: '#6B5E52' }).forEach(function (r) { sc.push(r.depth, r.svg); });
+			if (G.furniture) {
+				box(sc, G.furniture.x, G.furniture.y, 0, G.furniture.x + 1.6, G.furniture.y + 0.9, 0.75, { top: G.furniture.kitchen ? '#BFC3C6' : '#E7E1D6', front: '#6B5E52' }).forEach(function (r) { sc.push(r.depth, r.svg); });
 			}
-			if (has(gf, 'garden_lights') && L.glow) {
-				[[doorMid - 1.2, front - 1.5], [doorMid + 1.2, front - 3.5], [left + 3, mainV.y1 + 2]].forEach(function (q) {
+			if (L.glow) {
+				G.lights.forEach(function (q) {
 					var lp = sc.track([q[0], q[1], 0]);
 					sc.push(sc.depth([q[0], q[1], 0]), '<circle cx="' + f(lp[0]) + '" cy="' + f(lp[1] - 0.5) + '" r="0.9" fill="#FFD27A" opacity="0.28"/><rect x="' + f(lp[0] - 0.06) + '" y="' + f(lp[1] - 0.6) + '" width="0.12" height="0.6" fill="#FFE3A3"/>');
 				});
 			}
-			// fence along the front edge: openings for the path (optional gate) and the driveway
+			// fence: the front with openings for the path (optional gate) and the driveway, the sides and the back along the plot
 			var fence = c.fence || 'none';
-			if (fence !== 'none') {
-				var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = plot ? Math.max(left + 0.6, plot.x0) : left + 0.6, fx1 = plot ? Math.min(right - 0.6, plot.x1) : right - 0.6, fy2 = siteEdge(c, front, plot);
-				var gateX = doorMid - 0.6, gateOn = c.gate !== false, pathOn = has(gf, 'paths') || !c.garden_features;
-				var dr0 = garage === 'none' ? maxX + 0.8 : gx0, dr1 = garage === 'none' ? maxX + 3.8 : gx0 + gW;
+			if (G.fence) {
+				var F = G.fence, fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = F.x0, fx1 = F.x1, fy2 = F.y;
+				var gateX = doorMid - 0.6, gateOn = c.gate !== false;
+				var dr0 = G.drive.x0, dr1 = G.drive.x1;
 				var fcol = { slats: c.arch_style === 'scandinavian' ? '#9C978E' : '#3B3E42', mesh: '#5B6B5A', masonry: shade(col(c.facade_color, '#F2EFE9'), -0.06), gabion: '#8E8A84' }[fence];
 				var ffill = fence === 'masonry' ? fcol : (fence === 'gabion' ? sc.mat('stone', '#9C978E') : (fence === 'mesh' ? 'rgba(91,107,90,0.25)' : 'none'));
-				var gaps2 = [[dr0 - 0.15, dr1 + 0.15]];
-				if (pathOn || gateOn) { gaps2.push([gateX, gateX + 1.2]); }
-				fenceSegs(fx0, fx1, gaps2).forEach(function (sg) {
-					var lenF = sg[1] - sg[0], inner2 = '';
-					if (fence === 'slats') { for (var sx = 0; sx < lenF - 0.1; sx += 0.16) { inner2 += '<rect x="' + f(sx) + '" y="0" width="0.11" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
-					if (fence === 'mesh') { inner2 += '<path d="M0 ' + f(fz) + 'H' + f(lenF) + '" stroke="' + fcol + '" stroke-width="0.05"/>'; for (var mx = 0; mx < lenF; mx += 2.5) { inner2 += '<rect x="' + f(mx) + '" y="0" width="0.06" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
-					var fe = sc.plane([sg[0], fy2, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [lenF, 0], [lenF, fz], [0, fz]], ffill, inner2, { noShade: true });
+				var fenceInner = function (lenF) {
+					var q = '';
+					if (fence === 'slats') { for (var sx = 0; sx < lenF - 0.1; sx += 0.16) { q += '<rect x="' + f(sx) + '" y="0" width="0.11" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
+					if (fence === 'mesh') { q += '<path d="M0 ' + f(fz) + 'H' + f(lenF) + '" stroke="' + fcol + '" stroke-width="0.05"/>'; for (var mx = 0; mx < lenF; mx += 2.5) { q += '<rect x="' + f(mx) + '" y="0" width="0.06" height="' + f(fz) + '" fill="' + fcol + '"/>'; } }
+					return q;
+				};
+				fenceSegs(fx0, fx1, F.gaps).forEach(function (sg) {
+					var lenF = sg[1] - sg[0];
+					var fe = sc.plane([sg[0], fy2, 0], [1, 0, 0], [0, 0, 1], [[0, 0], [lenF, 0], [lenF, fz], [0, fz]], ffill, fenceInner(lenF), { noShade: true });
 					if (fe) { sc.push(fe.depth + 50, fe.svg); }
+				});
+				F.sides.concat(F.back ? [[null, F.back[0], F.back[1], F.back[2]]] : []).forEach(function (sd) {
+					var alongX = sd[0] === null, a0 = alongX ? sd[1] : sd[2], lenS = alongX ? sd[2] - sd[1] : sd[2] - sd[1];
+					var o = alongX ? [sd[1], sd[3], 0] : [sd[0], sd[2], 0], du = alongX ? [1, 0, 0] : [0, -1, 0];
+					void a0;
+					var se = sc.plane(o, du, [0, 0, 1], [[0, 0], [lenS, 0], [lenS, fz], [0, fz]], ffill, fenceInner(lenS), { noShade: true, both: true });
+					if (se) { sc.push(se.depth, se.svg); }
 				});
 				var gc = '#2E3135', posts = [];
 				if (gateOn) {
@@ -1746,7 +1857,7 @@
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
 		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
 		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
-		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _roundPts: roundPts, massing: MASSING };
+		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _roundPts: roundPts, massing: MASSING };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));

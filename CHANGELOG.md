@@ -1,5 +1,11 @@
 # Változásnapló
 
+## 1.3.3 – 2026-10-13
+
+- Közös kertterv a 2D vázlatnak és a 3D előnézetnek: fák, cserjék, sövény, virágágyás, kerti tároló, játszótér, tűzrakó, pergola, kerti bútor és lámpák csak a telken belül, a burkolatoktól (terasz, járda, beálló, garázs, medence, tornác, veranda, lépcső) és a háztól távol kerülnek elhelyezésre, egymásra sem kerülnek. Önteszt: 600 véletlen kert, ~4300 növény, 0 hibás elhelyezés.
+- A pázsit a telket fedi, körülötte rét; ha van kerítés, a telek oldalain és hátul is körbefut (eddig csak elöl volt).
+- Ha a terasz ajtaja nem fér a homlokzat szabad részére (pl. középrizalitnál), a terasz a legszélesebb szabad falszakasz elé kerül, nem a rizalit elé.
+
 ## 1.3.2 – 2026-10-13
 
 - A varázsló „Teljes tervező” gombja Részletes módban nyitja a tervezőt (minden beállítással), nem Egyszerűben.

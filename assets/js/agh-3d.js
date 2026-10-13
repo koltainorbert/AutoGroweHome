@@ -981,112 +981,89 @@ House.prototype.site = function () {
 	}
 	this.plotBox = { left: left, right: right, front: front, back: back };
 	var flat = function (x0, y0, x1, y1, z, mat) { var m = box(x0, y0, z - 0.02, x1, y1, z, mat, { noCast: true }); self.add(m, false); return m; };
+	var ext = { left: left, right: right, front: front, back: back }, fence = c.fence || 'none', fy = K._siteEdge(c, front, plot);
+	// one garden plan for the 2D sketch and the 3D view: inside the plot, nothing on paved surfaces
+	var G = K._garden(c, vols, pl, ext, plot, this.garage || null, this.terrace || null, fy);
+	this.gardenPlan = G;
 	// lawn of the plot (slightly raised over the surrounding meadow)
 	var lawn = has(gf, 'lawn') || !c.garden_features;
-	flat(left, back, right, front, 0.01, groundKind(c, lawn ? 'grass' : 'meadow'));
-	var ent = K._entrance(c, vols), doorMid = ent.x;
-	// Paths and the driveway end at the fence line (on the front plot line when the plot is given).
-	var fence = c.fence || 'none', fy = K._siteEdge(c, front, plot), edge = fy;
-	var pathOn = has(gf, 'paths') || !c.garden_features;
-	if (pathOn) { flat(doorMid - 0.6, ent.y, doorMid + 0.6, edge, 0.02, groundKind(c, 'slabs')); }
+	flat(G.lawn.x0, G.lawn.y0, G.lawn.x1, G.lawn.y1, 0.01, groundKind(c, lawn ? 'grass' : 'meadow'));
+	var doorMid = G.ent.x;
+	if (G.path) { flat(G.path.x0, G.path.y0, G.path.x1, G.path.y1, 0.02, groundKind(c, 'slabs')); }
 	var dk = { gravel: 'gravel', grass: 'grasspavers', asphalt: 'asphalt' }[c.driveway] || 'pavers';
-	var drive = garage !== 'none' ? [this.garage.x0, this.garage.x1] : [maxX + 0.8, maxX + 3.8];
-	flat(drive[0], garage !== 'none' ? this.garage.y1 : D * 0.45, drive[1], edge, 0.02, groundKind(c, dk));
-	if (gs === 'minimal' || gs === 'mediterranean') { flat(left + 0.8, mainV.y1 + 0.8, Math.max(left + 1.8, doorMid - 1.4), front - 0.8, 0.012, groundKind(c, 'gravel')); }
-	if (has(gf, 'pool')) {
-		var ext = { left: left, right: right, front: front, back: back };
-		var pr = K._pool(c, vols, ext, plot, fy, K._avoid(c, vols, ext, this.garage || null, this.terrace || null, doorMid, ent.y)), px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
+	flat(G.drive.x0, G.drive.y0, G.drive.x1, G.drive.y1, 0.02, groundKind(c, dk));
+	if (G.gravel) { flat(G.gravel.x0, G.gravel.y0, G.gravel.x1, G.gravel.y1, 0.012, groundKind(c, 'gravel')); }
+	if (G.pool) {
+		var pr = G.pool, px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
 		flat(px0, py0, px0 + poolW, py0 + pdp, 0.06, groundKind(c, 'slabs'));
 		var water = cached('water', function () { return new THREE.MeshPhysicalMaterial({ color: '#2D8FB0', roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
 		flat(px0 + 0.3, py0 + 0.3, px0 + poolW - 0.3, py0 + pdp - 0.3, 0.07, water);
 	}
-	if (has(gf, 'flowerbeds') && season !== 'winter') {
-		flat(0.2, mainV.y1 + 1.0, Math.max(1.2, Math.min(3, doorMid - 1)), mainV.y1 + 1.8, 0.03, groundKind(c, 'soil'));
-		for (var fb = 0; fb < 6; fb++) { this.plant('flower', 0.5 + fb * 0.42, mainV.y1 + 1.4, 0.5, fb); }
+	G.flats.forEach(function (f) { flat(f.x0, f.y0, f.x1, f.y1, 0.03, groundKind(c, f.kind)); });
+	if (G.shed) { var sh = G.shed; this.add(box(sh.x0 + 0.1, sh.y0 + 0.1, 0, sh.x1 - 0.1, sh.y1 - 0.1, 2.3, pbr('wood', { color: '#9A7048' }, { normal: 1 })), false); this.add(box(sh.x0, sh.y0, 2.3, sh.x1, sh.y1, 2.42, solid('#3A3D40', 0.6)), false); }
+	if (G.firepit) {
+		var fp = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.65, 0.35, 24), pbr('stone', { color: '#8D8576' }, { normal: 2 })); fp.position.copy(X(G.firepit.x, G.firepit.y, 0.17)); this.add(fp, false);
+		var fire = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 12), solid('#FF8A30', 0.8, 0, { emissive: '#FF7A20', emissiveIntensity: this.night ? 4 : 1.5 })); fire.position.copy(X(G.firepit.x, G.firepit.y, 0.6)); this.add(fire, false);
 	}
-	if (has(gf, 'playground') && season !== 'winter') { flat(right - 3.5, back + 3.5, right - 1, back + 6, 0.03, groundKind(c, 'sand')); }
-	if (has(gf, 'shed')) { this.add(box(right - 3.4, back + 1.2, 0, right - 1.2, back + 3, 2.3, pbr('wood', { color: '#9A7048' }, { normal: 1 })), false); this.add(box(right - 3.5, back + 1.1, 2.3, right - 1.1, back + 3.1, 2.42, solid('#3A3D40', 0.6)), false); }
-	if (has(gf, 'firepit')) {
-		var fp = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.65, 0.35, 24), pbr('stone', { color: '#8D8576' }, { normal: 2 })); fp.position.copy(X(left + 3.5, mainV.y1 + 3.5, 0.17)); this.add(fp, false);
-		var fire = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 12), solid('#FF8A30', 0.8, 0, { emissive: '#FF7A20', emissiveIntensity: this.night ? 4 : 1.5 })); fire.position.copy(X(left + 3.5, mainV.y1 + 3.5, 0.6)); this.add(fire, false);
-	}
-	if (this.ta <= 0 && (has(gf, 'pergola') || has(c.shading, 'pergola'))) {
-		var pgx = left + 1.4, pgy = mainV.y1 + 2.2, pm = pbr('wood', { color: '#8A6A4C' }, { normal: 1 });
+	if (G.pergola) {
+		var pgx = G.pergola.x0, pgy = G.pergola.y0, pm = pbr('wood', { color: '#8A6A4C' }, { normal: 1 });
 		[[pgx, pgy], [pgx + 2.8, pgy], [pgx, pgy + 2.4], [pgx + 2.8, pgy + 2.4]].forEach(function (q) { self.add(box(q[0], q[1], 0, q[0] + 0.14, q[1] + 0.14, 2.5, pm), false); });
 		for (var pb = 0; pb < 3; pb += 0.45) { this.add(box(pgx + pb, pgy - 0.1, 2.5, pgx + pb + 0.08, pgy + 2.6, 2.62, pm), false); }
 	}
-	if (this.ta <= 0 && (has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen'))) { this.furniture(left + 2, mainV.y1 + 2.8, 0, has(gf, 'outdoor_kitchen')); }
-	if (has(gf, 'garden_lights')) {
-		[[doorMid - 1.2, front - 1.5], [doorMid + 1.2, front - 3.5], [left + 3, mainV.y1 + 2]].forEach(function (q) {
-			self.add(box(q[0] - 0.06, q[1] - 0.06, 0, q[0] + 0.06, q[1] + 0.06, 0.6, solid('#2E3135', 0.4, 0.5)), false);
-			self.add(box(q[0] - 0.07, q[1] - 0.07, 0.48, q[0] + 0.07, q[1] + 0.07, 0.56, self.night ? solid('#3A3020', 0.3, 0, { emissive: '#FFD9A0', emissiveIntensity: 4 }) : solid('#D8D8D2', 0.3)), false);
-		});
-	}
-	// planting: trees by garden style, rows along the path, hedge
-	var kinds = { natural: ['deciduous', 'deciduous', 'conifer', 'multistem', 'shrub'], formal: ['topiary', 'topiary', 'cypress', 'deciduous', 'topiary'], minimal: ['multistem', 'grass', 'grass', 'multistem', 'grass'], cottage: ['fruit', 'deciduous', 'shrub', 'fruit', 'shrub'], mediterranean: ['olive', 'cypress', 'cypress', 'olive', 'lavender'] }[gs] || ['deciduous'];
-	if (has(gf, 'trees') || !c.garden_features) {
-		[[left + 2.2, back + 2.5, 7.5], [right - 2.5, back + 3, 8], [left + 1.6, front - 2.2, 6], [right - 1.8, front - 1.6, 5.5], [doorMid - 2.2, mainV.y1 + 1.4, 1.1]].forEach(function (sp, i) {
-			var k = kinds[i % kinds.length];
-			var sz = k === 'grass' || k === 'lavender' || k === 'shrub' || k === 'topiary' ? (i === 4 ? 1.0 : 1.6) : sp[2];
-			self.plant(k, sp[0], sp[1], sz, 11 + i * 7);
-		});
-	}
-	var rowKind = { formal: 'topiary', mediterranean: 'lavender', cottage: 'shrub', minimal: 'grass', natural: 'shrub' }[gs] || 'shrub';
-	if (gs !== 'natural' || has(gf, 'flowerbeds')) {
-		var step = gs === 'formal' ? 1.3 : (gs === 'minimal' ? 1.8 : 0.95), ri = 0;
-		for (var py = mainV.y1 + 1.6; py < front - 0.9; py += step) {
-			[-1.15, 1.15].forEach(function (dx) { ri++; if (gs === 'natural' && (ri * 7919) % 10 < 4) { return; } self.plant(rowKind, doorMid + dx, py, gs === 'formal' ? 1.15 : (gs === 'minimal' ? 1.2 : 0.95), 101 + ri); });
-		}
-	}
-	if (gs === 'mediterranean') { [[left + 1.2, mainV.y1 + 0.8], [left + 2.6, mainV.y1 + 0.8]].forEach(function (q, i) { self.plant('cypress', q[0], q[1], 4.5, 7 + i); }); }
-	if (gs === 'formal') { [[left + 1.4, mainV.y1 + 1], [right - 1.4, mainV.y1 + 1]].forEach(function (q, i) { self.plant('cypress', q[0], q[1], 3.6, 9 + i); }); }
-	if (has(gf, 'hedge')) {
+	if (G.furniture) { this.furniture(G.furniture.x, G.furniture.y, 0, G.furniture.kitchen); }
+	G.lights.forEach(function (q) {
+		self.add(box(q[0] - 0.06, q[1] - 0.06, 0, q[0] + 0.06, q[1] + 0.06, 0.6, solid('#2E3135', 0.4, 0.5)), false);
+		self.add(box(q[0] - 0.07, q[1] - 0.07, 0.48, q[0] + 0.07, q[1] + 0.07, 0.56, self.night ? solid('#3A3020', 0.3, 0, { emissive: '#FFD9A0', emissiveIntensity: 4 }) : solid('#D8D8D2', 0.3)), false);
+	});
+	G.plants.forEach(function (p) { self.plant(p.kind, p.x, p.y, p.size, p.seed); });
+	if (G.hedge) {
 		var hm = c.season === 'winter' ? pbr('snow', {}, { normal: 0.5 }) : pbr('hedge', { season: season }, { normal: 2.5 });
-		this.add(box(left + 0.4, back + 0.2, 0, right - 0.4, back + 1.1, 1.5, hm), false);
+		this.add(box(G.hedge.x0, G.hedge.y0, 0, G.hedge.x1, G.hedge.y1, 1.5, hm), false);
 	}
-	// fence along the front: openings for the path (with an optional gate) and for the driveway
-	if (fence !== 'none') {
-		var fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], fx0 = plot ? Math.max(left + 0.6, plot.x0) : left + 0.6, fx1 = plot ? Math.min(right - 0.6, plot.x1) : right - 0.6, gx = doorMid - 0.6, gateOn = c.gate !== false;
+	// fence: the front with openings for the path (optional gate) and the driveway, the sides and the back along the plot
+	if (G.fence) {
+		var F = G.fence, fz = { slats: 1.6, mesh: 1.4, masonry: 1.3, gabion: 1.2 }[fence], gateOn = c.gate !== false, gx = doorMid - 0.6;
 		var fm = fence === 'slats' ? (c.arch_style === 'scandinavian' ? pbr('wood', { color: '#9C978E' }, { normal: 1 }) : solid('#3B3E42', 0.45, 0.5)) : null;
-		var gaps = [[drive[0] - 0.15, drive[1] + 0.15]];
-		if (pathOn || gateOn) { gaps.push([gx, gx + 1.2]); }
-		var segs = SK()._fenceSegs(fx0, fx1, gaps);
-		segs.forEach(function (sg) {
+		var meshM = cached('meshfence', function () { return new THREE.MeshStandardMaterial({ color: '#5B6B5A', roughness: 0.6, metalness: 0.4, transparent: true, opacity: 0.35 }); });
+		// one fence run from a to b along x (alongY = false) or along y, centred on the line `at`
+		var run = function (a, b, at, alongY) {
+			var B2 = function (u0, v0, z0, u1, v1, z1, m, o) { return alongY ? box(v0, u0, z0, v1, u1, z1, m, o) : box(u0, v0, z0, u1, v1, z1, m, o); };
 			if (fence === 'slats') {
-				var n = Math.floor((sg[1] - sg[0]) / 0.16), geo = boxGeo(0.11, fz, 0.04), im = new THREE.InstancedMesh(geo, fm, n), mt = new THREE.Matrix4();
-				for (var i = 0; i < n; i++) { mt.makeTranslation(sg[0] + i * 0.16 + 0.055, fz / 2, fy); im.setMatrixAt(i, mt); }
-				im.castShadow = true; im.receiveShadow = true; self.add(im, false);
-				self.add(box(sg[0], fy - 0.06, fz * 0.3, sg[1], fy - 0.02, fz * 0.3 + 0.06, fm), false);
+				var n = Math.floor((b - a) / 0.16), geo = alongY ? boxGeo(0.04, fz, 0.11) : boxGeo(0.11, fz, 0.04), im = new THREE.InstancedMesh(geo, fm, Math.max(1, n)), mt = new THREE.Matrix4();
+				for (var i = 0; i < n; i++) { var u = a + i * 0.16 + 0.055; if (alongY) { mt.makeTranslation(at, fz / 2, u); } else { mt.makeTranslation(u, fz / 2, at); } im.setMatrixAt(i, mt); }
+				im.count = n; im.castShadow = true; im.receiveShadow = true; self.add(im, false);
+				self.add(B2(a, at - 0.06, fz * 0.3, b, at - 0.02, fz * 0.3 + 0.06, fm), false);
 			} else if (fence === 'mesh') {
-				var meshM = cached('meshfence', function () { return new THREE.MeshStandardMaterial({ color: '#5B6B5A', roughness: 0.6, metalness: 0.4, transparent: true, opacity: 0.35 }); });
-				self.add(box(sg[0], fy - 0.01, 0, sg[1], fy + 0.01, fz, meshM, { noCast: true }), false);
-				for (var mx = sg[0]; mx <= sg[1]; mx += 2.5) { self.add(box(mx, fy - 0.03, 0, mx + 0.06, fy + 0.03, fz, solid('#4B5A4A', 0.5, 0.5)), false); }
+				self.add(B2(a, at - 0.01, 0, b, at + 0.01, fz, meshM, { noCast: true }), false);
+				for (var mx = a; mx <= b; mx += 2.5) { self.add(B2(mx, at - 0.03, 0, mx + 0.06, at + 0.03, fz, solid('#4B5A4A', 0.5, 0.5)), false); }
 			} else if (fence === 'masonry') {
-				self.add(box(sg[0], fy - 0.15, 0, sg[1], fy + 0.15, fz, facadeMat(c, 'render')), false);
-				self.add(box(sg[0] - 0.03, fy - 0.18, fz, sg[1] + 0.03, fy + 0.18, fz + 0.05, solid('#6E7378', 0.4, 0.6)), false);
+				self.add(B2(a, at - 0.15, 0, b, at + 0.15, fz, facadeMat(c, 'render')), false);
+				self.add(B2(a - 0.03, at - 0.18, fz, b + 0.03, at + 0.18, fz + 0.05, solid('#6E7378', 0.4, 0.6)), false);
 			} else {
-				self.add(box(sg[0], fy - 0.25, 0, sg[1], fy + 0.25, fz, pbr('stone', { color: '#9C978E' }, { normal: 2.5 })), false);
+				self.add(B2(a, at - 0.25, 0, b, at + 0.25, fz, pbr('stone', { color: '#9C978E' }, { normal: 2.5 })), false);
 			}
-		});
-		var gm = solid('#2E3135', 0.4, 0.6);
+		};
+		SK()._fenceSegs(F.x0, F.x1, F.gaps).forEach(function (sg) { run(sg[0], sg[1], F.y, false); });
+		F.sides.forEach(function (sd) { run(sd[1], sd[2], sd[0], true); });
+		if (F.back) { run(F.back[0], F.back[1], F.back[2], false); }
+		var gm = solid('#2E3135', 0.4, 0.6), dg0 = Math.max(F.x0, G.drive.x0 - 0.15), dg1 = Math.min(F.x1, G.drive.x1 + 0.15), fyy = F.y;
 		// driveway opening: two posts; with a gate, a sliding gate parked open behind the fence
-		var dg0 = Math.max(fx0, drive[0] - 0.15), dg1 = Math.min(fx1, drive[1] + 0.15);
 		if (dg1 - dg0 > 0.5) {
-			self.add(box(dg0 - 0.12, fy - 0.08, 0, dg0, fy + 0.08, fz + 0.1, gm), false);
-			self.add(box(dg1, fy - 0.08, 0, dg1 + 0.12, fy + 0.08, fz + 0.1, gm), false);
+			self.add(box(dg0 - 0.12, fyy - 0.08, 0, dg0, fyy + 0.08, fz + 0.1, gm), false);
+			self.add(box(dg1, fyy - 0.08, 0, dg1 + 0.12, fyy + 0.08, fz + 0.1, gm), false);
 			if (gateOn) {
-				var sw = dg1 - dg0, sx0 = dg1 + sw + 0.3 <= fx1 ? dg1 + 0.15 : Math.max(fx0, dg0 - sw - 0.15), sy = fy - 0.16;
+				var sw = dg1 - dg0, sx0 = dg1 + sw + 0.3 <= F.x1 ? dg1 + 0.15 : Math.max(F.x0, dg0 - sw - 0.15), sy = fyy - 0.16;
 				self.add(box(sx0, sy - 0.03, 0.08, sx0 + sw, sy + 0.03, 0.16, gm), false);
 				self.add(box(sx0, sy - 0.03, fz - 0.16, sx0 + sw, sy + 0.03, fz - 0.08, gm), false);
 				for (var sb = sx0 + 0.06; sb < sx0 + sw - 0.04; sb += 0.13) { self.add(box(sb, sy - 0.015, 0.16, sb + 0.04, sy + 0.015, fz - 0.16, gm), false); }
 			}
 		}
 		if (gateOn) {
-			self.add(box(gx - 0.12, fy - 0.06, 0, gx, fy + 0.06, fz + 0.1, gm), false);
-			self.add(box(gx + 1.2, fy - 0.06, 0, gx + 1.32, fy + 0.06, fz + 0.1, gm), false);
-			for (var gb = gx + 0.08; gb < gx + 1.15; gb += 0.15) { self.add(box(gb, fy - 0.015, 0.05, gb + 0.03, fy + 0.015, fz - 0.07, gm), false); }
-			self.add(box(gx, fy - 0.03, fz - 0.1, gx + 1.2, fy + 0.03, fz - 0.04, gm), false);
-			self.add(box(gx, fy - 0.03, 0.05, gx + 1.2, fy + 0.03, 0.11, gm), false);
+			self.add(box(gx - 0.12, fyy - 0.06, 0, gx, fyy + 0.06, fz + 0.1, gm), false);
+			self.add(box(gx + 1.2, fyy - 0.06, 0, gx + 1.32, fyy + 0.06, fz + 0.1, gm), false);
+			for (var gb = gx + 0.08; gb < gx + 1.15; gb += 0.15) { self.add(box(gb, fyy - 0.015, 0.05, gb + 0.03, fyy + 0.015, fz - 0.07, gm), false); }
+			self.add(box(gx, fyy - 0.03, fz - 0.1, gx + 1.2, fyy + 0.03, fz - 0.04, gm), false);
+			self.add(box(gx, fyy - 0.03, 0.05, gx + 1.2, fyy + 0.03, 0.11, gm), false);
 		}
 	}
 	if (c.neighbors) {

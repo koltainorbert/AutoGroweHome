@@ -106,5 +106,39 @@ for (const rt of ['flat', 'gable', 'hip']) {
   for (const v of O.massing) for (const lv of ['single', 'attic', 'two', 'three']) check(K.render(Object.assign({}, BASE, { massing: v, roof_type: rt, levels: lv, garden_features: ['lawn', 'pool', 'trees', 'paths', 'shed'] }), { id: 'x' }), 'tömeg ' + v + '/' + rt + '/' + lv);
 }
 
-console.log(`vázlat: ${n} rajz, ${tested} paraméterváltozat (${changed} változott), átlag ${(total / 800).toFixed(1)} ms, max ${maxMs.toFixed(1)} ms, hiba ${fail}`);
+let gardenSummary = '';
+// 4) garden plan: plants inside the plot, never on paving or in the house, the pool inside the plot
+{
+  const S = {}; for (const st of O.arch_style) S[st] = { massing: O.massing[(O.arch_style.indexOf(st) % (O.massing.length - 1)) + 1], roof_type: ['flat', 'gable', 'hip'][O.arch_style.indexOf(st) % 3] };
+  let n = 0, bad = [], plants = 0;
+const styles = Object.keys(S), gss = ['natural', 'formal', 'minimal', 'cottage', 'mediterranean'];
+let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+for (let i = 0; i < 600; i++) {
+  const st = styles[i % styles.length];
+  const c = Object.assign({ net_area: 80 + Math.round(rnd() * 200), terrace_area: rnd() < 0.7 ? Math.round(rnd() * 40) : 0, garage: ['none', 'carport', 'garage_1', 'garage_2', 'separate'][Math.floor(rnd() * 5)], plot_width: rnd() < 0.8 ? 14 + Math.round(rnd() * 25) : 0, plot_length: 25 + Math.round(rnd() * 30), fence: ['none', 'slats', 'mesh', 'masonry'][Math.floor(rnd() * 4)] }, S[st], { arch_style: st, garden_style: gss[Math.floor(rnd() * 5)], garden_features: ['lawn', 'trees', 'paths', 'flowerbeds', 'pool', 'hedge', 'shed', 'firepit', 'garden_furniture', 'playground', 'garden_lights'].filter(() => rnd() < 0.6), levels: ['single', 'attic', 'two'][Math.floor(rnd() * 3)] });
+  const pl = K.plan(c), vols = K._volumes(c, pl), bb = K._siteBox(vols);
+  const gW = c.garage === 'garage_2' ? 6.2 : 3.4, gx0 = c.garage === 'separate' ? bb.x1 + 2.2 : bb.x1 + 0.4, gD = 6.2;
+  const gar = c.garage !== 'none' ? { x0: gx0, x1: gx0 + gW, y0: (c.garage === 'separate' ? pl.D * 0.8 : Math.min(pl.D, gD)) - gD, y1: c.garage === 'separate' ? pl.D * 0.8 : Math.min(pl.D, gD) } : null;
+  let front = bb.y1 + 6.5, back = bb.y0 - 6, left = bb.x0 - 6.5, right = (gar ? gar.x1 : bb.x1) + 6;
+  const plot = K._plot(c, vols, gar ? gar.x1 : bb.x1 + 3.8);
+  if (plot) { left = Math.min(left, plot.x0 - 1.2); right = Math.max(right, plot.x1 + 1.2); front = Math.max(front, plot.yF + 1.2); if (plot.yB !== null) back = Math.min(back, plot.yB - 1.2); }
+  const ter = c.terrace_area > 0 ? K._terrace(c, vols[0], vols, c.terrace_area) : null;
+  const G = K._garden(c, vols, pl, { left, right, front, back }, plot, gar, ter, K._siteEdge(c, front, plot));
+  const hardR = [ter, G.path, G.drive, G.pool, gar].filter(Boolean);
+  const A = G.area;
+  for (const p of G.plants) {
+    plants++;
+    const r = p.kind === 'flower' ? 0.1 : (['grass', 'lavender'].includes(p.kind) ? 0.3 : (['shrub', 'topiary'].includes(p.kind) ? p.size * 0.38 : (p.kind === 'cypress' ? 0.5 : Math.min(2, p.size * 0.26))));
+    if (p.x - r < A.x0 - 0.01 || p.x + r > A.x1 + 0.01 || p.y - r < A.y0 - 0.01 || p.y + r > A.y1 + 0.01) bad.push(i + ' kilóg ' + p.kind);
+    for (const h of hardR) { const dx = Math.max(h.x0 - p.x, 0, p.x - h.x1), dy = Math.max(h.y0 - p.y, 0, p.y - h.y1); if (dx * dx + dy * dy < r * r) bad.push(i + ' burkolaton ' + p.kind); }
+    for (const v of vols) { if (p.x > v.x0 && p.x < v.x1 && p.y > v.y0 && p.y < v.y1) bad.push(i + ' házban ' + p.kind); }
+  }
+  for (const k of ['shed', 'playground', 'pergola']) { const r = G[k]; if (r && (r.x0 < A.x0 - 0.01 || r.x1 > A.x1 + 0.01 || r.y0 < A.y0 - 0.01 || r.y1 > A.y1 + 0.01)) bad.push(i + ' kilóg ' + k); }
+  if (G.pool && plot && (G.pool.x0 < plot.x0 || G.pool.x1 > plot.x1 || G.pool.y1 > plot.yF)) bad.push(i + ' medence kilóg');
+  n++;
+}
+  if (bad.length) err('kert: ' + bad.length + ' hibás elhelyezés, pl. ' + bad.slice(0, 3).join('; '));
+  gardenSummary = n + ' kert, ' + plants + ' növény';
+}
+console.log(`vázlat: ${n} rajz, ${tested} paraméterváltozat (${changed} változott), átlag ${(total / 800).toFixed(1)} ms, max ${maxMs.toFixed(1)} ms, ${gardenSummary}, hiba ${fail}`);
 process.exit(fail ? 1 : 0);
