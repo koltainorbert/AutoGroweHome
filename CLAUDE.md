@@ -2,6 +2,17 @@
 
 Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 
+## Állandó szabály: minden szövegből előbb tökéletes prompt készül
+
+- Amikor Norbi listát, kívánságot vagy hibabejelentést ír, **az első lépés mindig egy
+  tökéletes prompt megírása ugyanabból a szövegből** – nem a kódolás.
+- A prompt fájlba megy (`docs/FELADAT-<verzió>.md`), és pontonként tartalmazza: mi a
+  kérés, hol van a kódban, mi a gyökérok (ha hiba), és **mikor kész, mérhetően**.
+- A prompt semmit nem hagy ki a kapott szövegből, és semmit nem vesz el a meglévő
+  működésből: „minden maradjon meg, de ezek maradéktalanul kellenek”.
+- Ami már létező mező, azt a prompt megjelöli, hogy ne keletkezzen duplikált paraméter.
+- A kész prompt egyszerre kerül a repóba és a Claude-projektbe, és ez alapján folyik a munka.
+
 ## Minden változtatás a repóba kerül, kérdés nélkül
 
 - Minden elkészült módosítás után: teszt → commit → `git push origin main`. Nem kell rá engedélyt kérni, és nem marad munka csak a chatben vagy csak a helyi gépen.

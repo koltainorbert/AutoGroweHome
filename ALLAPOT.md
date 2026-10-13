@@ -5,6 +5,7 @@
 **Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 2016 szöveg, 0 hiba · vázlat 1247 rajz, 600 kert, 0 hiba · felületi lefedettség 154 mező, 2D és 3D 0 hiba, konzol 0 · responsive, wizard, gen E2E rendben · 342 tárgykártya, 512 házváltozat, 0 hiba · 300 véletlen szoba / 628 tárgy: 0 kilógó, 0 ajtóban · táj első felépítése 120–215 ms, változás 15–57 ms (SwiftShader) · Licencközpont 40/40.
 
 **Döntések**
+- Norbi minden szövegéből először tökéletes prompt készül fájlba (`docs/FELADAT-<verzió>.md`), csak utána kezdődik a munka; a prompt semmit nem hagy ki és semmit nem vesz el a meglévőből.
 - Minden változtatás automatikusan a repóba (teszt → commit → push main); minden új ZIP új verzió (bin/bump-version.sh, központnál bin/bump-hub-version.sh).
 - Két plugin: gyökér = ügyfélplugin; license-hub/ = licencszerver Norbi HTTPS-oldalára (Ed25519 {data, signature}). Saját oldalon: `AGH_OWNER_MODE`.
 - Stílus = 1. lépés; stílusonként tömegforma, szintszám, tető, anyag javaslat (Catalog::style_seed).
@@ -15,6 +16,7 @@
 - 1 kérés = 3 koncepció = 1 egység; BRAMAC magastetőnél kötelező. Licenc nélkül Starter: a beállítások egy része látszik.
 
 **Nyitott tételek**
+- 1.8.0 munkaprompt kész: `docs/FELADAT-1.8.0.md` (19 pont: kereső fókusz, tetőszellőző, hófogó, dryvit dekor, belső nézet újratervezés, kattintás→mező, több táj, 5 új stílus, pince, padlás, ajtókeret, radiátor, gyerekszoba, akvárium, komód/polc, lépcső, erkély, bentre állat, falikép). Implementálás még nem kezdődött.
 - Kézi szöveg külön a külsőhöz és a belsőhöz, beépítve a promptba.
 - Licencközpont telepítése Norbi oldalára → szerver URL + nyilvános kulcs az ügyfélpluginba.
 - htombau: 1.7.0 telepítése; 3D sebesség telefonon (valódi GPU-n nem mérve); Magnific/Anthropic kulcs, éles végigteszt.
