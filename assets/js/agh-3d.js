@@ -17,13 +17,15 @@ import { EffectComposer } from './vendor/three/jsm/postprocessing/EffectComposer
 import { RenderPass } from './vendor/three/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from './vendor/three/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
-import { texture, setAnisotropy, onTexture, texturesReady, TINT, NEUTRAL } from './agh-3d-tex.js';
+import { texture, setAnisotropy, onTexture, texturesReady, TINT, NEUTRAL, imageTexture, onImage } from './agh-3d-tex.js';
 // interiors (furnished rooms, studio shots of single items) – loaded with the same version query as this file
 const INT = await import('./agh-3d-int.js' + new URL(import.meta.url).search);
 
 var D2R = Math.PI / 180;
 var SK = function () { return window.AGH_Sketch; };
 function X(x, y, z) { return new THREE.Vector3(x, z, y); }
+// A built object placed on the site at (x, y, z) turned by rot around the vertical.
+function life(g, x, y, rot, z) { g.position.copy(X(x, y, z || 0)); g.rotation.y = rot || 0; return g; }
 function num(v, d) { v = Number(v); return isFinite(v) ? v : d; }
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function has(a, v) { return Array.isArray(a) && a.indexOf(v) !== -1; }
@@ -31,6 +33,11 @@ function col(c, d) { return /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? String(c
 function shadeHex(h, k) { var c = new THREE.Color(h); var t = k < 0 ? new THREE.Color(0, 0, 0) : new THREE.Color(1, 1, 1); c.lerp(t, Math.abs(k)); return '#' + c.getHexString(); }
 
 /* ================================================================== materials */
+// Every material is a MeshStandardMaterial: each extra physical feature (clearcoat, sheen,
+// transmission) is a separate shader program, and compiling programs was the slowest part of the
+// preview (seconds on some Windows GPUs). Glossy surfaces get low roughness and reflections instead.
+var STRIP = { clearcoat: 1, clearcoatRoughness: 1, transmission: 1, thickness: 1, ior: 1, sheen: 1, sheenColor: 1, sheenRoughness: 1, specularIntensity: 1, specularColor: 1, attenuationColor: 1, attenuationDistance: 1, iridescence: 1 };
+function stdMat(o) { var q = {}; Object.keys(o || {}).forEach(function (k) { if (!STRIP[k]) { q[k] = o[k]; } }); return new THREE.MeshStandardMaterial(q); }
 var MATS = {};
 function cached(key, make) { if (!MATS[key]) { MATS[key] = make(); MATS[key].userData.key = key; } return MATS[key]; }
 function solid(color, rough, metal, extra) {
@@ -49,11 +56,10 @@ function pbr(kind, opts, params) {
 		// single-tone materials: one neutral texture per pattern, the colour comes from the material
 		var tint = TINT[kind] && opts && /^#[0-9a-f]{6}$/i.test(opts.color || '');
 		var t = texture(kind, tint ? Object.assign({}, opts, { color: NEUTRAL }) : (opts || {}));
-		var P = params.physical ? THREE.MeshPhysicalMaterial : THREE.MeshStandardMaterial;
-		var m = new P({ map: t.map, normalMap: t.normalMap, roughnessMap: t.roughnessMap, roughness: params.roughness === undefined ? 1 : params.roughness, metalness: params.metalness || 0 });
+		var m = new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, roughnessMap: t.roughnessMap, roughness: params.roughness === undefined ? 1 : params.roughness, metalness: params.metalness || 0 });
 		m.normalScale = new THREE.Vector2(params.normal || 1, params.normal || 1);
 		if (t.alpha) { m.alphaTest = 0.5; m.side = THREE.DoubleSide; }
-		if (params.clearcoat) { m.clearcoat = params.clearcoat; m.clearcoatRoughness = 0.15; }
+		if (params.clearcoat && params.roughness === undefined) { m.roughness = 0.85; }
 		if (tint) { m.color = new THREE.Color(opts.color).multiplyScalar(1 / NEUTRAL_LIN); }
 		if (params.color) { m.color = new THREE.Color(params.color); }
 		return m;
@@ -64,7 +70,7 @@ function glassMat(c, night) {
 	var g = c.glazing || 'clear';
 	var key = 'glass' + g;
 	return cached(key, function () {
-		return new THREE.MeshPhysicalMaterial({
+		return stdMat({
 			color: new THREE.Color(g === 'tinted' ? '#3A444D' : (g === 'frosted' ? '#C9D3DA' : '#66798A')),
 			roughness: g === 'frosted' ? 0.45 : 0.04, metalness: g === 'frosted' ? 0 : 0.75, envMapIntensity: 1.3, clearcoat: 1, clearcoatRoughness: 0.02
 		});
@@ -156,6 +162,27 @@ function lbox(u0, v0, w0, u1, v1, w1, mat, noCast) {
 	var m = new THREE.Mesh(boxGeo(Math.abs(u1 - u0), Math.abs(v1 - v0), Math.abs(w1 - w0)), mat);
 	m.position.set((u0 + u1) / 2, (v0 + v1) / 2, (w0 + w1) / 2);
 	m.castShadow = !noCast; m.receiveShadow = true;
+	return m;
+}
+// Many boxes (face-local [u0, v0, w0, u1, v1, w1]) as one mesh: railings, balusters, boards.
+function lboxes(list, mat, noCast) {
+	if (!list.length) { return null; }
+	var pos = [], nor = [], uv = [], idx = [];
+	list.forEach(function (b) {
+		var g = new THREE.BoxGeometry(Math.max(1e-3, Math.abs(b[3] - b[0])), Math.max(1e-3, Math.abs(b[4] - b[1])), Math.max(1e-3, Math.abs(b[5] - b[2])));
+		g.translate((b[0] + b[3]) / 2, (b[1] + b[4]) / 2, (b[2] + b[5]) / 2);
+		var base = pos.length / 3, P = g.attributes.position.array, N = g.attributes.normal.array, U = g.attributes.uv.array, I = g.index.array, i;
+		for (i = 0; i < P.length; i++) { pos.push(P[i]); nor.push(N[i]); }
+		for (i = 0; i < U.length; i++) { uv.push(U[i]); }
+		for (i = 0; i < I.length; i++) { idx.push(I[i] + base); }
+		g.dispose();
+	});
+	var geo = new THREE.BufferGeometry();
+	geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+	geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+	geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+	geo.setIndex(idx);
+	var m = new THREE.Mesh(geo, mat); m.castShadow = !noCast; m.receiveShadow = true;
 	return m;
 }
 // Planar polygon (three.js points) with optional thickness along -normal. Group 0 = top face, 1 = rest.
@@ -297,12 +324,19 @@ function faceOpenings(c, v, pl, F, fp, rise, gabled) {
 		var n = Math.max(1, Math.floor((len - 0.8) / (w + ws.gap)));
 		if (side) { n = Math.max(1, Math.min(n, Math.floor((len - 1) / (w + 1.4)))); }
 		if (F.name === 'back' && !st.band) { n = Math.max(1, n - 1); }
-		var step = len / n;
+		var step = len / n, row = [];
 		for (var i = 0; i < n; i++) {
 			var x = step * i + (step - w) / 2;
 			if (fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
 			if (blocked.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
-			out.push({ kind: 'win', x: x, y: z0 + sill, w: w, h: h, fl: fl, i: i });
+			row.push({ x: x, w: w, i: i });
+		}
+		// behind a balcony the windows become doors (shared rule with the 2D sketch)
+		if (fl > 0 && F.balc && F.balc.length) { SK()._balcMark(F.balc, F.name, fl, row); }
+		for (var ri = 0; ri < row.length; ri++) {
+			var o = row[ri];
+			if (o.door) { out.push({ kind: 'bdoor', x: o.x, y: z0 + 0.02, w: o.w, h: Math.min(2.3, pl.FH - 0.45), fl: fl, french: !!o.french }); }
+			else { out.push({ kind: 'win', x: o.x, y: z0 + sill, w: w, h: h, fl: fl, i: o.i }); }
 		}
 	}
 	if (gabled && (pl.attic || rise > 2.2)) {
@@ -311,7 +345,7 @@ function faceOpenings(c, v, pl, F, fp, rise, gabled) {
 	}
 	if (c.corner_window && F.name === 'front' && entrance) { out.unshift({ kind: 'win', x: len - 1.7, y: pl.plinth + 0.5, w: 1.6, h: 1.8, corner: true }); }
 	// holes must not overlap: doors and the corner window win over ordinary windows
-	out.sort(function (a, b) { var r = function (o) { return o.kind === 'door' ? 0 : (o.kind === 'tdoor' ? 1 : (o.corner ? 2 : 3)); }; return r(a) - r(b); });
+	out.sort(function (a, b) { var r = function (o) { return o.kind === 'door' ? 0 : (o.kind === 'tdoor' || o.kind === 'bdoor' ? 1 : (o.corner ? 2 : 3)); }; return r(a) - r(b); });
 	var kept = [];
 	out.forEach(function (o) {
 		if (o.x < 0.05 || o.x + o.w > len - 0.05) { return; }
@@ -348,6 +382,7 @@ House.prototype.volume = function (v, idx, type, vpl) {
 	var rd = type === 'flat' ? null : roofData(c, v, pl, type);
 	var rise = rd ? rd.info.rise : 0;
 	var acc = c.facade_accent || [], r = SK()._round(c, v), fp = SK()._front(c, v, this.vols);
+	var BL = SK()._balconies(c, v, pl, this.vols);
 	var wallMat = v.glass ? glassMat(c, this.night) : ((v.wing || v.second || v.accent) && acc.length ? accentMat(c, acc[0]) : facadeMat(c, c.facade_main));
 	var faces = [
 		{ name: 'front', o: [v.x0 + r, v.y1], u: [1, 0], n: X(0, 1, 0), len: v.x1 - v.x0 - 2 * r },
@@ -364,6 +399,7 @@ House.prototype.volume = function (v, idx, type, vpl) {
 		g.matrixAutoUpdate = false; g.matrix.copy(m);
 		var top = gableTop(F.name, v, type, rise);
 		F.fp = F.name === 'front' ? fp : null;
+		F.balc = BL;
 		var ops = faceOpenings(c, v, pl, F, F.fp, rise, top && type !== 'shed' && type !== 'saw' ? type : false);
 		F.ops = ops;
 		// a shed roof's high side needs a full-height wall
@@ -544,6 +580,20 @@ House.prototype.opening = function (g, o, T, st) {
 		g.add(lbox(x0 + o.w * 0.12, y0 + o.h * 0.38, w1 + 0.02, x0 + o.w * 0.12 + 0.035, y0 + o.h * 0.38 + hl, w1 + 0.08, solid('#C9CCCF', 0.25, 1)));
 		return;
 	}
+	if (o.kind === 'bdoor') {
+		this.frameRect(g, x0, y0, x1, y1, w0, w1, fr, fm);
+		g.add(lbox(x0 + fr, y0 + fr, w0 + fd * 0.45, x1 - fr, y1 - fr, w0 + fd * 0.55, gm, true));
+		if (o.w > 1.3) { g.add(lbox(x0 + o.w / 2 - 0.035, y0, w0, x0 + o.w / 2 + 0.035, y1, w1, fm)); }
+		if (o.french) {
+			// juliet balcony: a railing in front of the door
+			var rl = [], a0 = x0 - 0.08, a1 = x1 + 0.08, rw0 = T + 0.05, rw1 = T + 0.09;
+			rl.push([a0, y0 + 0.97, rw0 - 0.01, a1, y0 + 1.01, rw1 + 0.01], [a0, y0 + 0.08, rw0, a1, y0 + 0.11, rw1]);
+			for (var fb = a0; fb <= a1 + 1e-6; fb += 0.11) { rl.push([fb, y0 + 0.11, rw0 + 0.01, fb + 0.016, y0 + 0.97, rw1 - 0.01]); }
+			[a0, a1 - 0.03].forEach(function (u) { rl.push([u, y0 + 0.08, T, u + 0.03, y0 + 0.11, rw1]); });
+			g.add(lboxes(rl, solid('#2F3235', 0.4, 0.75)));
+		}
+		return;
+	}
 	if (o.kind === 'tdoor') {
 		var panes = c.terrace_door === 'folding' ? 4 : 2;
 		this.frameRect(g, x0, y0, x1, y1, w0, w1, fr, fm);
@@ -679,7 +729,7 @@ House.prototype.flatRoof = function (v, r) {
 };
 House.prototype.roofItems = function (v, type, info, vpl) {
 	var c = this.c, pl = vpl || this.pl, self = this, W = v.x1 - v.x0, D = v.y1 - v.y0;
-	if (!v.items || type === 'saw') { return; }
+	if (type === 'saw') { return; }
 	var solar = c.roof_solar || has(c.energy, 'solar') || !!SK()._style(c).pv;
 	var ss = SK()._solar(c);
 	var panelM = pbr('solar', { type: ss.t }, { roughness: ss.t === 'glass' ? 0.25 : 0.6, metalness: 0.35, normal: ss.tiles ? 1.2 : 0.8, clearcoat: 1, physical: true });
@@ -701,21 +751,31 @@ House.prototype.roofItems = function (v, type, info, vpl) {
 			self.add(box(cx - 0.1, cy - 0.1, zt + 0.1, cx + cs.w + 0.1, cy + cs.d + 0.1, zt + 0.22, solid(cs.cap, 0.4, 0.6)));
 		}
 	}
+	// solar modules (shared layout with the 2D sketch: whole modules inside the roof planes)
+	function solarDraw() {
+		if (!solar) { return; }
+		SK()._solarFaces(c, v, pl, type, self.vols).forEach(function (F) {
+			F.panels.forEach(function (q) {
+				if (F.flat) {
+					var x0 = q[0], y0 = q[1], z0 = v.flatTop + (ss.flush ? 0.05 : 0.15);
+					self.add(polyMesh([X(x0, y0 + 0.935, z0), X(x0 + 1.7, y0 + 0.935, z0), X(x0 + 1.7, y0, z0 + 0.55), X(x0, y0, z0 + 0.55)], [panelM, panelEdge], { thick: 0.04 }));
+					self.add(box(x0 + 0.1, y0 + 0.05, v.flatTop, x0 + 0.16, y0 + 0.11, z0 + 0.5, solid('#9DA1A4', 0.4, 0.8)));
+					return;
+				}
+				var P = function (u, s2) { return X(F.o[0] + F.ux[0] * u + F.uy[0] * s2 + F.n[0] * pLift, F.o[1] + F.ux[1] * u + F.uy[1] * s2 + F.n[1] * pLift, F.o[2] + F.uy[2] * s2 + F.n[2] * pLift + 0.02); };
+				var u0 = q[0] + 0.01, s0 = q[1] + 0.01, w = F.pw - 0.02, hh = F.ph - 0.02;
+				self.add(polyMesh([P(u0, s0), P(u0 + w, s0), P(u0 + w, s0 + hh), P(u0, s0 + hh)], [panelM, panelEdge], { thick: pThick }));
+			});
+		});
+	}
+	if (!v.items) { solarDraw(); return; }
 	if (type === 'flat') {
-		if (solar) {
-			var n = Math.max(1, Math.min(6, Math.floor((W - 1.2) / 2.1)));
-			for (var i = 0; i < n; i++) {
-				var x0 = v.x0 + 0.8 + i * 2.1, y0 = v.y0 + 1 + D * 0.3, z0 = v.flatTop + (ss.flush ? 0.05 : 0.15);
-				var pts = [X(x0, y0 + 1.1 * 0.85, z0), X(x0 + 1.7, y0 + 1.1 * 0.85, z0), X(x0 + 1.7, y0, z0 + 0.55), X(x0, y0, z0 + 0.55)];
-				this.add(polyMesh(pts, [panelM, panelEdge], { thick: 0.04 }));
-				this.add(box(x0 + 0.1, y0 + 0.05, v.flatTop, x0 + 0.16, y0 + 0.11, z0 + 0.5, solid('#9DA1A4', 0.4, 0.8)));
-			}
-		}
+		solarDraw();
 		if (c.chimney) { chimney(v.flatTop + 1.0); }
 		return;
 	}
 	if (c.chimney) { chimney(v.h + (info ? info.rise : 0) + 1.0); }
-	if (v.ridge === 'y') { return; }
+	if (v.ridge === 'y') { solarDraw(); return; }
 	var tp = Math.tan(pl.pitch * D2R), cosP = Math.cos(pl.pitch * D2R), sinP = Math.sin(pl.pitch * D2R);
 	var slopeL = (type === 'shed' ? D : D / 2) / cosP;
 	var hipIn = type === 'hip' || type === 'pyramid' ? D / 2 : 0;
@@ -724,11 +784,8 @@ House.prototype.roofItems = function (v, type, info, vpl) {
 	function roofRect(u, s, w, hh, lift, mats, thick) {
 		return polyMesh([onRoof(u, s, lift), onRoof(u + w, s, lift), onRoof(u + w, s + hh, lift), onRoof(u, s + hh, lift)], mats, { thick: thick });
 	}
-	var lay = SK()._roofLayout(c, v, pl, slopeL, hipIn, solar);
-	if (lay.solar) {
-		var Ls = lay.solar;
-		for (var r = 0; r < Ls.rows; r++) { for (var q = 0; q < Ls.cols; q++) { this.add(roofRect(Ls.u0 + q * 1.12 + 0.01, Ls.s0 + r * 1.75 + 0.01, 1.1, 1.73, pLift, [panelM, panelEdge], pThick)); } }
-	}
+	var lay = SK()._roofLayout(c, v, pl, slopeL, hipIn, false);
+	solarDraw();
 	lay.wins.forEach(function (ux) {
 		self.add(roofRect(ux, lay.winS, 0.78, 1.2, 0.08, [frameMat(c), frameMat(c)], 0.1));
 		self.add(roofRect(ux + 0.07, lay.winS + 0.07, 0.64, 1.06, 0.1, [glassMat(c, self.night), frameMat(c)], 0.01));
@@ -751,6 +808,40 @@ House.prototype.roofItems = function (v, type, info, vpl) {
 		this.add(polyMesh([X(dx + dw + 0.15, yd + 0.2, zt - 0.08), X(dx + dw / 2, yd + 0.2, zr), X(dx + dw / 2, yb, zr), X(dx + dw + 0.15, yb, zt - 0.08)], [rm, solid('#E6E2DA', 0.8)], { thick: 0.1 }));
 		this.add(polyMesh([X(dx - 0.15, yd + 0.2, zt - 0.08), X(dx + dw / 2, yd + 0.2, zr), X(dx + dw / 2, yb, zr), X(dx - 0.15, yb, zt - 0.08)], [rm, solid('#E6E2DA', 0.8)], { thick: 0.1 }));
 	}
+};
+// Balconies on the upper floors (shared layout with the 2D sketch): slab, decking and the railing
+// (glass, metal balusters, timber boards or a solid parapet) along the open edges.
+House.prototype.balconyDraw = function (v, pl, railGlass, wood) {
+	var c = this.c, self = this, BL = SK()._balconies(c, v, pl, this.vols);
+	if (!BL.length) { return; }
+	var FR = { front: [[v.x0, v.y1], [1, 0], [0, 1]], right: [[v.x1, v.y1], [0, -1], [1, 0]], back: [[v.x1, v.y0], [-1, 0], [0, -1]], left: [[v.x0, v.y0], [0, 1], [-1, 0]] };
+	var metal = solid('#33373B', 0.4, 0.75), slabM = solid('#D8D4CC', 0.8), fac = facadeMat(c, c.facade_main);
+	BL.forEach(function (b) {
+		if (b.type === 'french') { return; }
+		var F = FR[b.face], g = new THREE.Group(), mx = new THREE.Matrix4().makeBasis(X(F[1][0], F[1][1], 0), new THREE.Vector3(0, 1, 0), X(F[2][0], F[2][1], 0));
+		mx.setPosition(X(F[0][0], F[0][1], 0)); g.matrixAutoUpdate = false; g.matrix.copy(mx);
+		var u0 = b.u0, u1 = b.u1, d = b.d, z = b.z, L = { m: [], g: [], w: [], s: [] };
+		g.add(lbox(u0, z - 0.22, 0, u1, z, d, slabM));
+		if (b.type === 'wood') { g.add(lbox(u0 + 0.02, z, 0.0, u1 - 0.02, z + 0.03, d - 0.02, pbr('deck', { color: '#A97B52' }, { normal: 1 }), true)); }
+		// railing runs: the outer edge (along u) and the open ends (along w), each with a thickness inwards
+		var runs = [{ u: true, a0: u0, a1: u1, at: d }];
+		if (b.endA) { runs.push({ u: false, a0: 0, a1: d, at: u0, dir: 1 }); }
+		if (b.endB) { runs.push({ u: false, a0: 0, a1: d, at: u1, dir: -1 }); }
+		runs.forEach(function (r) {
+			function put(list, p0, p1, y0, y1, th) {
+				if (r.u) { list.push([r.a0 + p0, y0, r.at - 0.02 - th, r.a0 + p1, y1, r.at - 0.02]); }
+				else if (r.dir > 0) { list.push([r.at + 0.02, y0, r.a0 + p0, r.at + 0.02 + th, y1, r.a0 + p1]); }
+				else { list.push([r.at - 0.02 - th, y0, r.a0 + p0, r.at - 0.02, y1, r.a0 + p1]); }
+			}
+			var len = r.a1 - r.a0;
+			if (b.type === 'glass') { put(L.g, 0, len, z + 0.1, z + 1.0, 0.02); put(L.m, 0, len, z, z + 0.1, 0.06); put(L.m, 0, len, z + 1.0, z + 1.05, 0.06); }
+			else if (b.type === 'metal') { put(L.m, 0, len, z + 0.97, z + 1.02, 0.05); put(L.m, 0, len, z + 0.08, z + 0.11, 0.03); for (var a = 0.04; a < len - 0.02; a += 0.11) { put(L.m, a, a + 0.018, z + 0.11, z + 0.97, 0.018); } }
+			else if (b.type === 'wood') { for (var bw = 0.02; bw < len - 0.06; bw += 0.16) { put(L.w, bw, bw + 0.1, z, z + 0.98, 0.03); } put(L.w, 0, len, z + 0.98, z + 1.04, 0.08); }
+			else { put(L.s, 0, len, z, z + 1.0, 0.15); put(L.m, 0, len, z + 1.0, z + 1.04, 0.19); }
+		});
+		[[L.m, metal], [L.g, railGlass], [L.w, wood], [L.s, fac]].forEach(function (q) { var mm = lboxes(q[0], q[1], q[1] === railGlass); if (mm) { g.add(mm); } });
+		self.add(g);
+	});
 };
 // Canopy and steps at the entrance; porch, balcony and the massing signatures (frame, veranda,
 // chalet balconies, steel exoskeleton, roof-terrace railing) around a volume.
@@ -780,17 +871,8 @@ House.prototype.frontExtras = function (v, fp, type, vpl) {
 		this.add(polyMesh([X(px0 - 0.2, v.y1 + pd + 0.3, pz), X(px1 + 0.2, v.y1 + pd + 0.3, pz), X(px1 + 0.2, v.y1, pz + 0.75), X(px0 - 0.2, v.y1, pz + 0.75)], [rm, solid('#E6E2DA', 0.8)], { thick: 0.12 }));
 	}
 	var wood = pbr('wood', { color: '#9C6B44' }, { normal: 1 });
-	var railGlass = cached('balglass', function () { return new THREE.MeshPhysicalMaterial({ color: '#BFD6DE', roughness: 0.05, metalness: 0, transmission: 0, transparent: true, opacity: 0.32, envMapIntensity: 1.5 }); });
-	if (v.main && c.balcony && pl.floors > 1 && !this.balcVol) {
-		var bz = pl.plinth + pl.FH, bx0 = v.x0 + (v.x1 - v.x0) * 0.5, bx1 = Math.min(v.x1 - 0.5, bx0 + 4.5);
-		this.add(box(bx0, v.y1, bz - 0.22, bx1, v.y1 + 1.4, bz, solid('#D8D4CC', 0.8)));
-		if (c.arch_style === 'alpine') {
-			for (var bxx = bx0 + 0.05; bxx < bx1; bxx += 0.16) { this.add(box(bxx, v.y1 + 1.33, bz, bxx + 0.1, v.y1 + 1.4, bz + 1.0, wood)); }
-		} else {
-			this.add(box(bx0, v.y1 + 1.36, bz, bx1, v.y1 + 1.4, bz + 1.0, railGlass, { noCast: true }));
-			this.add(box(bx0, v.y1 + 1.34, bz + 1.0, bx1, v.y1 + 1.42, bz + 1.05, solid('#5A6066', 0.4, 0.7)));
-		}
-	}
+	var railGlass = cached('balglass', function () { return stdMat({ color: '#BFD6DE', roughness: 0.05, metalness: 0, transmission: 0, transparent: true, opacity: 0.32, envMapIntensity: 1.5 }); });
+	this.balconyDraw(v, pl, railGlass, wood);
 	// modern minimal: a deep frame around the glazed front
 	if (v.frame && type === 'flat') {
 		var frm = solid(shadeHex(fcol, 0.04), 0.8), dy = 1.5;
@@ -891,7 +973,8 @@ House.prototype.extras = function () {
 			var cm = solid('#3A3D40', 0.45, 0.5);
 			[[gx0, gy1], [gx0 + gW - 0.15, gy1], [gx0, gy0 + 0.15], [gx0 + gW - 0.15, gy0 + 0.15]].forEach(function (q) { self.add(box(q[0], q[1] - 0.15, 0, q[0] + 0.15, q[1], gh, cm)); });
 			this.add(box(gx0 - 0.1, gy0, gh, gx0 + gW + 0.1, gy1 + 0.2, gh + 0.25, c.roof_surface === 'green' ? pbr('green', {}, { normal: 2 }) : solid('#5A5E62', 0.6, 0.3)));
-			this.car(gx0 + gW / 2, gy1 - 2.6);
+			var pcar = SK()._vehicles(c).filter(function (k) { return k !== 'motorcycle' && k !== 'bicycle'; })[0];
+			if (pcar) { this.add(life(INT.vehicle(INT.mats(c), pcar, col(c.car_color, '#3C4148')), gx0 + gW / 2, gy1 - 2.975, Math.PI / 2)); }
 		} else {
 			var doors = garage === 'garage_2' ? 2 : 1, dw = garage === 'garage_2' ? 2.5 : 2.6;
 			var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(gW, 0); s.lineTo(gW, gh); s.lineTo(0, gh); s.lineTo(0, 0);
@@ -947,30 +1030,6 @@ House.prototype.furniture = function (x, y, z, kitchen) {
 	this.add(box(x - 0.2, y + 1.2, z, x + 1.8, y + 2.0, z + 0.4, cush));
 	this.add(box(x - 0.2, y + 1.85, z, x + 1.8, y + 2.0, z + 0.8, cush));
 };
-House.prototype.car = function (cx, cy) {
-	var paint = cached('carpaint', function () { return new THREE.MeshPhysicalMaterial({ color: '#3C4148', metalness: 0.65, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.04 }); });
-	var dark = cached('cartrim', function () { return new THREE.MeshPhysicalMaterial({ color: '#0E1216', metalness: 0.4, roughness: 0.08, clearcoat: 1, envMapIntensity: 1.6 }); });
-	var tyre = solid('#161616', 0.85), rim = solid('#B9BDC1', 0.25, 0.9), g = new THREE.Group();
-	// side profile (x = length, y = height), extruded across the width with rounded edges
-	var body = new THREE.Shape();
-	body.moveTo(-2.2, 0.32); body.lineTo(2.15, 0.32); body.quadraticCurveTo(2.3, 0.35, 2.28, 0.62); body.quadraticCurveTo(2.25, 0.86, 1.6, 0.92);
-	body.lineTo(0.75, 0.98); body.quadraticCurveTo(0.35, 1.42, -0.2, 1.44); body.lineTo(-1.25, 1.42); body.quadraticCurveTo(-1.95, 1.38, -2.12, 1.0); body.quadraticCurveTo(-2.3, 0.7, -2.2, 0.32);
-	var bg = new THREE.ExtrudeGeometry(body, { depth: 1.62, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.08, bevelSegments: 4, curveSegments: 12 });
-	bg.translate(0, 0, -0.81);
-	var bm = new THREE.Mesh(bg, paint); bm.castShadow = true; bm.receiveShadow = true; g.add(bm);
-	var gl = new THREE.Shape();
-	gl.moveTo(0.62, 1.0); gl.quadraticCurveTo(0.3, 1.36, -0.2, 1.37); gl.lineTo(-1.2, 1.36); gl.quadraticCurveTo(-1.75, 1.32, -1.95, 1.02); gl.lineTo(0.62, 1.0);
-	var gg = new THREE.ExtrudeGeometry(gl, { depth: 1.66, bevelEnabled: false, curveSegments: 10 }); gg.translate(0, 0, -0.83);
-	g.add(new THREE.Mesh(gg, dark));
-	[[1.4, 0.82], [1.4, -0.82], [-1.35, 0.82], [-1.35, -0.82]].forEach(function (q) {
-		var t = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.24, 28), tyre); t.rotation.x = Math.PI / 2; t.position.set(q[0], 0.34, q[1]); t.castShadow = true; g.add(t);
-		var rr = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.25, 20), rim); rr.rotation.x = Math.PI / 2; rr.position.set(q[0], 0.34, q[1]); g.add(rr);
-	});
-	g.rotation.y = Math.PI / 2; // nose towards the street (+z)
-	g.position.copy(X(cx, cy, 0));
-	this.add(g);
-};
-
 /* ------------------------------------------------------------------ site: plot, paths, garden, fence */
 House.prototype.site = function () {
 	var c = this.c, pl = this.pl, vols = this.vols, mainV = vols[0], self = this, season = c.season || 'summer', K = SK();
@@ -999,7 +1058,7 @@ House.prototype.site = function () {
 	if (G.pool) {
 		var pr = G.pool, px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
 		flat(px0, py0, px0 + poolW, py0 + pdp, 0.06, groundKind(c, 'slabs'));
-		var water = cached('water', function () { return new THREE.MeshPhysicalMaterial({ color: '#2D8FB0', roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
+		var water = cached('water', function () { return stdMat({ color: '#2D8FB0', roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
 		flat(px0 + 0.3, py0 + 0.3, px0 + poolW - 0.3, py0 + pdp - 0.3, 0.07, water);
 	}
 	G.flats.forEach(function (f) { flat(f.x0, f.y0, f.x1, f.y1, 0.03, groundKind(c, f.kind)); });
@@ -1019,6 +1078,19 @@ House.prototype.site = function () {
 		self.add(box(q[0] - 0.07, q[1] - 0.07, 0.48, q[0] + 0.07, q[1] + 0.07, 0.56, self.night ? solid('#3A3020', 0.3, 0, { emissive: '#FFD9A0', emissiveIntensity: 4 }) : solid('#D8D8D2', 0.3)), false);
 	});
 	G.plants.forEach(function (p) { self.plant(p.kind, p.x, p.y, p.size, p.seed); });
+	// vehicles, people and pets (shared plan with the 2D sketch)
+	if (G.vehicles.length || G.people.length || G.pets.length || G.kennel) {
+		var LM = INT.mats(c), paint = col(c.car_color, '#3C4148');
+		G.vehicles.forEach(function (vh) {
+			var two = vh.type === 'motorcycle' || vh.type === 'bicycle';
+			if (vh.port && !two) { return; }
+			self.add(life(vh.type === 'motorcycle' ? INT.motorcycle(LM, paint) : (vh.type === 'bicycle' ? INT.bicycle(LM, paint) : INT.vehicle(LM, vh.type, paint)), vh.x, vh.y, Math.PI / 2), false);
+		});
+		if (G.charger) { var ch = new THREE.Group(); ch.add(box(-0.1, -0.08, 0, 0.1, 0.08, 1.0, solid('#2B2E31', 0.4, 0.3))); var wb = INT.wallbox(LM); wb.position.set(0, -0.35, 0.08); ch.add(wb); self.add(life(ch, G.charger.x, G.charger.y, 0), false); }
+		if (G.kennel) { self.add(life(INT.kennel(LM), G.kennel.x, G.kennel.y, 0.3), false); }
+		G.people.forEach(function (pp) { self.add(life(INT.person(LM, pp.kind, pp.pose, pp.seed), pp.x, pp.y, pp.rot), false); });
+		G.pets.forEach(function (pp) { self.add(life(pp.kind === 'cat' ? INT.cat(LM, pp.seed, pp.pose) : INT.dog(LM, pp.kind === 'dog_small' ? 'small' : 'large', pp.seed, pp.pose), pp.x, pp.y, pp.rot, pp.z), false); });
+	}
 	if (G.hedge) {
 		var hm = c.season === 'winter' ? pbr('snow', {}, { normal: 0.5 }) : pbr('hedge', { season: season }, { normal: 2.5 });
 		this.add(box(G.hedge.x0, G.hedge.y0, 0, G.hedge.x1, G.hedge.y1, 1.5, hm), false);
@@ -1137,6 +1209,38 @@ House.prototype.plant = function (kind, x, y, size, seed) {
 		} else {
 			var kk = kind === 'lavender' ? 'lavender' : 'broad';
 			canopy('sphere', 0, H * 0.38, 0, H * 0.48, H * 0.36, H * 0.48, kind === 'flower' ? 40 : 120, kk, (kind === 'shrub' && c.garden_style === 'cottage') || kind === 'flower');
+		}
+	} else if (kind === 'palm') {
+		// curved ringed trunk and a crown of drooping fronds
+		var lean = (rnd() - 0.5) * H * 0.25, pts = [];
+		for (var t = 0; t <= 6; t++) { var q = t / 6; pts.push(new THREE.Vector3(lean * q * q, H * 0.82 * q, lean * 0.3 * q * q)); }
+		var tm2 = pbr('bark', {}, { normal: 2.5 });
+		for (var ts = 0; ts < 6; ts++) { g.add(rod(pts[ts], pts[ts + 1], H * (0.035 - ts * 0.002), tm2, 10)); }
+		var top = pts[6], fm = cached('palmfrond' + season, function () { return stdMat({ color: winter ? '#6E7F55' : '#4E7A3A', roughness: 0.7, side: THREE.DoubleSide }); });
+		for (var fr = 0; fr < 11; fr++) {
+			var fa = fr / 11 * Math.PI * 2 + rnd() * 0.3, fl = H * (0.32 + rnd() * 0.08), sh = new THREE.Shape();
+			sh.moveTo(0, 0);
+			for (var k = 1; k <= 10; k++) { var u = k / 10; sh.lineTo(u * fl, Math.sin(u * Math.PI) * fl * 0.13 * (k % 2 ? 1 : 0.7)); }
+			for (var k2 = 9; k2 >= 1; k2--) { var u2 = k2 / 10; sh.lineTo(u2 * fl, -Math.sin(u2 * Math.PI) * fl * 0.13 * (k2 % 2 ? 1 : 0.7)); }
+			var fmesh = new THREE.Mesh(new THREE.ShapeGeometry(sh), fm); fmesh.castShadow = true;
+			var piv = new THREE.Group(); piv.position.copy(top); piv.rotation.y = fa; fmesh.rotation.x = -Math.PI / 2;
+			var bend = new THREE.Group(); bend.rotation.z = -(0.25 + rnd() * 0.45); bend.add(fmesh); piv.add(bend); g.add(piv);
+		}
+		var knob = new THREE.Mesh(new THREE.SphereGeometry(H * 0.05, 10, 8), tm2); knob.position.copy(top); g.add(knob);
+	} else if (kind === 'birch') {
+		var white = solid('#E6E2DA', 0.75);
+		g.add(rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(H * 0.03, H * 0.72, 0), H * 0.02, white, 10));
+		for (var bb = 0; bb < 4; bb++) { var ba = bb / 4 * Math.PI * 2 + rnd(); g.add(rod(new THREE.Vector3(0, H * (0.42 + bb * 0.08), 0), new THREE.Vector3(Math.cos(ba) * H * 0.16, H * (0.62 + bb * 0.06), Math.sin(ba) * H * 0.16), H * 0.007, white, 5)); }
+		if (!winter) {
+			[[0, 0.68, 0, 0.2, 0.3], [-0.1, 0.52, 0.05, 0.14, 0.2], [0.11, 0.55, -0.05, 0.14, 0.2], [0.03, 0.86, 0.02, 0.11, 0.15]].forEach(function (q, i) { canopy('sphere', q[0] * H, q[1] * H, q[2] * H, q[3] * H, q[4] * H, q[3] * H, 160, 'broad', false); });
+		}
+	} else if (kind === 'maple') {
+		for (var ms = 0; ms < 2; ms++) { var mo = (ms - 0.5) * H * 0.08; g.add(rod(new THREE.Vector3(mo, 0, 0), new THREE.Vector3(mo * 3, H * 0.42, mo), H * 0.025, bark, 8)); }
+		if (!winter) {
+			var red = leafMat({ season: 'autumn' }, 'broad');
+			[[0, 0.62, 0, 0.42, 0.24], [-0.26, 0.52, 0.05, 0.26, 0.16], [0.27, 0.54, -0.05, 0.27, 0.16], [0.05, 0.78, 0.02, 0.26, 0.14]].forEach(function (q, i) {
+				var mm = new THREE.Mesh(canopyGeo('sphere', 220, (seed + i) % 5), red); mm.position.set(q[0] * H, q[1] * H, q[2] * H); mm.scale.set(q[3] * H, q[4] * H, q[3] * H); mm.castShadow = true; mm.receiveShadow = true; g.add(mm);
+			});
 		}
 	} else if (kind === 'grass') {
 		var gm = solid(winter ? '#B5A98F' : (season === 'autumn' ? '#C2A35E' : '#9AAE62'), 0.9);
@@ -1287,14 +1391,20 @@ function Viewer(opts) {
 	this.thumb = !!opts.thumb;
 	var coarse = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
 	this.quality = opts.quality || (this.thumb ? 'thumb' : (coarse ? 'medium' : 'high'));
-	var r = this.renderer = new THREE.WebGLRenderer({ antialias: this.quality !== 'high', alpha: false, preserveDrawingBuffer: !!this.thumb, powerPreference: 'high-performance' });
+	// Option cards borrow the renderer of the live preview: one WebGL context, so every shader is
+	// compiled and every texture uploaded once (a second context did all of it again).
+	this.shared = !!opts.renderer;
+	var r = this.renderer = opts.renderer || new THREE.WebGLRenderer({ antialias: this.quality !== 'high', alpha: false, preserveDrawingBuffer: !!this.thumb, powerPreference: 'high-performance' });
 	this.dprHi = this.thumb ? 1 : Math.min(window.devicePixelRatio || 1, this.quality === 'high' ? 1.5 : 1.25);
-	r.setPixelRatio(this.dprHi);
-	r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
-	// the sun moves with the house, not with the camera: shadows are drawn only when the scene changes
-	r.shadowMap.autoUpdate = false; r.shadowMap.needsUpdate = true;
-	r.toneMapping = THREE.NeutralToneMapping; r.outputColorSpace = THREE.SRGBColorSpace;
-	setAnisotropy(Math.min(8, r.capabilities.getMaxAnisotropy()));
+	this.exposure = 1;
+	if (!this.shared) {
+		r.setPixelRatio(this.dprHi);
+		r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+		// the sun moves with the house, not with the camera: shadows are drawn only when the scene changes
+		r.shadowMap.autoUpdate = false; r.shadowMap.needsUpdate = true;
+		r.toneMapping = THREE.NeutralToneMapping; r.outputColorSpace = THREE.SRGBColorSpace;
+		setAnisotropy(Math.min(8, r.capabilities.getMaxAnisotropy()));
+	}
 	this.scene = new THREE.Scene();
 	this.camera = new THREE.PerspectiveCamera(40, 1.5, 0.3, 3000);
 	this.env = new Env(r);
@@ -1303,6 +1413,10 @@ function Viewer(opts) {
 	this.sun.shadow.mapSize.set(ms, ms); this.sun.shadow.bias = -0.0003; this.sun.shadow.normalBias = 0.03; this.sun.shadow.radius = 3;
 	this.scene.add(this.sun); this.scene.add(this.sun.target);
 	this.hemi = new THREE.HemisphereLight('#CFE3F7', '#5B6B45', 0.5); this.scene.add(this.hemi);
+	// A fixed set of lamp lights: the scene's lamps borrow them, so the number of lights – part of
+	// every shader – never changes and no shader has to be compiled again when lamps come or go.
+	this.pool = [];
+	for (var li = 0; li < 4; li++) { var pli = new THREE.PointLight('#FFC98A', 0, 6, 2); this.scene.add(pli); this.pool.push(pli); }
 	// surrounding meadow
 	var gg = new THREE.PlaneGeometry(900, 900, 150, 150), uv = gg.attributes.uv, cols = [], gp = gg.attributes.position;
 	for (var i = 0; i < uv.count; i++) {
@@ -1337,6 +1451,31 @@ function Viewer(opts) {
 		}
 	}
 }
+// Compiles the shaders of a scene for the target this viewer really draws into (the effect
+// composer's buffer or an option card's buffer: tone mapping and colour space are part of a shader).
+Viewer.prototype.compileFor = function (scene, target) {
+	var r = this.renderer, prev = r.getRenderTarget();
+	if (!r.compileAsync) { return Promise.resolve(); }
+	r.setRenderTarget(target || (this.composer ? this.composer.renderTarget1 : null));
+	var p = r.compileAsync(scene, this.camera);
+	r.setRenderTarget(prev);
+	return p.catch(function () {});
+};
+// The lamps of the new scene take over the fixed lights (brightest first; the rest stay dark).
+Viewer.prototype.lampsToPool = function (root) {
+	var found = [], wp = new THREE.Vector3();
+	root.updateMatrixWorld(true);
+	root.traverse(function (o) { if (o.isLight) { found.push({ l: o, p: o.getWorldPosition(new THREE.Vector3()) }); } });
+	found.forEach(function (f) { if (f.l.parent) { f.l.parent.remove(f.l); } });
+	found.sort(function (a, b) { return b.l.intensity - a.l.intensity; });
+	this.pool.forEach(function (pl, i) {
+		var f = found[i];
+		if (!f) { pl.intensity = 0; return; }
+		pl.color.copy(f.l.color); pl.intensity = f.l.isSpotLight ? f.l.intensity * 0.4 : f.l.intensity; pl.distance = f.l.distance || 6; pl.decay = 2;
+		pl.position.copy(f.p);
+	});
+	void wp;
+};
 Viewer.prototype.setDPR = function (pr) {
 	if (Math.abs(this.renderer.getPixelRatio() - pr) < 0.01) { return; }
 	this.renderer.setPixelRatio(pr);
@@ -1346,7 +1485,7 @@ Viewer.prototype.setSize = function (w, h) {
 	w = Math.max(1, Math.round(w)); h = Math.max(1, Math.round(h));
 	if (this.w === w && this.h === h) { return; }
 	this.w = w; this.h = h;
-	this.renderer.setSize(w, h, !this.thumb);
+	if (!this.shared) { this.renderer.setSize(w, h, !this.thumb); }
 	if (this.composer) { this.composer.setSize(w, h); }
 	this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
 	// A resized box keeps the visitor's view (only the very first fit uses the preset).
@@ -1362,7 +1501,7 @@ Viewer.prototype.update = function (cfg, mode) {
 	this.c = c;
 	var night = c.time_of_day === 'night', t = TOD[c.time_of_day] || TOD.golden, overcast = c.weather === 'overcast';
 	this.env.apply(this.scene, c, !!c._int || !!c._item || mode === 'interior');
-	this.renderer.toneMappingExposure = t.exp * (overcast ? 1.15 : 1);
+	this.exposure = this.renderer.toneMappingExposure = t.exp * (overcast ? 1.15 : 1);
 	var sd = sunDir(c);
 	this.sunDir = sd;
 	this.sun.color.set(t.sun); this.sun.intensity = overcast ? t.si * 0.25 : t.si;
@@ -1376,7 +1515,8 @@ Viewer.prototype.update = function (cfg, mode) {
 	var hz = overcast ? (night ? '#151A26' : (c.time_of_day === 'blue' ? '#5C6175' : '#C9CDD2')) : (SKYCOL[c.time_of_day] || SKYCOL.golden).hor;
 	// interior view: one room as a cut-away, without the meadow, the tree line and the haze
 	var inner = !!c._int || !!c._item || mode === 'interior';
-	this.scene.fog = inner ? null : new THREE.FogExp2(hz, overcast ? 0.0075 : 0.0045);
+	// indoors practically no haze – but the same kind of fog, so the shaders stay the same
+	this.scene.fog = new THREE.FogExp2(hz, inner ? 0.000001 : (overcast ? 0.0075 : 0.0045));
 	this.ground.visible = !inner; this.treeline.visible = !inner;
 	// rebuild the house
 	if (this.house) { this.scene.remove(this.house.root); disposeTree(this.house.root); }
@@ -1385,11 +1525,19 @@ Viewer.prototype.update = function (cfg, mode) {
 	else if (c._item) { this.house = INT.itemScene(c, c._item); }
 	else if (inner) { this.house = INT.interiorScene(c, c._int || { type: 'living' }); }
 	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini' }).build(); }
+	this.lampsToPool(this.house.root);
 	mergeStatic(this.house.fit || this.house.root);
 	if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
 	this.scene.add(this.house.root);
-	this.renderer.shadowMap.needsUpdate = true;
+	this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
 	this.treelineFor(c);
+	// new shaders are compiled in the background (parallel compile where the GPU driver offers it):
+	// the previous picture stays until they are ready instead of the page freezing
+	var self = this;
+	if (!this.thumb && this.frames && this.renderer.compileAsync) {
+		var job = this.compileJob = {};
+		this.compileFor(this.scene).then(function () { if (self.compileJob === job) { self.compileJob = null; self.requestRender(); } }, function () { self.compileJob = null; self.requestRender(); });
+	}
 	var key = [inner ? 'interior' : c.camera, c.lens, mode, inner && c._int ? (c._int.id || c._int.type) : '', c._item ? c._item.field : ''].join('|');
 	this.fitCamera(key !== this.camKey);
 	this.camKey = key;
@@ -1457,7 +1605,7 @@ Viewer.prototype.fitCamera = function (reset) {
 };
 Viewer.prototype.requestRender = function () {
 	var self = this;
-	if (this.thumb) { this.render(); return; }
+	if (this.thumb) { if (!this.shared) { this.render(); } return; }
 	if (this.raf) { return; }
 	this.raf = requestAnimationFrame(function () { self.raf = 0; self.render(); });
 };
@@ -1483,6 +1631,9 @@ Viewer.prototype.syncSize = function () {
 Viewer.prototype.render = function () {
 	this.syncSize();
 	if (!this.w || this.disposed) { return; }
+	if (this.compileJob && !this.interacting) { return; }
+	this.renderer.toneMappingExposure = this.exposure;
+	if (this.shadowDirty) { this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = false; }
 	if (this.gtao) { this.gtao.enabled = !this.interacting; }
 	if (this.composer) { this.composer.render(); } else { this.renderer.render(this.scene, this.camera); }
 	this.frames = (this.frames || 0) + 1;
@@ -1669,42 +1820,131 @@ function bathTileMat(c) {
 	}
 }
 
-INT.setup({ solid: solid, pbr: pbr, cached: cached, boxGeo: boxGeo, box: box, X: X, House: House, shadeHex: shadeHex, col: col, num: num, clamp: clamp, has: has, SK: SK, canopyGeo: canopyGeo, leafMat: leafMat, frameMat: frameMat, glassMat: glassMat, roomFloorMat: roomFloorMat, roomFloorKey: roomFloorKey, bathTileMat: bathTileMat });
+INT.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, boxGeo: boxGeo, box: box, X: X, House: House, shadeHex: shadeHex, col: col, num: num, clamp: clamp, has: has, SK: SK, canopyGeo: canopyGeo, leafMat: leafMat, frameMat: frameMat, glassMat: glassMat, roomFloorMat: roomFloorMat, roomFloorKey: roomFloorKey, bathTileMat: bathTileMat, imageTexture: imageTexture, onImage: onImage });
 
 /* ------------------------------------------------------------------ public API */
+// Option-card pictures: drawn by the live preview's renderer into an off-screen target (same WebGL
+// context: shaders and textures are shared), tone-mapped like the preview, read back as a JPEG.
+// Pictures are kept in the browser (IndexedDB) per plugin version, so a returning visitor gets them
+// at once.
 var shared = null;
 function sharedThumb() {
-	if (!shared) { shared = new Viewer({ thumb: true, quality: 'thumb' }); }
+	if (!shared) { shared = new Viewer({ thumb: true, quality: 'thumb', renderer: liveViewer().renderer }); }
 	return shared;
+}
+function thumbPixels(v, w, h) {
+	var r = v.renderer;
+	if (!v.rtA || v.rtA.width !== w || v.rtA.height !== h) { thumbPixels.prep(v, w, h); }
+	var prevRT = r.getRenderTarget(), prevExp = r.toneMappingExposure, prevShadow = r.shadowMap.needsUpdate;
+	r.toneMappingExposure = v.exposure;
+	r.shadowMap.needsUpdate = true;
+	r.setRenderTarget(v.rtA); r.clear(); r.render(v.scene, v.camera);
+	v.outPass.renderToScreen = false; v.outPass.render(r, v.rtB, v.rtA);
+	r.setRenderTarget(prevRT); r.toneMappingExposure = prevExp; r.shadowMap.needsUpdate = prevShadow;
+	var px = new Uint8Array(w * h * 4); r.readRenderTargetPixels(v.rtB, 0, 0, w, h, px);
+	var ctx = v.cv.getContext('2d'), img = ctx.createImageData(w, h), row = w * 4;
+	for (var y = 0; y < h; y++) { img.data.set(px.subarray((h - 1 - y) * row, (h - y) * row), y * row); }
+	ctx.putImageData(img, 0, 0);
+	return v.cv.toDataURL('image/jpeg', 0.84);
+}
+thumbPixels.prep = function (v, w, h) {
+	if (v.rtA) { v.rtA.dispose(); v.rtB.dispose(); }
+	v.rtA = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: 4 });
+	v.rtB = new THREE.WebGLRenderTarget(w, h, { type: THREE.UnsignedByteType });
+	v.outPass = v.outPass || new OutputPass();
+	v.cv = document.createElement('canvas'); v.cv.width = w; v.cv.height = h;
+};
+// Shaders and textures of the rooms are prepared while the visitor looks at the house, so the first
+// switch to a room (and the first furniture cards) shows at once. Built off-screen, never drawn.
+var warmed = false;
+function warmup(cfg) {
+	if (warmed || !live || !live.house) { return Promise.resolve(); }
+	warmed = true;
+	var v = live, base = cfg || v.c || {};
+	return [['living_kitchen', 'night'], ['bathroom', 'midday'], ['master', 'golden']].reduce(function (p, q) {
+		return p.then(function () { return new Promise(function (res) { setTimeout(res, 150); }); }).then(function () {
+			var c = Object.assign({}, base, { _int: { type: q[0] }, time_of_day: q[1] }), hs;
+			try { hs = INT.interiorScene(c, c._int); } catch (e) { return null; }
+			var lights = []; hs.root.traverse(function (o) { if (o.isLight) { lights.push(o); } else if (o.isMesh) { o.layers.set(1); } });
+			lights.forEach(function (l) { if (l.parent) { l.parent.remove(l); } });
+			v.scene.add(hs.root);
+			var sv = sharedThumb(); if (!sv.rtA) { thumbPixels.prep(sv, 300, 200); }
+			var both = [v.compileFor(v.scene), sv.compileFor(v.scene, sv.rtA)];
+			return Promise.all(both).then(function () { v.scene.remove(hs.root); disposeTree(hs.root); });
+		});
+	}, texturesReady());
+}
+// Kept pictures (IndexedDB; any failure simply means "not kept").
+var VER = (function () { try { return new URL(import.meta.url).search || 'dev'; } catch (e) { return 'dev'; } })();
+var idb = null;
+function store() {
+	if (idb !== null) { return idb; }
+	idb = new Promise(function (res) {
+		try {
+			var rq = indexedDB.open('agh-thumbs', 1);
+			rq.onupgradeneeded = function () { rq.result.createObjectStore('t'); };
+			rq.onsuccess = function () { res(rq.result); };
+			rq.onerror = function () { res(null); };
+		} catch (e) { res(null); }
+	});
+	return idb;
+}
+function hashKey(str) {
+	var h1 = 0x811c9dc5, h2 = 0x01000193 ^ str.length;
+	for (var i = 0; i < str.length; i++) { var ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 16777619); h2 = Math.imul(h2 ^ ch, 2246822519); }
+	return VER + ':' + (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
+}
+function kept(key) {
+	return store().then(function (db) {
+		if (!db) { return ''; }
+		return new Promise(function (res) { try { var q = db.transaction('t').objectStore('t').get(key); q.onsuccess = function () { res(q.result || ''); }; q.onerror = function () { res(''); }; } catch (e) { res(''); } });
+	});
+}
+var keepCount = 0;
+function keep(key, url) {
+	store().then(function (db) {
+		if (!db || !url) { return; }
+		try {
+			var tx = db.transaction('t', 'readwrite'), os = tx.objectStore('t');
+			os.put(url, key);
+			// pictures of earlier versions are dropped now and then
+			if (++keepCount % 40 === 1) { var cur = os.openCursor(); cur.onsuccess = function () { var cc = cur.result; if (!cc) { return; } if (String(cc.key).indexOf(VER + ':') !== 0) { cc.delete(); } cc.continue(); }; }
+		} catch (e) { /* storage full or blocked */ }
+	});
 }
 // Renders one configuration into an image (option cards). Queued so the UI stays responsive.
 var queue = Promise.resolve();
 function thumb(cfg, w, h, mode, alive) {
-	queue = queue.then(function () {
-		return new Promise(function (res) {
-			var go = function () {
-				if (alive && !alive()) { res(''); return; }
-				try {
-					var v = sharedThumb();
-					v.setSize(w, h);
-					v.update(cfg, mode || 'mini');
-					// the pixels of new materials come from the texture workers
-					texturesReady().then(function () {
-						try { v.renderer.shadowMap.needsUpdate = true; v.render(); res(v.el.toDataURL('image/jpeg', 0.86)); } catch (e) { res(''); }
-					});
-				} catch (e) { res(''); }
-			};
-			if (window.requestIdleCallback) { window.requestIdleCallback(go, { timeout: 200 }); } else { setTimeout(go, 0); }
+	var key = hashKey((mode || 'mini') + '|' + w + 'x' + h + '|' + JSON.stringify(cfg));
+	return kept(key).then(function (url) {
+		if (url) { return url; }
+		queue = queue.then(function () {
+			return new Promise(function (res) {
+				var go = function () {
+					if (alive && !alive()) { res(''); return; }
+					try {
+						var v = sharedThumb();
+						v.setSize(w, h);
+						v.update(cfg, mode || 'mini');
+						// the pixels of new materials come from the texture workers; new shaders compile in parallel
+						if (!v.rtA || v.rtA.width !== w || v.rtA.height !== h) { thumbPixels.prep(v, w, h); }
+						texturesReady().then(function () { return v.compileFor(v.scene, v.rtA); }).then(function () {
+							try { var u = thumbPixels(v, w, h); keep(key, u); res(u); } catch (e) { res(''); }
+						});
+					} catch (e) { res(''); }
+				};
+				setTimeout(go, 0);
+			});
 		});
+		return queue;
 	});
-	return queue;
 }
 function supported() {
 	try { var cv = document.createElement('canvas'); return !!(window.WebGL2RenderingContext && cv.getContext('webgl2')); } catch (e) { return false; }
 }
 // One live viewer: its canvas is moved into whichever preview box is current (designer or wizard).
 var live = null, ro = null;
-function attach(container, cfg, opts) {
+function liveViewer(opts) {
 	if (!live) {
 		live = new Viewer(opts || {});
 		live.wrap = document.createElement('div'); live.wrap.className = 'agh-3d';
@@ -1713,6 +1953,10 @@ function attach(container, cfg, opts) {
 		// animation frame would show one empty or distorted frame.
 		if (window.ResizeObserver) { ro = new ResizeObserver(function () { if (live.wrap.clientWidth > 0) { live.syncSize(); live.render(); } }); ro.observe(live.wrap); }
 	}
+	return live;
+}
+function attach(container, cfg, opts) {
+	liveViewer(opts);
 	if (live.wrap.parentNode !== container) { container.insertBefore(live.wrap, container.firstChild); }
 	live.syncSize();
 	live.update(cfg);
@@ -1722,8 +1966,8 @@ function attach(container, cfg, opts) {
 var texTimer = 0;
 onTexture(function () {
 	if (texTimer) { return; }
-	texTimer = setTimeout(function () { texTimer = 0; if (live && !live.disposed) { live.renderer.shadowMap.needsUpdate = true; live.requestRender(); } }, 90);
+	texTimer = setTimeout(function () { texTimer = 0; if (live && !live.disposed) { live.shadowDirty = true; live.requestRender(); } }, 90);
 });
-var api = { attach: attach, thumb: thumb, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, version: 'r170-2' };
+var api = { attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, version: 'r170-2' };
 window.AGH_3D = api;
 export default api;

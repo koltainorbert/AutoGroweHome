@@ -1,5 +1,18 @@
 # Változásnapló
 
+## 1.6.0 – 2026-10-13
+
+- Gyorsabb 3D: egyetlen WebGL-környezet az élő előnézetnek és a kártyaképeknek; a kártyaképek a böngésző tárában (IndexedDB) maradnak, a következő látogatáskor azonnal megvannak; a 3D modulok már a gomb felé mozduló egérre vagy tétlen időben letöltődnek; a belső jelenetek árnyalói előre lefordulnak; kevesebb anyagfajta, állandó lámpakészlet, 4 textúra-szál. Mérés (szoftveres GPU, SwiftShader, 1.5.0 → 1.6.0): bútorkártyák első megnyitáskor 20–24 s → 15–18 s, újbóli látogatáskor 21–23 s → 5,5–10 s; fürdőkártyák 7,6–11 s → 4,0–7,4 s; egy beállítás átrajzolása 1,1 s → 0,65 s.
+- A belső nézet helyiségválasztója nem lóg ki: egy gomb a helyiség nevével (kattintásra lista), mellette előző/következő nyíl; az Esc csak a listát zárja be.
+- Erkélyek: típus (üvegkorlát, fém pálcás, fa, tömör mellvéd, francia erkély), hely (főhomlokzat, hátsó, mindkettő, oldal, sarkon körbefutó), méret (1,2 / 1,5 / 1,8 m); minden emeleten, az erkély mögötti ablakokból ajtó lesz. Közös terv a 2D vázlatnak és a 3D-nek.
+- Napelemek a szabad tetőrészeken, kilógás nélkül: egész modulok sorokban, a tetősíkon belül (eresz, gerinc, oromszél, élgerinc ráhagyással), a kémény, a tetőablakok, a tetőkiugrók és a csatlakozó tömegek kikerülésével. Hely: a tájolás szerint, elülső, hátsó, mindkét fő tetősík vagy minden szabad tetőfelület (a melléktömegeken és lapostetőn is); a gerinccel keresztben álló tetőkön is. Önteszt: 384 tetőváltozat, 0 kilógó modul.
+- Új kategória: Autók, emberek, állatok. Járművek (szedán, ferdehátú, SUV, pickup, kisbusz, sportautó, elektromos autó töltőoszloppal, motor, kerékpár) színválasztóval, a beállóban és a kocsibeállón parkolva; emberek (pár, család gyerekekkel, vendégek) kint a teraszon, bent a kanapén és a nappaliban; kutya (nagy – kutyaházzal, kicsi), macska kint és bent.
+- Kert: növényzet sűrűsége (ritkás, átlagos, dús), fafajták (lombhullató, nyír, japán juhar, gyümölcs, olaj, pálma, fenyő, ciprus, többtörzsű).
+- Belső tér: további bútorok (könyvespolc, tálalószekrény, íróasztal, olvasósarok, zongora, bárkocsi, pad, virágállvány, álló tükör, komód, vitrin, puff) – a falak szabad szakaszaira kerülnek; elektronika (nagy tévé, hangprojektor, álló hangfalak, játékkonzol, projektor vászonnal, asztali gép, laptop, okos hangszóró, robotporszívó, okosotthon-panel); függöny anyaga (len, bársony, voile, sötétítő, mintás) és színe, vitrázsfüggöny, pliszé roló; szőnyeg: shaggy, geometrikus, kilim, csíkos, marhabőr, kopott vintage, és szín; lépcső: L alakú, U alakú, falból kinyúló fokok, helytakarékos (a lépcsőválasztó az alap nézetben is látszik); küszöbök (fa, kő, fém); szobanövény: kaktusz, csüngő futónövény, bonszai, és mennyiség („urban jungle”).
+- Saját fotó a képkeretben: a látogató feltölthet egy képet (a böngészőben 640 px-re kicsinyítve), ami a 3D előnézet falikép-keretében vagy a képfalon jelenik meg; a generált képre nem kerül rá. A szerver csak kis JPEG/PNG/WebP képet fogad el.
+- Minden új választás képes kártyán, a promptba is bekerül (az erkély részletei csak erkéllyel, a járművek színe csak járművel).
+- 131 új felirat 15 nyelven.
+
 ## 1.5.0 – 2026-10-13
 
 - Professzionális belső terek: új 3D belsőépítészeti könyvtár (külön modul, agh-3d-int.js). Minden bútor, szaniter és tárgy valódi formájú: párnás kanapék ülő- és háttámlapárnákkal, díszpárnákkal, plédekkel; ágyak matraccal, paplannal, párnákkal és éjjeliszekrénnyel; asztalok, székek, szekrények, polcok könyvekkel, vázák, gyertyák, szobanövények. Fizikai anyagok: szőtt kárpit csillogással (len, bouclé, bársony, gyapjú), bőr, furnér, márvány, travertin, mázas kerámia, króm, sárgaréz, inox, üveg, tükör.

@@ -485,9 +485,15 @@ var GEN = {
 	// upholstery fabrics (tinted): linen weave, boucle loops, velvet, knitted wool
 	fabric: function (o) {
 		var base = hex(o.color || '#BFBFBF'), k = o.kind || 'linen';
-		return { tw: 0.12, th: 0.12, w: 512, h: 512, fn: function (u, v) {
+		return { tw: k === 'pattern' ? 0.45 : 0.12, th: k === 'pattern' ? 0.45 : 0.12, w: 512, h: 512, fn: function (u, v) {
 			var n = fbm(u, v, 6, 3, 51), r, hgt, rough = 0.95;
-			if (k === 'boucle') {
+			if (k === 'pattern') {
+				// woven ikat-like motif: soft diamonds in stripes on a fine weave
+				var wx = u * 160, wy = v * 160, ov = (Math.floor(wx) + Math.floor(wy)) % 2, t = ov ? Math.sin((wy % 1) * Math.PI) : Math.sin((wx % 1) * Math.PI);
+				var dx = Math.abs(((u * 4) % 1) - 0.5), dy = Math.abs(((v * 4 + 0.25) % 1) - 0.5), dia = dx + dy * 0.8 + (fbm(u, v, 30, 2, 65) - 0.5) * 0.08, band = Math.floor(v * 8) % 2;
+				var mot = dia < 0.22 ? 0.62 : (dia < 0.3 ? 0.85 : 1);
+				hgt = t * 0.5 + 0.2; r = (band ? mot : (dia < 0.12 ? 0.72 : 1)) * (0.93 + t * 0.07);
+			} else if (k === 'boucle') {
 				var w = worley(u, v, 36, 53, 1), w2 = worley(u, v, 72, 54, 1);
 				hgt = (1 - smooth(0, 0.62, w[0])) * 0.7 + (1 - smooth(0, 0.5, w2[0])) * 0.3;
 				r = 0.9 + hgt * 0.1 + (hash2(w[2], 1, 55) - 0.5) * 0.04;
@@ -621,6 +627,29 @@ var GEN = {
 				t = 0.7 + n * 0.5; c = [c[0] * t, c[1] * t, c[2] * t];
 			} else if (k === 'stripe') {
 				if (Math.floor(v * 16) % 4 === 0) { c = acc; }
+			} else if (k === 'geometric') {
+				var gx = u * 6, gy = v * 9, fx = gx % 1, fy = gy % 1, tri = (Math.floor(gx) + Math.floor(gy)) % 2 ? fx > fy : fx < 1 - fy;
+				if (tri && Math.min(fx, fy, 1 - fx, 1 - fy) > 0.06) { c = mixc(acc, base, 0.25); }
+				if (Math.min(u, 1 - u, v, 1 - v) < 0.04) { c = acc; }
+			} else if (k === 'kilim') {
+				var bi = Math.floor(v * 10), bv = (v * 10) % 1, cx2 = Math.abs(((u * 5) % 1) - 0.5) * 2, step = Math.floor(cx2 * 4) / 4;
+				c = bi % 2 ? base : mixc(base, [0.9, 0.82, 0.68], 0.55);
+				if (bi % 2 && Math.abs(bv - 0.5) * 2 < 1 - step) { c = acc; }
+				if (bi % 3 === 2 && Math.abs(bv - 0.5) < 0.12) { c = [0.85, 0.72, 0.45]; }
+			} else if (k === 'cowhide') {
+				var ph = fbm(u * 1.4, v * 1.1, 3, 4, 107);
+				c = ph > 0.56 ? acc : (ph > 0.52 ? mixc(acc, base, 0.5) : base);
+				var hair = fbm(u, v, 220, 2, 109); c = [c[0] * (0.92 + hair * 0.1), c[1] * (0.92 + hair * 0.1), c[2] * (0.92 + hair * 0.1)];
+				return [c[0], c[1], c[2], hair * 0.4, 0.75];
+			} else if (k === 'vintage') {
+				var e2 = Math.min(u, 1 - u, v, 1 - v), dm2 = Math.abs(u - 0.5) + Math.abs(v - 0.5) * 0.8, wear = smooth(0.45, 0.75, fbm(u, v, 4, 4, 111));
+				c = base;
+				if (e2 < 0.08) { c = acc; } else if (dm2 < 0.22) { c = mixc(acc, [0.86, 0.78, 0.6], dm2 < 0.1 ? 0.6 : 0.1); } else if (Math.sin(u * 50) * Math.sin(v * 34) > 0.8) { c = mixc(base, acc, 0.45); }
+				c = mixc(c, [0.86, 0.8, 0.72], wear * 0.55);
+			} else if (k === 'shag') {
+				var sp2 = fbm(u, v, 320, 2, 113), cl = worley(u, v, 90, 115, 1);
+				t = 0.78 + sp2 * 0.3 - smooth(0, 0.5, cl[0]) * 0.12; c = [base[0] * t, base[1] * t, base[2] * t];
+				return [c[0], c[1], c[2], sp2 * 0.7 + (1 - cl[0]) * 0.3, 1];
 			} else if (k === 'jute') {
 				var wx = u * 120, wy = v * 120, ox = Math.floor(wx), oy = Math.floor(wy), ov = (ox + Math.floor(oy / 2)) % 2;
 				t = 0.8 + (ov ? Math.sin((wx - ox) * Math.PI) : Math.sin((wy - oy) * Math.PI)) * 0.25; c = [base[0] * t, base[1] * t, base[2] * t];

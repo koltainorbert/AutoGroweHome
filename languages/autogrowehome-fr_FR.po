@@ -7842,3 +7842,527 @@ msgstr "Plaques de marbre"
 #: includes/Params/Definitions.php
 msgid "Díszcsempe"
 msgstr "Carreaux décoratifs"
+
+#: includes/Params/Definitions.php
+msgid "Autók, emberek, állatok"
+msgstr "Voitures, personnes, animaux"
+
+#: includes/Params/Definitions.php
+msgid "Erkély típusa"
+msgstr "Type de balcon"
+
+#: includes/Params/Definitions.php
+msgid "Üvegkorlát"
+msgstr "Garde-corps en verre"
+
+#: includes/Params/Definitions.php
+msgid "Fém pálcás korlát"
+msgstr "Garde-corps à barreaux métalliques"
+
+#: includes/Params/Definitions.php
+msgid "Fa korlát"
+msgstr "Garde-corps en bois"
+
+#: includes/Params/Definitions.php
+msgid "Tömör mellvéd"
+msgstr "Allège pleine"
+
+#: includes/Params/Definitions.php
+msgid "Francia erkély"
+msgstr "Balcon à la française"
+
+#: includes/Params/Definitions.php
+msgid "Erkély helye"
+msgstr "Emplacement du balcon"
+
+#: includes/Params/Definitions.php
+msgid "Főhomlokzaton"
+msgstr "Sur la façade principale"
+
+#: includes/Params/Definitions.php
+msgid "Hátsó homlokzaton"
+msgstr "Sur la façade arrière"
+
+#: includes/Params/Definitions.php
+msgid "Elöl és hátul"
+msgstr "Devant et derrière"
+
+#: includes/Params/Definitions.php
+msgid "Oldalhomlokzaton"
+msgstr "Sur la façade latérale"
+
+#: includes/Params/Definitions.php
+msgid "Sarkon körbefutó"
+msgstr "En angle, sur deux façades"
+
+#: includes/Params/Definitions.php
+msgid "Erkély mérete"
+msgstr "Taille du balcon"
+
+#: includes/Params/Definitions.php
+msgid "Kicsi (1,2 m mély)"
+msgstr "Petit (1,2 m de profondeur)"
+
+#: includes/Params/Definitions.php
+msgid "Közepes (1,5 m mély)"
+msgstr "Moyen (1,5 m de profondeur)"
+
+#: includes/Params/Definitions.php
+msgid "Teljes szélességű (1,8 m mély)"
+msgstr "Toute la largeur (1,8 m de profondeur)"
+
+#: includes/Params/Definitions.php
+msgid "Napelemek helye"
+msgstr "Emplacement des panneaux solaires"
+
+#: includes/Params/Definitions.php
+msgid "A panelek a tetősíkon belül maradnak, és kikerülik a kéményt, a tetőablakokat és a csatlakozó tömegeket."
+msgstr "Les panneaux restent dans les pans de toit et évitent la cheminée, les fenêtres de toit et les volumes attenants."
+
+#: includes/Params/Definitions.php
+msgid "A tájolás szerint (napos oldal)"
+msgstr "Selon l'orientation (côté ensoleillé)"
+
+#: includes/Params/Definitions.php
+msgid "Elülső tetősík"
+msgstr "Pan de toit avant"
+
+#: includes/Params/Definitions.php
+msgid "Hátsó tetősík"
+msgstr "Pan de toit arrière"
+
+#: includes/Params/Definitions.php
+msgid "Mindkét fő tetősík"
+msgstr "Les deux pans principaux"
+
+#: includes/Params/Definitions.php
+msgid "Minden szabad tetőfelület"
+msgstr "Toutes les surfaces de toit libres"
+
+#: includes/Params/Definitions.php
+msgid "L alakú, fordulós"
+msgstr "En L avec palier"
+
+#: includes/Params/Definitions.php
+msgid "U alakú, pihenős"
+msgstr "En U avec palier intermédiaire"
+
+#: includes/Params/Definitions.php
+msgid "Falból kinyúló fokok"
+msgstr "Marches en console"
+
+#: includes/Params/Definitions.php
+msgid "Helytakarékos, váltott fokú"
+msgstr "Gain de place, marches alternées"
+
+#: includes/Params/Definitions.php
+msgid "Vitrázsfüggöny (fél magas)"
+msgstr "Brise-bise (mi-hauteur)"
+
+#: includes/Params/Definitions.php
+msgid "Pliszé roló"
+msgstr "Store plissé"
+
+#: includes/Params/Definitions.php
+msgid "Függöny anyaga"
+msgstr "Tissu des rideaux"
+
+#: includes/Params/Definitions.php
+msgid "Len"
+msgstr "Lin"
+
+#: includes/Params/Definitions.php
+msgid "Bársony"
+msgstr "Velours"
+
+#: includes/Params/Definitions.php
+msgid "Fátyol (voile)"
+msgstr "Voilage"
+
+#: includes/Params/Definitions.php
+msgid "Sötétítő"
+msgstr "Occultant"
+
+#: includes/Params/Definitions.php
+msgid "Mintás"
+msgstr "À motifs"
+
+#: includes/Params/Definitions.php
+msgid "Függöny színe"
+msgstr "Couleur des rideaux"
+
+#: includes/Params/Definitions.php
+msgid "Törtfehér"
+msgstr "Ivoire"
+
+#: includes/Params/Definitions.php
+msgid "Homok"
+msgstr "Sable"
+
+#: includes/Params/Definitions.php
+msgid "Világosszürke"
+msgstr "Gris clair"
+
+#: includes/Params/Definitions.php
+msgid "Terrakotta"
+msgstr "Terre cuite"
+
+#: includes/Params/Definitions.php
+msgid "Kék"
+msgstr "Bleu"
+
+#: includes/Params/Definitions.php
+msgid "Zöld"
+msgstr "Vert"
+
+#: includes/Params/Definitions.php
+msgid "Okker"
+msgstr "Ocre"
+
+#: includes/Params/Definitions.php
+msgid "Púder"
+msgstr "Rose poudré"
+
+#: includes/Params/Definitions.php
+msgid "Küszöbök"
+msgstr "Seuils"
+
+#: includes/Params/Definitions.php
+msgid "Szintbeli, küszöb nélkül"
+msgstr "De plain-pied, sans seuil"
+
+#: includes/Params/Definitions.php
+msgid "Fa küszöb"
+msgstr "Seuil en bois"
+
+#: includes/Params/Definitions.php
+msgid "Kő küszöb"
+msgstr "Seuil en pierre"
+
+#: includes/Params/Definitions.php
+msgid "Fém profil"
+msgstr "Profilé métallique"
+
+#: includes/Params/Definitions.php
+msgid "Hosszú szálas (shaggy)"
+msgstr "À poils longs (shaggy)"
+
+#: includes/Params/Definitions.php
+msgid "Geometrikus"
+msgstr "Géométrique"
+
+#: includes/Params/Definitions.php
+msgid "Kilim"
+msgstr "Kilim"
+
+#: includes/Params/Definitions.php
+msgid "Csíkos"
+msgstr "Rayé"
+
+#: includes/Params/Definitions.php
+msgid "Marhabőr"
+msgstr "Peau de vache"
+
+#: includes/Params/Definitions.php
+msgid "Kopott vintage"
+msgstr "Vintage délavé"
+
+#: includes/Params/Definitions.php
+msgid "Szőnyeg színe"
+msgstr "Couleur du tapis"
+
+#: includes/Params/Definitions.php
+msgid "Saját fotó keretben"
+msgstr "Votre photo encadrée"
+
+#: includes/Params/Definitions.php
+msgid "Saját fotó a képkeretben"
+msgstr "Votre photo dans le cadre"
+
+#: includes/Params/Definitions.php
+msgid "A fotó a 3D előnézet képkeretében jelenik meg (a „Saját fotó” falikép vagy a képfal része). A generált képre nem kerül rá."
+msgstr "La photo apparaît dans un cadre de l’aperçu 3D (en tableau « Votre photo » ou dans le mur de cadres). Elle n’est pas ajoutée à l’image générée."
+
+#: includes/Params/Definitions.php
+msgid "Kaktuszok"
+msgstr "Cactus"
+
+#: includes/Params/Definitions.php
+msgid "Csüngő futónövény"
+msgstr "Plante retombante"
+
+#: includes/Params/Definitions.php
+msgid "Bonszai"
+msgstr "Bonsaï"
+
+#: includes/Params/Definitions.php
+msgid "Növények mennyisége"
+msgstr "Quantité de plantes"
+
+#: includes/Params/Definitions.php
+msgid "Kevés"
+msgstr "Peu"
+
+#: includes/Params/Definitions.php
+msgid "Átlagos"
+msgstr "Normal"
+
+#: includes/Params/Definitions.php
+msgid "Sok, „urban jungle”"
+msgstr "Beaucoup, « urban jungle »"
+
+#: includes/Params/Definitions.php
+msgid "További bútorok"
+msgstr "Autres meubles"
+
+#: includes/Params/Definitions.php
+msgid "A megfelelő helyiségekbe kerülnek, ahol van hely."
+msgstr "Ils vont dans les pièces adaptées, là où il y a de la place."
+
+#: includes/Params/Definitions.php
+msgid "Könyvespolc"
+msgstr "Bibliothèque"
+
+#: includes/Params/Definitions.php
+msgid "Tálalószekrény"
+msgstr "Buffet"
+
+#: includes/Params/Definitions.php
+msgid "Íróasztal"
+msgstr "Bureau"
+
+#: includes/Params/Definitions.php
+msgid "Olvasósarok"
+msgstr "Coin lecture"
+
+#: includes/Params/Definitions.php
+msgid "Zongora"
+msgstr "Piano"
+
+#: includes/Params/Definitions.php
+msgid "Bárkocsi"
+msgstr "Desserte bar"
+
+#: includes/Params/Definitions.php
+msgid "Pad"
+msgstr "Banc"
+
+#: includes/Params/Definitions.php
+msgid "Virágállvány"
+msgstr "Porte-plantes"
+
+#: includes/Params/Definitions.php
+msgid "Álló tükör"
+msgstr "Miroir sur pied"
+
+#: includes/Params/Definitions.php
+msgid "Komód"
+msgstr "Commode"
+
+#: includes/Params/Definitions.php
+msgid "Vitrin"
+msgstr "Vitrine"
+
+#: includes/Params/Definitions.php
+msgid "Puff"
+msgstr "Pouf"
+
+#: includes/Params/Definitions.php
+msgid "Elektronikai eszközök"
+msgstr "Électronique"
+
+#: includes/Params/Definitions.php
+msgid "Nagy tévé"
+msgstr "Grand téléviseur"
+
+#: includes/Params/Definitions.php
+msgid "Hangprojektor"
+msgstr "Barre de son"
+
+#: includes/Params/Definitions.php
+msgid "Álló hangfalak"
+msgstr "Enceintes colonnes"
+
+#: includes/Params/Definitions.php
+msgid "Játékkonzol"
+msgstr "Console de jeux"
+
+#: includes/Params/Definitions.php
+msgid "Projektor vászonnal"
+msgstr "Vidéoprojecteur avec écran"
+
+#: includes/Params/Definitions.php
+msgid "Asztali számítógép"
+msgstr "Ordinateur de bureau"
+
+#: includes/Params/Definitions.php
+msgid "Laptop"
+msgstr "Ordinateur portable"
+
+#: includes/Params/Definitions.php
+msgid "Okos hangszóró"
+msgstr "Enceinte connectée"
+
+#: includes/Params/Definitions.php
+msgid "Robotporszívó"
+msgstr "Robot aspirateur"
+
+#: includes/Params/Definitions.php
+msgid "Okosotthon-panel"
+msgstr "Écran domotique"
+
+#: includes/Params/Definitions.php
+msgid "Növényzet sűrűsége"
+msgstr "Densité de la végétation"
+
+#: includes/Params/Definitions.php
+msgid "Ritkás"
+msgstr "Clairsemée"
+
+#: includes/Params/Definitions.php
+msgid "Dús, sok fával"
+msgstr "Luxuriante, beaucoup d’arbres"
+
+#: includes/Params/Definitions.php
+msgid "Fák fajtái"
+msgstr "Essences d’arbres"
+
+#: includes/Params/Definitions.php
+msgid "Ha üres, a kert stílusa dönt."
+msgstr "Si vide, le style du jardin décide."
+
+#: includes/Params/Definitions.php
+msgid "Lombhullató fa"
+msgstr "Arbre à feuilles caduques"
+
+#: includes/Params/Definitions.php
+msgid "Nyírfa"
+msgstr "Bouleau"
+
+#: includes/Params/Definitions.php
+msgid "Japán juhar"
+msgstr "Érable du Japon"
+
+#: includes/Params/Definitions.php
+msgid "Gyümölcsfa"
+msgstr "Arbre fruitier"
+
+#: includes/Params/Definitions.php
+msgid "Fenyő"
+msgstr "Conifère"
+
+#: includes/Params/Definitions.php
+msgid "Ciprus"
+msgstr "Cyprès"
+
+#: includes/Params/Definitions.php
+msgid "Többtörzsű fa"
+msgstr "Arbre en cépée"
+
+#: includes/Params/Definitions.php
+msgid "Járművek"
+msgstr "Véhicules"
+
+#: includes/Params/Definitions.php
+msgid "A fedett beállóban és a kocsibeállón parkolnak."
+msgstr "Ils stationnent sous le carport et dans l’allée."
+
+#: includes/Params/Definitions.php
+msgid "Szedán"
+msgstr "Berline"
+
+#: includes/Params/Definitions.php
+msgid "Ferdehátú"
+msgstr "Citadine"
+
+#: includes/Params/Definitions.php
+msgid "SUV"
+msgstr "SUV"
+
+#: includes/Params/Definitions.php
+msgid "Pickup"
+msgstr "Pick-up"
+
+#: includes/Params/Definitions.php
+msgid "Kisbusz"
+msgstr "Fourgon"
+
+#: includes/Params/Definitions.php
+msgid "Sportautó"
+msgstr "Voiture de sport"
+
+#: includes/Params/Definitions.php
+msgid "Elektromos autó töltővel"
+msgstr "Voiture électrique avec borne"
+
+#: includes/Params/Definitions.php
+msgid "Motor"
+msgstr "Moto"
+
+#: includes/Params/Definitions.php
+msgid "Kerékpár"
+msgstr "Vélo"
+
+#: includes/Params/Definitions.php
+msgid "Járművek színe"
+msgstr "Couleur des véhicules"
+
+#: includes/Params/Definitions.php
+msgid "Emberek"
+msgstr "Personnes"
+
+#: includes/Params/Definitions.php
+msgid "Kint a teraszon, bent a nappaliban jelennek meg."
+msgstr "Ils apparaissent dehors sur la terrasse et dedans dans le séjour."
+
+#: includes/Params/Definitions.php
+msgid "Pár"
+msgstr "Couple"
+
+#: includes/Params/Definitions.php
+msgid "Család gyerekekkel"
+msgstr "Famille avec enfants"
+
+#: includes/Params/Definitions.php
+msgid "Vendégek"
+msgstr "Invités"
+
+#: includes/Params/Definitions.php
+msgid "Háziállatok"
+msgstr "Animaux de compagnie"
+
+#: includes/Params/Definitions.php
+msgid "Nagytestű kutya"
+msgstr "Grand chien"
+
+#: includes/Params/Definitions.php
+msgid "Kistestű kutya"
+msgstr "Petit chien"
+
+#: includes/Params/Definitions.php
+msgid "Macska"
+msgstr "Chat"
+
+#: includes/Frontend/Strings.php
+msgid "Előző helyiség"
+msgstr "Pièce précédente"
+
+#: includes/Frontend/Strings.php
+msgid "Következő helyiség"
+msgstr "Pièce suivante"
+
+#: includes/Frontend/Strings.php
+msgid "Másik kép"
+msgstr "Autre image"
+
+#: includes/Frontend/Strings.php
+msgid "Kép törlése"
+msgstr "Supprimer l’image"
+
+#: includes/Frontend/Strings.php
+msgid "A kép nem olvasható."
+msgstr "Impossible de lire l’image."
+
+#: includes/Quote/Summary.php
+msgid "feltöltve"
+msgstr "téléversée"

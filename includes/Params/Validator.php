@@ -106,6 +106,10 @@ final class Validator {
 			case 'cards':
 				$v = is_scalar( $value ) ? (string) $value : '';
 				return isset( $def['options'][ $v ] ) ? $v : (string) $def['default'];
+			case 'image':
+				// A small picture chosen in the browser (downscaled there to a JPEG/PNG/WebP data URL).
+				$v = is_string( $value ) ? trim( $value ) : '';
+				return ( strlen( $v ) <= 400000 && preg_match( '#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$#', $v ) ) ? $v : '';
 			case 'catalog':
 				$v = is_scalar( $value ) ? sanitize_key( (string) $value ) : '';
 				return ( '' === $v || Catalog::exists( $def['catalog'], $v ) ) ? $v : '';

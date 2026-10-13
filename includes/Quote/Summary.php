@@ -38,6 +38,8 @@ final class Summary {
 				return $labels ? implode( ', ', $labels ) : '–';
 			case 'color':
 				return (string) $v;
+			case 'image':
+				return '' !== (string) $v ? __( 'feltöltve', 'autogrowehome' ) : '–';
 			case 'rooms':
 				return sprintf( /* translators: %d: count */ _n( '%d helyiség', '%d helyiség', count( (array) $v ), 'autogrowehome' ), count( (array) $v ) );
 			default:

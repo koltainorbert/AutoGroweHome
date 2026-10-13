@@ -107,6 +107,22 @@ final class Frontend {
 	 * guests). The designer sends it as X-WP-Nonce on every REST call – also on
 	 * the bootstrap request – so the REST layer sees the logged-in user.
 	 */
+	/**
+	 * Every module the 3D preview imports (exact URLs of the import statements), so the loader can
+	 * fetch them in parallel ahead of time instead of one import level after the other.
+	 */
+	private static function three_deps(): array {
+		$out = array();
+		foreach ( array( 'vendor/three/three.module.min.js', 'vendor/three/jsm/controls/OrbitControls.js', 'vendor/three/jsm/postprocessing/EffectComposer.js', 'vendor/three/jsm/postprocessing/RenderPass.js', 'vendor/three/jsm/postprocessing/GTAOPass.js', 'vendor/three/jsm/postprocessing/OutputPass.js', 'vendor/three/jsm/postprocessing/Pass.js', 'vendor/three/jsm/postprocessing/ShaderPass.js', 'vendor/three/jsm/postprocessing/MaskPass.js', 'vendor/three/jsm/shaders/CopyShader.js', 'vendor/three/jsm/shaders/GTAOShader.js', 'vendor/three/jsm/shaders/OutputShader.js', 'vendor/three/jsm/shaders/PoissonDenoiseShader.js', 'vendor/three/jsm/math/SimplexNoise.js', 'agh-3d-tex.js', 'agh-3d-gen.js' ) as $rel ) {
+			if ( file_exists( AGH_DIR . 'assets/js/' . $rel ) ) {
+				$out[] = AGH_URL . 'assets/js/' . $rel;
+			}
+		}
+		// The interiors are imported with the same version query as agh-3d.js.
+		$out[] = AGH_URL . 'assets/js/agh-3d-int.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) );
+		return $out;
+	}
+
 	public static function loader_config( bool $floating ): array {
 		$label = (string) Settings::get( 'general.button_label', '' );
 		return array(
@@ -114,6 +130,7 @@ final class Frontend {
 			'js'       => AGH_URL . 'assets/js/agh-designer.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-designer.js' ) ),
 			'sketch'   => AGH_URL . 'assets/js/agh-sketch.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-sketch.js' ) ),
 			'three'    => AGH_URL . 'assets/js/agh-3d.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) ),
+			'threeDeps' => self::three_deps(),
 			'rest'     => wp_make_link_relative( esc_url_raw( rest_url( AGH_REST_NS . '/' ) ) ),
 			'wpNonce'  => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
 			'floating' => $floating,

@@ -35,6 +35,7 @@ final class Definitions {
 			'bathroom' => array( 'label' => __( 'Fürdőszoba', 'autogrowehome' ), 'icon' => 'bath' ),
 			'surfaces' => array( 'label' => __( 'Burkolatok', 'autogrowehome' ), 'icon' => 'tiles' ),
 			'garden'   => array( 'label' => __( 'Kert és környezet', 'autogrowehome' ), 'icon' => 'tree' ),
+			'life'     => array( 'label' => __( 'Autók, emberek, állatok', 'autogrowehome' ), 'icon' => 'car' ),
 			'energy'   => array( 'label' => __( 'Gépészet és energia', 'autogrowehome' ), 'icon' => 'bolt' ),
 			'scene'    => array( 'label' => __( 'Fény és kamera', 'autogrowehome' ), 'icon' => 'camera' ),
 			'custom'   => array( 'label' => __( 'Egyedi leírás', 'autogrowehome' ), 'icon' => 'pen' ),
@@ -212,6 +213,41 @@ final class Definitions {
 		);
 		$f[] = array( 'id' => 'terrace_area', 'category' => 'massing', 'type' => 'range', 'label' => __( 'Fedett terasz', 'autogrowehome' ), 'help' => __( 'A kert felőli fedett terasz mérete (0 = nincs).', 'autogrowehome' ), 'default' => 20, 'min' => 0, 'max' => 120, 'step' => 1, 'unit' => 'm²', 'quick' => array( 0, 12, 20, 30 ), 'prompt' => 'generous covered terrace of about {value} m2' );
 		$f[] = array( 'id' => 'balcony', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Erkély', 'autogrowehome' ), 'help' => __( 'Csak emeletes vagy tetőteres háznál.', 'autogrowehome' ), 'default' => false, 'show_if' => array( 'field' => 'levels', 'op' => '!=', 'value' => 'single' ), 'prompt' => 'upper floor balcony' );
+		$f[] = array_merge(
+			array( 'id' => 'balcony_type', 'category' => 'massing', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Erkély típusa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'show_if' => array( 'field' => 'balcony', 'op' => '=', 'value' => true ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'   => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'glass'  => array( __( 'Üvegkorlát', 'autogrowehome' ), 'a balcony with a glass balustrade' ),
+					'metal'  => array( __( 'Fém pálcás korlát', 'autogrowehome' ), 'a balcony with slim black metal balusters' ),
+					'wood'   => array( __( 'Fa korlát', 'autogrowehome' ), 'a balcony with a timber railing' ),
+					'solid'  => array( __( 'Tömör mellvéd', 'autogrowehome' ), 'a balcony with a solid rendered parapet' ),
+					'french' => array( __( 'Francia erkély', 'autogrowehome' ), 'French (juliet) balconies with floor-to-ceiling doors' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'balcony_place', 'category' => 'massing', 'type' => 'select', 'label' => __( 'Erkély helye', 'autogrowehome' ), 'help' => '', 'default' => 'front', 'show_if' => array( 'field' => 'balcony', 'op' => '=', 'value' => true ), 'prompt' => 'balcony {value}' ),
+			self::opts(
+				array(
+					'front' => array( __( 'Főhomlokzaton', 'autogrowehome' ), 'on the main facade' ),
+					'back'  => array( __( 'Hátsó homlokzaton', 'autogrowehome' ), 'on the rear facade' ),
+					'both'  => array( __( 'Elöl és hátul', 'autogrowehome' ), 'on the front and the rear facade' ),
+					'side'  => array( __( 'Oldalhomlokzaton', 'autogrowehome' ), 'on the side facade' ),
+					'wrap'  => array( __( 'Sarkon körbefutó', 'autogrowehome' ), 'wrapping around the corner' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'balcony_size', 'category' => 'massing', 'type' => 'select', 'label' => __( 'Erkély mérete', 'autogrowehome' ), 'help' => '', 'default' => 'medium', 'show_if' => array( 'field' => 'balcony', 'op' => '=', 'value' => true ), 'prompt' => '{value} balcony' ),
+			self::opts(
+				array(
+					'small'  => array( __( 'Kicsi (1,2 m mély)', 'autogrowehome' ), 'a small' ),
+					'medium' => array( __( 'Közepes (1,5 m mély)', 'autogrowehome' ), 'a medium-depth' ),
+					'large'  => array( __( 'Teljes szélességű (1,8 m mély)', 'autogrowehome' ), 'a full-width, deep' ),
+				)
+			)
+		);
 		$f[] = array( 'id' => 'entrance_canopy', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Bejárati előtető', 'autogrowehome' ), 'help' => '', 'default' => true, 'prompt' => 'sheltered entrance canopy' );
 		$f[] = array( 'id' => 'outdoor_covered', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'További fedett kültéri tér', 'autogrowehome' ), 'help' => __( 'Pl. nyári konyha, fedett pihenő.', 'autogrowehome' ), 'default' => false, 'advanced' => true, 'prompt' => 'additional covered outdoor living area' );
 		$f[] = array( 'id' => 'exterior_steps', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Külső lépcsők', 'autogrowehome' ), 'help' => __( 'Lejtős telek vagy megemelt padlószint esetén.', 'autogrowehome' ), 'default' => false, 'advanced' => true, 'prompt' => 'a few exterior steps to the entrance' );
@@ -290,6 +326,18 @@ final class Definitions {
 							'small' => array( __( 'Kicsi (néhány panel)', 'autogrowehome' ), 'a small array of solar panels' ),
 							'medium' => array( __( 'Közepes', 'autogrowehome' ), 'a medium solar array' ),
 							'full' => array( __( 'Teljes tetősík', 'autogrowehome' ), 'solar panels covering most of the roof plane' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'solar_place', 'category' => 'roof', 'type' => 'select', 'label' => __( 'Napelemek helye', 'autogrowehome' ), 'help' => __( 'A panelek a tetősíkon belül maradnak, és kikerülik a kéményt, a tetőablakokat és a csatlakozó tömegeket.', 'autogrowehome' ), 'default' => 'auto', 'show_if' => array( 'field' => 'roof_solar', 'op' => '=', 'value' => true ), 'prompt' => 'solar panels {value}' ),
+			self::opts(
+				array(
+					'auto'  => array( __( 'A tájolás szerint (napos oldal)', 'autogrowehome' ), '' ),
+					'front' => array( __( 'Elülső tetősík', 'autogrowehome' ), 'on the front roof plane' ),
+					'back'  => array( __( 'Hátsó tetősík', 'autogrowehome' ), 'on the rear roof plane' ),
+					'both'  => array( __( 'Mindkét fő tetősík', 'autogrowehome' ), 'on both main roof planes' ),
+					'all'   => array( __( 'Minden szabad tetőfelület', 'autogrowehome' ), 'on every free roof surface' ),
 				)
 			)
 		);
@@ -610,7 +658,7 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
-			array( 'id' => 'stair_type', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Lépcső', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'show_if' => array( 'field' => 'levels', 'op' => '!=', 'value' => 'single' ), 'prompt' => '{value}' ),
+			array( 'id' => 'stair_type', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Lépcső', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'show_if' => array( 'field' => 'levels', 'op' => '!=', 'value' => 'single' ), 'prompt' => '{value}' ),
 			self::opts(
 				array(
 					'auto'     => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
@@ -619,6 +667,10 @@ final class Definitions {
 					'spiral'   => array( __( 'Csigalépcső', 'autogrowehome' ), 'a spiral staircase' ),
 					'steel'    => array( __( 'Acél gerinces', 'autogrowehome' ), 'a steel spine staircase with timber treads' ),
 					'concrete' => array( __( 'Monolit beton', 'autogrowehome' ), 'a monolithic concrete staircase' ),
+					'l_shaped'    => array( __( 'L alakú, fordulós', 'autogrowehome' ), 'an L-shaped staircase with a landing' ),
+					'u_shaped'    => array( __( 'U alakú, pihenős', 'autogrowehome' ), 'a U-shaped staircase with a half landing' ),
+					'cantilever'  => array( __( 'Falból kinyúló fokok', 'autogrowehome' ), 'cantilevered treads from the wall' ),
+					'space_saver' => array( __( 'Helytakarékos, váltott fokú', 'autogrowehome' ), 'a space-saving alternating tread stair' ),
 				)
 			)
 		);
@@ -633,6 +685,49 @@ final class Definitions {
 					'venetian' => array( __( 'Reluxa', 'autogrowehome' ), 'venetian blinds' ),
 					'roller'   => array( __( 'Roló', 'autogrowehome' ), 'roller blinds' ),
 					'shutters' => array( __( 'Belső zsalugáter', 'autogrowehome' ), 'interior plantation shutters' ),
+					'cafe'        => array( __( 'Vitrázsfüggöny (fél magas)', 'autogrowehome' ), 'café curtains' ),
+					'pleated'     => array( __( 'Pliszé roló', 'autogrowehome' ), 'pleated blinds' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'curtain_fabric', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Függöny anyaga', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'show_if' => array( 'field' => 'curtains', 'op' => '=', 'value' => true ), 'prompt' => 'curtains in {value}' ),
+			self::opts(
+				array(
+					'auto'      => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'linen'     => array( __( 'Len', 'autogrowehome' ), 'linen' ),
+					'velvet'    => array( __( 'Bársony', 'autogrowehome' ), 'velvet' ),
+					'voile'     => array( __( 'Fátyol (voile)', 'autogrowehome' ), 'sheer voile' ),
+					'blackout'  => array( __( 'Sötétítő', 'autogrowehome' ), 'blackout fabric' ),
+					'patterned' => array( __( 'Mintás', 'autogrowehome' ), 'a patterned fabric' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'curtain_tone', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Függöny színe', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'show_if' => array( 'field' => 'curtains', 'op' => '=', 'value' => true ), 'prompt' => '{value} curtains' ),
+			self::opts(
+				array(
+					'auto'       => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'ivory'      => array( __( 'Törtfehér', 'autogrowehome' ), 'ivory' ),
+					'sand'       => array( __( 'Homok', 'autogrowehome' ), 'sand-coloured' ),
+					'grey'       => array( __( 'Világosszürke', 'autogrowehome' ), 'light grey' ),
+					'charcoal'   => array( __( 'Grafit', 'autogrowehome' ), 'charcoal' ),
+					'terracotta' => array( __( 'Terrakotta', 'autogrowehome' ), 'terracotta' ),
+					'blue'       => array( __( 'Kék', 'autogrowehome' ), 'deep blue' ),
+					'green'      => array( __( 'Zöld', 'autogrowehome' ), 'sage green' ),
+					'ochre'      => array( __( 'Okker', 'autogrowehome' ), 'ochre' ),
+					'rose'       => array( __( 'Púder', 'autogrowehome' ), 'dusty pink' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'thresholds', 'category' => 'architecture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Küszöbök', 'autogrowehome' ), 'help' => '', 'default' => 'none', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'none'  => array( __( 'Szintbeli, küszöb nélkül', 'autogrowehome' ), '' ),
+					'wood'  => array( __( 'Fa küszöb', 'autogrowehome' ), 'wooden door thresholds' ),
+					'stone' => array( __( 'Kő küszöb', 'autogrowehome' ), 'stone door thresholds' ),
+					'metal' => array( __( 'Fém profil', 'autogrowehome' ), 'slim metal threshold profiles' ),
 				)
 			)
 		);
@@ -756,7 +851,30 @@ final class Definitions {
 					'oriental' => array( __( 'Keleti mintás', 'autogrowehome' ), 'an oriental rug' ),
 					'round'    => array( __( 'Kerek', 'autogrowehome' ), 'a round rug' ),
 					'jute'     => array( __( 'Juta', 'autogrowehome' ), 'a jute rug' ),
+					'shag'        => array( __( 'Hosszú szálas (shaggy)', 'autogrowehome' ), 'a shaggy rug' ),
+					'geometric'   => array( __( 'Geometrikus', 'autogrowehome' ), 'a geometric pattern rug' ),
+					'kilim'       => array( __( 'Kilim', 'autogrowehome' ), 'a kilim rug' ),
+					'stripe'      => array( __( 'Csíkos', 'autogrowehome' ), 'a striped rug' ),
+					'cowhide'     => array( __( 'Marhabőr', 'autogrowehome' ), 'a cowhide rug' ),
+					'vintage'     => array( __( 'Kopott vintage', 'autogrowehome' ), 'a faded vintage rug' ),
 					'none'     => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'rug_tone', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Szőnyeg színe', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value} rug' ),
+			self::opts(
+				array(
+					'auto'       => array( __( 'A stílus szerint', 'autogrowehome' ), '' ),
+					'ivory'      => array( __( 'Törtfehér', 'autogrowehome' ), 'ivory' ),
+					'sand'       => array( __( 'Homok', 'autogrowehome' ), 'sand-coloured' ),
+					'grey'       => array( __( 'Világosszürke', 'autogrowehome' ), 'light grey' ),
+					'charcoal'   => array( __( 'Grafit', 'autogrowehome' ), 'charcoal' ),
+					'terracotta' => array( __( 'Terrakotta', 'autogrowehome' ), 'terracotta' ),
+					'blue'       => array( __( 'Kék', 'autogrowehome' ), 'deep blue' ),
+					'green'      => array( __( 'Zöld', 'autogrowehome' ), 'sage green' ),
+					'ochre'      => array( __( 'Okker', 'autogrowehome' ), 'ochre' ),
+					'rose'       => array( __( 'Púder', 'autogrowehome' ), 'dusty pink' ),
 				)
 			)
 		);
@@ -770,10 +888,12 @@ final class Definitions {
 					'landscape' => array( __( 'Tájkép', 'autogrowehome' ), 'a landscape painting' ),
 					'gallery'   => array( __( 'Képfal', 'autogrowehome' ), 'a gallery wall of framed prints' ),
 					'mirror'    => array( __( 'Nagy boltíves tükör', 'autogrowehome' ), 'a large arched mirror' ),
+					'photo'       => array( __( 'Saját fotó keretben', 'autogrowehome' ), 'a framed personal photograph' ),
 					'none'      => array( __( 'Nincs', 'autogrowehome' ), '' ),
 				)
 			)
 		);
+		$f[] = array( 'id' => 'art_photo', 'category' => 'furniture', 'type' => 'image', 'label' => __( 'Saját fotó a képkeretben', 'autogrowehome' ), 'help' => __( 'A fotó a 3D előnézet képkeretében jelenik meg (a „Saját fotó” falikép vagy a képfal része). A generált képre nem kerül rá.', 'autogrowehome' ), 'default' => '', 'prompt' => '' );
 		$f[] = array_merge(
 			array( 'id' => 'plants', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Szobanövények', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'advanced' => true, 'prompt' => '{value}' ),
 			self::opts(
@@ -784,7 +904,56 @@ final class Definitions {
 					'olive'    => array( __( 'Olajfa', 'autogrowehome' ), 'a potted olive tree' ),
 					'snake'    => array( __( 'Anyósnyelv', 'autogrowehome' ), 'snake plants' ),
 					'palm'     => array( __( 'Pálma', 'autogrowehome' ), 'a potted palm' ),
+					'cactus'      => array( __( 'Kaktuszok', 'autogrowehome' ), 'cacti in pots' ),
+					'pothos'      => array( __( 'Csüngő futónövény', 'autogrowehome' ), 'trailing pothos plants' ),
+					'bonsai'      => array( __( 'Bonszai', 'autogrowehome' ), 'a bonsai tree' ),
 					'none'     => array( __( 'Nincs', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'plant_amount', 'category' => 'furniture', 'type' => 'select', 'label' => __( 'Növények mennyisége', 'autogrowehome' ), 'help' => '', 'default' => 'normal', 'advanced' => true, 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'few'    => array( __( 'Kevés', 'autogrowehome' ), 'a few indoor plants' ),
+					'normal' => array( __( 'Átlagos', 'autogrowehome' ), '' ),
+					'jungle' => array( __( 'Sok, „urban jungle”', 'autogrowehome' ), 'lots of indoor plants, urban jungle style' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'extra_furniture', 'category' => 'furniture', 'type' => 'multiselect', 'visual' => 'item', 'label' => __( 'További bútorok', 'autogrowehome' ), 'help' => __( 'A megfelelő helyiségekbe kerülnek, ahol van hely.', 'autogrowehome' ), 'default' => array(), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'bookshelf'    => array( __( 'Könyvespolc', 'autogrowehome' ), 'a bookshelf' ),
+					'sideboard'    => array( __( 'Tálalószekrény', 'autogrowehome' ), 'a sideboard' ),
+					'desk'         => array( __( 'Íróasztal', 'autogrowehome' ), 'a desk with a chair' ),
+					'reading'      => array( __( 'Olvasósarok', 'autogrowehome' ), 'a reading corner' ),
+					'piano'        => array( __( 'Zongora', 'autogrowehome' ), 'an upright piano' ),
+					'bar_cart'     => array( __( 'Bárkocsi', 'autogrowehome' ), 'a bar cart' ),
+					'bench'        => array( __( 'Pad', 'autogrowehome' ), 'a bench' ),
+					'plant_stand'  => array( __( 'Virágállvány', 'autogrowehome' ), 'a plant stand' ),
+					'floor_mirror' => array( __( 'Álló tükör', 'autogrowehome' ), 'a leaning floor mirror' ),
+					'chest'        => array( __( 'Komód', 'autogrowehome' ), 'a chest of drawers' ),
+					'vitrine'      => array( __( 'Vitrin', 'autogrowehome' ), 'a glass display cabinet' ),
+					'pouf'         => array( __( 'Puff', 'autogrowehome' ), 'a pouf' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'electronics', 'category' => 'furniture', 'type' => 'multiselect', 'visual' => 'item', 'label' => __( 'Elektronikai eszközök', 'autogrowehome' ), 'help' => '', 'default' => array(), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'tv'            => array( __( 'Nagy tévé', 'autogrowehome' ), 'a large flat TV' ),
+					'soundbar'      => array( __( 'Hangprojektor', 'autogrowehome' ), 'a soundbar' ),
+					'speakers'      => array( __( 'Álló hangfalak', 'autogrowehome' ), 'floor-standing speakers' ),
+					'console'       => array( __( 'Játékkonzol', 'autogrowehome' ), 'a game console' ),
+					'projector'     => array( __( 'Projektor vászonnal', 'autogrowehome' ), 'a projector with a screen' ),
+					'computer'      => array( __( 'Asztali számítógép', 'autogrowehome' ), 'a desktop computer' ),
+					'laptop'        => array( __( 'Laptop', 'autogrowehome' ), 'a laptop' ),
+					'smart_speaker' => array( __( 'Okos hangszóró', 'autogrowehome' ), 'a smart speaker' ),
+					'robot_vacuum'  => array( __( 'Robotporszívó', 'autogrowehome' ), 'a robot vacuum' ),
+					'smart_panel'   => array( __( 'Okosotthon-panel', 'autogrowehome' ), 'a smart-home wall panel' ),
 				)
 			)
 		);
@@ -1237,6 +1406,32 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
+			array( 'id' => 'garden_density', 'category' => 'garden', 'type' => 'select', 'label' => __( 'Növényzet sűrűsége', 'autogrowehome' ), 'help' => '', 'default' => 'normal', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'sparse' => array( __( 'Ritkás', 'autogrowehome' ), 'sparse planting' ),
+					'normal' => array( __( 'Átlagos', 'autogrowehome' ), '' ),
+					'lush'   => array( __( 'Dús, sok fával', 'autogrowehome' ), 'lush planting with many trees' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'tree_types', 'category' => 'garden', 'type' => 'multiselect', 'visual' => 'item', 'label' => __( 'Fák fajtái', 'autogrowehome' ), 'help' => __( 'Ha üres, a kert stílusa dönt.', 'autogrowehome' ), 'default' => array(), 'prompt' => 'trees: {value}' ),
+			self::opts(
+				array(
+					'deciduous' => array( __( 'Lombhullató fa', 'autogrowehome' ), 'deciduous trees' ),
+					'birch'     => array( __( 'Nyírfa', 'autogrowehome' ), 'birch trees' ),
+					'maple'     => array( __( 'Japán juhar', 'autogrowehome' ), 'Japanese maples' ),
+					'fruit'     => array( __( 'Gyümölcsfa', 'autogrowehome' ), 'fruit trees' ),
+					'olive'     => array( __( 'Olajfa', 'autogrowehome' ), 'olive trees' ),
+					'palm'      => array( __( 'Pálma', 'autogrowehome' ), 'palm trees' ),
+					'conifer'   => array( __( 'Fenyő', 'autogrowehome' ), 'conifers' ),
+					'cypress'   => array( __( 'Ciprus', 'autogrowehome' ), 'columnar cypresses' ),
+					'multistem' => array( __( 'Többtörzsű fa', 'autogrowehome' ), 'multi-stem trees' ),
+				)
+			)
+		);
+		$f[] = array_merge(
 			array( 'id' => 'terrace_floor', 'category' => 'garden', 'type' => 'select', 'label' => __( 'Teraszburkolat', 'autogrowehome' ), 'help' => '', 'default' => 'wpc', 'prompt' => 'terrace decking in {value}' ),
 			self::opts(
 				array(
@@ -1272,6 +1467,46 @@ final class Definitions {
 		);
 		$f[] = array( 'id' => 'gate', 'category' => 'garden', 'type' => 'toggle', 'label' => __( 'Kapu és gyalogosbejárat', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => 'matching driveway gate and pedestrian gate' );
 		$f[] = array( 'id' => 'neighbors', 'category' => 'garden', 'type' => 'toggle', 'label' => __( 'Környező épületek látszódjanak', 'autogrowehome' ), 'help' => '', 'default' => false, 'advanced' => true, 'prompt' => 'neighbouring houses softly visible in the background' );
+
+		/* ---------------------------------------------------------------- Autók, emberek, állatok */
+		$f[] = array_merge(
+			array( 'id' => 'vehicles', 'category' => 'life', 'type' => 'multiselect', 'visual' => 'item', 'label' => __( 'Járművek', 'autogrowehome' ), 'help' => __( 'A fedett beállóban és a kocsibeállón parkolnak.', 'autogrowehome' ), 'default' => array( 'sedan' ), 'prompt' => '{value} parked at the house' ),
+			self::opts(
+				array(
+					'sedan'      => array( __( 'Szedán', 'autogrowehome' ), 'a sedan' ),
+					'hatchback'  => array( __( 'Ferdehátú', 'autogrowehome' ), 'a hatchback' ),
+					'suv'        => array( __( 'SUV', 'autogrowehome' ), 'an SUV' ),
+					'pickup'     => array( __( 'Pickup', 'autogrowehome' ), 'a pickup truck' ),
+					'van'        => array( __( 'Kisbusz', 'autogrowehome' ), 'a van' ),
+					'sports'     => array( __( 'Sportautó', 'autogrowehome' ), 'a sports car' ),
+					'electric'   => array( __( 'Elektromos autó töltővel', 'autogrowehome' ), 'an electric car with a charging post' ),
+					'motorcycle' => array( __( 'Motor', 'autogrowehome' ), 'a motorcycle' ),
+					'bicycle'    => array( __( 'Kerékpár', 'autogrowehome' ), 'a bicycle' ),
+				)
+			)
+		);
+		$f[] = array( 'id' => 'car_color', 'category' => 'life', 'type' => 'color', 'label' => __( 'Járművek színe', 'autogrowehome' ), 'help' => '', 'default' => '#3C4148', 'prompt' => 'vehicles in {color}' );
+		$f[] = array_merge(
+			array( 'id' => 'people', 'category' => 'life', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Emberek', 'autogrowehome' ), 'help' => __( 'Kint a teraszon, bent a nappaliban jelennek meg.', 'autogrowehome' ), 'default' => 'none', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'none'   => array( __( 'Nincs', 'autogrowehome' ), '' ),
+					'couple' => array( __( 'Pár', 'autogrowehome' ), 'a couple enjoying the house' ),
+					'family' => array( __( 'Család gyerekekkel', 'autogrowehome' ), 'a family with two children' ),
+					'guests' => array( __( 'Vendégek', 'autogrowehome' ), 'a small group of guests' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'pets', 'category' => 'life', 'type' => 'multiselect', 'visual' => 'item', 'label' => __( 'Háziállatok', 'autogrowehome' ), 'help' => '', 'default' => array(), 'prompt' => 'with {value}' ),
+			self::opts(
+				array(
+					'dog_large' => array( __( 'Nagytestű kutya', 'autogrowehome' ), 'a large dog' ),
+					'dog_small' => array( __( 'Kistestű kutya', 'autogrowehome' ), 'a small dog' ),
+					'cat'       => array( __( 'Macska', 'autogrowehome' ), 'a cat' ),
+				)
+			)
+		);
 
 		/* ---------------------------------------------------------------- Energia */
 		$f[] = array_merge(

@@ -128,6 +128,7 @@
 		tiles: ['#8C7B62', '<path class="d" d="M3 3h9v9H3zM12 12h9v9h-9z"/><rect x="3" y="3" width="18" height="18" rx="1.2"/><path d="M3 12h18M12 3v18"/><path d="M3 7.5l4.5-4.5M3 12l9-9M7.5 12L12 7.5M12 16.5l4.5-4.5M12 21l9-9M16.5 21l4.5-4.5"/>'],
 		tree: ['#5E9A4B', '<path class="d" d="M9 4a5 5 0 015 5 4 4 0 01-1 7H6a4 4 0 01-1-7.8A5 5 0 019 4z"/><path d="M9 4a5 5 0 015 5 4 4 0 01-1 7H6a4 4 0 01-1-7.8A5 5 0 019 4z"/><path d="M9 21v-9M9 15l-2-2M9 13l2-2"/><path d="M18 21v-5M18 16l-2.5-1M18 7l3.5 9h-7z"/><path d="M2 21h20"/>'],
 		bolt: ['#D3A12C', '<path class="d" d="M3 13l4-6h14l-4 6z"/><path d="M3 13l4-6h14l-4 6zM8.4 13l2.6-6M13.6 13L16.4 7M5 10h14"/><path d="M10 13v4M8 21l2-4 2 4"/><path d="M19 15.5l-2.2 3h2.2l-2.2 3"/>'],
+		car: ['#4F86C6', '<path class="d" d="M3.5 12.5l2-4.2A2 2 0 017.3 7h9.4a2 2 0 011.8 1.3l2 4.2V17H3.5z"/><path d="M3.5 12.5l2-4.2A2 2 0 017.3 7h9.4a2 2 0 011.8 1.3l2 4.2M3 12.5h18v4.5H3z"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/><path d="M6.5 12.5l1.3-3h8.4l1.3 3"/>'],
 		camera: ['#7A6BC4', '<path class="d" d="M3 8h18v12H3z"/><path d="M3 8h4l1.6-2.5h6.8L17 8h4v12H3z"/><circle cx="12" cy="14" r="3.6"/><path d="M12 10.4V8.8M15.6 14h1.6"/><circle cx="18.5" cy="10.5" r=".2"/>'],
 		door: ['#7C8D6A', '<path class="d" d="M6 3h11v18H6z"/><path d="M4 21h16"/><rect x="6" y="3" width="11" height="18" rx="0.8"/><path d="M9 7h5v4H9zM9 14h5v4H9"/><circle cx="14.6" cy="12.2" r="0.9"/>'],
 		armchair: ['#9C6B8E', '<path class="d" d="M6 11h12v5H6z"/><path d="M6 11V7.5A2.5 2.5 0 018.5 5h7A2.5 2.5 0 0118 7.5V11"/><path d="M4 11.5a2 2 0 014 0V15h8v-3.5a2 2 0 014 0V18H4z"/><path d="M6 18v2M18 18v2"/>'],
@@ -311,6 +312,8 @@
 			renderPreviewOnly();
 			if (S.wiz) { updateWizardSide(); }
 			refreshCardThumbs();
+			// rooms and furniture cards are prepared in the background while the house is on screen
+			if (api.warmup) { setTimeout(function () { (window.requestIdleCallback || setTimeout)(function () { api.warmup(S.config); }); }, 1800); }
 		}).catch(function () { clearTimeout(giveUp); A3 = null; A3wait = false; fallback2D(); });
 		return load3D.p;
 	}
@@ -732,6 +735,9 @@
 			case 'color':
 				ctl = renderColor(f, v);
 				break;
+			case 'image':
+				ctl = renderImage(f, v);
+				break;
 			case 'cards':
 				ctl = h('div', { class: 'agh-cards', role: 'radiogroup', 'aria-label': f.label });
 				(f.options || []).forEach(function (o) {
@@ -776,6 +782,35 @@
 	}
 
 	// Several choices as picture cards (each card switches its item on or off).
+	// A picture of the visitor's own (for a frame in the 3D preview): read in the browser and scaled down
+	// to at most 640 px as a JPEG, so it stays small in the saved design.
+	function renderImage(f, v) {
+		var box = h('div', { class: 'agh-image' }), inp = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', id: 'agh-f-' + f.id, class: 'agh-image-input' });
+		if (v) { box.appendChild(h('img', { src: v, alt: '', class: 'agh-image-prev' })); }
+		box.appendChild(h('label', { class: 'agh-btn agh-image-pick', for: 'agh-f-' + f.id }, icon('plus', 'agh-ico-s'), h('span', { text: t(v ? 'image_change' : 'image_pick') })));
+		box.appendChild(inp);
+		if (v) { box.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-ghost', onclick: function () { setValue(f.id, '', true); } }, h('span', { text: t('image_remove') }))); }
+		inp.addEventListener('change', function () {
+			var file = inp.files && inp.files[0];
+			if (!file || !/^image\//.test(file.type)) { return; }
+			var rd = new FileReader();
+			rd.onload = function () {
+				var img = new Image();
+				img.onload = function () {
+					var k = Math.min(1, 640 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+					cv.width = Math.max(1, Math.round(img.width * k)); cv.height = Math.max(1, Math.round(img.height * k));
+					cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+					var url = cv.toDataURL('image/jpeg', 0.82);
+					if (url.length > 390000) { url = cv.toDataURL('image/jpeg', 0.55); }
+					setValue(f.id, url.length > 390000 ? '' : url, true);
+				};
+				img.onerror = function () { toast(t('image_error'), 'warn'); };
+				img.src = rd.result;
+			};
+			rd.readAsDataURL(file);
+		});
+		return box;
+	}
 	function multiCards(f, v) {
 		var box = h('div', { class: 'agh-cards', role: 'group', 'aria-label': f.label }), arr = Array.isArray(v) ? v : [];
 		(f.options || []).forEach(function (o) {
@@ -938,21 +973,21 @@
 	var THUMBS = {};
 	var THUMB_FIELDS = { roof_type: 'mini', levels: 'mini', property_type: 'mini', garage: 'mini', massing: 'mini', footprint: 'mini', window_style: 'mini', facade_main: 'facade', floor_main: 'floor', floor_bedrooms: 'floor', floor_kitchen: 'floor', floor_entry: 'floor', floor_wet: 'floor', garden_style: 'full', time_of_day: 'full' };
 	// Settings a single-item picture depends on (the rest of the configuration does not change it).
-	var ITEM_KEYS = ['interior_style', 'furniture_style', 'furniture_color', 'wall_color', 'floor_main', 'floor_color', 'floor_bedrooms', 'floor_kitchen', 'floor_wet', 'grout_color', 'bath_tiles', 'taps', 'bath_color', 'bath_fixtures', 'fronts', 'fronts_color', 'handles', 'worktop', 'worktop_color', 'sink', 'backsplash', 'appliances', 'vanity_type', 'basin_type', 'toilet_type', 'ceiling', 'ceiling_lights', 'window_frame_color', 'window_frame_material', 'glazing', 'skirting', 'wall_finish', 'curtains'];
+	var ITEM_KEYS = ['interior_style', 'furniture_style', 'furniture_color', 'wall_color', 'floor_main', 'floor_color', 'floor_bedrooms', 'floor_kitchen', 'floor_wet', 'grout_color', 'bath_tiles', 'taps', 'bath_color', 'bath_fixtures', 'fronts', 'fronts_color', 'handles', 'worktop', 'worktop_color', 'sink', 'backsplash', 'appliances', 'vanity_type', 'basin_type', 'toilet_type', 'ceiling', 'ceiling_lights', 'window_frame_color', 'window_frame_material', 'glazing', 'skirting', 'wall_finish', 'curtains', 'car_color', 'curtain_fabric', 'curtain_tone', 'rug_tone', 'window_treatment'];
 	function thumbMode(field) { return THUMB_FIELDS[field] || ((S.fields[field] || {}).visual === 'item' ? 'item' : null); }
 	function cardThumb(el, field, value) {
 		var mode = thumbMode(field);
 		if (!A3 || !mode || lsGet('agh_3d_thumbs', true) === false) { return; }
 		var cfg = clone(S.config);
 		cfg[field] = value;
-		if (mode === 'item') { cfg = {}; ITEM_KEYS.forEach(function (k) { if (S.config[k] !== undefined) { cfg[k] = S.config[k]; } }); cfg._item = { field: field, value: value }; }
+		if (mode === 'item') { cfg = {}; ITEM_KEYS.forEach(function (k) { if (S.config[k] !== undefined) { cfg[k] = S.config[k]; } }); cfg._item = { field: field, value: value }; if (field === 'art_style' && S.config.art_photo) { cfg.art_photo = S.config.art_photo; } }
 		// per-room floors show their material in the same room scene ("same" = the main floor)
 		if (mode === 'floor' && field !== 'floor_main') { cfg.floor_main = value === 'same' ? S.config.floor_main : value; }
 		if (mode === 'mini') { cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; if (field === 'footprint') { cfg.camera = 'elevated'; cfg.property_type = 'detached'; } if (field === 'window_style') { cfg.camera = 'frontal'; } }
 		if (mode === 'facade') { cfg.time_of_day = 'golden'; cfg.weather = 'clear'; cfg.camera = 'three_quarter'; }
 		if (mode === 'floor') { cfg.time_of_day = 'midday'; cfg.camera = 'elevated'; }
 		if (field === 'garden_style') { cfg.garden_features = ['lawn', 'trees', 'paths', 'hedge', 'flowerbeds']; cfg.time_of_day = 'midday'; cfg.weather = 'clear'; cfg.season = 'summer'; cfg.camera = 'elevated'; }
-		var key = mode + '|' + JSON.stringify(cfg);
+		var key = mode + '|' + JSON.stringify(cfg, function (k, x) { return k === 'art_photo' && x ? 'img' + x.length + ':' + x.slice(-40) : x; });
 		el._key = key;
 		var put = function (url) {
 			if (el._key !== key) { return; }
@@ -966,7 +1001,7 @@
 		var alive = function () { return el._key === key && document.body.contains(el); };
 		whenVisible(el, function () {
 			if (!alive()) { return; }
-			A3.thumb(cfg, 360, 240, mode === 'full' ? 'full' : (mode === 'item' ? 'mini' : mode), alive).then(function (url) { if (url) { THUMBS[key] = url; } if (alive()) { put(url); } });
+			A3.thumb(cfg, 300, 200, mode === 'full' ? 'full' : (mode === 'item' ? 'mini' : mode), alive).then(function (url) { if (url) { THUMBS[key] = url; } if (alive()) { put(url); } });
 		});
 	}
 	// Runs fn once the element is (nearly) on screen – pictures of cards nobody looks at are never made.
@@ -1280,7 +1315,7 @@
 		var ch = S.lastChange;
 		if (ch && fresh && S.fields[ch.id]) {
 			var f = S.fields[ch.id], vis = ch.before ? ch.before !== box._aghSk : isVisual(ch.id);
-			var val = f.type === 'toggle' ? (S.config[ch.id] ? t('yes') : t('no')) : (f.options ? optLabel(f, S.config[ch.id]) : (f.type === 'color' ? '' : String(S.config[ch.id] == null ? '' : S.config[ch.id]) + (f.unit ? ' ' + f.unit : '')));
+			var val = f.type === 'toggle' ? (S.config[ch.id] ? t('yes') : t('no')) : (f.options ? optLabel(f, S.config[ch.id]) : (f.type === 'color' || f.type === 'image' ? '' : String(S.config[ch.id] == null ? '' : S.config[ch.id]) + (f.unit ? ' ' + f.unit : '')));
 			box.appendChild(h('div', { class: 'agh-preview-chg' + (vis ? '' : ' is-hidden-param'), role: 'status' },
 				h('b', { text: f.label + (val ? ': ' + val : '') }),
 				vis ? null : h('span', { text: t('sketch_not_visual') })));
@@ -1326,7 +1361,7 @@
 	function roomTypesFor(id) {
 		var f = S.fields[id] || {};
 		var LIV = ['living', 'living_kitchen'], BED = ['master', 'bedroom', 'guest', 'kids'];
-		var MAP = { sofa_type: LIV, armchair_type: LIV, coffee_table: LIV, media_wall: LIV, fireplace: LIV, floor_lamp: LIV, dining_table: ['dining', 'living_kitchen', 'kitchen'], dining_chairs: ['dining', 'living_kitchen', 'kitchen'], pendant_style: ['dining', 'living_kitchen', 'kitchen', 'living'], bed_type: BED, wardrobe_type: BED.concat(['wardrobe']), floor_bedrooms: BED, toilet_type: ['bathroom', 'wc'], stair_type: ['stairs', 'hall', 'corridor'], floor_entry: ['hall', 'corridor'], floor_kitchen: ['kitchen', 'living_kitchen'], floor_wet: ['bathroom', 'wc', 'wellness'] };
+		var MAP = { sofa_type: LIV, armchair_type: LIV, coffee_table: LIV, media_wall: LIV, fireplace: LIV, floor_lamp: LIV, dining_table: ['dining', 'living_kitchen', 'kitchen'], dining_chairs: ['dining', 'living_kitchen', 'kitchen'], pendant_style: ['dining', 'living_kitchen', 'kitchen', 'living'], bed_type: BED, wardrobe_type: BED.concat(['wardrobe']), floor_bedrooms: BED, toilet_type: ['bathroom', 'wc'], stair_type: ['stairs', 'hall', 'corridor'], floor_entry: ['hall', 'corridor'], floor_kitchen: ['kitchen', 'living_kitchen'], floor_wet: ['bathroom', 'wc', 'wellness'], electronics: LIV, art_photo: LIV.concat(BED) };
 		if (MAP[id]) { return MAP[id]; }
 		if (f.category === 'kitchen') { return ['kitchen', 'living_kitchen']; }
 		if (f.category === 'bathroom') { return ['bathroom', 'wellness', 'wc']; }
@@ -1335,6 +1370,7 @@
 	function autoView(id, cat) {
 		if (!A3) { return; }
 		var ct = cat || (S.fields[id] || {}).category;
+		if (id === 'vehicles' || id === 'car_color') { S.view = 'ext'; return; }
 		if (INT_CATS.indexOf(ct) !== -1) {
 			S.view = 'int';
 			var types = id ? roomTypesFor(id) : ({ kitchen: ['kitchen', 'living_kitchen'], bathroom: ['bathroom', 'wc'], furniture: ['living', 'living_kitchen', 'dining', 'master', 'bedroom', 'guest', 'kids'] }[ct] || null);
@@ -1356,12 +1392,25 @@
 			h('button', { type: 'button', 'aria-pressed': S.view !== 'int' ? 'true' : 'false', onclick: function () { setView('ext'); } }, icon('home', 'agh-ico-s'), h('span', { text: t('view_exterior') })),
 			h('button', { type: 'button', 'aria-pressed': S.view === 'int' ? 'true' : 'false', onclick: function () { setView('int'); } }, icon('sofa', 'agh-ico-s'), h('span', { text: t('view_interior') })));
 	}
+	// Room picker of the interior view: one button with the current room (a list opens above it) and
+	// arrows to step through the rooms – it never runs out of the preview, however many rooms there are.
 	function roomChips() {
 		var cur = curRoom(), list = roomList();
 		if (cur && list.every(function (r) { return r.id !== cur.id; })) { list.unshift(cur); }
-		return h('div', { class: 'agh-3d-rooms', role: 'group', 'aria-label': t('view_rooms') }, list.map(function (r) {
-			return h('button', { type: 'button', 'aria-pressed': cur && r.id === cur.id ? 'true' : 'false', onclick: function () { setView('int', r.id); }, text: r.name });
+		var idx = 0; list.forEach(function (r, i) { if (cur && r.id === cur.id) { idx = i; } });
+		var step = function (d) { var n = list[(idx + d + list.length) % list.length]; if (n) { setView('int', n.id); } };
+		var menu = h('div', { class: 'agh-3d-roommenu', role: 'listbox', 'aria-label': t('view_rooms'), hidden: true }, list.map(function (r) {
+			return h('button', { type: 'button', role: 'option', title: r.name, 'aria-selected': cur && r.id === cur.id ? 'true' : 'false', onclick: function () { setView('int', r.id); }, text: r.name });
 		}));
+		var btn = h('button', { type: 'button', class: 'agh-3d-roombtn', title: cur ? cur.name : '', 'aria-haspopup': 'listbox', 'aria-expanded': 'false', onclick: function (e) { menu.hidden = !menu.hidden; e.currentTarget.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true'); } },
+			h('span', { class: 'agh-3d-roomname', text: cur ? cur.name : '' }), icon('chev', 'agh-ico-s'));
+		// Escape closes the open list only (not the designer)
+		var onKey = function (e) { if (e.key === 'Escape' && !menu.hidden) { e.preventDefault(); e.stopPropagation(); menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); btn.focus(); } };
+		return h('div', { class: 'agh-3d-rooms', role: 'group', 'aria-label': t('view_rooms'), onkeydown: onKey },
+			list.length > 1 ? h('button', { type: 'button', class: 'agh-3d-step is-prev', title: t('view_prev_room'), 'aria-label': t('view_prev_room'), onclick: function () { step(-1); } }, icon('chev', 'agh-ico-s')) : null,
+			btn,
+			list.length > 1 ? h('button', { type: 'button', class: 'agh-3d-step is-next', title: t('view_next_room'), 'aria-label': t('view_next_room'), onclick: function () { step(1); } }, icon('chev', 'agh-ico-s')) : null,
+			menu);
 	}
 	function previewCaption(c) {
 		if (S.view === 'int' && A3) {
@@ -2138,7 +2187,7 @@
 			else {
 				el.classList.add('is-wait');
 				var alive = function () { return document.body.contains(el); };
-				whenVisible(el, function () { A3.thumb(cfg, 360, 240, 'mini', alive).then(function (url) { if (url) { THUMBS[key] = url; } if (alive()) { put(url); } }); });
+				whenVisible(el, function () { A3.thumb(cfg, 300, 200, 'mini', alive).then(function (url) { if (url) { THUMBS[key] = url; } if (alive()) { put(url); } }); });
 			}
 		} else { el.innerHTML = svg(); addPhoto(); }
 		return el;

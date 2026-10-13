@@ -598,6 +598,7 @@
 		var H = function (r, m) { if (r) { hard.push([r.x0 - m, r.y0 - m, r.x1 + m, r.y1 + m]); } };
 		vols.forEach(function (v) { var e = (v.ext || 0) + 0.35; hard.push([v.x0 - e, v.y0 - e, v.x1 + e, v.y1 + e]); if (v.porch || (v.main && st.porch)) { hard.push([v.x0, v.y1, v.x1, v.y1 + 2.6]); } if (v.veranda) { hard.push([v.x0, v.y1, v.x1, v.y1 + 1.8]); } if (v.frame) { hard.push([v.x0 - 0.5, v.y1, v.x1 + 0.5, v.y1 + 1.8]); } });
 		H(gar, 0.3); H(out.drive, 0.15); H(ter, 0.25); H(out.path, 0.15);
+		vols.forEach(function (v) { balconies(c, v, vplan(pl, v), vols).forEach(function (b) { if (b.type !== 'french') { H(balcRect(v, b), 0.5); } }); });
 		hard.push([doorMid - 1.3, ent.y, doorMid + 1.3, ent.y + 1.6]);
 		if ((c.ac_units || 'none') !== 'none' || has(c.energy, 'heat_pump')) { hard.push([mainV.x1, D * 0.35 - 0.4, mainV.x1 + 1.2, D * 0.35 + 1.5]); }
 		if (has(gf, 'pool')) {
@@ -680,19 +681,75 @@
 		var kinds = { natural: ['deciduous', 'deciduous', 'conifer', 'multistem', 'shrub'], formal: ['topiary', 'topiary', 'cypress', 'deciduous', 'topiary'], minimal: ['multistem', 'grass', 'grass', 'multistem', 'grass'], cottage: ['fruit', 'deciduous', 'shrub', 'fruit', 'shrub'], mediterranean: ['olive', 'cypress', 'cypress', 'olive', 'lavender'] }[gs] || ['deciduous'];
 		if (gs === 'mediterranean') { [[A.x0 + 0.9, my + 0.8], [A.x0 + 2.3, my + 0.8]].forEach(function (q, i) { plant('cypress', q[0], q[1], 4.5, 7 + i, 1.8); }); }
 		if (gs === 'formal') { [[A.x0 + 1.1, my + 1], [A.x1 - 1.1, my + 1]].forEach(function (q, i) { plant('cypress', q[0], q[1], 3.6, 9 + i, 1.8); }); }
+		var dens = c.garden_density || 'normal', tt = (Array.isArray(c.tree_types) ? c.tree_types : []).filter(function (k) { return !!TREE_SIZE[k]; });
 		if (has(gf, 'trees') || !c.garden_features) {
-			[[A.x0 + 1.9, A.y0 + 2.2, 7.5], [A.x1 - 2.2, A.y0 + 2.7, 8], [A.x0 + 1.3, A.y1 - 1.9, 6], [A.x1 - 1.5, A.y1 - 1.3, 5.5], [doorMid - 2.2, my + 1.4, 1.1]].forEach(function (sp, i) {
-				var k = kinds[i % kinds.length], sz = k === 'grass' || k === 'lavender' || k === 'shrub' || k === 'topiary' ? (i === 4 ? 1.0 : 1.6) : sp[2];
-				plant(k, sp[0], sp[1], sz, 11 + i * 7, i === 4 ? 1.2 : 3);
+			var spots = [[A.x0 + 1.9, A.y0 + 2.2, 7.5], [A.x1 - 2.2, A.y0 + 2.7, 8], [A.x0 + 1.3, A.y1 - 1.9, 6], [A.x1 - 1.5, A.y1 - 1.3, 5.5], [doorMid - 2.2, my + 1.4, 1.1]];
+			if (dens === 'sparse') { spots = spots.slice(0, 2).concat([spots[4]]); }
+			if (dens === 'lush') {
+				// more trees along the back and the sides of the plot, shrubs at the house corners
+				for (var bx2 = A.x0 + 4.6; bx2 < A.x1 - 3.5; bx2 += 3.6) { spots.push([bx2, A.y0 + 1.6 + ((Math.round(bx2) % 2) ? 0.9 : 0), 6.5]); }
+				for (var sy2 = A.y0 + 5.5; sy2 < A.y1 - 4; sy2 += 3.4) { spots.push([A.x0 + 1.1, sy2, 5.5], [A.x1 - 1.1, sy2 + 1.2, 6]); }
+				[[mainV.x0 - 0.9, my + 0.9], [mainV.x1 + 0.9, my + 0.9], [mainV.x0 - 0.9, mainV.y0 - 0.9], [mainV.x1 + 0.9, mainV.y0 - 0.9], [doorMid + 2.4, my + 1.3]].forEach(function (q) { spots.push([q[0], q[1], 1.1]); });
+			}
+			var ti = 0;
+			spots.forEach(function (sp, i) {
+				var small = sp[2] < 2, k = small ? (i === 4 || dens !== 'lush' ? kinds[4] : (i % 2 ? 'shrub' : rowKindOf(gs))) : (tt.length ? tt[ti++ % tt.length] : kinds[i < 4 ? i : (i % 4)]);
+				var sz = k === 'grass' || k === 'lavender' || k === 'shrub' || k === 'topiary' ? (small ? 1.0 : 1.6) : sp[2] * (tt.length ? TREE_SIZE[k] || 1 : 1);
+				plant(k, sp[0], sp[1], sz, 11 + i * 7, small ? 1.2 : 3);
 			});
 		}
-		var rowKind = { formal: 'topiary', mediterranean: 'lavender', cottage: 'shrub', minimal: 'grass', natural: 'shrub' }[gs] || 'shrub';
+		var rowKind = rowKindOf(gs);
 		if (gs !== 'natural' || has(gf, 'flowerbeds')) {
 			var step = gs === 'formal' ? 1.3 : (gs === 'minimal' ? 1.8 : 0.95), ri = 0, rsz = gs === 'formal' ? 1.15 : (gs === 'minimal' ? 1.2 : 0.95);
 			for (var py = ent.y + 1.6; py < A.y1 - 0.6; py += step) {
 				[-1.15, 1.15].forEach(function (dx) { ri++; if (gs === 'natural' && (ri * 7919) % 10 < 4) { return; } plant(rowKind, doorMid + dx, py, rsz, 101 + ri, 0); });
 			}
 		}
+		// vehicles: under the carport, then on the driveway (side by side, nose to the street);
+		// motorbikes and bicycles share a parking space or stand beside the drive
+		out.vehicles = [];
+		var vl = vehicleList(c), cars = vl.filter(function (k) { return k !== 'motorcycle' && k !== 'bicycle'; }), two = vl.filter(function (k) { return k === 'motorcycle' || k === 'bicycle'; });
+		var cells = [], dr = out.drive;
+		function slot(r) {
+			var w = r.x1 - r.x0, l = r.y1 - r.y0, lanes = Math.floor(w / 2.45), rows = Math.floor(l / 5.7);
+			if (lanes < 1 && w >= 2.1) { lanes = 1; } if (rows < 1 && l >= 4.3) { rows = 1; }
+			for (var ro = 0; ro < rows; ro++) { for (var la = lanes - 1; la >= 0; la--) { cells.push({ x: r.x0 + (la + 0.5) * w / lanes, y: r.y1 - (ro + 0.5) * l / rows, w: w / lanes, l: l / rows }); } }
+		}
+		if (gar && c.garage === 'carport') { slot({ x0: gar.x0 + 0.25, x1: gar.x1 - 0.25, y0: gar.y0 + 0.3, y1: gar.y1 - 0.05 }); cells.forEach(function (q) { q.port = true; }); }
+		slot({ x0: dr.x0 + 0.15, x1: dr.x1 - 0.15, y0: dr.y0 + 0.35, y1: dr.y1 - 0.4 });
+		cars.forEach(function (k) {
+			var i = cells.findIndex(function (q) { return q.l >= VEH[k][1] + 0.1 && q.w >= VEH[k][0] + 0.2; });
+			if (i < 0) { return; }
+			var q = cells.splice(i, 1)[0];
+			out.vehicles.push({ type: k, x: q.x, y: q.y, rot: 0, port: !!q.port });
+			if (k === 'electric' && !has(c.energy, 'ev_charger')) { out.charger = { x: q.x - VEH[k][0] / 2 - 0.35, y: q.y + VEH[k][1] / 2 - 0.4 }; }
+		});
+		two.forEach(function (k, i) {
+			var q = cells[0];
+			if (q && q.l >= 2.3) { out.vehicles.push({ type: k, x: q.x + (q.used ? 0.55 : -0.55), y: q.y, rot: 0, port: !!q.port }); if (q.used) { cells.shift(); } else { q.used = true; } return; }
+			var p = spot((gar ? gar.x1 : dr.x1) + 0.9 + i * 0.9, (gar ? gar.y1 : dr.y0) - 1.4, 1.1, 2.4);
+			if (p) { out.vehicles.push({ type: k, x: p[0], y: p[1], rot: 0 }); placed.push({ x: p[0], y: p[1], r: 1.1 }); }
+		});
+		// people: on the terrace if there is one (or in front of the entrance), the children on the lawn
+		out.people = []; out.pets = []; out.kennel = null;
+		var who = PEOPLE[c.people] || [], meet = ter ? { x: Math.min(ter.x1 - 1, ter.x0 + 1.6), y: (ter.y0 + ter.y1) / 2 + 0.3 } : { x: doorMid + 1.9, y: ent.y + 2.6 };
+		var adults = who.filter(function (w) { return w[0] !== 'child'; });
+		adults.forEach(function (w, i) {
+			var a = (i + 0.5) / adults.length * Math.PI * 2 + 0.6, px = meet.x + Math.cos(a) * 0.62, py = meet.y + Math.sin(a) * 0.5;
+			out.people.push({ kind: w[0], pose: w[1], x: px, y: py, rot: Math.atan2(meet.x - px, meet.y - py), seed: 3 + i * 5 });
+		});
+		who.filter(function (w) { return w[0] === 'child'; }).forEach(function (w, i) {
+			var p = spot(A.x0 + 3.5 + i * 1.4, Math.min(A.y1 - 1, my + 4.2), 0.4, 4);
+			if (p) { out.people.push({ kind: 'child', pose: w[1], x: p[0], y: p[1], rot: 0.5 - i, seed: 20 + i }); placed.push({ x: p[0], y: p[1], r: 0.4 }); }
+		});
+		// pets on the lawn near the people; the big dog gets a kennel by the house
+		(Array.isArray(c.pets) ? c.pets : []).forEach(function (k, i) {
+			var p = k === 'cat' && ter ? [Math.min(ter.x1 - 0.4, meet.x + 1.4), ter.y1 - 0.5] : (spot(meet.x + 1.6 + i * 1.1, Math.min(A.y1 - 1, meet.y + 2.0), 0.5, 4) || spot(doorMid - 2.5 - i, Math.min(A.y1 - 1, my + 3), 0.5, 6) || spot((A.x0 + A.x1) / 2, (A.y0 + A.y1) / 2, 0.5, 8));
+			if (!p) { return; }
+			out.pets.push({ kind: k, x: p[0], y: p[1], rot: 2.2 - i * 1.3, pose: k === 'cat' ? 'sit' : (i % 2 ? 'lie' : 'stand'), seed: 7 + i, z: k === 'cat' && ter ? 0.18 : 0 });
+			if (!(k === 'cat' && ter)) { placed.push({ x: p[0], y: p[1], r: 0.5 }); }
+			if (k === 'dog_large' && !out.kennel) { var kp = spot(mainV.x0 - 1.4, mainV.y0 + 2.2, 0.7, 3); if (kp) { out.kennel = { x: kp[0], y: kp[1] }; placed.push({ x: kp[0], y: kp[1], r: 0.7 }); } }
+		});
 		if (has(gf, 'garden_lights')) {
 			[[doorMid - 1.2, edge - 1.5], [doorMid + 1.2, edge - 3.5], [A.x0 + 2.7, my + 2]].forEach(function (q) { var p = spot(q[0], q[1], 0.2, 1.2); if (p) { out.lights.push(p); placed.push({ x: p[0], y: p[1], r: 0.2 }); } });
 		}
@@ -967,6 +1024,7 @@
 		var reserved = [], blocked = fp ? fp.block.map(function (b) { return [b[0] - 0.3, b[1] + 0.3]; }) : [];
 		var doorW = 0, doorH = 0;
 		var doorX = null, tdoorX = null, tdoorW = 0, entrance = !!(fp && fp.door);
+		var BL = balconies(c, v, pl, sc.vols);
 		if (fp && fp.door) { doorX = fp.door.x; doorW = fp.door.w; doorH = fp.door.h; reserved.push([doorX - 0.5, doorX + doorW + 0.5]); }
 		if (fp && fp.tdoor) { tdoorX = fp.tdoor.x; tdoorW = fp.tdoor.w; reserved.push([tdoorX - 0.4, tdoorX + tdoorW + 0.4]); }
 		for (var fl = 0; fl < pl.floors; fl++) {
@@ -978,14 +1036,29 @@
 			if (styleBand) { w = Math.min(len - 1.2, 4.4); h = 1.0; sill = 1.0; }
 			var n = Math.max(1, Math.floor((len - 0.8) / (w + ws.gap)));
 			if (F.name === 'right') { n = Math.max(1, Math.min(n, Math.floor((len - 1) / (w + 1.4)))); }
-			var step = len / n;
+			var step = len / n, row = [];
 			for (var i = 0; i < n; i++) {
 				var x = step * i + (step - w) / 2;
 				if (fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
 				if (blocked.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
-				s += windowSvg(sc, x, z0 + sill, w, h, { shutters: shut, blindsDown: (i + fl) % 3 === 1 });
+				row.push({ x: x, w: w, i: i });
+			}
+			// behind a balcony the windows become doors
+			if (fl > 0 && BL.length) { balcMark(BL, F.name, fl, row); }
+			for (var ri = 0; ri < row.length; ri++) {
+				var o = row[ri];
+				if (o.door) {
+					s += windowSvg(sc, o.x, z0 + 0.02, o.w, Math.min(2.3, pl.FH - 0.45), {});
+					if (o.french) {
+						var fx0 = o.x - 0.08, fx1 = o.x + o.w + 0.08, bars = '';
+						for (var fb = fx0 + 0.1; fb < fx1 - 0.05; fb += 0.11) { bars += 'M' + f(fb) + ' ' + f(z0 + 0.1) + 'V' + f(z0 + 1.0); }
+						s += '<path d="M' + f(fx0) + ' ' + f(z0 + 1.0) + 'H' + f(fx1) + 'M' + f(fx0) + ' ' + f(z0 + 0.1) + 'H' + f(fx1) + bars + '" stroke="#2F3235" stroke-width="0.045" fill="none"/>';
+					}
+					continue;
+				}
+				s += windowSvg(sc, o.x, z0 + sill, w, h, { shutters: shut, blindsDown: (o.i + fl) % 3 === 1 });
 				if (has(c.shading, 'louvres') && fl > 0) {
-					for (var lv = 0; lv <= 4; lv++) { s += '<rect x="' + f(x - 0.1 + lv * (w + 0.2) / 4 - 0.03) + '" y="' + f(z0 + sill - 0.2) + '" width="0.06" height="' + f(h + 0.4) + '" fill="#9DA1A4"/>'; }
+					for (var lv = 0; lv <= 4; lv++) { s += '<rect x="' + f(o.x - 0.1 + lv * (w + 0.2) / 4 - 0.03) + '" y="' + f(z0 + sill - 0.2) + '" width="0.06" height="' + f(h + 0.4) + '" fill="#9DA1A4"/>'; }
 				}
 			}
 			if (c.exterior_lighting && fl === 0 && entrance) {
@@ -1242,10 +1315,178 @@
 		out.winS = clamp(slopeL * 0.45 - 0.6, 0.8, Math.max(0.8, slopeL - 1.8));
 		return out;
 	}
+	/* ------------------------------------------------------------------ balconies */
+	// Railing style: glass / metal / wood / solid parapet, or 'french' (a railing in front of a door, no slab).
+	function balconyType(c) {
+		var t = c.balcony_type || 'auto';
+		if (t === 'auto') { t = c.arch_style === 'alpine' || c.arch_style === 'rustic' || c.arch_style === 'american_farm' ? 'wood' : (c.arch_style === 'classic_burgher' || c.arch_style === 'mediterranean' || c.arch_style === 'industrial' ? 'metal' : 'glass'); }
+		return t;
+	}
+	// Balconies of a volume on its upper floors, in the wall frames shared with the 3D view
+	// (front: u from the left corner, right: from the front corner, back: from the right corner, left: from the back corner):
+	// [{ face, u0, u1, d, z, fl, type, endA, endB }]. A french balcony spans the whole face (its windows become doors).
+	function balconies(c, v, pl, vols) {
+		var out = [];
+		if (!v.main || !c.balcony || pl.floors < 2 || (vols || []).some(function (q) { return q.balc; }) || roundR(c, v) > 0) { return out; }
+		var t = balconyType(c), size = c.balcony_size || 'medium', place = c.balcony_place || 'front';
+		var d = t === 'french' ? 0.14 : ({ small: 1.2, medium: 1.5, large: 1.8 }[size] || 1.5);
+		var W = v.x1 - v.x0, D = v.y1 - v.y0;
+		var faces = place === 'both' ? ['front', 'back'] : (place === 'wrap' ? ['front', 'right'] : (place === 'side' ? ['right'] : [place === 'back' ? 'back' : 'front']));
+		for (var fl = 1; fl < pl.floors; fl++) {
+			var z = pl.plinth + fl * pl.FH;
+			if (z < (v.z0 || 0) - 0.05 || z + 1.2 > v.h) { continue; }
+			faces.forEach(function (F) {
+				var len = F === 'front' || F === 'back' ? W : D, a;
+				if (t === 'french') { a = [0, len]; }
+				else if (place === 'wrap') { a = F === 'front' ? [size === 'large' ? 0.5 : (size === 'small' ? len - 2.6 : len * 0.5), len] : [-d, Math.min(len - 0.5, size === 'large' ? len : (size === 'small' ? 2.2 : 3.6))]; }
+				else if (size === 'large') { a = [0.5, len - 0.5]; }
+				else if (size === 'small') { a = [clamp(len * 0.7 - 1.2, 0.4, Math.max(0.4, len - 2.8)), 0]; a[1] = Math.min(len - 0.4, a[0] + 2.4); }
+				else { a = [len * 0.5, Math.min(len - 0.5, len * 0.5 + 4.5)]; }
+				if (a[1] - a[0] < 1) { return; }
+				out.push({ face: F, u0: a[0], u1: a[1], d: d, z: z, fl: fl, type: t, endA: true, endB: !(place === 'wrap' && F === 'front' && t !== 'french') });
+			});
+		}
+		return out;
+	}
+	// Windows of one floor of a face ([{ x, w }]) behind a balcony become doors: those mostly over the slab,
+	// or the one that overlaps it most; with no window over it, a door is added in its middle.
+	function balcMark(BL, face, fl, wins) {
+		BL.forEach(function (b) {
+			if (b.face !== face || b.fl !== fl) { return; }
+			var a = Math.max(0, b.u0), e = b.u1, hit = 0, best = null, bo = 0;
+			wins.forEach(function (o) {
+				var ov = Math.min(o.x + o.w, e) - Math.max(o.x, a);
+				if (b.type === 'french' || ov >= o.w * 0.6) { o.door = true; o.french = b.type === 'french'; hit++; }
+				else if (ov > bo) { bo = ov; best = o; }
+			});
+			if (!hit && best && bo >= best.w * 0.3) { best.door = true; hit++; }
+			if (!hit && b.type !== 'french') { wins.push({ x: (a + e) / 2 - 0.5, w: 1.0, door: true, add: true }); }
+		});
+		return wins;
+	}
+
+	// Plan rectangle of a balcony slab.
+	function balcRect(v, b) {
+		if (b.face === 'front') { return { x0: v.x0 + b.u0, x1: v.x0 + b.u1, y0: v.y1, y1: v.y1 + b.d }; }
+		if (b.face === 'back') { return { x0: v.x1 - b.u1, x1: v.x1 - b.u0, y0: v.y0 - b.d, y1: v.y0 }; }
+		if (b.face === 'right') { return { x0: v.x1, x1: v.x1 + b.d, y0: v.y1 - b.u1, y1: v.y1 - b.u0 }; }
+		return { x0: v.x0 - b.d, x1: v.x0, y0: v.y0 + b.u0, y1: v.y0 + b.u1 };
+	}
+
+	/* ------------------------------------------------------------------ vehicles, people, pets */
+	// Footprint (width, length) of the vehicles; cars are driven in forwards (nose towards the house).
+	var VEH = { sedan: [1.85, 4.7], hatchback: [1.8, 4.1], suv: [1.95, 4.75], pickup: [1.95, 5.4], van: [2.0, 5.1], sports: [1.95, 4.6], electric: [1.9, 4.75], motorcycle: [0.8, 2.15], bicycle: [0.6, 1.75] };
+	function vehicleList(c) { return (c.vehicles === undefined || c.vehicles === null ? ['sedan'] : (Array.isArray(c.vehicles) ? c.vehicles : [])).filter(function (k) { return !!VEH[k]; }); }
+	var TREE_SIZE = { deciduous: 1, birch: 1.1, maple: 0.5, fruit: 0.75, olive: 0.7, palm: 0.85, conifer: 1, cypress: 0.75, multistem: 0.8 };
+	function rowKindOf(gs) { return { formal: 'topiary', mediterranean: 'lavender', cottage: 'shrub', minimal: 'grass', natural: 'shrub' }[gs] || 'shrub'; }
+	var PEOPLE = { couple: [['man', 'stand'], ['woman', 'stand']], family: [['man', 'stand'], ['woman', 'walk'], ['child', 'walk'], ['child', 'stand']], guests: [['man', 'stand'], ['woman', 'stand'], ['man', 'walk'], ['woman', 'stand'], ['woman', 'walk']] };
+
+	// Which roof planes carry the solar panels: 'front' / 'back' / 'both' long planes, or 'all' planes (hip ends
+	// and the other roofs too). 'auto': the garden side, unless that faces north.
+	function solarPlace(c) { var p = c.solar_place || 'auto'; return p === 'auto' ? (c.orientation === 'north' ? 'back' : 'front') : p; }
+	// Solar modules (1.1 × 1.73 m, in rows) laid out on the roof planes of a volume. Each plane keeps
+	// margins to the eave, the ridge, the verges and the hips, so no module hangs over an edge, and the
+	// modules stay clear of the chimney, the dormers, the roof windows and the other volumes.
+	// Pitched plane: { o, ux, uy, n, panels: [[u, s]] } – o on the wall line at eave height, u along the
+	// eave, s up the slope. Flat roof: { flat: true, panels: [[x, y]] } – back left corner of a module
+	// (1.7 m wide, 0.94 m deep in plan, tilted up towards the back).
+	function solarFaces(c, v, pl, type, vols) {
+		var out = [], place = solarPlace(c), cov = c.solar_coverage || 'medium';
+		if (type === 'saw' || v.glass || v.terraceRoof || roundR(c, v) > 0) { return out; }
+		if (!v.items && (place !== 'all' || v.x1 - v.x0 < 3 || v.y1 - v.y0 < 3)) { return out; }
+		var W = v.x1 - v.x0, D = v.y1 - v.y0, excl = [];
+		(vols || []).forEach(function (q) { if (q !== v) { excl.push([q.x0 - 0.6, q.y0 - 0.6, q.x1 + 0.6, q.y1 + 0.6]); } });
+		if (v.items && c.chimney) { var cs = chimneySpec(c), chx = v.x0 + W * 0.7, chy = (v.y0 + v.y1) / 2 + 0.3; excl.push([chx - 0.3, chy - 0.3, chx + cs.w + 0.3, chy + cs.d + 0.3]); }
+		function clear(xs, ys) {
+			var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+			return !excl.some(function (r) { return x0 < r[2] - 1e-6 && x1 > r[0] + 1e-6 && y0 < r[3] - 1e-6 && y1 > r[1] + 1e-6; });
+		}
+		// the central `want` of n columns (same parity, so the field stays centred)
+		function keep(n, want) { var k = Math.min(n, want); if ((n - k) % 2) { k = Math.min(n, k + 1); } return [(n - k) / 2, (n - k) / 2 + k]; }
+		function cols(n) { return cov === 'full' ? n : Math.max(2, Math.ceil(n * (cov === 'small' ? 0.45 : 0.75))); }
+		var pan = [], r, k;
+		if (type === 'flat') {
+			var nx = Math.floor((W - 1.6 + 0.1) / 1.8), ny = Math.floor((D - 1.6 - 0.94) / 2.0) + 1;
+			if (nx < 1 || ny < 1) { return out; }
+			var kc = keep(nx, cols(nx)), kr = cov === 'small' ? 1 : (cov === 'full' ? ny : Math.max(1, Math.ceil(ny * 0.6)));
+			var bx = v.x0 + (W - (nx * 1.8 - 0.1)) / 2, by = v.y0 + (D - ((kr - 1) * 2.0 + 0.94)) / 2;
+			for (r = 0; r < kr; r++) { for (k = kc[0]; k < kc[1]; k++) { var px = bx + k * 1.8, py = by + r * 2.0; if (clear([px, px + 1.7], [py, py + 0.94])) { pan.push([px, py]); } } }
+			if (pan.length) { out.push({ flat: true, panels: pan }); }
+			return out;
+		}
+		var alongX = v.ridge !== 'y';
+		var A0 = alongX ? v.x0 : v.y0, A1 = alongX ? v.x1 : v.y1, B0 = alongX ? v.y0 : v.x0, B1 = alongX ? v.y1 : v.x1;
+		var Lr = A1 - A0, S = B1 - B0, tp = Math.tan(pl.pitch * D2R);
+		var pyr = type === 'pyramid' || (type === 'hip' && Lr <= S), hip = type === 'hip' && !pyr, shed = type === 'shed';
+		var rise = shed ? S * tp : (pyr ? Math.min(Lr, S) / 2 * tp : S / 2 * tp), bh = type === 'half_hip' ? 0.21 * S : 0;
+		function xy(a, b) { return alongX ? [a, b] : [b, a]; }
+		// inset of a plane's sides at plan depth p from its eave (hips and the half-hip corners)
+		var longIns = hip ? function (p) { return p; } : (pyr ? function (p) { return p * Lr / S; } : (bh ? function (p) { return Math.max(0, p - (S / 2 - bh)); } : function () { return 0; }));
+		var endIns = pyr ? function (p) { return p * S / Lr; } : function (p) { return p; };
+		var F = [{ id: 'b1', e0: [A0, B1], d: [1, 0], n: [0, -1], E: Lr, P: shed ? S : S / 2, ins: longIns }];
+		if (!shed) { F.push({ id: 'b0', e0: [A1, B0], d: [-1, 0], n: [0, 1], E: Lr, P: S / 2, ins: longIns }); }
+		if (hip || pyr) {
+			F.push({ id: 'a1', e0: [A1, B1], d: [0, -1], n: [-1, 0], E: S, P: pyr ? Lr / 2 : S / 2, ins: endIns });
+			F.push({ id: 'a0', e0: [A0, B0], d: [0, 1], n: [1, 0], E: S, P: pyr ? Lr / 2 : S / 2, ins: endIns });
+		}
+		// ridge along y: the long planes face right / left, a hip end faces the front
+		var want = place === 'all' || !v.items ? null : (place === 'both' ? ['b1', 'b0'] : (place === 'back' && !shed ? ['b0', alongX ? '' : 'a0'] : ['b1', alongX ? '' : 'a1']));
+		var lay = v.items && alongX ? roofLayout(c, v, pl, (shed ? D : D / 2) / Math.cos(pl.pitch * D2R), type === 'hip' || type === 'pyramid' ? D / 2 : 0, false) : null;
+		F.forEach(function (fc) {
+			if (want && want.indexOf(fc.id) === -1) { return; }
+			var Lf = Math.sqrt(fc.P * fc.P + rise * rise), cosA = fc.P / Lf, sinA = rise / Lf;
+			var nR = Math.floor((Lf - 0.45 - 0.35 + 0.02) / 1.75);
+			if (nR < 1) { return; }
+			var useR = cov === 'small' ? 1 : (cov === 'full' ? nR : Math.max(1, Math.ceil(nR * 0.6)));
+			var s0 = hip || pyr || useR >= nR ? 0.45 : 0.45 + (Lf - 0.8 - useR * 1.75) / 2;
+			function span(s) { var i = fc.ins(Math.min(fc.P, s * cosA)); return [i + 0.3, fc.E - i - 0.3]; }
+			var r0 = span(s0 + 1.73), n0 = Math.floor((r0[1] - r0[0] + 0.02) / 1.12);
+			if (n0 < 1) { return; }
+			function ok(kk, s) {
+				var u = fc.E / 2 + (kk - (n0 - 1) / 2) * 1.12 - 0.55, rg = span(s + 1.73);
+				if (u < rg[0] - 1e-6 || u + 1.1 > rg[1] + 1e-6) { return null; }
+				if (lay && fc.id === 'b1' && (lay.dorm.some(function (dx) { return u < dx + 2.3 && u + 1.1 > dx - 0.5; }) ||
+					lay.wins.some(function (wx) { return u < wx + 1.03 && u + 1.1 > wx - 0.25 && s < lay.winS + 1.5 && s + 1.73 > lay.winS - 0.3; }))) { return null; }
+				var xs = [], ys = [];
+				[[u, s], [u + 1.1, s], [u + 1.1, s + 1.73], [u, s + 1.73]].forEach(function (q) { var p2 = xy(fc.e0[0] + fc.d[0] * q[0] + fc.n[0] * q[1] * cosA, fc.e0[1] + fc.d[1] * q[0] + fc.n[1] * q[1] * cosA); xs.push(p2[0]); ys.push(p2[1]); });
+				return clear(xs, ys) ? u : null;
+			}
+			// columns: all of them for a full field, else the longest free run of the first row, trimmed to size
+			var c0 = 0, c1 = n0;
+			if (cov !== 'full') {
+				var best = null, run = null;
+				for (var kq = 0; kq <= n0; kq++) {
+					if (kq < n0 && ok(kq, s0) !== null) { run = run || [kq, kq]; run[1] = kq + 1; continue; }
+					if (run && (!best || run[1] - run[0] > best[1] - best[0] || (run[1] - run[0] === best[1] - best[0] && Math.abs(run[0] + run[1] - n0) < Math.abs(best[0] + best[1] - n0)))) { best = run; }
+					run = null;
+				}
+				if (!best) { return; }
+				var kc2 = keep(best[1] - best[0], cols(n0));
+				c0 = best[0] + kc2[0]; c1 = best[0] + kc2[1];
+			}
+			var list = [];
+			for (var rr = 0; rr < useR; rr++) {
+				var s = s0 + rr * 1.75;
+				for (var kk = c0; kk < c1; kk++) { var u = ok(kk, s); if (u !== null) { list.push([u, s]); } }
+			}
+			if (!list.length) { return; }
+			var o2 = xy(fc.e0[0], fc.e0[1]), ux = xy(fc.d[0], fc.d[1]), nn = xy(fc.n[0], fc.n[1]);
+			out.push({ id: fc.id, o: [o2[0], o2[1], v.h], ux: [ux[0], ux[1], 0], uy: [nn[0] * cosA, nn[1] * cosA, sinA], n: [-nn[0] * sinA, -nn[1] * sinA, cosA], panels: list, pw: 1.1, ph: 1.73 });
+		});
+		return out;
+	}
+	// One module's drawing (local: 1.1 × 1.73 m, or 1.7 × 1.1 m on a flat roof).
+	function panelSvg(ss, w, h) {
+		var s = '';
+		if (ss.tiles) { for (var t = 0.35; t < h - 0.01; t += 0.35) { s += '<path d="M0 ' + f(t) + 'H' + f(w) + '" stroke="' + ss.line + '" stroke-width="0.02"/>'; } }
+		else { s += '<path d="M0 ' + f(h / 3) + 'H' + f(w) + 'M0 ' + f(h * 2 / 3) + 'H' + f(w) + 'M' + f(w / 2) + ' 0V' + f(h) + '" stroke="' + ss.line + '" stroke-width="0.025"/>'; }
+		if (ss.frame) { s += '<rect width="' + f(w) + '" height="' + f(h) + '" fill="none" stroke="' + ss.frame + '" stroke-width="0.05"/>'; }
+		return s + '<polygon points="0,0 ' + f(w * 0.45) + ',0 0,' + f(h * 0.5) + '" fill="#FFFFFF" opacity="0.06"/>';
+	}
 	// Roof-mounted items: solar panels, roof windows, dormers (front plane of a ridge-along-x roof), chimney.
 	function roofItems(sc, v, pl, roof, type) {
 		var c = sc.c, items = [];
-		if (!v.items || type === 'saw') { return items; }
+		if (type === 'saw') { return items; }
 		var solar = c.roof_solar || has(c.energy, 'solar') || !!styleOf(c).pv;
 		var W = v.x1 - v.x0, D = v.y1 - v.y0;
 		function chimneyBox(zBase) {
@@ -1257,18 +1498,26 @@
 			var tpz = sc.plane([cx - 0.06, cy + cd + 0.06, zt], [1, 0, 0], [0, -1, 0], [[0, 0], [cw + 0.12, 0], [cw + 0.12, cd + 0.12], [0, cd + 0.12]], cs.cap, '', { noShade: true });
 			[fr, rs, tpz].forEach(function (r) { if (r) { r.depth += 50; items.push(r); } });
 		}
-		if (roof.flatTop) {
-			if (solar) {
-				var n = Math.max(1, Math.min(6, Math.floor((W - 1.2) / 2.1)));
-				for (var i = 0; i < n; i++) {
-					var ss = solarSpec(c), r = sc.plane([v.x0 + 0.8 + i * 2.1, v.y0 + 1 + D * 0.3, roof.flatTop + (ss.flush ? 0.02 : 0.15)], [1, 0, 0], norm([0, -0.85, 0.5]), [[0, 0], [1.7, 0], [1.7, 1.1], [0, 1.1]], ss.cell, '<path d="M0.57 0v1.1M1.13 0v1.1M0 0.55h1.7" stroke="' + ss.line + '" stroke-width="0.03"/>');
+		// solar modules on every plane that faces the camera
+		function solarDraw() {
+			if (!solar) { return; }
+			var ss = solarSpec(c);
+			solarFaces(c, v, pl, type, sc.vols).forEach(function (F) {
+				F.panels.forEach(function (q) {
+					var r = F.flat ? sc.plane([q[0], q[1] + 0.94, roof.flatTop + (ss.flush ? 0.02 : 0.15)], [1, 0, 0], norm([0, -0.85, 0.5]), [[0, 0], [1.7, 0], [1.7, 1.1], [0, 1.1]], ss.cell, panelSvg(ss, 1.7, 1.1))
+						: sc.plane(add(add(add(F.o, mul(F.ux, q[0])), mul(F.uy, q[1])), mul(F.n, ss.flush ? 0.04 : 0.1)), F.ux, F.uy, [[0, 0], [F.pw, 0], [F.pw, F.ph], [0, F.ph]], ss.cell, panelSvg(ss, F.pw, F.ph), { noShade: true, sw: 0.4 });
 					if (r) { r.depth += 40; items.push(r); }
-				}
-			}
+				});
+			});
+		}
+		if (!v.items) { solarDraw(); return items; }
+		if (roof.flatTop) {
+			solarDraw();
 			if (c.chimney) { chimneyBox(function () { return roof.flatTop; }); }
 			return items;
 		}
 		if (v.ridge === 'y') {
+			solarDraw();
 			if (c.chimney) { chimneyBox(function () { return v.h; }); }
 			return items;
 		}
@@ -1281,14 +1530,8 @@
 			if (r) { r.depth += 40; items.push(r); }
 		}
 		var hipIn = type === 'hip' || type === 'pyramid' ? D / 2 : 0;
-		var lay = roofLayout(c, v, pl, slopeL, hipIn, solar);
-		if (lay.solar) {
-			var ss2 = solarSpec(c), L2 = lay.solar, inner = '';
-			for (var a = 1; a < L2.cols; a++) { inner += '<path d="M' + f(a * 1.12) + ' 0V' + f(L2.rows * 1.75) + '" stroke="' + ss2.line + '" stroke-width="0.04"/>'; }
-			for (var b = 1; b < L2.rows; b++) { inner += '<path d="M0 ' + f(b * 1.75) + 'H' + f(L2.pw) + '" stroke="' + ss2.line + '" stroke-width="0.04"/>'; }
-			if (ss2.tiles) { for (var tb = 1; tb < L2.rows * 5; tb++) { inner += '<path d="M0 ' + f(tb * 0.35) + 'H' + f(L2.pw) + '" stroke="' + ss2.line + '" stroke-width="0.02"/>'; } }
-			onRoof(L2.u0, L2.s0, L2.pw, L2.rows * 1.75, ss2.cell, inner + (ss2.frame ? '<rect width="' + f(L2.pw) + '" height="' + f(L2.rows * 1.75) + '" fill="none" stroke="' + ss2.frame + '" stroke-width="0.07"/>' : '') + '<polygon points="0,0 ' + f(L2.pw * 0.4) + ',0 0,' + f(L2.rows * 1.75) + '" fill="#9FB4CC" opacity="0.14"/>');
-		}
+		var lay = roofLayout(c, v, pl, slopeL, hipIn, false);
+		solarDraw();
 		lay.wins.forEach(function (ux) { onRoof(ux, lay.winS, 0.78, 1.2, '#2A2D30', '<rect x="0.07" y="0.07" width="0.64" height="1.06" fill="' + glass(sc) + '"/>'); });
 		var nd = lay.dorm.length;
 		for (var dd = 0; dd < nd; dd++) {
@@ -1360,6 +1603,30 @@
 			[[-0.18, 0.62, 0.26], [0.14, 0.66, 0.24], [0, 0.82, 0.22], [-0.05, 0.55, 0.2]].forEach(function (q, i) { s += '<ellipse cx="' + f(bx + q[0] * H) + '" cy="' + f(by - q[1] * H) + '" rx="' + f(q[2] * H) + '" ry="' + f(q[2] * H * 0.62) + '" fill="' + shade(oc, i * 0.05) + '"/>'; });
 			return s;
 		}
+		if (kind === 'palm') {
+			var lean = (r() - 0.5) * H * 0.2, tx = bx + lean, ty = by - H * 0.8, pc = season === 'winter' ? '#6E7F55' : '#4E7A3A';
+			s += '<path d="M' + f(bx) + ' ' + f(by) + 'Q' + f(bx + lean * 0.1) + ' ' + f(by - H * 0.45) + ' ' + f(tx) + ' ' + f(ty) + '" stroke="#8A7458" stroke-width="' + f(H * 0.045) + '" fill="none"/>';
+			for (var pf = 0; pf < 9; pf++) {
+				var a3 = -Math.PI * 0.95 + pf / 8 * Math.PI * 0.9, l3 = H * (0.3 + r() * 0.08), ex = tx + Math.cos(a3) * l3, ey = ty + Math.abs(Math.sin(a3)) * -l3 * 0.25 + l3 * 0.42 * (1 - Math.abs(Math.sin(a3)));
+				s += '<path d="M' + f(tx) + ' ' + f(ty) + 'Q' + f(tx + Math.cos(a3) * l3 * 0.5) + ' ' + f(ty - l3 * 0.32) + ' ' + f(ex) + ' ' + f(ey) + '" stroke="' + shade(pc, (pf % 3 - 1) * 0.12) + '" stroke-width="' + f(H * 0.055) + '" fill="none" stroke-linecap="round"/>';
+			}
+			return s;
+		}
+		if (kind === 'birch') {
+			s += '<path d="M' + f(bx) + ' ' + f(by) + 'L' + f(bx + H * 0.02) + ' ' + f(by - H * 0.7) + '" stroke="#ECE9E2" stroke-width="' + f(H * 0.035) + '"/>';
+			for (var bm = 0; bm < 5; bm++) { s += '<rect x="' + f(bx - H * 0.012) + '" y="' + f(by - H * (0.1 + bm * 0.12)) + '" width="' + f(H * 0.022) + '" height="' + f(H * 0.012) + '" fill="#3A3633"/>'; }
+			if (season === 'winter') { for (var bb2 = 0; bb2 < 5; bb2++) { var ab = -Math.PI / 2 + (bb2 - 2) * 0.35; s += '<path d="M' + f(bx) + ' ' + f(by - H * 0.5) + 'l' + f(Math.cos(ab) * H * 0.25) + ' ' + f(Math.sin(ab) * H * 0.45) + '" stroke="#8C8378" stroke-width="' + f(H * 0.01) + '"/>'; } return s; }
+			var bg = season === 'autumn' ? ['#D9B33F', '#E5C55A', '#C49A2E'] : ['#8DB65A', '#A6C972', '#76A048'];
+			[[0, 0.62, 0.17, 0.3], [-0.09, 0.5, 0.13, 0.2], [0.1, 0.48, 0.12, 0.2], [0.02, 0.8, 0.11, 0.17]].forEach(function (q, i) { s += '<ellipse cx="' + f(bx + q[0] * H) + '" cy="' + f(by - q[1] * H) + '" rx="' + f(q[2] * H) + '" ry="' + f(q[3] * H) + '" fill="' + bg[i % 3] + '" opacity="0.95"/>'; });
+			return s;
+		}
+		if (kind === 'maple') {
+			s += '<path d="M' + f(bx) + ' ' + f(by) + 'L' + f(bx - H * 0.05) + ' ' + f(by - H * 0.4) + 'M' + f(bx) + ' ' + f(by - H * 0.15) + 'L' + f(bx + H * 0.08) + ' ' + f(by - H * 0.42) + '" stroke="#4A3A2E" stroke-width="' + f(H * 0.04) + '"/>';
+			if (season === 'winter') { return s; }
+			var mg = season === 'spring' ? ['#B2463A', '#C85B44', '#963A31'] : (season === 'summer' ? ['#9E3A2F', '#B84A36', '#7E2E28'] : ['#D2662F', '#E08A3A', '#B4452C']);
+			[[0, 0.62, 0.42, 0.24], [-0.24, 0.55, 0.26, 0.17], [0.25, 0.56, 0.27, 0.17], [0.05, 0.8, 0.26, 0.14]].forEach(function (q, i) { s += '<ellipse cx="' + f(bx + q[0] * H) + '" cy="' + f(by - q[1] * H) + '" rx="' + f(q[2] * H) + '" ry="' + f(q[3] * H) + '" fill="' + mg[i % 3] + '"/>'; });
+			return s;
+		}
 		// deciduous / multistem / fruit
 		var stems = kind === 'multistem' ? 3 : 1;
 		for (var st = 0; st < stems; st++) { var off = (st - (stems - 1) / 2) * H * 0.05; s += '<path d="M' + f(bx + off) + ' ' + f(by) + 'L' + f(bx + off * 2.5) + ' ' + f(by - H * 0.5) + '" stroke="' + trunk + '" stroke-width="' + f(H * (stems > 1 ? 0.025 : 0.045)) + '"/>'; }
@@ -1375,6 +1642,50 @@
 			'<circle cx="' + f(bx - R * 0.1) + '" cy="' + f(cy - R * 0.38) + '" r="' + f(R * 0.5) + '" fill="' + shade(greens[1], 0.12) + '"/>';
 		if (kind === 'fruit' || (season === 'spring' && r() > 0.4)) { for (var fr2 = 0; fr2 < 7; fr2++) { s += '<circle cx="' + f(bx + (r() - 0.5) * R * 1.4) + '" cy="' + f(cy + (r() - 0.5) * R * 1.2) + '" r="' + f(R * 0.07) + '" fill="' + (season === 'spring' ? '#F7D3E0' : '#D9472B') + '"/>'; } }
 		void k;
+		return s;
+	}
+
+	// A parked vehicle (driven in forwards: nose to -y): body and cabin boxes, dark wheels below.
+	var CAB = { sedan: [0.3, 0.95, 1.45, 0.12, 0.62], hatchback: [0.3, 0.98, 1.5, 0.05, 0.62], suv: [0.42, 1.15, 1.72, 0.05, 0.68], pickup: [0.45, 1.0, 1.82, 0.42, 0.75], van: [0.38, 1.95, 1.95, 0, 0], sports: [0.25, 0.8, 1.18, 0.2, 0.55], electric: [0.3, 0.92, 1.42, 0.12, 0.66] };
+	function vehicle2d(sc, type, x, y, paint) {
+		var out = [], d = VEH[type] || VEH.sedan, hw = d[0] / 2, hl = d[1] / 2, P = CAB[type], glassC = '#2A3138';
+		function put(list) { list.forEach(function (r) { out.push(r); }); }
+		if (type === 'motorcycle' || type === 'bicycle') {
+			var mb = type === 'motorcycle';
+			put(box(sc, x - 0.04, y - hl + 0.1, 0, x + 0.04, y + hl - 0.1, mb ? 0.6 : 0.62, { top: '#1E1F21', front: '#1E1F21', side: '#2A2C2E' }));
+			put(box(sc, x - (mb ? 0.16 : 0.03), y - hl * 0.55, mb ? 0.55 : 0.6, x + (mb ? 0.16 : 0.03), y + hl * 0.45, mb ? 0.95 : 0.95, { top: mb ? paint : '#3A3D40', front: mb ? shade(paint, -0.1) : '#3A3D40', side: mb ? paint : '#3A3D40' }));
+			return out;
+		}
+		put(box(sc, x - hw + 0.12, y - hl + 0.45, 0, x + hw - 0.12, y + hl - 0.45, P[0], { top: '#151617', front: '#151617', side: '#1C1D1E' }));
+		put(box(sc, x - hw, y - hl, P[0], x + hw, y + hl, P[1], { top: shade(paint, 0.1), front: paint, side: shade(paint, -0.12) }));
+		if (P[4] > P[3]) { put(box(sc, x - hw + 0.14, y + hl - P[4] * d[1], P[1], x + hw - 0.14, y + hl - P[3] * d[1], P[2], { top: shade(paint, 0.05), front: glassC, side: glassC })); }
+		else { put(box(sc, x - hw + 0.08, y + hl - 0.02, P[1] * 0.55, x + hw - 0.08, y + hl + 0.005, P[1] - 0.1, { top: glassC, front: glassC, side: glassC })); }
+		return out;
+	}
+	// A person drawn upright at the foot point (x, y): legs, body, arms, head and hair.
+	var TOPS2 = ['#2F4A5A', '#B4553F', '#EDE6DA', '#6F7D63', '#3B3331', '#C49A5A', '#7E8FA6', '#E3D3C4'], BOTS2 = ['#2B3442', '#3A3836', '#C9B9A0', '#5C6B7A', '#1E1F21'], SKIN2 = ['#E8C3A6', '#D9A88A', '#C58E6B', '#9B6A4C', '#6E4A35'], HAIR2 = ['#2A1E16', '#5B3B24', '#A9763F', '#D8B36A', '#3A3A3A'];
+	function person2d(sc, p) {
+		var hgt = p.kind === 'child' ? 1.2 : (p.kind === 'woman' ? 1.67 : 1.78), b = sc.track([p.x, p.y, 0]), t = sc.cam.P([p.x, p.y, hgt]);
+		sc.track([p.x, p.y, hgt]);
+		var H = b[1] - t[1], x = b[0], y = b[1], r = rng(p.seed || 3);
+		var top = TOPS2[Math.floor(r() * TOPS2.length)], bot = BOTS2[Math.floor(r() * BOTS2.length)], skin = SKIN2[Math.floor(r() * SKIN2.length)], hair = HAIR2[Math.floor(r() * HAIR2.length)];
+		var walk = p.pose === 'walk' ? H * 0.05 : 0, s = '';
+		s += '<path d="M' + f(x - H * 0.045) + ' ' + f(y - H * 0.47) + 'L' + f(x - H * 0.05 - walk) + ' ' + f(y) + 'M' + f(x + H * 0.045) + ' ' + f(y - H * 0.47) + 'L' + f(x + H * 0.05 + walk) + ' ' + f(y) + '" stroke="' + bot + '" stroke-width="' + f(H * 0.07) + '" stroke-linecap="round"/>';
+		s += '<path d="M' + f(x - H * 0.13) + ' ' + f(y - H * 0.8) + 'L' + f(x - H * 0.16 - walk) + ' ' + f(y - H * 0.5) + 'M' + f(x + H * 0.13) + ' ' + f(y - H * 0.8) + 'L' + f(x + H * 0.16 + walk) + ' ' + f(y - H * 0.5) + '" stroke="' + top + '" stroke-width="' + f(H * 0.055) + '" stroke-linecap="round"/>';
+		s += '<rect x="' + f(x - H * 0.12) + '" y="' + f(y - H * 0.84) + '" width="' + f(H * 0.24) + '" height="' + f(H * 0.4) + '" rx="' + f(H * 0.07) + '" fill="' + top + '"/>';
+		s += '<circle cx="' + f(x) + '" cy="' + f(y - H * 0.92) + '" r="' + f(H * 0.07) + '" fill="' + skin + '"/>';
+		s += '<path d="M' + f(x - H * 0.072) + ' ' + f(y - H * 0.91) + 'a' + f(H * 0.072) + ' ' + f(H * 0.072) + ' 0 0 1 ' + f(H * 0.144) + ' 0' + (p.kind === 'woman' ? 'v' + f(H * 0.09) : '') + '" fill="' + hair + '"/>';
+		return s;
+	}
+	// A dog or a cat (sitting / lying), drawn at the foot point.
+	function pet2d(sc, p) {
+		var b = sc.track([p.x, p.y, 0]), k = b[1] - sc.cam.P([p.x, p.y, 1])[1], x = b[0], y = b[1], r = rng(p.seed || 5);
+		var col2 = p.kind === 'cat' ? ['#C97A3A', '#6E6E70', '#2A2624', '#E9E2D6'][Math.floor(r() * 4)] : ['#C9974F', '#3A2F28', '#E8DCC8', '#8A5A33'][Math.floor(r() * 4)], s = '';
+		if (p.kind === 'cat') { var cs = 0.32 * k; return '<ellipse cx="' + f(x) + '" cy="' + f(y - cs * 0.45) + '" rx="' + f(cs * 0.35) + '" ry="' + f(cs * 0.5) + '" fill="' + col2 + '"/><circle cx="' + f(x) + '" cy="' + f(y - cs * 1.05) + '" r="' + f(cs * 0.25) + '" fill="' + col2 + '"/><path d="M' + f(x - cs * 0.22) + ' ' + f(y - cs * 1.15) + 'l' + f(cs * 0.04) + ' ' + f(-cs * 0.25) + 'l' + f(cs * 0.12) + ' ' + f(cs * 0.15) + 'M' + f(x + cs * 0.22) + ' ' + f(y - cs * 1.15) + 'l' + f(-cs * 0.04) + ' ' + f(-cs * 0.25) + 'l' + f(-cs * 0.12) + ' ' + f(cs * 0.15) + '" fill="' + col2 + '"/>'; }
+		var z = (p.kind === 'dog_small' ? 0.55 : 1) * k, ly = p.pose === 'lie' ? 0.18 : 0.48;
+		s += '<ellipse cx="' + f(x) + '" cy="' + f(y - z * ly) + '" rx="' + f(z * 0.38) + '" ry="' + f(z * 0.16) + '" fill="' + col2 + '"/>';
+		if (p.pose !== 'lie') { s += '<path d="M' + f(x - z * 0.25) + ' ' + f(y - z * 0.4) + 'V' + f(y) + 'M' + f(x + z * 0.25) + ' ' + f(y - z * 0.4) + 'V' + f(y) + '" stroke="' + col2 + '" stroke-width="' + f(z * 0.08) + '"/>'; }
+		s += '<circle cx="' + f(x + z * 0.36) + '" cy="' + f(y - z * (ly + 0.22)) + '" r="' + f(z * 0.13) + '" fill="' + col2 + '"/><ellipse cx="' + f(x + z * 0.5) + '" cy="' + f(y - z * (ly + 0.18)) + '" rx="' + f(z * 0.08) + '" ry="' + f(z * 0.05) + '" fill="' + shade(col2, -0.1) + '"/>';
 		return s;
 	}
 
@@ -1441,6 +1752,7 @@
 
 		/* buildings */
 		var units = pl.units, balcVol = vols.some(function (q) { return q.balc; });
+		sc.vols = vols;
 		vols.forEach(function (v, idx) {
 			var type = vtype(c, v), vp = vplan(pl, v), fpv = frontPlan(c, v, vols);
 			var roof = roofFor(sc, v, vp, type);
@@ -1489,14 +1801,34 @@
 				var proof = sc.poly3([[px0 - 0.2, v.y1 + pd + 0.3, pz], [px1 + 0.2, v.y1 + pd + 0.3, pz], [px1 + 0.2, v.y1, pz + 0.75], [px0 - 0.2, v.y1, pz + 0.75]], roofMaterial(sc));
 				if (proof) { parts.push(proof); }
 			}
-			// balcony on the first upper floor
-			if (v.main && c.balcony && pl.floors > 1 && !balcVol) {
-				var bz = pl.plinth + pl.FH, bx0 = v.x0 + (v.x1 - v.x0) * 0.5, bx1 = Math.min(v.x1 - 0.5, bx0 + 4.5);
-				var rail = c.arch_style === 'alpine' ? '#9C6B44' : null;
-				box(sc, bx0, v.y1, bz - 0.22, bx1, v.y1 + 1.4, bz, { top: '#D8D4CC', front: '#E9E6E0' }).forEach(function (r) { parts.push(r); });
-				var rl = sc.plane([bx0, v.y1 + 1.4, bz], [1, 0, 0], [0, 0, 1], [[0, 0], [bx1 - bx0, 0], [bx1 - bx0, 1.0], [0, 1.0]], rail || 'rgba(200,225,235,0.35)', rail ? '' : '<path d="M0 1H' + f(bx1 - bx0) + '" stroke="#5A6066" stroke-width="0.05"/>', { noShade: true, stroke: rail ? null : '#C7D4DA', sw: 0.02 });
-				if (rl) { parts.push(rl); }
-			}
+			// balconies (front and right side: the faces the sketch shows)
+			balconies(c, v, vp, vols).forEach(function (b) {
+				if (b.type === 'french' || (b.face !== 'front' && b.face !== 'right')) { return; }
+				var fr = b.face === 'front', bz = b.z, L = b.u1 - b.u0, slab = b.type === 'wood' ? sc.mat('deck', '#A97B52') : '#D8D4CC';
+				var bx0 = fr ? v.x0 + b.u0 : v.x1, bx1 = fr ? v.x0 + b.u1 : v.x1 + b.d, by0 = fr ? v.y1 : v.y1 - b.u1, by1 = fr ? v.y1 + b.d : v.y1 - b.u0;
+				box(sc, bx0, by0, bz - 0.22, bx1, by1, bz, { top: slab, front: '#E9E6E0', side: '#DCD8D0' }).forEach(function (r) { parts.push(r); });
+				var fcol = col(c.facade_color, '#F2EFE9'), fill, inner = function (len) {
+					var q = '';
+					if (b.type === 'glass') { q = '<path d="M0 1H' + f(len) + '" stroke="#5A6066" stroke-width="0.05"/>'; }
+					else if (b.type === 'metal') { q = '<path d="M0 1H' + f(len) + 'M0 0.1H' + f(len); for (var mb = 0.1; mb < len; mb += 0.11) { q += 'M' + f(mb) + ' 0.1V1'; } q += '" stroke="#2F3235" stroke-width="0.03" fill="none"/>'; }
+					else if (b.type === 'wood') { for (var wb = 0.02; wb < len; wb += 0.16) { q += '<rect x="' + f(wb) + '" y="0" width="0.1" height="1" fill="#9C6B44"/>'; } }
+					else { q = '<path d="M0 1H' + f(len) + '" stroke="' + shade(fcol, -0.2) + '" stroke-width="0.08"/>'; }
+					return q;
+				};
+				fill = b.type === 'glass' ? 'rgba(200,225,235,0.35)' : (b.type === 'solid' ? shade(fcol, -0.04) : 'none');
+				var ro = { noShade: b.type !== 'solid', stroke: b.type === 'glass' ? '#C7D4DA' : null, sw: 0.5, both: true, edge: b.type === 'solid' };
+				var rails = [];
+				if (fr) {
+					if (b.endA) { rails.push(sc.plane([bx0, by0, bz], [0, 1, 0], [0, 0, 1], [[0, 0], [b.d, 0], [b.d, 1], [0, 1]], fill, inner(b.d), ro)); }
+					rails.push(sc.plane([bx0, by1, bz], [1, 0, 0], [0, 0, 1], [[0, 0], [L, 0], [L, 1], [0, 1]], fill, inner(L), ro));
+					if (b.endB) { rails.push(sc.plane([bx1, by1, bz], [0, -1, 0], [0, 0, 1], [[0, 0], [b.d, 0], [b.d, 1], [0, 1]], fill, inner(b.d), ro)); }
+				} else {
+					if (b.endA) { rails.push(sc.plane([bx0, by1, bz], [1, 0, 0], [0, 0, 1], [[0, 0], [b.d, 0], [b.d, 1], [0, 1]], fill, inner(b.d), ro)); }
+					rails.push(sc.plane([bx1, by1, bz], [0, -1, 0], [0, 0, 1], [[0, 0], [L, 0], [L, 1], [0, 1]], fill, inner(L), ro));
+					if (b.endB) { rails.push(sc.plane([bx1, by0, bz], [-1, 0, 0], [0, 0, 1], [[0, 0], [b.d, 0], [b.d, 1], [0, 1]], fill, inner(b.d), ro)); }
+				}
+				rails.forEach(function (r) { if (r) { parts.push(r); } });
+			});
 			deco2d(sc, v, vp, type, roof).forEach(function (r) { parts.push(r); });
 			var gr = group(parts, 0);
 			// volumes are ordered by their footprint (ground) position, not by the height of their parts
@@ -1536,10 +1868,9 @@
 				var pc2 = '#3A3D40';
 				[[gx0, gy1], [gx0 + gW - 0.15, gy1]].forEach(function (q) { box(sc, q[0], q[1] - 0.15, 0, q[0] + 0.15, q[1], gh, { top: pc2, front: pc2 }).forEach(function (r) { gparts.push(r); }); });
 				box(sc, gx0 - 0.1, gy0, gh, gx0 + gW + 0.1, gy1 + 0.2, gh + 0.25, { top: c.roof_surface === 'green' ? sc.mat('green', '#6E8F45') : '#5A5E62', front: '#3A3D40' }).forEach(function (r) { gparts.push(r); });
-				// parked car
-				var carC = '#2C4A6B';
-				box(sc, gx0 + 0.5, gy1 - 4.8, 0.25, gx0 + gW - 0.5, gy1 - 0.4, 0.95, { top: shade(carC, 0.1), front: carC }).forEach(function (r) { gparts.push(r); });
-				box(sc, gx0 + 0.75, gy1 - 3.8, 0.95, gx0 + gW - 0.75, gy1 - 1.6, 1.45, { top: shade(carC, 0.15), front: '#5D7A94' }).forEach(function (r) { gparts.push(r); });
+				// parked vehicle (the first car of the list, same place as in the garden plan)
+				var pcar = vehicleList(c).filter(function (k) { return k !== 'motorcycle' && k !== 'bicycle'; })[0];
+				if (pcar) { vehicle2d(sc, pcar, gx0 + gW / 2, gy1 - 2.975, col(c.car_color, '#3C4148')).forEach(function (r) { gparts.push(r); }); }
 			} else {
 				var doors = garage === 'garage_2' ? 2 : 1, dw = garage === 'garage_2' ? 2.5 : 2.6, inner = '';
 				for (var gd = 0; gd < doors; gd++) {
@@ -1634,6 +1965,12 @@
 				var pgt = sc.plane([pgx, pgy + 2.55, 2.5], [1, 0, 0], [0, -1, 0], [[0, 0], [2.95, 0], [2.95, 2.6], [0, 2.6]], 'none', pgb, { noShade: true, edge: false });
 				if (pgt) { sc.push(sc.depth([pgx + 1.4, pgy + 1.2, 0]) + 1, pgt.svg); }
 			}
+			var paint2 = col(c.car_color, '#3C4148');
+			G.vehicles.forEach(function (vh) { if (!(vh.port && (vh.type !== 'motorcycle' && vh.type !== 'bicycle'))) { vehicle2d(sc, vh.type, vh.x, vh.y, paint2).forEach(function (r) { sc.push(r.depth, r.svg); }); } });
+			if (G.charger) { box(sc, G.charger.x - 0.11, G.charger.y - 0.09, 0, G.charger.x + 0.11, G.charger.y + 0.09, 1.3, { top: '#2B2E31', front: '#3A3D40', side: '#2B2E31' }, { front: '<rect x="0.04" y="0.95" width="0.14" height="0.2" fill="#4CAF7A"/>' }).forEach(function (r) { sc.push(r.depth + 0.5, r.svg); }); }
+			if (G.kennel) { box(sc, G.kennel.x - 0.45, G.kennel.y - 0.4, 0, G.kennel.x + 0.45, G.kennel.y + 0.4, 0.75, { top: '#5A3A2A', front: sc.mat('wood', '#9C7452'), side: '#8A6446' }, { front: '<path d="M0.29 0V0.3A0.16 0.16 0 0 1 0.61 0.3V0Z" fill="#1A1614"/>' }).forEach(function (r) { sc.push(r.depth, r.svg); }); }
+			G.people.forEach(function (pp) { sc.push(sc.depth([pp.x, pp.y, 0]) + 0.3, person2d(sc, pp)); });
+			G.pets.forEach(function (pp) { sc.push(sc.depth([pp.x, pp.y, 0]) + 0.3, pet2d(sc, pp)); });
 			if (G.furniture) {
 				box(sc, G.furniture.x, G.furniture.y, 0, G.furniture.x + 1.6, G.furniture.y + 0.9, 0.75, { top: G.furniture.kitchen ? '#BFC3C6' : '#E7E1D6', front: '#6B5E52' }).forEach(function (r) { sc.push(r.depth, r.svg); });
 			}
@@ -1816,10 +2153,18 @@
 		'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'plinth_color', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number',
 		'window_style', 'window_frame_color', 'window_frame_material', 'window_trim', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading',
 		'garden_style', 'garden_features', 'terrace_floor', 'driveway', 'fence', 'gate', 'neighbors', 'time_of_day', 'season', 'weather', 'camera', 'lens', 'night_lighting', 'energy',
-		'chimney_type', 'solar_type', 'solar_coverage', 'roof_vent_type', 'ridge_tile', 'shutter_color', 'ac_units'];
+		'chimney_type', 'solar_type', 'solar_coverage', 'roof_vent_type', 'ridge_tile', 'shutter_color', 'ac_units',
+		'balcony_type', 'balcony_place', 'balcony_size', 'solar_place', 'garden_density', 'tree_types', 'vehicles', 'car_color', 'people', 'pets'];
 
 	// Whether changing a parameter shows on the sketch for this configuration (value: the multiselect item
 	// that was switched). Used by the tests; the designer itself compares the drawings before and after.
+	// Whether switching one item of a multiselect changes the drawing (exact: both drawings are made).
+	function toggles(c, id, value) {
+		var rest = (Array.isArray(c[id]) ? c[id] : (id === 'vehicles' ? vehicleList(c) : [])).filter(function (x) { return x !== value; });
+		var a = Object.assign({}, c), b = Object.assign({}, c);
+		a[id] = rest; b[id] = rest.concat([value]);
+		return render(a, { id: 'vt_' }) !== render(b, { id: 'vt_' });
+	}
 	function visibleFor(id, c, value) {
 		if (VISUAL.indexOf(id) === -1) { return false; }
 		var pitched = c.roof_type !== 'flat', ta = num(c.terrace_area, 0) > 0, acc = c.facade_accent || [];
@@ -1857,6 +2202,17 @@
 			case 'garden_features': return ['robot_mower', 'outdoor_shower', 'irrigation'].indexOf(value) === -1 && !(value === 'garden_lights' && !lightFor(c).glow);
 			case 'shading': return value !== 'louvres' || c.levels === 'two' || c.levels === 'three';
 			case 'orientation': return c.weather !== 'overcast' && c.time_of_day !== 'night';
+			case 'balcony_type': case 'balcony_place': case 'balcony_size':
+				var bOn = !!c.balcony && (c.levels === 'two' || c.levels === 'three') && !volumes(c, plan(c)).some(function (q) { return q.balc; });
+				if (id === 'balcony_type') { return bOn && (c.balcony_type || 'auto') !== 'auto' && c.balcony_type !== balconyType(Object.assign({}, c, { balcony_type: 'auto' })); }
+				if (id === 'balcony_size') { return bOn && c.balcony_place !== 'back' && balconyType(c) !== 'french'; }
+				return bOn;
+			case 'solar_place':
+				var sOn = !!(c.roof_solar || has(c.energy, 'solar') || styleOf(c).pv), sp = c.solar_place || 'auto';
+				return sOn && pitched && c.roof_type !== 'shed' && sp !== 'auto' && sp !== solarPlace(Object.assign({}, c, { solar_place: 'auto' }));
+			case 'garden_density': return has(c.garden_features, 'trees') || !c.garden_features;
+			case 'tree_types': case 'pets': case 'vehicles': return value === undefined || value === null ? true : toggles(c, id, value);
+			case 'car_color': return vehicleList(c).length > 0;
 			default: return true;
 		}
 	}
@@ -1864,7 +2220,7 @@
 	var api = { render: render, swatch: swatch, palette: palette, vignette: vignette, visual: VISUAL, visibleFor: visibleFor, plan: plan,
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
 		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
-		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
+		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _solarFaces: solarFaces, _balconies: balconies, _balcMark: balcMark, _vehicles: vehicleList, _balconyType: balconyType, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
 		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }

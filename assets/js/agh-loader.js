@@ -19,14 +19,8 @@
 			var st = document.createElement('style');
 			st.textContent = cfg.vars;
 			document.head.appendChild(st);
-			// Start fetching the 3D module together with the designer, so the 3D view is ready sooner.
-			if (cfg.three && !document.querySelector('link[data-agh-3d]')) {
-				var mp = document.createElement('link');
-				mp.rel = 'modulepreload';
-				mp.href = cfg.three;
-				mp.setAttribute('data-agh-3d', '1');
-				document.head.appendChild(mp);
-			}
+			// Start fetching the 3D modules together with the designer, so the 3D view is ready sooner.
+			preload3D();
 			function script(src, done) {
 				var s = document.createElement('script');
 				s.src = src;
@@ -40,6 +34,30 @@
 			if (cfg.sketch && !window.AGH_Sketch) { script(cfg.sketch, designer); } else { designer(); }
 		});
 		return loading;
+	}
+
+	// All 3D modules at once (in parallel, not one import level after the other).
+	function preload3D() {
+		if (!cfg.three || document.querySelector('link[data-agh-3d]')) { return; }
+		[cfg.three].concat(cfg.threeDeps || []).forEach(function (u) {
+			var mp = document.createElement('link');
+			mp.rel = 'modulepreload';
+			mp.href = u;
+			mp.setAttribute('data-agh-3d', '1');
+			document.head.appendChild(mp);
+		});
+	}
+	// Ahead of the click: when the pointer heads for the button, or once the page is idle.
+	function warm() { load().catch(function () {}); }
+	function early() {
+		var nodes = document.querySelectorAll('[data-agh-open]');
+		for (var i = 0; i < nodes.length; i++) {
+			if (nodes[i].__aghWarm) { continue; }
+			nodes[i].__aghWarm = 1;
+			['pointerenter', 'focus', 'touchstart'].forEach(function (ev) { nodes[i].addEventListener(ev, warm, { once: true, passive: true }); });
+		}
+		var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); };
+		setTimeout(function () { idle(warm, { timeout: 4000 }); }, 2500);
 	}
 
 	function open(e) {
@@ -71,6 +89,7 @@
 			document.body.appendChild(b);
 		}
 		fromHash();
+		early();
 	}
 
 	// "#agh-open" in the address bar opens the designer: on page load and on later hash changes.

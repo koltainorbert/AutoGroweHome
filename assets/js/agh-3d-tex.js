@@ -25,7 +25,7 @@ function spawn() {
 	if (typeof Worker === 'undefined') { return workers; }
 	try {
 		var src = new URL('./agh-3d-texw.js' + new URL(import.meta.url).search, import.meta.url);
-		var n = Math.max(1, Math.min(3, ((typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 2) - 1));
+		var n = Math.max(1, Math.min(4, ((typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 2) - 1));
 		for (var i = 0; i < n; i++) {
 			var w = new Worker(src, { type: 'module' });
 			w.onmessage = function (e) { var j = jobs[e.data.id]; if (j) { delete jobs[e.data.id]; j.done(e.data); } };
@@ -47,6 +47,23 @@ function settle() {
 }
 // Called (once per filled texture) so the preview can redraw.
 export function onTexture(fn) { listeners.push(fn); }
+// A picture from a data URL (the visitor's own photo) as a texture; waited for like the generated ones.
+var IMG = {};
+export function imageTexture(url) {
+	var e = IMG[url];
+	if (!e) {
+		e = IMG[url] = { t: new THREE.Texture(), fns: [] };
+		e.t.colorSpace = THREE.SRGBColorSpace;
+		pending++;
+		var img = new Image();
+		img.onload = function () { e.t.image = img; e.t.needsUpdate = true; var fns = e.fns; e.fns = null; fns.forEach(function (fn) { try { fn(img); } catch (x) {} }); pending--; settle(); };
+		img.onerror = function () { e.fns = null; pending--; settle(); };
+		img.src = url;
+	}
+	return e.t;
+}
+// Calls fn(image) once the picture of imageTexture(url) is loaded.
+export function onImage(url, fn) { var e = IMG[url]; if (e && e.fns) { e.fns.push(fn); } else if (e && e.t.image) { fn(e.t.image); } }
 // Resolves when every requested texture has its pixels.
 export function texturesReady() { return pending === 0 ? Promise.resolve() : new Promise(function (res) { waiters.push(res); }); }
 
