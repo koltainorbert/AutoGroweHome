@@ -8565,3 +8565,39 @@ msgstr "Eau douce, planté"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Marin, avec coraux"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Coteau de vignes avec pressoirs"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Ferme isolée de plaine"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Bord de rivière"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Vallée du ruisseau"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Montagne de pins"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Puszta, steppe"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Rue de ville"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Paysage désertique et sec"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Paysage enneigé"

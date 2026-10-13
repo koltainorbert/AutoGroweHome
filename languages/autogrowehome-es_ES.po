@@ -8565,3 +8565,39 @@ msgstr "De agua dulce, plantado"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Marino, con corales"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Ladera de viñedos con lagares"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Alquería de llanura"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Orilla del río"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Valle del arroyo"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Montaña de pinares"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Puszta, estepa"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Calle urbana"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Paisaje desértico y seco"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Paisaje nevado"

@@ -8567,3 +8567,39 @@ msgstr "Sladkovodné, rastlinné"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Morské, s koralmi"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Vinica, svah s lisovňami"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Nížinný statok"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Breh rieky"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Údolie potoka"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Horské borovicové lesy"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Pusta, step"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Mestská ulica"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Púštna, suchá krajina"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Zasnežená krajina"

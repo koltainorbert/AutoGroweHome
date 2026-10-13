@@ -8537,3 +8537,39 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr ""

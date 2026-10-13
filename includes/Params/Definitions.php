@@ -1643,6 +1643,15 @@ final class Definitions {
 					'forest'    => array( __( 'Erdő szélén', 'autogrowehome' ), 'at the edge of a mixed forest' ),
 					'lake'      => array( __( 'Tópart', 'autogrowehome' ), 'near a calm lake with forested shores' ),
 					'sea'       => array( __( 'Tengerpart', 'autogrowehome' ), 'on a sunny coast with a sea view, olive and cypress trees' ),
+					'vineyard'  => array( __( 'Szőlőhegy, présházas domboldal', 'autogrowehome' ), 'on a vineyard hillside with terraced rows of vines and small press houses' ),
+					'farmstead' => array( __( 'Alföldi tanya', 'autogrowehome' ), 'on a lowland farmstead with vast fields and rows of poplars' ),
+					'river'     => array( __( 'Folyópart', 'autogrowehome' ), 'on a river bank with willows and poplars' ),
+					'valley'    => array( __( 'Patakvölgy', 'autogrowehome' ), 'in a narrow valley with a stream and wooded slopes' ),
+					'alpine_forest' => array( __( 'Fenyves hegyvidék', 'autogrowehome' ), 'high in a pine-covered mountain landscape' ),
+					'puszta'    => array( __( 'Puszta', 'autogrowehome' ), 'on the open puszta with dry grassland to the horizon' ),
+					'town'      => array( __( 'Városi utcasor', 'autogrowehome' ), 'in a town street of closely spaced houses' ),
+					'desert'    => array( __( 'Sivatagos, száraz táj', 'autogrowehome' ), 'in an arid desert landscape with rocky outcrops' ),
+					'snowy'     => array( __( 'Havas táj', 'autogrowehome' ), 'in a snow-covered winter landscape' ),
 				)
 			)
 		);
@@ -1709,7 +1718,7 @@ final class Definitions {
 	 * agh-3d-land.js uses the same table).
 	 */
 	public static function landscape_for_style( string $style ): string {
-		$map = array( 'modern_minimal' => 'suburb', 'contemporary_lux' => 'hills', 'mediterranean' => 'sea', 'scandinavian' => 'lake', 'bauhaus' => 'suburb', 'japandi' => 'hills', 'classic_burgher' => 'suburb', 'rustic' => 'plain', 'modern_farmhouse' => 'plain', 'american_farm' => 'plain', 'alpine' => 'mountains', 'industrial' => 'suburb', 'organic_modern' => 'forest', 'high_tech' => 'suburb', 'passive' => 'forest' );
+		$map = array( 'modern_minimal' => 'suburb', 'contemporary_lux' => 'hills', 'mediterranean' => 'sea', 'scandinavian' => 'lake', 'bauhaus' => 'suburb', 'japandi' => 'hills', 'classic_burgher' => 'suburb', 'rustic' => 'farmstead', 'modern_farmhouse' => 'plain', 'american_farm' => 'plain', 'alpine' => 'mountains', 'industrial' => 'suburb', 'organic_modern' => 'forest', 'high_tech' => 'suburb', 'passive' => 'forest' );
 		return $map[ $style ] ?? 'hills';
 	}
 

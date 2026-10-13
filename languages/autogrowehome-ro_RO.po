@@ -8567,3 +8567,39 @@ msgstr "Cu apă dulce, plantat"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Marin, cu corali"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Deal cu vii și crame"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Fermă de câmpie"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Malul râului"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Valea pârâului"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Munte cu păduri de pini"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Pustă, stepă"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Stradă urbană"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Peisaj deșertic, uscat"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Peisaj înzăpezit"

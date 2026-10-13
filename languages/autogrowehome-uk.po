@@ -8567,3 +8567,39 @@ msgstr "Прісноводний, рослинний"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Морський, з коралами"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Виноградний схил із пресхаузами"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Хутір на рівнині"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Берег річки"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Долина струмка"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Гори у хвойних лісах"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Пуста, степ"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Міська вулиця"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Пустельний посушливий ландшафт"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Засніжений краєвид"

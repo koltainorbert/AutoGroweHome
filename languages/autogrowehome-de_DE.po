@@ -8565,3 +8565,39 @@ msgstr "Süßwasser, bepflanzt"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Meerwasser, mit Korallen"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Weinberg mit Presshäusern"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Gehöft in der Tiefebene"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Flussufer"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Bachtal"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Nadelwaldgebirge"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Puszta (Steppe)"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Städtische Häuserzeile"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Wüstenhafte, trockene Landschaft"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Verschneite Landschaft"

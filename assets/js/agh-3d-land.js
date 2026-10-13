@@ -46,10 +46,20 @@ var P = {
 	mountains: { hill: 34, far: 520, farR: 980, tree: ['conifer', 'conifer', 'conifer', 'broad'], n: 1100, near: 95, rock: 1, snow: 360 },
 	forest: { hill: 12, far: 70, farR: 620, tree: ['conifer', 'broad', 'conifer', 'birch'], n: 1400, near: 72, fields: 0 },
 	lake: { hill: 16, far: 120, farR: 560, tree: ['conifer', 'conifer', 'birch'], n: 1000, near: 88, lake: [-170, -280, 150] },
-	sea: { hill: 22, far: 95, farR: 560, tree: ['olive', 'olive', 'cypress'], n: 560, near: 88, sea: 235, dry: 1 }
+	sea: { hill: 22, far: 95, farR: 560, tree: ['olive', 'olive', 'cypress'], n: 560, near: 88, sea: 235, dry: 1 },
+	// 1.8.0: further places to put the house
+	vineyard: { hill: 24, far: 110, farR: 600, tree: ['olive', 'broad', 'cypress'], n: 420, near: 110, fields: 0.95, dry: 0.6 },
+	farmstead: { hill: 3, far: 22, farR: 800, tree: ['poplar', 'broad', 'poplar'], n: 260, near: 120, fields: 1 },
+	river: { hill: 10, far: 60, farR: 640, tree: ['broad', 'poplar', 'birch'], n: 900, near: 85, lake: [-120, -330, 230] },
+	valley: { hill: 30, far: 180, farR: 560, tree: ['conifer', 'broad', 'birch'], n: 1050, near: 80, lake: [-60, -300, 70] },
+	alpine_forest: { hill: 32, far: 430, farR: 940, tree: ['conifer', 'conifer', 'conifer', 'birch'], n: 1500, near: 70, rock: 0.8, snow: 420 },
+	puszta: { hill: 2, far: 16, farR: 820, tree: ['broad', 'poplar'], n: 120, near: 150, fields: 1, dry: 0.8 },
+	town: { hill: 2, far: 25, farR: 700, tree: ['broad', 'broad', 'conifer'], n: 300, near: 120, fields: 0 },
+	desert: { hill: 14, far: 140, farR: 700, tree: ['olive', 'cypress'], n: 90, near: 130, rock: 0.7, dry: 1 },
+	snowy: { hill: 20, far: 260, farR: 760, tree: ['conifer', 'conifer', 'birch'], n: 900, near: 90, snow: 10, rock: 0.5 }
 };
 // the landscape that suits the style when the visitor has not chosen one
-var STYLE_LAND = { modern_minimal: 'suburb', contemporary_lux: 'hills', mediterranean: 'sea', scandinavian: 'lake', bauhaus: 'suburb', japandi: 'hills', classic_burgher: 'suburb', rustic: 'plain', modern_farmhouse: 'plain', american_farm: 'plain', alpine: 'mountains', industrial: 'suburb', organic_modern: 'forest', high_tech: 'suburb', passive: 'forest' };
+var STYLE_LAND = { modern_minimal: 'suburb', contemporary_lux: 'hills', mediterranean: 'sea', scandinavian: 'lake', bauhaus: 'suburb', japandi: 'hills', classic_burgher: 'suburb', rustic: 'farmstead', modern_farmhouse: 'plain', american_farm: 'plain', alpine: 'mountains', industrial: 'suburb', organic_modern: 'forest', high_tech: 'suburb', passive: 'forest' };
 export function landKind(c) { var k = c.landscape || 'auto'; return P[k] ? k : (STYLE_LAND[c.arch_style] || 'hills'); }
 export var WATER_Y = -1.0;
 // the street in front of the plot (sketch y of its near edge; set by the viewer per house)

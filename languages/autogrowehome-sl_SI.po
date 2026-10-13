@@ -8569,3 +8569,39 @@ msgstr "Sladkovodni, zasajen"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Morski, s koralami"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Vinograd, pobočje s zidanicami"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Nižinska kmetija"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Rečni breg"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Dolina potoka"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Gore s smrekovimi gozdovi"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Pusta, stepa"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Mestna ulica"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Puščavska, suha pokrajina"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Zasnežena pokrajina"

@@ -8567,3 +8567,39 @@ msgstr "Słodkowodne, roślinne"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Morskie, z koralowcami"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Winnica na zboczu z tłoczniami"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Zagroda na nizinie"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Brzeg rzeki"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Dolina potoku"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Góry porośnięte sosnami"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Puszta, step"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Miejska pierzeja"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Pustynny, suchy krajobraz"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Ośnieżony krajobraz"

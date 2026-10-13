@@ -8565,3 +8565,39 @@ msgstr "Zoetwater, beplant"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Zeewater, met koralen"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Wijnheuvel met pershuisjes"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Laaglandboerderij"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Rivieroever"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Beekdal"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Bergen met dennenbos"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Poesta, steppe"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Stadsstraat"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Woestijnachtig, droog landschap"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Besneeuwd landschap"

@@ -8565,3 +8565,39 @@ msgstr "Freshwater, planted"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Marine, with corals"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Vineyard hillside with press houses"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Lowland farmstead"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "River bank"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Stream valley"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Pine-covered mountains"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Puszta grassland"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Town street row"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Arid desert landscape"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Snow-covered landscape"

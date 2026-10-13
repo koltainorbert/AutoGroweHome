@@ -8565,3 +8565,39 @@ msgstr "D'acqua dolce, piantumato"
 #: includes/Params/Definitions.php
 msgid "Tengeri, korallos"
 msgstr "Marino, con coralli"
+
+#: includes/Params/Definitions.php
+msgid "Szőlőhegy, présházas domboldal"
+msgstr "Collina di vigneti con cantine"
+
+#: includes/Params/Definitions.php
+msgid "Alföldi tanya"
+msgstr "Podere di pianura"
+
+#: includes/Params/Definitions.php
+msgid "Folyópart"
+msgstr "Riva del fiume"
+
+#: includes/Params/Definitions.php
+msgid "Patakvölgy"
+msgstr "Valle del torrente"
+
+#: includes/Params/Definitions.php
+msgid "Fenyves hegyvidék"
+msgstr "Montagna di pini"
+
+#: includes/Params/Definitions.php
+msgid "Puszta"
+msgstr "Puszta, steppa"
+
+#: includes/Params/Definitions.php
+msgid "Városi utcasor"
+msgstr "Fila di case in città"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagos, száraz táj"
+msgstr "Paesaggio desertico e arido"
+
+#: includes/Params/Definitions.php
+msgid "Havas táj"
+msgstr "Paesaggio innevato"
