@@ -889,7 +889,7 @@
 		if (plot) {
 			var pyB = plot.yB !== null ? plot.yB : back + 0.4, pc4 = [[plot.x0, pyB], [plot.x0, plot.yF], [plot.x1, plot.yF], [plot.x1, pyB]];
 			if (plot.yB !== null) { pc4.push([plot.x0, pyB]); }
-			groundSvg += '<path d="' + pc4.map(function (q, i) { var p2 = sc.cam.P([q[0], q[1], 0.02]); return (i ? 'L' : 'M') + f(p2[0]) + ' ' + f(p2[1]); }).join('') + '" fill="none" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="0.09" stroke-dasharray="0.5 0.35"/>';
+			groundSvg += '<path d="' + pc4.map(function (q, i) { var p2 = sc.cam.P([q[0], q[1], 0.02]); return (i ? 'L' : 'M') + f(p2[0]) + ' ' + f(p2[1]); }).join('') + '" fill="none" stroke="' + shade(groundC, -0.22) + '" stroke-opacity="0.55" stroke-width="0.07"/>';
 		}
 		var clipId = sc.def('gclip', '<clipPath id="' + sc.id + 'gclip"><polygon points="' + pts(gpoly) + '"/></clipPath>');
 		var horizon = '';
@@ -983,8 +983,11 @@
 		/* terrace (+ pergola / covered) */
 		var ta = clamp(num(c.terrace_area, 0), 0, 200);
 		if (ta > 0) {
-			var td = clamp(ta / 6, 2.4, 5), tw = clamp(ta / td, 3, W);
-			var tx0 = clamp(W * 0.62, 0, Math.max(0, W - tw)), ty1 = mainV.y1 + td;
+			var td = clamp(ta / 6, 2.4, 5), mlen = mainV.x1 - mainV.x0, mdp = doorPos(c, mlen);
+			var tdw = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
+			// centred on the terrace door (same rule as the facade openings), never wider than the main volume
+			var tcx = mainV.x0 + (mlen > 7 ? clamp(mlen * 0.62, mdp.x + mdp.w + 1.2, mlen - tdw - 0.6) + tdw / 2 : mlen * 0.62);
+			var tw = clamp(ta / td, Math.min(tdw + 0.8, mlen), mlen), tx0 = clamp(tcx - tw / 2, mainV.x0, mainV.x1 - tw), ty1 = mainV.y1 + td;
 			var tfc = { wpc: '#7A6E64', wood: '#A97B52', stone: '#CFC6B6', ceramic: '#BEB8AE' }[c.terrace_floor || 'wpc'];
 			var tfill = c.terrace_floor === 'stone' || c.terrace_floor === 'ceramic' ? sc.mat('slabs', tfc) : sc.mat('deck', tfc);
 			var tparts = box(sc, tx0, mainV.y1, 0, tx0 + tw, ty1, 0.18, { top: tfill, front: shade(tfc, -0.25) });

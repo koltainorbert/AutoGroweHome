@@ -44,6 +44,25 @@
 	function debounce(fn, ms) { var t; return function () { var a = arguments, s = this; clearTimeout(t); t = setTimeout(function () { fn.apply(s, a); }, ms); }; }
 	function lsGet(k, d) { try { var v = window.localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
 	function lsSet(k, v) { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+
+	// Wizard: the live preview column can be widened by dragging its left edge (double click = reset).
+	function wizSideResizer(main) {
+		var grip = h('div', { class: 'agh-wiz-grip', role: 'separator', 'aria-orientation': 'vertical' });
+		var saved = parseInt(lsGet('agh_wiz_side_w', 0), 10);
+		function apply(px) { if (px > 0) { main.style.setProperty('--agh-wiz-side-w', px + 'px'); } else { main.style.removeProperty('--agh-wiz-side-w'); } }
+		apply(saved);
+		grip.addEventListener('dblclick', function () { lsSet('agh_wiz_side_w', 0); apply(0); });
+		grip.addEventListener('pointerdown', function (e) {
+			e.preventDefault();
+			var rect = main.getBoundingClientRect(), pad = parseFloat(window.getComputedStyle(main).paddingRight) || 0, max = Math.max(300, Math.min(900, rect.width * 0.7)), cur = 0;
+			try { grip.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+			main.classList.add('is-resizing');
+			function move(ev) { cur = Math.round(Math.max(280, Math.min(max, rect.right - pad - ev.clientX - 7))); apply(cur); }
+			function up() { grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up); main.classList.remove('is-resizing'); if (cur) { lsSet('agh_wiz_side_w', cur); } window.dispatchEvent(new Event('resize')); }
+			grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', up);
+		});
+		main.appendChild(grip);
+	}
 	function fmt(n, d) { var x = Number(n); if (!isFinite(x)) { return '–'; } return x.toLocaleString(S.locale.replace('_', '-'), { maximumFractionDigits: d === undefined ? 1 : d }); }
 
 	var ICONS = {
@@ -1634,7 +1653,9 @@
 		els.wizBody = content;
 		els.wizScroll = h('div', { class: 'agh-wiz-scroll' }, content);
 		els.wizSide = keepSide || h('aside', { class: 'agh-wiz-side', 'aria-label': t('live_preview') });
-		w.appendChild(h('div', { class: 'agh-wiz-main' }, els.wizScroll, els.wizSide));
+		var wmain = h('div', { class: 'agh-wiz-main' }, els.wizScroll, els.wizSide);
+		wizSideResizer(wmain);
+		w.appendChild(wmain);
 
 		var nav = h('div', { class: 'agh-wiz-nav' });
 		nav.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-ghost agh-wiz-back', disabled: i === 0 ? 'disabled' : null, title: t('back'), onclick: function () { wizardGo(i - 1); } }, icon('left', 'agh-ico-s'), h('span', { class: 'agh-btn-label', text: t('back') })));

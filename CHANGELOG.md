@@ -1,5 +1,11 @@
 # Változásnapló
 
+## 1.1.2 – 2026-10-13
+
+- A fehér telekhatár-keret eltűnt: a telek széle vékony, a pázsitnál sötétebb vonal (3D és 2D).
+- A terasz a teraszajtó alá igazodik, és nem lóg túl a fő épülettömbön oldalra (3D és 2D).
+- Varázsló: az élő előnézeti panel bal szélénél húzással szélesíthető (dupla kattintás: alaphelyzet; a beállítás megmarad).
+
 ## 1.1.1 – 2026-10-13
 
 - Két stíluscsalád közös alapra került, csak kis részletekben különböznek: (1) Organikus modern + Egyedi stílus (az egyedi most az organikus alapról indul, zöldtető nélkül); (2) Modern minimalista + Kortárs luxus (azonos fehér, lapostetős, panorámaablakos alap; a luxus kő/fa kiegészítőt, kőteraszt, falazott kerítést és kültéri világítást kap).

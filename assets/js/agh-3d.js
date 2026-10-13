@@ -732,7 +732,11 @@ House.prototype.extras = function () {
 	var ta = clamp(num(c.terrace_area, 0), 0, 200);
 	this.ta = ta;
 	if (ta > 0) {
-		var td = clamp(ta / 6, 2.4, 5), tw = clamp(ta / td, 3, W), tx0 = clamp(W * 0.62, 0, Math.max(0, W - tw)), ty1 = mainV.y1 + td;
+		var td = clamp(ta / 6, 2.4, 5), mlen = mainV.x1 - mainV.x0, mdp = SK()._door(c, mlen);
+		var tdw = { folding: 3.6, french: 1.6, sliding: 2.6, lift_slide: 3.3 }[c.terrace_door] || 3.3;
+		// centred on the terrace door (same rule as faceOpenings), never wider than the main volume
+		var tcx = mainV.x0 + (mlen > 7 ? clamp(mlen * 0.62, mdp.x + mdp.w + 1.2, mlen - tdw - 0.6) + tdw / 2 : mlen * 0.62);
+		var tw = clamp(ta / td, Math.min(tdw + 0.8, mlen), mlen), tx0 = clamp(tcx - tw / 2, mainV.x0, mainV.x1 - tw), ty1 = mainV.y1 + td;
 		var tfc = { wpc: '#7A6E64', wood: '#A97B52', stone: '#CFC6B6', ceramic: '#BEB8AE' }[c.terrace_floor || 'wpc'];
 		var tm = c.terrace_floor === 'stone' || c.terrace_floor === 'ceramic' ? pbr('slabs', { color: tfc }, { normal: 1 }) : pbr('deck', { color: tfc }, { normal: 1.2 });
 		if (c.season === 'winter') { tm = pbr('snow', {}, { normal: 0.4 }); }
@@ -835,9 +839,10 @@ House.prototype.site = function () {
 	var lawn = has(gf, 'lawn') || !c.garden_features;
 	flat(left, back, right, front, 0.01, groundKind(c, lawn ? 'grass' : 'meadow'));
 	if (plot) {
-		var lm = solid('#EDEDE8', 0.8), yB = plot.yB !== null ? plot.yB : back + 0.4;
-		flat(plot.x0 - 0.05, yB, plot.x0 + 0.05, plot.yF, 0.03, lm); flat(plot.x1 - 0.05, yB, plot.x1 + 0.05, plot.yF, 0.03, lm); flat(plot.x0, plot.yF - 0.05, plot.x1, plot.yF + 0.05, 0.03, lm);
-		if (plot.yB !== null) { flat(plot.x0, yB - 0.05, plot.x1, yB + 0.05, 0.03, lm); }
+		// the plot edge: a thin, low-contrast seam in the lawn (no white frame)
+		var lm = solid(season === 'winter' ? '#B7C2CB' : '#5B7840', 0.95), yB = plot.yB !== null ? plot.yB : back + 0.4, lw = 0.04;
+		flat(plot.x0 - lw, yB, plot.x0 + lw, plot.yF, 0.025, lm); flat(plot.x1 - lw, yB, plot.x1 + lw, plot.yF, 0.025, lm); flat(plot.x0, plot.yF - lw, plot.x1, plot.yF + lw, 0.025, lm);
+		if (plot.yB !== null) { flat(plot.x0, yB - lw, plot.x1, yB + lw, 0.025, lm); }
 	}
 	var dpm = SK()._door(c, mainV.x1 - mainV.x0), doorMid = mainV.x0 + dpm.x + dpm.w / 2;
 	// Paths and the driveway end at the fence line (the fence has openings for them), never beyond it.

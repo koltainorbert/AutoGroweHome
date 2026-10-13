@@ -562,7 +562,14 @@
 .agh-wiz-steplabel { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .agh-wiz-bar { height: 3px; margin-top: 10px; border-radius: 3px; background: var(--agh-line); overflow: hidden; }
 .agh-wiz-bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--agh-primary), var(--agh-accent)); transition: width .4s var(--agh-ease); }
-.agh-wiz-main { min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 420px); gap: 14px; padding: 14px 20px; }
+.agh-wiz-main { position: relative; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) var(--agh-wiz-side-w, minmax(300px, 420px)); gap: 14px; padding: 14px 20px; }
+.agh-wiz-grip { grid-column: 2; grid-row: 1; justify-self: start; align-self: stretch; width: 14px; margin-left: -14px; z-index: 6; cursor: col-resize; touch-action: none; position: relative; }
+.agh-wiz-grip::after { content: ""; position: absolute; left: 5px; top: 50%; width: 4px; height: 44px; margin-top: -22px; border-radius: 4px; background: var(--agh-line-2); opacity: .7; transition: opacity .15s, background .15s; }
+.agh-wiz-grip:hover::after, .agh-wiz-main.is-resizing .agh-wiz-grip::after { opacity: 1; background: var(--agh-primary); }
+.agh-wiz-main.is-resizing { user-select: none; }
+.agh-wiz-main > .agh-wiz-scroll { grid-column: 1; grid-row: 1; }
+.agh-wiz-main > .agh-wiz-side { grid-column: 2; grid-row: 1; }
+.agh-wizard.is-last .agh-wiz-grip { display: none; }
 .agh-wiz-scroll {
 	min-height: 0; overflow: auto; border-radius: var(--agh-r-l); background: var(--agh-surface);
 	border: 1px solid var(--agh-glass-border); box-shadow: var(--agh-shadow-s);
@@ -600,6 +607,7 @@
 }
 @media (max-width: 1080px) {
 	.agh-wiz-main { grid-template-columns: minmax(0, 1fr) 280px; }
+	.agh-wiz-grip { display: none; }
 	.agh-wiz-steplabel { display: none; }
 	.agh-wiz-step.is-current .agh-wiz-steplabel { display: inline; }
 	.agh-body { grid-template-columns: var(--agh-left-w) minmax(0, 1fr); }
@@ -663,6 +671,7 @@
 	.agh-wiz-steps { display: none; }
 	.agh-wiz-bar { margin-top: 0; height: 4px; }
 	.agh-wiz-main { grid-template-columns: minmax(0, 1fr); padding: 10px; }
+	.agh-wiz-grip { display: none; }
 	.agh-wiz-side { display: none; }
 	.agh-wiz-content { padding: 18px 16px 24px; }
 	.agh-wiz-title { font-size: 23px; }
