@@ -1,5 +1,10 @@
 # Változásnapló
 
+## 1.1.1 – 2026-10-13
+
+- Két stíluscsalád közös alapra került, csak kis részletekben különböznek: (1) Organikus modern + Egyedi stílus (az egyedi most az organikus alapról indul, zöldtető nélkül); (2) Modern minimalista + Kortárs luxus (azonos fehér, lapostetős, panorámaablakos alap; a luxus kő/fa kiegészítőt, kőteraszt, falazott kerítést és kültéri világítást kap).
+- DB v7: a módosított stílusok javaslatai csak akkor frissülnek, ha az admin nem szerkesztette őket.
+
 ## 1.1.0 – 2026-10-12
 
 ### Stílus és varázsló
