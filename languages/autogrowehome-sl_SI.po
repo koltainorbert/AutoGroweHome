@@ -8605,3 +8605,27 @@ msgstr "Puščavska, suha pokrajina"
 #: includes/Params/Definitions.php
 msgid "Havas táj"
 msgstr "Zasnežena pokrajina"
+
+#: includes/Params/Definitions.php
+msgid "Magyar kockaház (kádeerkocka)"
+msgstr "Madžarska kockasta hiša"
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus magyar parasztház"
+msgstr "Klasična madžarska kmečka hiša"
+
+#: includes/Params/Definitions.php
+msgid "Magyar présház, borospince"
+msgstr "Madžarska zidanica z vinsko kletjo"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai mid-century modern"
+msgstr "Ameriški mid-century modern"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai modern, lapostetős"
+msgstr "Ameriški moderni z ravno streho"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagi modern (Palm Springs)"
+msgstr "Puščavski moderni (Palm Springs)"

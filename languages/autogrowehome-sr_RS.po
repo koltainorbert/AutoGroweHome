@@ -8603,3 +8603,27 @@ msgstr "Pustinjski, suvi pejzaž"
 #: includes/Params/Definitions.php
 msgid "Havas táj"
 msgstr "Snežni pejzaž"
+
+#: includes/Params/Definitions.php
+msgid "Magyar kockaház (kádeerkocka)"
+msgstr "Mađarska kockasta kuća"
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus magyar parasztház"
+msgstr "Klasična mađarska seoska kuća"
+
+#: includes/Params/Definitions.php
+msgid "Magyar présház, borospince"
+msgstr "Mađarska klijet sa vinskim podrumom"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai mid-century modern"
+msgstr "Američki mid-century modern"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai modern, lapostetős"
+msgstr "Američki moderni, ravan krov"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagi modern (Palm Springs)"
+msgstr "Pustinjski moderni (Palm Springs)"

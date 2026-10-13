@@ -8603,3 +8603,27 @@ msgstr "Peisaj deșertic, uscat"
 #: includes/Params/Definitions.php
 msgid "Havas táj"
 msgstr "Peisaj înzăpezit"
+
+#: includes/Params/Definitions.php
+msgid "Magyar kockaház (kádeerkocka)"
+msgstr "Casă cub maghiară"
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus magyar parasztház"
+msgstr "Casă țărănească maghiară clasică"
+
+#: includes/Params/Definitions.php
+msgid "Magyar présház, borospince"
+msgstr "Cramă maghiară cu pivniță de vin"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai mid-century modern"
+msgstr "Mid-century modern american"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai modern, lapostetős"
+msgstr "Modern american, acoperiș plat"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagi modern (Palm Springs)"
+msgstr "Modern deșertic (Palm Springs)"

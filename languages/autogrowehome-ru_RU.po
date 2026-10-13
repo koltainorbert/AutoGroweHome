@@ -8603,3 +8603,27 @@ msgstr "Пустынный засушливый ландшафт"
 #: includes/Params/Definitions.php
 msgid "Havas táj"
 msgstr "Заснеженный пейзаж"
+
+#: includes/Params/Definitions.php
+msgid "Magyar kockaház (kádeerkocka)"
+msgstr "Венгерский дом-куб"
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus magyar parasztház"
+msgstr "Классический венгерский крестьянский дом"
+
+#: includes/Params/Definitions.php
+msgid "Magyar présház, borospince"
+msgstr "Венгерская винодельня с погребом"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai mid-century modern"
+msgstr "Американский мид-сенчури модерн"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai modern, lapostetős"
+msgstr "Американский модерн с плоской крышей"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagi modern (Palm Springs)"
+msgstr "Пустынный модерн (Палм-Спрингс)"

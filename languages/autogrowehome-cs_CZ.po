@@ -8603,3 +8603,27 @@ msgstr "Pouštní, suchá krajina"
 #: includes/Params/Definitions.php
 msgid "Havas táj"
 msgstr "Zasněžená krajina"
+
+#: includes/Params/Definitions.php
+msgid "Magyar kockaház (kádeerkocka)"
+msgstr "Maďarský kostkový dům"
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus magyar parasztház"
+msgstr "Klasický maďarský selský dům"
+
+#: includes/Params/Definitions.php
+msgid "Magyar présház, borospince"
+msgstr "Maďarská lisovna s vinným sklepem"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai mid-century modern"
+msgstr "Americký mid-century modern"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai modern, lapostetős"
+msgstr "Americký moderní s plochou střechou"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagi modern (Palm Springs)"
+msgstr "Pouštní moderní (Palm Springs)"

@@ -8573,3 +8573,27 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "Havas táj"
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Magyar kockaház (kádeerkocka)"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus magyar parasztház"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Magyar présház, borospince"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Amerikai mid-century modern"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Amerikai modern, lapostetős"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Sivatagi modern (Palm Springs)"
+msgstr ""

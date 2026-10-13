@@ -59,7 +59,7 @@ var P = {
 	snowy: { hill: 20, far: 260, farR: 760, tree: ['conifer', 'conifer', 'birch'], n: 900, near: 90, snow: 10, rock: 0.5 }
 };
 // the landscape that suits the style when the visitor has not chosen one
-var STYLE_LAND = { modern_minimal: 'suburb', contemporary_lux: 'hills', mediterranean: 'sea', scandinavian: 'lake', bauhaus: 'suburb', japandi: 'hills', classic_burgher: 'suburb', rustic: 'farmstead', modern_farmhouse: 'plain', american_farm: 'plain', alpine: 'mountains', industrial: 'suburb', organic_modern: 'forest', high_tech: 'suburb', passive: 'forest' };
+var STYLE_LAND = { cube_house: 'suburb', folk_house: 'farmstead', wine_cellar: 'vineyard', midcentury: 'suburb', us_modern: 'suburb', desert_modern: 'desert', modern_minimal: 'suburb', contemporary_lux: 'hills', mediterranean: 'sea', scandinavian: 'lake', bauhaus: 'suburb', japandi: 'hills', classic_burgher: 'suburb', rustic: 'farmstead', modern_farmhouse: 'plain', american_farm: 'plain', alpine: 'mountains', industrial: 'suburb', organic_modern: 'forest', high_tech: 'suburb', passive: 'forest' };
 export function landKind(c) { var k = c.landscape || 'auto'; return P[k] ? k : (STYLE_LAND[c.arch_style] || 'hills'); }
 export var WATER_Y = -1.0;
 // the street in front of the plot (sketch y of its near edge; set by the viewer per house)
@@ -332,6 +332,13 @@ var HOOD = {
 	industrial: { roofs: ['flat', 'shed', 'gable'], fac: ['brick', 'metal', 'concrete'], walls: ['#8E5A44', '#5A5D60', '#B9B4AA'], roofC: ['#2E3033', '#3A3D40'], lv: ['two', 'single'], fp: ['rectangle', 'l_shape'] },
 	organic_modern: { roofs: ['flat', 'shed', 'gable'], fac: ['wood_horizontal', 'render', 'stone'], walls: ['#E9E3D6', '#D8CFBE', '#C4B59C'], roofC: ['#3A3D40'], lv: ['single', 'two'], fp: ['rectangle', 'l_shape'] },
 	high_tech: { roofs: ['flat'], fac: ['metal', 'concrete', 'render'], walls: ['#F4F4F2', '#B9BCBF', '#3E4145'], roofC: ['#2E3033'], lv: ['two', 'single'], fp: ['rectangle', 'staggered'] },
+	// 1.8.0 styles: a street of cube houses, a village row, a vineyard hamlet, three American suburbs
+	cube_house: { roofs: ['pyramid', 'hip', 'gable'], fac: ['render', 'render', 'brick'], walls: ['#F1E7D3', '#E8DCC4', '#EFE3CE', '#D9C9A8', '#CFE0D6'], roofC: ['#8C4A35', '#7A3F2E', '#9A5A40'], lv: ['attic', 'attic', 'single'], fp: ['rectangle'] },
+	folk_house: { roofs: ['gable', 'half_hip'], fac: ['render', 'render', 'stone'], walls: ['#F6F2E8', '#F2EBDD', '#EFE6D2', '#E6DAC3'], roofC: ['#8C4A35', '#9A5A40', '#5A4A42'], lv: ['single', 'attic'], fp: ['rectangle'] },
+	wine_cellar: { roofs: ['gable', 'gable', 'half_hip'], fac: ['render', 'stone'], walls: ['#F4EFE2', '#EDE3CE', '#E3D7BE'], roofC: ['#8C4A35', '#7A3F2E'], lv: ['single'], fp: ['rectangle'] },
+	midcentury: { roofs: ['flat', 'flat', 'shed'], fac: ['wood_horizontal', 'render', 'stone', 'brick'], walls: ['#E9E3D6', '#D8D2C6', '#C9A57C', '#8FA3A8'], roofC: ['#3A3D40', '#2E3033'], lv: ['single', 'single', 'two'], fp: ['rectangle', 'l_shape', 'staggered'] },
+	us_modern: { roofs: ['flat', 'flat', 'shed'], fac: ['render', 'wood_horizontal', 'board_batten'], walls: ['#F4F2EE', '#2E3236', '#E3DED4', '#B9B4AA'], roofC: ['#2E3033', '#3A3D40'], lv: ['two', 'two', 'single'], fp: ['rectangle', 'staggered', 'l_shape'] },
+	desert_modern: { roofs: ['flat'], fac: ['render', 'render', 'stone'], walls: ['#F3E9D7', '#EBD9BC', '#E7C9A2', '#D8CFC2'], roofC: ['#C9C4BA', '#B9B4AA'], lv: ['single'], fp: ['rectangle', 'l_shape'] },
 	passive: { roofs: ['gable', 'flat', 'shed'], fac: ['render', 'wood_horizontal'], walls: ['#F4F2EE', '#E3DED4', '#C9C2B2'], roofC: ['#3A3D40', '#2E3033'], lv: ['two', 'single'], fp: ['rectangle'] }
 };
 var TREE_OF = { mediterranean: 'olive', alpine: 'conifer', scandinavian: 'conifer', japandi: 'birch' };

@@ -8601,3 +8601,27 @@ msgstr "Wüstenhafte, trockene Landschaft"
 #: includes/Params/Definitions.php
 msgid "Havas táj"
 msgstr "Verschneite Landschaft"
+
+#: includes/Params/Definitions.php
+msgid "Magyar kockaház (kádeerkocka)"
+msgstr "Ungarisches Würfelhaus (Kockaház)"
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus magyar parasztház"
+msgstr "Klassisches ungarisches Bauernhaus"
+
+#: includes/Params/Definitions.php
+msgid "Magyar présház, borospince"
+msgstr "Ungarisches Presshaus mit Weinkeller"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai mid-century modern"
+msgstr "Amerikanischer Mid-Century-Modern"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai modern, lapostetős"
+msgstr "Amerikanisch modern mit Flachdach"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagi modern (Palm Springs)"
+msgstr "Desert Modern (Palm Springs)"

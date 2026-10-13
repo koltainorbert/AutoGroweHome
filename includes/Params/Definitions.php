@@ -157,6 +157,12 @@ final class Definitions {
 					'organic_modern'   => array( __( 'Organikus modern', 'autogrowehome' ), 'organic modern' ),
 					'high_tech'        => array( __( 'High-tech', 'autogrowehome' ), 'high-tech' ),
 					'passive'          => array( __( 'Passzívház', 'autogrowehome' ), 'passive-house standard compact' ),
+					'cube_house'       => array( __( 'Magyar kockaház (kádeerkocka)', 'autogrowehome' ), 'Hungarian cube house (kockahaz) with a four-sided hipped roof' ),
+					'folk_house'       => array( __( 'Klasszikus magyar parasztház', 'autogrowehome' ), 'classic Hungarian village farmhouse with a tornac porch' ),
+					'wine_cellar'      => array( __( 'Magyar présház, borospince', 'autogrowehome' ), 'small Hungarian press house with a vaulted wine cellar' ),
+					'midcentury'       => array( __( 'Amerikai mid-century modern', 'autogrowehome' ), 'American mid-century modern' ),
+					'us_modern'        => array( __( 'Amerikai modern, lapostetős', 'autogrowehome' ), 'American modern flat-roofed house' ),
+					'desert_modern'    => array( __( 'Sivatagi modern (Palm Springs)', 'autogrowehome' ), 'desert modern, Palm Springs style' ),
 					'custom'           => array( __( 'Egyedi stílus', 'autogrowehome' ), 'custom' ),
 				)
 			)
@@ -1718,7 +1724,7 @@ final class Definitions {
 	 * agh-3d-land.js uses the same table).
 	 */
 	public static function landscape_for_style( string $style ): string {
-		$map = array( 'modern_minimal' => 'suburb', 'contemporary_lux' => 'hills', 'mediterranean' => 'sea', 'scandinavian' => 'lake', 'bauhaus' => 'suburb', 'japandi' => 'hills', 'classic_burgher' => 'suburb', 'rustic' => 'farmstead', 'modern_farmhouse' => 'plain', 'american_farm' => 'plain', 'alpine' => 'mountains', 'industrial' => 'suburb', 'organic_modern' => 'forest', 'high_tech' => 'suburb', 'passive' => 'forest' );
+		$map = array( 'cube_house' => 'suburb', 'folk_house' => 'farmstead', 'wine_cellar' => 'vineyard', 'midcentury' => 'suburb', 'us_modern' => 'suburb', 'desert_modern' => 'desert', 'modern_minimal' => 'suburb', 'contemporary_lux' => 'hills', 'mediterranean' => 'sea', 'scandinavian' => 'lake', 'bauhaus' => 'suburb', 'japandi' => 'hills', 'classic_burgher' => 'suburb', 'rustic' => 'farmstead', 'modern_farmhouse' => 'plain', 'american_farm' => 'plain', 'alpine' => 'mountains', 'industrial' => 'suburb', 'organic_modern' => 'forest', 'high_tech' => 'suburb', 'passive' => 'forest' );
 		return $map[ $style ] ?? 'hills';
 	}
 

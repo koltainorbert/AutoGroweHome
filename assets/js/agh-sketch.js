@@ -292,7 +292,14 @@
 		industrial: { seam: true, lintel: '#1E1F21', grid: true },
 		organic_modern: { fins: '#8A6A4C' },
 		high_tech: { fins: '#9DA1A4', portal: '#5E6266' },
-		passive: { pv: true, reveal: true }
+		passive: { pv: true, reveal: true },
+		// 1.8.0 – Hungarian cube house, village farmhouse, press house and three American flat-roofed houses
+		cube_house: { sym: true, trim: 'light', lintel: '#C7B79C' },
+		folk_house: { sym: true, porch: '#F6F2E8', lintel: '#8A7A5C', trim: 'light' },
+		wine_cellar: { arches: true, quoins: true, lintel: '#8A7A5C' },
+		midcentury: { over: 1.1, slats: '#8A6A4C', portal: '#3A3D40' },
+		us_modern: { band: true, slats: '#5C4632' },
+		desert_modern: { over: 1.0, fins: '#C9A882', portal: '#3A3D40' }
 	};
 	function styleOf(c) { return STYLES[c.arch_style] || {}; }
 	// Colour of the surround around the windows (null = none): by style, or the visitor's choice.

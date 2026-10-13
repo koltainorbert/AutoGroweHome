@@ -8601,3 +8601,27 @@ msgstr "Paesaggio desertico e arido"
 #: includes/Params/Definitions.php
 msgid "Havas táj"
 msgstr "Paesaggio innevato"
+
+#: includes/Params/Definitions.php
+msgid "Magyar kockaház (kádeerkocka)"
+msgstr "Casa a cubo ungherese"
+
+#: includes/Params/Definitions.php
+msgid "Klasszikus magyar parasztház"
+msgstr "Casa contadina ungherese classica"
+
+#: includes/Params/Definitions.php
+msgid "Magyar présház, borospince"
+msgstr "Casa del torchio ungherese con cantina"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai mid-century modern"
+msgstr "Mid-century modern americano"
+
+#: includes/Params/Definitions.php
+msgid "Amerikai modern, lapostetős"
+msgstr "Moderno americano con tetto piano"
+
+#: includes/Params/Definitions.php
+msgid "Sivatagi modern (Palm Springs)"
+msgstr "Moderno del deserto (Palm Springs)"

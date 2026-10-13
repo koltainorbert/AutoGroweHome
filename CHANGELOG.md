@@ -16,7 +16,8 @@
 - Új teszt: `tests/e2e/rooms.js` – véletlen konfigurációkkal belső tereket épít és méri, hogy minden tárgy a szobán belül van-e. Mérve: 56 szoba, 311 tárgy, 0 kilógó, 0 ajtóban álló, 0 konzolhiba, és többszintes háznál 6/6 helyiségben megvan a lépcső.
 - Koppintás a modellre: a 3D előnézetben egy elemre kattintva (érintőképernyőn koppintva) a bal oldali beállítások arra a mezőre ugranak, és a mező felvillan. A ház minden része tudja, melyik beállításhoz tartozik: homlokzat, tető, ablak, bejárati ajtó, előtető, terasz, kert, fák, és belül minden bútor, tárgy, kép, radiátor, lépcső, háziállat. Ha a tárgynak nincs saját mezője, a „további bútorok”, „elektronika” vagy „háziállatok” mezőhöz ugrik. A forgatás nem változik: csak a 6 képpontnál kisebb elmozdulás számít koppintásnak. Új teszt: `tests/e2e/pick.js` (122 rész, 8 mező, kívül és belül is talál).
 - Kilenc új helyszín a 7 mellé: szőlőhegy présházas domboldallal, alföldi tanya, folyópart, patakvölgy, fenyves hegyvidék, puszta, városi utcasor, sivatagos száraz táj és havas táj. Mindegyiknek saját domborzata, növényzete, talaja és vize van. A rusztikus stílus „a stílushoz illő” tája mostantól az alföldi tanya. Mérve (SwiftShader): mind a 16 táj felépül, 90–218 ms, 0 konzolhiba.
-- 38 új felirat 15 nyelven, az erkély súgója újrafogalmazva.
+- Hat új építészeti stílus, saját tömeggel, tetővel, anyagokkal, színekkel, kerttel, tájjal és szomszédokkal: **magyar kockaház (kádeerkocka)** négy irányba lejtő sátortetővel és tetőtérrel, **klasszikus magyar parasztház** tornáccal és oromfalas nyeregtetővel, **magyar présház borospincével** a szőlőhegyen, **amerikai mid-century modern** széles ereszkiülésű lapostetővel, **amerikai modern lapostetős** kétszintes dobozokkal, és **sivatagi modern (Palm Springs)** kiálló tetőlemezzel. Mindegyik stíluskártyája a megfelelő beállításokat hozza magával.
+- 44 új felirat 15 nyelven, az erkély súgója újrafogalmazva.
 
 ## 1.7.0 – 2026-10-13
 
