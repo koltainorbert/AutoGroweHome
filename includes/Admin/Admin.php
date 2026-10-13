@@ -767,6 +767,11 @@ final class Admin {
 		if ( ! Secrets::has( 'anthropic_api_key' ) ) {
 			$w[] = array( 'warning', __( 'Nincs Anthropic API-kulcs – a koncepciókat a beállított szabályalapú tervező készíti, az „AI értelmezés” nem érhető el.', 'autogrowehome' ) );
 		}
+		if ( ! Features::enabled( 'full_params' ) ) {
+			$locked = count( array_filter( Registry::fields(), function ( $d ) { return ! empty( $d['locked'] ); } ) );
+			/* translators: 1: number of hidden settings, 2: number of all settings. */
+			$w[] = array( 'error', sprintf( __( 'A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( \'AGH_OWNER_MODE\', true ); – ügyféloldalon aktiváld a licencet.', 'autogrowehome' ), $locked, count( Registry::fields() ) ) . ' <a href="' . esc_url( admin_url( 'admin.php?page=agh-license' ) ) . '">' . esc_html__( 'Licenc', 'autogrowehome' ) . '</a>' );
+		}
 		if ( $st['image_is_test'] ) {
 			$w[] = array( 'warning', __( 'A képgenerálás TESZT módban fut: a látogatók helyi vázlatképeket kapnak (egyértelműen jelölve).', 'autogrowehome' ) );
 		}

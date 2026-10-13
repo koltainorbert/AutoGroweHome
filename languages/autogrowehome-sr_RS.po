@@ -7112,3 +7112,19 @@ msgstr "Стаклена кутија са видљивом челичном к�
 #: includes/Params/Definitions.php
 msgid "Kompakt, tagolatlan tömb"
 msgstr "Компактан, једноставан волумен"
+
+#. translators: %1$s: number of settings that are not available in the current licence plan.
+#: includes/Frontend/Strings.php
+#, php-format
+msgid "Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható."
+msgstr "На овом сајту ради основни пакет (Starter): још %1$s подешавања (кров, фасада, прозори и врата, детаљи ентеријера, енергија) видљиво је само у пакету Professional."
+
+#: includes/Frontend/Strings.php
+msgid "Adminisztrátornak: saját oldalon a wp-config.php-ban a define( 'AGH_OWNER_MODE', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc)."
+msgstr "За администраторе: на сопственом сајту ред define( 'AGH_OWNER_MODE', true ); у датотеци wp-config.php, на сајту клијента активација лиценце укључује сва (Админ → Лиценца)."
+
+#. translators: 1: number of hidden settings, 2: number of all settings.
+#: includes/Admin/Admin.php
+#, php-format
+msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
+msgstr "Дизајнер ради у основном режиму (Starter): %1$d од %2$d подешавања скривено је од посетилаца јер нема активне лиценце Professional (или је истекао грејс период). На сопственом сајту додајте у wp-config.php: define( 'AGH_OWNER_MODE', true ); – на сајту клијента активирајте лиценцу."

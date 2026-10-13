@@ -7112,3 +7112,19 @@ msgstr "Стеклянный объём с открытым стальным к�
 #: includes/Params/Definitions.php
 msgid "Kompakt, tagolatlan tömb"
 msgstr "Компактный простой объём"
+
+#. translators: %1$s: number of settings that are not available in the current licence plan.
+#: includes/Frontend/Strings.php
+#, php-format
+msgid "Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható."
+msgstr "На этом сайте работает базовый пакет (Starter): ещё %1$s настроек (крыша, фасад, окна и двери, детали интерьера, энергия) видны только в пакете Professional."
+
+#: includes/Frontend/Strings.php
+msgid "Adminisztrátornak: saját oldalon a wp-config.php-ban a define( 'AGH_OWNER_MODE', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc)."
+msgstr "Для администраторов: на своём сайте строка define( 'AGH_OWNER_MODE', true ); в wp-config.php, на сайте клиента активация лицензии включает все настройки (Админка → Лицензия)."
+
+#. translators: 1: number of hidden settings, 2: number of all settings.
+#: includes/Admin/Admin.php
+#, php-format
+msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
+msgstr "Конструктор работает в базовом режиме (Starter): %1$d из %2$d настроек скрыты от посетителей, так как нет активной лицензии Professional (или истёк льготный период). На своём сайте добавьте в wp-config.php: define( 'AGH_OWNER_MODE', true ); – на сайте клиента активируйте лицензию."

@@ -7082,3 +7082,19 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "Kompakt, tagolatlan tömb"
 msgstr ""
+
+#. translators: %1$s: number of settings that are not available in the current licence plan.
+#: includes/Frontend/Strings.php
+#, php-format
+msgid "Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható."
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Adminisztrátornak: saját oldalon a wp-config.php-ban a define( 'AGH_OWNER_MODE', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc)."
+msgstr ""
+
+#. translators: 1: number of hidden settings, 2: number of all settings.
+#: includes/Admin/Admin.php
+#, php-format
+msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
+msgstr ""

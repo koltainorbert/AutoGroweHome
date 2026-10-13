@@ -211,6 +211,9 @@ final class Strings {
 			'shape_staggered'        => __( 'Tagolt', 'autogrowehome' ),
 			/* translators: %1$s: number of hidden advanced settings. */
 			'show_advanced'          => __( '+ %1$s haladó beállítás', 'autogrowehome' ),
+			/* translators: %1$s: number of settings that are not available in the current licence plan. */
+			'plan_limited'           => __( 'Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható.', 'autogrowehome' ),
+			'plan_limited_admin'     => __( 'Adminisztrátornak: saját oldalon a wp-config.php-ban a define( \'AGH_OWNER_MODE\', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc).', 'autogrowehome' ),
 			'skip'                   => __( 'Kihagyás', 'autogrowehome' ),
 			'start'                  => __( 'Kezdjük!', 'autogrowehome' ),
 			'status_changed'         => __( 'A beállítások változtak – új generálással frissítheted a terveket.', 'autogrowehome' ),

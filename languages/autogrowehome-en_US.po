@@ -7110,3 +7110,19 @@ msgstr "Glass box with an exposed steel frame"
 #: includes/Params/Definitions.php
 msgid "Kompakt, tagolatlan tömb"
 msgstr "Compact, simple volume"
+
+#. translators: %1$s: number of settings that are not available in the current licence plan.
+#: includes/Frontend/Strings.php
+#, php-format
+msgid "Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható."
+msgstr "This site runs the basic plan (Starter): %1$s more settings (roof, facade, windows and doors, interior details, energy) are only shown in the Professional plan."
+
+#: includes/Frontend/Strings.php
+msgid "Adminisztrátornak: saját oldalon a wp-config.php-ban a define( 'AGH_OWNER_MODE', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc)."
+msgstr "For administrators: on your own site the line define( 'AGH_OWNER_MODE', true ); in wp-config.php, on a client site activating the licence turns them all on (Admin → Licence)."
+
+#. translators: 1: number of hidden settings, 2: number of all settings.
+#: includes/Admin/Admin.php
+#, php-format
+msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
+msgstr "The designer runs in basic (Starter) mode: %1$d of %2$d settings are hidden from visitors because there is no active Professional licence (or the grace period has ended). On your own site add to wp-config.php: define( 'AGH_OWNER_MODE', true ); – on a client site activate the licence."

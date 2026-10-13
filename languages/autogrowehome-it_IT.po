@@ -7110,3 +7110,19 @@ msgstr "Scatola di vetro con struttura in acciaio a vista"
 #: includes/Params/Definitions.php
 msgid "Kompakt, tagolatlan tömb"
 msgstr "Volume compatto e semplice"
+
+#. translators: %1$s: number of settings that are not available in the current licence plan.
+#: includes/Frontend/Strings.php
+#, php-format
+msgid "Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható."
+msgstr "Questo sito usa il piano base (Starter): altre %1$s impostazioni (tetto, facciata, serramenti, dettagli interni, energia) sono visibili solo nel piano Professional."
+
+#: includes/Frontend/Strings.php
+msgid "Adminisztrátornak: saját oldalon a wp-config.php-ban a define( 'AGH_OWNER_MODE', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc)."
+msgstr "Per gli amministratori: sul proprio sito la riga define( 'AGH_OWNER_MODE', true ); in wp-config.php, sul sito di un cliente l'attivazione della licenza le abilita tutte (Admin → Licenza)."
+
+#. translators: 1: number of hidden settings, 2: number of all settings.
+#: includes/Admin/Admin.php
+#, php-format
+msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
+msgstr "Il configuratore funziona in modalità base (Starter): %1$d impostazioni su %2$d sono nascoste ai visitatori perché non c'è una licenza Professional attiva (o è terminato il periodo di tolleranza). Sul proprio sito aggiungere a wp-config.php: define( 'AGH_OWNER_MODE', true ); – sul sito di un cliente attivare la licenza."

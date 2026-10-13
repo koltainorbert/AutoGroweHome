@@ -7112,3 +7112,19 @@ msgstr "Szklane pudełko z widoczną konstrukcją stalową"
 #: includes/Params/Definitions.php
 msgid "Kompakt, tagolatlan tömb"
 msgstr "Zwarta, prosta bryła"
+
+#. translators: %1$s: number of settings that are not available in the current licence plan.
+#: includes/Frontend/Strings.php
+#, php-format
+msgid "Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható."
+msgstr "Na tej stronie działa pakiet podstawowy (Starter): kolejne %1$s ustawień (dach, elewacja, stolarka, detale wnętrz, energia) jest widocznych tylko w pakiecie Professional."
+
+#: includes/Frontend/Strings.php
+msgid "Adminisztrátornak: saját oldalon a wp-config.php-ban a define( 'AGH_OWNER_MODE', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc)."
+msgstr "Dla administratorów: na własnej stronie wiersz define( 'AGH_OWNER_MODE', true ); w pliku wp-config.php, na stronie klienta aktywacja licencji włącza wszystkie (Admin → Licencja)."
+
+#. translators: 1: number of hidden settings, 2: number of all settings.
+#: includes/Admin/Admin.php
+#, php-format
+msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
+msgstr "Projektant działa w trybie podstawowym (Starter): %1$d z %2$d ustawień jest ukrytych przed odwiedzającymi, bo brak aktywnej licencji Professional (lub minął okres karencji). Na własnej stronie dodaj do wp-config.php: define( 'AGH_OWNER_MODE', true ); – na stronie klienta aktywuj licencję."

@@ -7110,3 +7110,19 @@ msgstr "Glazen doos met zichtbaar staalskelet"
 #: includes/Params/Definitions.php
 msgid "Kompakt, tagolatlan tömb"
 msgstr "Compact, eenvoudig volume"
+
+#. translators: %1$s: number of settings that are not available in the current licence plan.
+#: includes/Frontend/Strings.php
+#, php-format
+msgid "Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható."
+msgstr "Deze site gebruikt het basispakket (Starter): nog %1$s instellingen (dak, gevel, ramen en deuren, interieurdetails, energie) zijn alleen zichtbaar in het Professional-pakket."
+
+#: includes/Frontend/Strings.php
+msgid "Adminisztrátornak: saját oldalon a wp-config.php-ban a define( 'AGH_OWNER_MODE', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc)."
+msgstr "Voor beheerders: op je eigen site de regel define( 'AGH_OWNER_MODE', true ); in wp-config.php, op een klantsite zet het activeren van de licentie alles aan (Beheer → Licentie)."
+
+#. translators: 1: number of hidden settings, 2: number of all settings.
+#: includes/Admin/Admin.php
+#, php-format
+msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
+msgstr "De ontwerper draait in basismodus (Starter): %1$d van de %2$d instellingen zijn verborgen voor bezoekers omdat er geen actieve Professional-licentie is (of de respijtperiode is verlopen). Voeg op je eigen site toe aan wp-config.php: define( 'AGH_OWNER_MODE', true ); – activeer op een klantsite de licentie."

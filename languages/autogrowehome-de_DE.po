@@ -7110,3 +7110,19 @@ msgstr "Glasbox mit sichtbarem Stahltragwerk"
 #: includes/Params/Definitions.php
 msgid "Kompakt, tagolatlan tömb"
 msgstr "Kompakter, ungegliederter Baukörper"
+
+#. translators: %1$s: number of settings that are not available in the current licence plan.
+#: includes/Frontend/Strings.php
+#, php-format
+msgid "Ezen az oldalon az alapcsomag (Starter) fut: további %1$s beállítás (tető, homlokzat, nyílászárók, belső részletek, energia) csak a Professional csomagban látható."
+msgstr "Auf dieser Website läuft das Basispaket (Starter): %1$s weitere Einstellungen (Dach, Fassade, Fenster und Türen, Innendetails, Energie) sind nur im Professional-Paket sichtbar."
+
+#: includes/Frontend/Strings.php
+msgid "Adminisztrátornak: saját oldalon a wp-config.php-ban a define( 'AGH_OWNER_MODE', true ); sor, ügyféloldalon a licenc aktiválása kapcsolja be az összeset (Admin → Licenc)."
+msgstr "Für Administratoren: auf der eigenen Website die Zeile define( 'AGH_OWNER_MODE', true ); in der wp-config.php, auf einer Kundenwebsite die Aktivierung der Lizenz schaltet alle frei (Admin → Lizenz)."
+
+#. translators: 1: number of hidden settings, 2: number of all settings.
+#: includes/Admin/Admin.php
+#, php-format
+msgid "A tervező alapcsomag (Starter) módban fut: a %2$d beállításból %1$d rejtve van a látogatók elől, mert nincs aktív Professional licenc (vagy lejárt a türelmi idő). Saját oldalon a wp-config.php-ba írd be: define( 'AGH_OWNER_MODE', true ); – ügyféloldalon aktiváld a licencet."
+msgstr "Der Planer läuft im Basismodus (Starter): %1$d von %2$d Einstellungen sind für Besucher ausgeblendet, weil keine aktive Professional-Lizenz vorhanden ist (oder die Kulanzfrist abgelaufen ist). Auf der eigenen Website in die wp-config.php eintragen: define( 'AGH_OWNER_MODE', true ); – auf einer Kundenwebsite die Lizenz aktivieren."

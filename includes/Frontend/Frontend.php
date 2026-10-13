@@ -249,6 +249,9 @@ final class Frontend {
 			'features'  => array(
 				'save'        => Features::enabled( 'project_save' ),
 				'full_params' => Features::enabled( 'full_params' ),
+				// settings hidden by the licence plan (Starter shows the basic set only)
+				'params_locked' => count( array_filter( Registry::fields(), function ( $d ) { return ! empty( $d['locked'] ); } ) ),
+				'manage'      => current_user_can( 'agh_manage' ),
 				'floorplans'  => Features::enabled( 'floorplans' ),
 				'download'    => Features::enabled( 'hero_download' ),
 				'quote'       => Features::enabled( 'contractor_email' ),

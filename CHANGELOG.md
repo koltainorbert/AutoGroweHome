@@ -1,5 +1,11 @@
 # Változásnapló
 
+## 1.3.2 – 2026-10-13
+
+- A varázsló „Teljes tervező” gombja Részletes módban nyitja a tervezőt (minden beállítással), nem Egyszerűben.
+- Ha az oldal licenccsomagja csak az alapbeállításokat engedi (Starter: nincs aktív Professional licenc vagy lejárt a türelmi idő, és nincs AGH_OWNER_MODE), a tervező kiírja, hány beállítás rejtett és miért; az admin minden oldalán hibaüzenet jelzi, hogyan kapcsolható be (saját oldalon AGH_OWNER_MODE, ügyféloldalon licenc). Eddig a beállítások szó nélkül tűntek el (mérve: 123 helyett 31 látszott).
+- 3 új felirat 15 nyelven.
+
 ## 1.3.1 – 2026-10-13
 
 ### Gyorsítás (3D előnézet és tervező)

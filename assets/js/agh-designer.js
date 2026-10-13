@@ -532,12 +532,15 @@
 
 	function setMode(m) {
 		S.mode = m;
-		[els.modeSeg, els.menuModeSeg].forEach(function (seg) {
-			if (!seg) { return; }
-			Array.prototype.forEach.call(seg.children, function (b, i) { b.setAttribute('aria-pressed', (i === 0 ? 'simple' : 'detailed') === m ? 'true' : 'false'); });
-		});
+		syncModeSeg();
 		persist();
 		renderFields();
+	}
+	function syncModeSeg() {
+		[els.modeSeg, els.menuModeSeg].forEach(function (seg) {
+			if (!seg) { return; }
+			Array.prototype.forEach.call(seg.children, function (b, i) { b.setAttribute('aria-pressed', (i === 0 ? 'simple' : 'detailed') === S.mode ? 'true' : 'false'); });
+		});
 	}
 
 	function switchLang(code) {
@@ -624,6 +627,12 @@
 			if (hidden) { list.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', onclick: function () { setMode('detailed'); } }, icon('sliders', 'agh-ico-s'), tf('show_advanced', hidden))); }
 		}
 		if (S.cat === 'custom' && !S.search) { list.appendChild(renderInterpret()); }
+		// Licence plan without the full parameter set: say so instead of silently showing less.
+		var locked = S.boot.features && !S.boot.features.full_params ? Number(S.boot.features.params_locked || 0) : 0;
+		if (locked > 0) {
+			list.appendChild(h('div', { class: 'agh-plan-note', role: 'note' }, icon('lock', 'agh-ico-s'),
+				h('div', null, h('span', { text: tf('plan_limited', locked) }), S.boot.features.manage ? h('span', { class: 'agh-small', text: t('plan_limited_admin') }) : null)));
+		}
 		updateRail();
 	}
 
@@ -1586,6 +1595,8 @@
 		if (els.wizard) { els.wizard.hidden = true; clear(els.wizard); }
 		els.wizBody = els.wizSide = els.wizScroll = els.wizGen = els.wizDone = els.wizPv = els.wizKpis = null;
 		updateWizardToggles();
+		// "Full designer" from the wizard opens with every setting (detailed mode)
+		if (!silent && S.mode !== 'detailed') { S.mode = 'detailed'; persist(); syncModeSeg(); }
 		renderParams();
 		renderStage();
 		renderSummary();
