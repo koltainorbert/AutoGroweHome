@@ -1592,9 +1592,11 @@ Viewer.prototype.update = function (cfg, mode) {
 	this.exposure = this.renderer.toneMappingExposure = t.exp * (overcast ? 1.15 : 1);
 	var sd = sunDir(c);
 	this.sunDir = sd;
-	this.sun.color.set(t.sun); this.sun.intensity = overcast ? t.si * 0.25 : t.si;
+	// indoors the sun comes through the openings: softer, so there are no burnt-out patches and no black corners
+	var innerLight = !!c._int || mode === 'interior';
+	this.sun.color.set(t.sun); this.sun.intensity = (overcast ? t.si * 0.25 : t.si) * (innerLight && !night ? 0.55 : 1);
 	this.sun.castShadow = !(overcast && !night);
-	this.hemi.intensity = night ? 0.45 : (overcast ? 0.8 : (c.time_of_day === 'blue' ? 0.4 : 0.2));
+	this.hemi.intensity = (night ? 0.45 : (overcast ? 0.8 : (c.time_of_day === 'blue' ? 0.4 : 0.2))) + (innerLight ? (night ? 0.25 : 0.55) : 0);
 	this.hemi.color.set(night ? '#5A6A9A' : '#CFE3F7');
 	// indoors the light bounces off floors and walls, not off a lawn: a warm neutral ground colour
 	this.hemi.groundColor.set(c._int || c._item || mode === 'interior' ? (night ? '#5E5246' : '#D2CABD') : '#5B6B45');
@@ -1658,6 +1660,54 @@ Viewer.prototype.landFor = function (c, mode) {
 		list.forEach(function (o) { this.hood.add(o.root); }, this);
 	}
 };
+// Frames `box` from the direction `dir`: the distance and the point to look at, so that the box fills
+// `fill` of the picture and sits in the middle of it. The eight corners are projected, the camera is
+// moved sideways to centre them and then pulled back or pushed in; perspective makes this converge fast.
+Viewer.prototype.fitFrame = function (box, target, dir, fill) {
+	var cam = this.camera.clone(), pts = [], i, tgt = target.clone();
+	var d = Math.max(1.2, box.getSize(new THREE.Vector3()).length());
+	for (i = 0; i < 8; i++) { pts.push(new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z)); }
+	var right = new THREE.Vector3(), up = new THREE.Vector3(), tv = Math.tan(cam.fov * D2R / 2), th = tv * (cam.aspect || 1.5);
+	for (var it = 0; it < 6; it++) {
+		cam.position.copy(tgt).addScaledVector(dir, d);
+		cam.lookAt(tgt); cam.updateMatrixWorld(true); cam.updateProjectionMatrix();
+		var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, behind = false;
+		for (i = 0; i < 8; i++) {
+			var n = pts[i].clone().project(cam);
+			if (!isFinite(n.x) || !isFinite(n.y) || n.z > 1) { behind = true; break; }
+			x0 = Math.min(x0, n.x); x1 = Math.max(x1, n.x); y0 = Math.min(y0, n.y); y1 = Math.max(y1, n.y);
+		}
+		if (behind) { d *= 1.35; continue; }
+		var sx = (x1 - x0) / 2, sy = (y1 - y0) / 2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+		if (!(sx > 0) || !(sy > 0)) { break; }
+		// move the look-at point so the box sits in the middle, then set the distance from its size
+		cam.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+		tgt.addScaledVector(right, cx * th * d).addScaledVector(up, cy * tv * d);
+		var s = Math.max(sx, sy);
+		if (Math.abs(s - fill) < 0.01 && Math.abs(cx) < 0.01 && Math.abs(cy) < 0.01) { break; }
+		d *= s / fill;
+	}
+	// the last step moved the look-at point, so the size is set once more from where the camera now stands
+	for (var fin = 0; fin < 2; fin++) {
+		cam.position.copy(tgt).addScaledVector(dir, d);
+		cam.lookAt(tgt); cam.updateMatrixWorld(true); cam.updateProjectionMatrix();
+		var fx0 = 1e9, fx1 = -1e9, fy0 = 1e9, fy1 = -1e9, out2 = false;
+		for (i = 0; i < 8; i++) {
+			var nn = pts[i].clone().project(cam);
+			if (!isFinite(nn.x) || !isFinite(nn.y) || nn.z > 1) { out2 = true; break; }
+			fx0 = Math.min(fx0, nn.x); fx1 = Math.max(fx1, nn.x); fy0 = Math.min(fy0, nn.y); fy1 = Math.max(fy1, nn.y);
+		}
+		if (out2) { d *= 1.3; continue; }
+		// the size comes from the span; the corner of the floor nearest the camera may run a little off the
+		// picture, as it does in any interior photograph, but never more than a twelfth of the frame
+		var fs = Math.max((fx1 - fx0) / 2, (fy1 - fy0) / 2);
+		var over = Math.max(Math.abs(fx0), Math.abs(fx1), Math.abs(fy0), Math.abs(fy1));
+		if (over > 1.08) { d *= over / 1.08; continue; }
+		if (!(fs > 0) || Math.abs(fs - fill) < 0.01) { break; }
+		d *= fs / fill;
+	}
+	return { dist: d, target: tgt };
+};
 Viewer.prototype.fitCamera = function (reset) {
 	if (!this.house) { return; }
 	var c = this.c || {}, box3 = new THREE.Box3().setFromObject(this.house.fit), sph = box3.getBoundingSphere(new THREE.Sphere());
@@ -1668,8 +1718,17 @@ Viewer.prototype.fitCamera = function (reset) {
 	var aspect = this.camera.aspect || 1.5, hfov = 2 * Math.atan(Math.tan(vfov * D2R / 2) * aspect);
 	var dist = sph.radius / Math.sin(Math.min(vfov * D2R, hfov) / 2) * (this.thumb ? 0.68 : 0.8);
 	var room = this.house && this.house.room;
-	var preset = room ? (room.cam || [32, 42]) : { three_quarter: [36, 14], frontal: [4, 8], low: [30, 4], elevated: [40, 38] }[c.camera || 'three_quarter'];
+	var preset = room ? (room.cam || [38, 20]) : { three_quarter: [36, 14], frontal: [4, 8], low: [30, 4], elevated: [40, 38] }[c.camera || 'three_quarter'];
 	var target = sph.center.clone(); if (!(room && room.cam)) { target.y = Math.max(1.2, sph.center.y * 0.75); }
+	if (room && !room.cam && room.W) {
+		// A room is framed by the room itself, not by everything in the scene: the camera looks in from the
+		// open corner at eye height, and the walls fill the picture. Vertical lines stay vertical.
+		var rb = new THREE.Box3(new THREE.Vector3(-0.1, 0, -0.1), new THREE.Vector3(room.W + 0.1, room.H, room.D + 0.1));
+		target.set(room.W / 2, Math.min(1.55, room.H * 0.56), room.D / 2);
+		var az0 = preset[0] * D2R, el0 = preset[1] * D2R;
+		var fr = this.fitFrame(rb, target, new THREE.Vector3(Math.sin(az0) * Math.cos(el0), Math.sin(el0), Math.cos(az0) * Math.cos(el0)), 0.96);
+		dist = fr.dist; target.copy(fr.target);
+	}
 	if (room && room.cam) {
 		// a single item: frame its box (width seen at three quarters, its height) with a margin
 		var sz = box3.getSize(new THREE.Vector3()), tv = Math.tan(vfov * D2R / 2), th = Math.tan(hfov / 2);

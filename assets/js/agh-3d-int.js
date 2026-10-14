@@ -1924,7 +1924,9 @@ export function interiorScene(c, room) {
 	var art = pick(c, 'art_style'), plantK = pick(c, 'plants');
 	function P(obj, x, y, rot) { return place(R, obj, x, y, rot); }
 	function onLeft(obj, y, depth) { return P(obj, depth || 0, y, 90); }   // origin on the left wall, facing +x
-	function cornerPlant(x, y, s) { if (deco && plantK !== 'none' && (c.plant_amount !== 'few' || kind === 'living' || kind === 'living_kitchen')) { P(tag(plant(m, plantK, s || 1), 'plants'), x, y, 0); } }
+	// a plant is scaled to the room: in a small bedroom a tree the size of the bed looks wrong
+	function plantScale(s) { return (s || 1) * L.clamp(Math.sqrt(W * D) / 4.6, 0.62, 1.1); }
+	function cornerPlant(x, y, s) { if (deco && plantK !== 'none' && (c.plant_amount !== 'few' || kind === 'living' || kind === 'living_kitchen')) { P(tag(plant(m, plantK, plantScale(s)), 'plants'), x, y, 0); } }
 	function tag(obj, key) { obj.userData.item = key; return obj; }
 	function pendantAt(x, y, type2, len) { if (type2 !== 'none' && c.lighting !== 'minimal') { var p = pendant(m, type2, H, len); p.position.set(x, 0, y); R.add(p); } }
 	var backArt = null;
@@ -2127,7 +2129,10 @@ export function interiorScene(c, room) {
 				for (var x = 0.1; x <= W; x += 0.1) {
 					var r = [x + ax0, y + az0, x + ax1, y + az1];
 					if (r[0] < 0.05 || r[2] > W - 0.05 || r[1] < 0.05 || r[3] > D - 0.05 || hits(r, fps, 0.06) || inDoor(r)) { continue; }
-					var sc = tall ? (W - r[2]) + r[1] : Math.abs(W - 0.3 - r[2]) * 0.8 + Math.abs(D - 0.35 - r[3]);
+					// near a wall first: a piece standing in the middle of the room blocks the view of it
+					var cx2 = (r[0] + r[2]) / 2, cz2 = (r[1] + r[3]) / 2;
+					var wall = Math.min(cx2, W - cx2, cz2, D - cz2);
+					var sc = (tall ? (W - r[2]) + r[1] : Math.abs(W - 0.3 - r[2]) * 0.8 + Math.abs(D - 0.35 - r[3])) + wall * 1.6;
 					if (sc < bs) { bs = sc; best = [x, y, rot]; }
 				}
 			}
@@ -2141,7 +2146,7 @@ export function interiorScene(c, room) {
 				var r2 = [x2 - w / 2, y2 - d / 2, x2 + w / 2, y2 + d / 2], ov = 0;
 				if (inDoor(r2)) { continue; }
 				fps.forEach(function (f) { ov += Math.max(0, Math.min(r2[2], f[2]) - Math.max(r2[0], f[0])) * Math.max(0, Math.min(r2[3], f[3]) - Math.max(r2[1], f[1])); });
-				ov += 0.01 * (Math.abs(W - x2) + Math.abs(D - y2));
+				ov += 0.01 * (Math.abs(W - x2) + Math.abs(D - y2)) + 0.06 * Math.min(x2, W - x2, y2, D - y2);
 				if (ov < lo) { lo = ov; best = [x2, y2 - d / 2]; }
 			}
 		}
@@ -2206,7 +2211,7 @@ export function interiorScene(c, room) {
 	if (deco && plantK !== 'none' && amount === 'jungle' && !wet) {
 		var kinds2 = [plantK, 'snake', 'pothos', 'monstera', 'fiddle', 'palm'], n3 = living ? 4 : 2;
 		for (var pi = 0, put = 0; pi < 8 && put < n3; pi++) {
-			var pk = kinds2[(pi + 1) % kinds2.length], pw3 = pk === 'pothos' || pk === 'snake' || pk === 'cactus' ? 0.55 : 0.85, po = tag(plant(m, pk, pk === 'fiddle' || pk === 'palm' ? 1.0 : 0.9), 'plants');
+			var pk = kinds2[(pi + 1) % kinds2.length], pw3 = pk === 'pothos' || pk === 'snake' || pk === 'cactus' ? 0.55 : 0.85, po = tag(plant(m, pk, plantScale(pk === 'fiddle' || pk === 'palm' ? 1.0 : 0.9)), 'plants');
 			po.rotation.y = pi * 0.7;
 			var c2p = po; var wrap2 = G(); c2p.position.z = pw3 / 2; wrap2.add(c2p); tag(wrap2, 'plants');
 			if (atWall(pi % 2 ? 'L' : 'B', wrap2, pw3, pw3, 0.5, pi % 2 ? D * 0.6 : (pi < 2 ? 0.5 : W * 0.35)) || atWall(pi % 2 ? 'B' : 'L', wrap2, pw3, pw3, 0.5, pi % 2 ? W * 0.3 : D * 0.5)) { put++; }
@@ -2417,7 +2422,10 @@ export function interiorScene(c, room) {
 		if (!wet && fw.length > 1 && wi === 1) { var lr = freeSpans(occL.concat([[0, door.u + door.w + 0.2]]), Wl.len, 1.0)[0]; if (lr) { featureWall(grp, m, fw[1], lr[0], lr[1], H, wallC); } }
 		g.add(grp);
 	});
-	ceiling(g, m, c.ceiling || 'flat', W, D, H, lights);
+	// the ceiling is cut away in this view: it must not throw its shadow down into the room
+	var ceilG = G(); g.add(ceilG);
+	ceiling(ceilG, m, c.ceiling || 'flat', W, D, H, lights);
+	ceilG.traverse(function (o) { if (o.isMesh) { o.castShadow = false; } });
 	if (vaulted) { vault(g, m, W, D, H, rise); }
 
 	// sizes for the camera: the room box (an invisible frame)
