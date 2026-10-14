@@ -66,6 +66,7 @@ final class Settings {
 				'style_adherence'    => 60,
 				'structure_guidance' => true,
 				'fidelity'           => 'faithful',
+				'guide_aspect'       => 1.645,
 				'structure_strength' => 45,
 				'upscale_enabled'    => false,
 				'upscale_endpoint'   => '/v1/ai/image-upscaler-precision',

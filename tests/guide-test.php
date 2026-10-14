@@ -141,6 +141,44 @@ Settings::flush();
 // a vezetőképes projekt promptjában ott van a mondat, a vezetőkép nélküliében nincs
 $t( 'a vezetőképes hero promptja hivatkozik a referenciára', isset( $prompt['hero'] ) );
 
+/* ---------------------------------------------------------------- 5. klón: tiltás és tetőszín */
+Settings::update_group( 'magnific', array( 'fidelity' => 'clone' ) );
+Settings::flush();
+$lead = PromptEngine::reference_lead();
+$t( 'klón módban van nyitóblokk', '' !== $lead && 0 === strpos( $lead, 'Photorealistic photograph of EXACTLY' ) );
+$t( 'a nyitóblokk egy épületet ír elő', false !== strpos( $lead, 'exactly ONE building' ) );
+$t( 'a nyitóblokk tiltja a pajtát és a melléképületet', false !== strpos( $lead, 'no barn' ) && false !== strpos( $lead, 'no outbuilding' ) && false !== strpos( $lead, 'no second house' ) );
+$t( 'a nyitóblokk a kameraállást is köti', false !== strpos( $lead, 'Keep the camera position' ) );
+Settings::update_group( 'magnific', array( 'fidelity' => 'balanced' ) );
+Settings::flush();
+$t( 'kiegyensúlyozott módban nincs nyitóblokk', '' === PromptEngine::reference_lead() );
+Settings::update_group( 'magnific', array( 'fidelity' => 'faithful' ) );
+Settings::flush();
+
+// a stílusszöveg nem rendel plusz épületet, és a tető színe a modellé
+$cfg2 = \AutoGroweHome\Params\Validator::sanitize( \AutoGroweHome\Params\Registry::defaults() );
+$cfg2['arch_style'] = 'rustic';
+$cfg2['roof_type']  = 'gable';
+$cfg2['roof_color'] = '#8C4A35';
+$con2 = array(
+	'variant'  => 'A',
+	'brief'    => array( 'name' => 'T', 'tagline' => '', 'direction' => '' ),
+	'building' => \AutoGroweHome\Generation\BuildingModel::build( $cfg2, 'A', array() ),
+);
+$pr3 = PromptEngine::build( $cfg2, $con2, 'hero', null, (int) PromptEngine::get()['version'] )['prompt'];
+// a katalógusban tárolt stílusszöveget a frissítés javítja (DB v9), ezt is itt mérjük
+\AutoGroweHome\Catalog\Catalog::upgrade_style_prompts();
+$pr3 = PromptEngine::build( $cfg2, $con2, 'hero', null, (int) PromptEngine::get()['version'] )['prompt'];
+$t( 'a stílusszöveg nem rendel pajtaszárnyat', false === stripos( $pr3, 'barn wing' ) );
+$t( 'a tetőcserép a modell színét kapja', false !== stripos( $pr3, 'in brick red' ) );
+$tile = substr( $pr3, (int) stripos( $pr3, 'roof tiles' ) );
+$tile = substr( $tile, 0, (int) strpos( $tile . '.', '.' ) );
+$t( 'a tetőcserép mondatában nincs ellentmondó szín', false === stripos( $tile, 'anthracite' ) );
+$t( 'a teljes prompt a nyitóblokkal együtt is belefér', strlen( PromptEngine::reference_lead() . $pr3 ) < PromptEngine::MAX_PROMPT );
+
+/* ---------------------------------------------------------------- 6. vezetőkép képaránya */
+$t( 'van alapértelmezett képarány', (float) Settings::get( 'magnific.guide_aspect', 0 ) > 1 );
+
 /* ---------------------------------------------------------------- takarítás */
 foreach ( array( $uuid, (string) $pr['uuid'], (string) $pr2['uuid'] ) as $u ) {
 	Storage::delete_project( $u );

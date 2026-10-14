@@ -324,7 +324,7 @@ final class Catalog {
 			'bauhaus'          => array( __( 'Bauhaus', 'autogrowehome' ), 'interlocking cubes of different heights, flat roofs with a roof terrace, horizontal ribbon windows, white render with dark accents', array( 'massing' => 'cubes', 'levels' => 'two', 'roof_type' => 'flat', 'facade_main' => 'render', 'facade_color' => '#F7F7F5', 'facade_texture' => 'smooth', 'facade_accent' => array( 'render_dark' ), 'window_style' => 'ribbon', 'window_frame_color' => '#1E1F21', 'corner_window' => true, 'plinth' => 'concrete', 'entrance_door' => 'glass_strip', 'terrace_floor' => 'ceramic', 'garden_style' => 'minimal', 'fence' => 'mesh' ) ),
 			'japandi'          => array( __( 'Japandi', 'autogrowehome' ), 'calm low pavilions with deep eaves and a timber veranda (engawa), charred or natural timber, zen garden elements, muted earthy palette', array( 'massing' => 'engawa', 'levels' => 'single', 'roof_type' => 'gable', 'roof_pitch' => 22, 'roof_color' => '#2B2E31', 'roof_overhang' => 1.0, 'facade_main' => 'charred_wood', 'facade_accent' => array( 'wood' ), 'facade_accent_color' => '#B48A62', 'window_style' => 'panoramic', 'window_frame_color' => '#2B2E31', 'plinth' => 'concrete', 'entrance_door' => 'slat', 'terrace_floor' => 'wood', 'garden_style' => 'minimal', 'fence' => 'slats' ) ),
 			'classic_burgher'  => array( __( 'Klasszikus polgári', 'autogrowehome' ), 'symmetrical two-storey block with a projecting central bay and pediment, vertical proportioned windows, cornices, hipped roof, rendered walls in soft tones', array( 'massing' => 'symmetric', 'levels' => 'two', 'roof_type' => 'hip', 'roof_pitch' => 40, 'roof_color' => '#8C4A36', 'facade_main' => 'render', 'facade_color' => '#EFE6D6', 'facade_accent' => array(), 'facade_ornaments' => true, 'corner_detail' => 'quoins', 'window_style' => 'vertical', 'window_frame_color' => '#F4F4F2', 'shading' => array( 'shutters' ), 'shutter_color' => '#5B6B5A', 'plinth' => 'stone', 'entrance_door' => 'double', 'terrace_floor' => 'stone', 'garden_style' => 'formal', 'fence' => 'masonry' ) ),
-			'rustic'           => array( __( 'Vidéki, rusztikus', 'autogrowehome' ), 'long narrow farmhouse with a covered porch (tornac) and a barn wing, natural stone, timber elements, traditional pitched roof, cottage garden', array( 'massing' => 'long_house', 'levels' => 'single', 'roof_type' => 'gable', 'roof_pitch' => 38, 'roof_color' => '#7A3E2C', 'facade_main' => 'stone', 'facade_accent' => array( 'wood' ), 'window_style' => 'classic', 'window_frame_material' => 'wood', 'window_frame_color' => '#6B4A33', 'shading' => array( 'shutters' ), 'shutter_color' => '#6B4A33', 'exposed_rafters' => true, 'chimney' => true, 'chimney_type' => 'stone', 'entrance_door' => 'wood', 'terrace_floor' => 'wood', 'garden_style' => 'cottage', 'fence' => 'slats' ) ),
+			'rustic'           => array( __( 'Vidéki, rusztikus', 'autogrowehome' ), 'long narrow farmhouse with a covered porch (tornac), natural stone, timber elements, traditional pitched roof, cottage garden', array( 'massing' => 'long_house', 'levels' => 'single', 'roof_type' => 'gable', 'roof_pitch' => 38, 'roof_color' => '#7A3E2C', 'facade_main' => 'stone', 'facade_accent' => array( 'wood' ), 'window_style' => 'classic', 'window_frame_material' => 'wood', 'window_frame_color' => '#6B4A33', 'shading' => array( 'shutters' ), 'shutter_color' => '#6B4A33', 'exposed_rafters' => true, 'chimney' => true, 'chimney_type' => 'stone', 'entrance_door' => 'wood', 'terrace_floor' => 'wood', 'garden_style' => 'cottage', 'fence' => 'slats' ) ),
 			'modern_farmhouse' => array( __( 'Modern parasztház', 'autogrowehome' ), 'two parallel elongated barn-houses with their gables to the street linked by a glass connector, steep gable roofs without overhang, dark roof, white walls, timber accents (Hungarian barnhouse)', array( 'massing' => 'twin_barns', 'levels' => 'attic', 'roof_type' => 'gable', 'roof_pitch' => 45, 'gable_finish' => 'flush', 'roof_overhang' => 0, 'roof_color' => '#2B2E31', 'facade_main' => 'render', 'facade_color' => '#F4F2EE', 'facade_accent' => array( 'wood' ), 'window_style' => 'vertical', 'window_frame_color' => '#2B2E31', 'plinth' => 'flush', 'entrance_door' => 'wood', 'terrace_floor' => 'wpc', 'garden_style' => 'natural', 'fence' => 'slats' ) ),
 			'american_farm'    => array( __( 'Amerikai farmhouse', 'autogrowehome' ), 'cross-gabled two-storey farmhouse, board-and-batten siding, long porch, black windows, standing-seam metal roof', array( 'massing' => 'cross_gable', 'levels' => 'two', 'roof_type' => 'gable', 'roof_pitch' => 35, 'roof_color' => '#3A3D40', 'facade_main' => 'board_batten', 'facade_color' => '#F4F4F2', 'facade_accent' => array(), 'window_style' => 'vertical', 'window_divided' => true, 'window_frame_color' => '#1E1F21', 'outdoor_covered' => true, 'entrance_door' => 'half_glass', 'terrace_floor' => 'wood', 'garden_style' => 'cottage', 'fence' => 'slats' ) ),
 			'alpine'           => array( __( 'Alpesi', 'autogrowehome' ), 'wide chalet with its gable to the street, deep overhanging roof, timber upper floor over a stone base, balconies with timber railings', array( 'massing' => 'chalet', 'levels' => 'two', 'roof_type' => 'gable', 'roof_pitch' => 30, 'roof_overhang' => 1.2, 'roof_color' => '#3A3029', 'facade_main' => 'render', 'facade_color' => '#EFE9DF', 'facade_accent' => array( 'wood', 'stone' ), 'balcony' => true, 'window_style' => 'classic', 'window_frame_material' => 'wood', 'window_frame_color' => '#6B4A33', 'shading' => array( 'shutters' ), 'shutter_color' => '#7A3E2C', 'plinth' => 'stone', 'chimney' => true, 'entrance_door' => 'wood', 'terrace_floor' => 'wood', 'garden_style' => 'natural', 'fence' => 'slats' ) ),
@@ -398,6 +398,37 @@ final class Catalog {
 				continue;
 			}
 			$res = self::save( 'style', array( 'slug' => $slug, 'name' => $row['name'], 'sort' => $row['sort'] ?? 0, 'status' => $row['status'] ?? 'published', 'image_id' => (int) ( $row['image_id'] ?? 0 ), 'data' => array( 'defaults' => $s[2] ) ) );
+			if ( ! is_wp_error( $res ) ) {
+				$n++;
+			}
+		}
+		self::flush();
+		return $n;
+	}
+
+	/**
+	 * Refresh built-in style wordings that described something the 3D model never builds, so the
+	 * image generator does not add it either (DB v9: the rustic style's "barn wing"). Only a text
+	 * that is still exactly the factory one is replaced; an edited wording is left alone.
+	 *
+	 * @return int Number of styles updated.
+	 */
+	public static function upgrade_style_prompts(): int {
+		$fix = array(
+			'rustic' => array(
+				'long narrow farmhouse with a covered porch (tornac) and a barn wing, natural stone, timber elements, traditional pitched roof, cottage garden',
+				'long narrow farmhouse with a covered porch (tornac), natural stone, timber elements, traditional pitched roof, cottage garden',
+			),
+		);
+		$n = 0;
+		foreach ( $fix as $slug => $pair ) {
+			$row = self::get( 'style', $slug );
+			if ( ! $row || trim( (string) ( $row['data']['direction'] ?? '' ) ) !== $pair[0] ) {
+				continue;
+			}
+			$data              = (array) $row['data'];
+			$data['direction'] = $pair[1];
+			$res               = self::save( 'style', array( 'slug' => $slug, 'name' => $row['name'], 'sort' => $row['sort'] ?? 0, 'status' => $row['status'] ?? 'published', 'image_id' => (int) ( $row['image_id'] ?? 0 ), 'data' => $data ) );
 			if ( ! is_wp_error( $res ) ) {
 				$n++;
 			}

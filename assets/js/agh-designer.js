@@ -2308,10 +2308,18 @@
 	 * views are sent afterwards, in the background, for the gallery. Nothing here can hold up a
 	 * generation: without WebGL, on an error or after 15 seconds the request simply goes without them. */
 	var guideJob = null;
+	// The guide picture is taken in the shape of the finished image (the server measures that from
+	// the pictures that come back), so the structure reference is never stretched or cropped.
+	function guideSize() {
+		var a = Number(S.boot && S.boot.guide && S.boot.guide.aspect) || 1.645;
+		a = Math.max(0.5, Math.min(3, a));
+		var w = 1152;
+		return [w, Math.round(w / a)];
+	}
 	function startGuides() {
 		if (!A3 || !A3.guides) { guideJob = null; return; }
-		var out = {};
-		try { guideJob = { out: out, p: A3.guides(['hero'], 0, 0, out).catch(function () { return out; }) }; }
+		var out = {}, sz = guideSize();
+		try { guideJob = { out: out, p: A3.guides(['hero'], sz[0], sz[1], out).catch(function () { return out; }) }; }
 		catch (e) { guideJob = null; }
 	}
 	function guideShots() {
@@ -2331,7 +2339,8 @@
 		if (!A3 || !A3.guides || !uuid) { return; }
 		setTimeout(function () {
 			try {
-				A3.guides(['front', 'back', 'left', 'right', 'aerial']).then(function (g) {
+				var sz = guideSize();
+				A3.guides(['front', 'back', 'left', 'right', 'aerial'], sz[0], sz[1]).then(function (g) {
 					if (g && Object.keys(g).length) { api('POST', 'projects/' + uuid + '/guides', { guides: g }, 60000).catch(function () { /* the server draws its own guide */ }); }
 				}).catch(function () { /* no guide for the gallery this time */ });
 			} catch (e) { /* no WebGL */ }

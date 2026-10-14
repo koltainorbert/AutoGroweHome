@@ -1,5 +1,15 @@
 # Változásnapló
 
+## 1.11.1 – 2026-10-14
+
+Norbi összehasonlította a 3D modelljét a kapott koncepcióképpel: a képen négy-öt épület volt egy helyett (hosszú fa pajta, plusz szárnyak), antracit tető a vörösbarna helyett, pergola és zsalugáter nélkül, madártávlatból. Négy gyökérok volt, mind a négy javítva.
+
+- **A prompt maga rendelt plusz épületet.** A „Vidéki, rusztikus” stílus szövege szó szerint ezt tartalmazta: „long narrow farmhouse with a covered porch (tornac) **and a barn wing**…”, pedig a 3D soha nem épít pajtaszárnyat. A szöveg javítva, és a frissítés (DB v9) a már telepített oldalakon is lecseréli – de csak ott, ahol a szöveget nem írták át kézzel.
+- **A tetőszín ellentmondott a modellnek.** A prompt a tetőtermék saját színszövegét írta ki (gyakran „in anthracite”), a 3D viszont a `roof_color` mezőből fest. Mostantól a termék típusa marad, de a szín a modellé: `roof_color = #8C4A35` mellett a prompt „Classic Roman-profile concrete roof tiles, **in brick red**”, és nincs benne ellentmondó szín.
+- **„Hű” és „Klón” fokozaton a kötő utasítás a prompt ELEJÉRE került**, és kimondja a tiltást is: pontosan EGY épület, a referenciaképen látható tömegekkel és nyílásokkal; tilos pajta, istálló, melléképület, második ház, további szárny vagy annex; garázs, terasz, pergola, előtető, erkély, zsalugáter és kerítés csak ott, ahol a referencián van, és ami a referencián látszik, az nem maradhat le; a kameraállás és a horizont is kötött. (A képmodellek a prompt elejét súlyozzák a legjobban, és amit nem tiltunk, azt hozzátehetik.)
+- **A vezetőkép képaránya nem egyezett a kész képével** (1,756 vs. 1,643), ezért a structure referencia nyújtva-vágva került a képre. Mostantól a plugin a visszakapott képből **megméri** a valódi képarányt, elteszi (`magnific.guide_aspect`, alap 1,645), és a következő vezetőképek már abban készülnek. Mérve: a kérésben a hero 1152×700 = 1,646, a kell 1,645.
+- Mérve: `tests/guide-test.php` 31/31 (nyitóblokk, tiltások, kameraállás, nincs pajtaszárny, tetőszín a modellé, a prompt a nyitóblokkal együtt is belefér: 3639 < 3900 karakter), `tests/e2e/guide.js` képarány-ellenőrzéssel 0 konzolhibával, gen/sketch/search/layout/stuck mind hibátlan.
+
 ## 1.11.0 – 2026-10-14
 
 - **Hűség a 3D modellhez – egy kapcsolóval.** Az AI-szolgáltatók oldalon új választás: Szabad (25) · Kiegyensúlyozott (45) · **Hű (65, alapértelmezés)** · Klón (80) · Egyedi (a kézzel megadott érték). Eddig egyetlen nyers 0–100-as számot kellett eltalálni; mostantól a súgó is megmondja, melyik mit ad, és hogy a nagyobb hűség pontosabb formát, de kissé „renderesebb” képet jelent.

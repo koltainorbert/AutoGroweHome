@@ -4,6 +4,18 @@
 const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/opt/npm-tools/node_modules/playwright'); } })();
 const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
 
+// JPEG mérete a base64-ből (a kérésben ezt küldjük, ennek a kész kép képarányát kell hoznia)
+function jpegSize(dataUrl) {
+  const b = Buffer.from(String(dataUrl).split(',')[1] || '', 'base64');
+  for (let i = 2; i + 9 < b.length;) {
+    if (b[i] !== 0xFF) { i++; continue; }
+    const m = b[i + 1];
+    if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) { return [b.readUInt16BE(i + 7), b.readUInt16BE(i + 5)]; }
+    i += 2 + b.readUInt16BE(i + 2);
+  }
+  return [0, 0];
+}
+
 (async () => {
   const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] });
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -23,7 +35,7 @@ const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
       try {
         const b = JSON.parse(r.postData() || '{}');
         const g = b.guides || {};
-        sent = Object.keys(g).map(k => ({ view: k, kb: Math.round((g[k] || '').length * 0.75 / 1024), type: (String(g[k]).split(';')[0] || '').replace('data:', '') }));
+        sent = Object.keys(g).map(k => { const sz = jpegSize(g[k]); return { view: k, kb: Math.round((g[k] || '').length * 0.75 / 1024), type: (String(g[k]).split(';')[0] || '').replace('data:', ''), w: sz[0], h: sz[1] }; });
       } catch (e) { sent = []; }
     }
   });
@@ -32,6 +44,14 @@ const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
   await page.click('[data-agh-open]');
   await page.waitForSelector('.agh-shell .agh-preview-box.has-3d canvas', { timeout: 60000 });
   await page.waitForTimeout(3000);
+
+  const wantAspect = await page.evaluate(async () => {
+    try {
+      const r = await fetch('/wp-json/agh/v1/bootstrap', { credentials: 'same-origin' });
+      const b = await r.json();
+      return (b.guide && b.guide.aspect) || 0;
+    } catch (e) { return 0; }
+  });
 
   // 1. a képkészítés önmagában (mind a hat nézet)
   const shots = await page.evaluate(async () => {
@@ -53,9 +73,13 @@ const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
   await browser.close();
   if (errors.length) { console.error(errors.slice(0, 4)); }
   const ok6 = shots.length >= 6 && shots.every(s => s.kb > 8 && s.w >= 1024 && s.h >= 512);
+  // a vezetőkép képarányának a kész képéhez kell illeszkednie (a szerver méri, a boot adja)
+  const want = wantAspect || 1.645;
+  const got = sent && sent[0] && sent[0].h ? sent[0].w / sent[0].h : 0;
+  const aspectOk = got > 0 && Math.abs(got - want) <= want * 0.02;
   const sentOk = Array.isArray(sent) && sent.length === 1 && sent[0].view === 'hero' && sent[0].kb > 8 && /image\/(png|jpeg)/.test(sent[0].type);
   const laterOk = Array.isArray(later) && later.length >= 4;
-  const ok = ok6 && sentOk && laterOk && !errors.length;
-  console.log(`vezetőkép: ${shots.length} nézet (${shots.map(s => s.view + ' ' + s.w + 'x' + s.h + '/' + s.kb + 'KB').join(', ')}), a generálással a hero ment ${sent ? sent.map(s => s.view + ' ' + s.kb + 'KB').join(',') : '–'}, utána a galéria nézetei ${later ? later.join(',') : '–'}, konzolhiba ${errors.length}`);
+  const ok = ok6 && sentOk && laterOk && aspectOk && !errors.length;
+  console.log(`vezetőkép: ${shots.length} nézet, a generálással a hero ment ${sent ? sent.map(s => s.w + 'x' + s.h + '/' + s.kb + 'KB').join(',') : '–'} (képarány ${got.toFixed(3)}, kell ${want.toFixed(3)}, ${aspectOk ? 'ok' : 'eltér'}), utána a galéria nézetei ${later ? later.join(',') : '–'}, konzolhiba ${errors.length}`);
   process.exit(ok ? 0 : 1);
 })();

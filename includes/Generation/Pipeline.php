@@ -426,7 +426,10 @@ final class Pipeline {
 		// gets a structure hint and no instruction to follow it.
 		$prompt = (string) $asset['prompt'];
 		if ( '' !== $structure ) {
-			$prompt .= PromptEngine::reference_note();
+			// Faithful and clone open with the binding block; the gentler levels only add a closing
+			// sentence. Both together would not fit the prompt limit and would say the same twice.
+			$lead   = PromptEngine::reference_lead();
+			$prompt = '' !== $lead ? $lead . $prompt : $prompt . PromptEngine::reference_note();
 		}
 		$request = array(
 			'op'              => $op,
@@ -509,6 +512,16 @@ final class Pipeline {
 		$name = 'renders/' . $concept['variant'] . '-' . preg_replace( '/[^a-z0-9_]/', '', $asset['view'] ) . '-v' . $asset['version'] . '.' . $ext;
 		$rel  = Storage::put( $p['uuid'], $name, $data );
 		$info = @getimagesizefromstring( $data ); // phpcs:ignore
+		// The guide picture has to have the same shape as the finished image, otherwise the structure
+		// reference is stretched or cropped and the geometry drifts. The real shape is measured here,
+		// from the picture the service actually returned, and the next guides are taken that way.
+		if ( $info && $info[0] > 0 && $info[1] > 0 && ! $asset['is_test'] ) {
+			$ratio = round( $info[0] / $info[1], 4 );
+			$known = (float) Settings::get( 'magnific.guide_aspect', 1.645 );
+			if ( $ratio > 0.4 && $ratio < 3.2 && abs( $ratio - $known ) > $known * 0.02 ) {
+				Settings::update_group( 'magnific', array( 'guide_aspect' => $ratio ) );
+			}
+		}
 		$prev = Storage::make_preview( $rel, (int) Settings::get( 'access.preview_max_px', 1280 ) );
 		$ms   = max( 0, ( time() - strtotime( $asset['created_at'] . ' UTC' ) ) * 1000 );
 		Repository::update_asset(

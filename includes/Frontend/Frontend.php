@@ -281,6 +281,8 @@ final class Frontend {
 				'gallery' => (string) Settings::get( 'limits.gallery_mode', 'selected' ),
 			),
 			'limits'    => RateLimiter::status_for_current(),
+			// the shape of the guide picture taken from the 3D model: the same as the finished image
+			'guide'     => array( 'aspect' => (float) Settings::get( 'magnific.guide_aspect', 1.645 ) ),
 			'consents'  => QuoteService::consents(),
 			'tour'      => Help::tour(),
 			'docs'      => array(

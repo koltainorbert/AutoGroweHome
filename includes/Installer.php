@@ -87,6 +87,15 @@ final class Installer {
 				Logger::error( 'core', 'Secrets storage upgrade failed: ' . $e->getMessage() );
 			}
 		}
+		if ( $from > 0 && $from < 9 ) {
+			// DB v9: style wordings that ordered a building the 3D model never builds (barn wing).
+			try {
+				$n = Catalog::upgrade_style_prompts();
+				Logger::info( 'core', 'Style wordings updated', array( 'count' => $n ) );
+			} catch ( \Throwable $e ) {
+				Logger::error( 'core', 'Style wording upgrade failed: ' . $e->getMessage() );
+			}
+		}
 		if ( $from > 0 && $from < 8 ) {
 			// DB v6–v8: current style suggestions with their own building forms (only untouched seeds).
 			try {
