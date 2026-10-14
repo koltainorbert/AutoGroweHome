@@ -17,8 +17,7 @@
 - Pince a -1. szint; padlás `attic`. 1 kérés = 3 koncepció = 1 egység; BRAMAC magastetőnél kötelező. Licenc nélkül Starter.
 
 **Nyitott tételek**
-- **Éles próba Norbinál:** stílusonként mintafotó feltöltése (valódi, szemmagasságú építészeti fotó, a kívánt fénnyel), `mystic_engine` kézi átállítása `magnific_sharpy`-ra (elmentett beállításnál nem vált magától), majd próbakép; a kép szépsége itt nem mérhető.
-- Ha a végi „Avoid” lista egy tiltott színt mégis behúz: „Negatív prompt a szöveg végén” ki.
+- **Éles próba Norbinál:** stílusonként mintafotó feltöltése (valódi, szemmagasságú építészeti fotó, a kívánt fénnyel), `mystic_engine` kézi átállítása `magnific_sharpy`-ra (elmentett beállításnál nem vált magától), majd próbakép; a kép szépsége itt nem mérhető. Ha a végi „Avoid” lista egy tiltott színt mégis behúz: „Negatív prompt a szöveg végén” ki.
 - Védett tárhely éles oldalon: AGH_PRIVATE_DIR vagy Nginx location, utána „Ellenőrzés újra” / „Fájlok áthozása”.
 - htombau: telepítés és visszajelzés; 3D sebesség telefonon valódi GPU-n nem mérve.
 - Betöltés: éles kiszolgálón gzip kell; `agh-3d-int.js` késleltetett betöltése nincs megcsinálva.
