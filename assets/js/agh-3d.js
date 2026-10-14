@@ -1522,16 +1522,32 @@ function Viewer(opts) {
 		this.controls.addEventListener('end', function () { self.interacting = false; self.settle = performance.now() + 900; self.loop(); });
 		// a tap on a part of the model: the designer jumps to the setting that part belongs to. Only a tap
 		// counts (under 6 px of movement), so turning the house keeps working, on a touch screen too.
-		var dn = null;
-		this.el.addEventListener('pointerdown', function (e) { dn = [e.clientX, e.clientY, Date.now()]; });
+		// In a room a piece can also be grabbed and dragged (with a mouse at once, with a finger after a
+		// short hold, so that turning the view keeps working) and turned with the wheel or with Shift.
+		var dn = null, hold = 0;
+		this.el.addEventListener('pointerdown', function (e) {
+			dn = [e.clientX, e.clientY, Date.now()];
+			if (self.drag) { return; }
+			if (e.pointerType === 'touch') { hold = setTimeout(function () { self.grabAt(e.clientX, e.clientY, e); }, 330); }
+			else if (e.button === 0) { self.grabAt(e.clientX, e.clientY, e); }
+		});
+		this.el.addEventListener('pointermove', function (e) {
+			if (dn && hold && (Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1])) > 8) { clearTimeout(hold); hold = 0; }
+			if (self.drag) { self.dragTo(e); }
+		});
+		this.el.addEventListener('wheel', function (e) { if (self.drag) { e.preventDefault(); self.turnDrag(e.deltaY > 0 ? 15 : -15); } }, { passive: false });
 		this.el.addEventListener('pointerup', function (e) {
-			if (!dn || !self.onPick) { return; }
+			if (hold) { clearTimeout(hold); hold = 0; }
+			var wasDrag = !!self.drag;
+			if (wasDrag) { self.dropDrag(); }
+			if (!dn || !self.onPick) { dn = null; return; }
 			var moved = Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1]), slow = Date.now() - dn[2] > 700;
 			dn = null;
-			if (moved > 6 || slow) { return; }
+			if (wasDrag || moved > 6 || slow) { return; }
 			var hit = self.pickAt(e.clientX, e.clientY);
 			if (hit) { self.onPick(hit); }
 		});
+		this.el.addEventListener('pointercancel', function () { if (hold) { clearTimeout(hold); hold = 0; } if (self.drag) { self.dropDrag(); } });
 		if (this.quality === 'high') {
 			this.composer = new EffectComposer(r, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
 			this.composer.addPass(new RenderPass(this.scene, this.camera));
@@ -1624,7 +1640,11 @@ Viewer.prototype.update = function (cfg, mode) {
 	if (!inner) { this.landFor(c, mode); }
 	this.lampsToPool(this.house.root);
 	this.picks = this.thumb ? null : collectPicks(this.house.root);   // before the merge, while the pieces are still apart
-	mergeStatic(this.house.fit || this.house.root);
+	// In a room every piece is merged on its own and the furniture group is left out of the big merge:
+	// that is what keeps each piece grabbable, while the number of draw calls stays low.
+	var itemsG = !this.thumb && this.house.items && this.house.items.children.length ? this.house.items : null;
+	if (itemsG) { itemsG.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
+	mergeStatic(this.house.fit || this.house.root, itemsG);
 	if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
 	this.scene.add(this.house.root);
 	this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
@@ -1660,11 +1680,15 @@ Viewer.prototype.landFor = function (c, mode) {
 	var full = pb && !(this.o.mini || mode === 'mini' || mode === 'facade' || mode === 'floor');
 	if (full) { hs.root.add(LAND.street(c, pb, hs.gardenPlan, k, night)); }
 	while (this.hood.children.length) { this.hood.remove(this.hood.children[0]); }
-	if (full && c.neighbors && !this.thumb) {
+	// A town street is the row of houses itself: there the neighbours belong to the landscape, so they
+	// are built even when the "show surrounding buildings" setting is off (elsewhere that setting rules).
+	if (full && (c.neighbors || 'town' === k) && !this.thumb) {
 		var list = LAND.neighbours(c, k, night);
 		LAND.placeNeighbours(list, pb, k);
 		list.forEach(function (o) { this.hood.add(o.root); }, this);
 	}
+	// what was built around the house, in numbers (the merge swallows the groups, this survives)
+	this.siteInfo = { street: full ? ('town' === k ? 'urban' : ('suburb' === k ? 'town' : 'country')) : '', hood: this.hood.children.length };
 };
 // Frames `box` from the direction `dir`: the distance and the point to look at, so that the box fills
 // `fill` of the picture and sits in the middle of it. The eight corners are projected, the camera is
@@ -1930,6 +1954,135 @@ function pickFromList(list, p) {
 	var hit = best || near;
 	return hit ? { field: hit.field, item: hit.item, point: p } : null;
 }
+// A moved or turned piece pushed back between the four walls: not its origin but its whole body is
+// kept inside, so nothing pokes through a wall however it was built or turned.
+var fitBox = null;
+function fitInRoom(o, W, D) {
+	if (!o || !(W > 0) || !(D > 0)) { return o; }
+	fitBox = fitBox || new THREE.Box3();
+	o.updateMatrixWorld(true);
+	fitBox.setFromObject(o);
+	if (!isFinite(fitBox.min.x) || fitBox.min.x > fitBox.max.x) { return o; }
+	var e = 0.02, dx = 0, dz = 0;
+	if (fitBox.max.x - fitBox.min.x < W - e * 2) {
+		if (fitBox.min.x < e) { dx = e - fitBox.min.x; } else if (fitBox.max.x > W - e) { dx = (W - e) - fitBox.max.x; }
+	} else { dx = (W - (fitBox.min.x + fitBox.max.x)) / 2; }
+	if (fitBox.max.z - fitBox.min.z < D - e * 2) {
+		if (fitBox.min.z < e) { dz = e - fitBox.min.z; } else if (fitBox.max.z > D - e) { dz = (D - e) - fitBox.max.z; }
+	} else { dz = (D - (fitBox.min.z + fitBox.max.z)) / 2; }
+	o.position.x += dx;
+	o.position.z += dz;
+	if (dx || dz) { o.updateMatrixWorld(true); }
+	return o;
+}
+// Which wall a piece is closest to: 0 = back (z=0), 1 = left (x=0), 2 = front (z=D), 3 = right (x=W).
+// The turn a piece needs to face into the room from each wall differs by exactly these angles, so a
+// picture carried to another wall keeps facing the room whatever its own model convention is.
+var WALL_ROT = [0, 90, 180, 270];
+function nearWall(bx, W, D) {
+	var cx = (bx.min.x + bx.max.x) / 2, cz = (bx.min.z + bx.max.z) / 2;
+	var dist = [cz, cx, Math.max(0, D - cz), Math.max(0, W - cx)], k = 0;
+	for (var i = 1; i < 4; i++) { if (dist[i] < dist[k]) { k = i; } }
+	return k;
+}
+// A piece that hangs on a wall (a picture, a wall shelf) is laid against the nearest wall instead of
+// being left floating in the middle of the room: it turns with the wall and touches it.
+function snapWall(o, w0, rot0, W, D) {
+	fitBox = fitBox || new THREE.Box3();
+	o.updateMatrixWorld(true);
+	fitBox.setFromObject(o);
+	var k = nearWall(fitBox, W, D);
+	o.rotation.y = rot0 + (WALL_ROT[k] - WALL_ROT[w0]) * D2R;
+	o.updateMatrixWorld(true);
+	fitBox.setFromObject(o);
+	var e = 0.02;
+	if (k === 0) { o.position.z += e - fitBox.min.z; }
+	else if (k === 1) { o.position.x += e - fitBox.min.x; }
+	else if (k === 2) { o.position.z += (D - e) - fitBox.max.z; }
+	else { o.position.x += (W - e) - fitBox.max.x; }
+	fitInRoom(o, W, D);
+	return k;
+}
+/* ====================================================================== moving a piece by hand
+   In a room the furniture stays in its own objects (they are not merged into the walls), so a piece
+   can be picked up with the pointer, dragged along the floor and turned. Whatever is moved is clamped
+   inside the room and out of the doorway, and reported through `onLayout` so the designer can save it. */
+// Which piece is under the screen point: the top-level child of the room's furniture group.
+Viewer.prototype.itemAt = function (cx, cy) {
+	var hs = this.house;
+	if (!hs || !hs.items || !hs.room || !hs.room.W || !this.el) { return null; }
+	var r = this.el.getBoundingClientRect();
+	if (!r.width || !r.height) { return null; }
+	this.ray = this.ray || new THREE.Raycaster();
+	this.ray.setFromCamera(new THREE.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), this.camera);
+	var hits = this.ray.intersectObject(hs.items, true);
+	for (var i = 0; i < hits.length; i++) {
+		var o = hits[i].object;
+		while (o && o.parent && o.parent !== hs.items) { o = o.parent; }
+		if (o && o.parent === hs.items && o.userData && o.userData.slot) { return { obj: o, point: hits[i].point }; }
+	}
+	return null;
+};
+// Grab the piece under the pointer: the orbit controls stop, the piece lifts a little and follows.
+Viewer.prototype.grabAt = function (cx, cy, ev) {
+	if (!this.house || !this.house.room || !this.house.room.W) { return false; }
+	var it = this.itemAt(cx, cy);
+	if (!it) { return false; }
+	var o = it.obj, bx = new THREE.Box3().setFromObject(o), rm = this.house.room;
+	// a piece that does not stand on the floor hangs on a wall: it slides along the walls, not the floor
+	var onWall = bx.min.y > 0.35;
+	this.drag = {
+		obj: o, slot: o.userData.slot,
+		dx: o.position.x - it.point.x, dz: o.position.z - it.point.z,
+		w: Math.max(0.12, bx.max.x - bx.min.x), d: Math.max(0.12, bx.max.z - bx.min.z),
+		rot: o.rotation.y, startX: cx, shift: !!(ev && ev.shiftKey), y0: o.position.y,
+		wall: onWall, w0: onWall ? nearWall(bx, rm.W, rm.D) : -1, rot0: o.rotation.y
+	};
+	if (!onWall) { o.position.y = this.drag.y0 + 0.012; }
+	if (this.controls) { this.controls.enabled = false; }
+	if (this.el) { this.el.style.cursor = 'grabbing'; }
+	if (this.onGrab) { this.onGrab(o.userData.item || o.userData.field || '', this.drag.slot); }
+	this.requestRender();
+	return true;
+};
+// Follow the pointer on the floor plane; with Shift held, sideways movement turns the piece instead.
+Viewer.prototype.dragTo = function (e) {
+	var d = this.drag, hs = this.house;
+	if (!d || !hs || !this.el) { return; }
+	if (e.shiftKey && !d.wall) { this.turnDrag((e.clientX - d.startX) * 0.5 - (d.rot - d.obj.rotation.y) / D2R); d.startX = e.clientX; return; }
+	var r = this.el.getBoundingClientRect();
+	this.ray = this.ray || new THREE.Raycaster();
+	this.ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), this.camera);
+	var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -Math.max(0, d.y0)), hit = new THREE.Vector3();
+	if (!this.ray.ray.intersectPlane(plane, hit)) { return; }
+	d.obj.position.x = hit.x + d.dx;
+	d.obj.position.z = hit.z + d.dz;
+	if (d.wall) { snapWall(d.obj, d.w0, d.rot0, hs.room.W, hs.room.D); }
+	else { fitInRoom(d.obj, hs.room.W, hs.room.D); }
+	this.requestRender();
+};
+// Turn the grabbed piece; it snaps to 15 degrees, and the turned piece is pushed back inside the room.
+Viewer.prototype.turnDrag = function (deg) {
+	if (!this.drag || this.drag.wall) { return; }
+	var cur = this.drag.obj.rotation.y / D2R + deg;
+	this.drag.obj.rotation.y = Math.round(cur / 15) * 15 * D2R;
+	if (this.house && this.house.room) { fitInRoom(this.drag.obj, this.house.room.W, this.house.room.D); }
+	this.requestRender();
+};
+// Let go: the piece stays where it is, and the designer is told so it can be saved.
+Viewer.prototype.dropDrag = function () {
+	var d = this.drag;
+	if (!d) { return; }
+	if (!d.wall) { d.obj.position.y = d.y0; }
+	this.drag = null;
+	if (this.controls) { this.controls.enabled = true; }
+	if (this.el) { this.el.style.cursor = ''; }
+	this.picks = this.thumb ? null : collectPicks(this.house.root);
+	if (this.onLayout) {
+		this.onLayout(d.slot, { x: Math.round(d.obj.position.x * 1000) / 1000, y: Math.round(d.obj.position.z * 1000) / 1000, rot: Math.round(((d.obj.rotation.y / D2R) % 360 + 360) % 360) });
+	}
+	this.requestRender();
+};
 // Screen point (CSS pixels) → the setting of the part under it.
 Viewer.prototype.pickAt = function (cx, cy) {
 	if (!this.picks || !this.picks.length || !this.el) { return null; }
@@ -2042,7 +2195,7 @@ function bathTileMat(c) {
 	}
 }
 
-INT.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, boxGeo: boxGeo, box: box, X: X, House: House, shadeHex: shadeHex, col: col, num: num, clamp: clamp, has: has, SK: SK, canopyGeo: canopyGeo, leafMat: leafMat, frameMat: frameMat, glassMat: glassMat, roomFloorMat: roomFloorMat, roomFloorKey: roomFloorKey, bathTileMat: bathTileMat, imageTexture: imageTexture, onImage: onImage });
+INT.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, boxGeo: boxGeo, box: box, X: X, House: House, shadeHex: shadeHex, col: col, num: num, clamp: clamp, has: has, SK: SK, canopyGeo: canopyGeo, leafMat: leafMat, frameMat: frameMat, glassMat: glassMat, roomFloorMat: roomFloorMat, roomFloorKey: roomFloorKey, fitInRoom: fitInRoom, bathTileMat: bathTileMat, imageTexture: imageTexture, onImage: onImage });
 LAND.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, box: box, House: House, groundKind: groundKind, canopyGeo: canopyGeo, leafMat: leafMat, mergeStatic: mergeStatic });
 
 /* ------------------------------------------------------------------ public API */

@@ -1880,6 +1880,9 @@ export function threshold(m, type, w) {
 }
 
 /* ================================================================== rooms */
+// A helyiség saját részletmezője → melyik házbeállítást írja felül a belső nézetben (1.9.0).
+// A `floor` külön fut, mert a padlót helyiségtípus szerint választja ki a ház.
+export var ROOM_OVERRIDE = { wall: 'wall_finish', ceiling: 'ceiling', lighting: 'ceiling_lights', curtains: 'window_treatment', doors: 'door_style', windows: 'window_style', furniture: 'furniture_style', heating: 'radiators', decor: 'art_amount' };
 var ROOM_KIND = { attic: 'attic', living: 'living', living_kitchen: 'living_kitchen', dining: 'dining', kitchen: 'kitchen', master: 'bed', bedroom: 'bed', guest: 'bed', kids: 'kids', office: 'office', wardrobe: 'wardrobe', bathroom: 'bath', wc: 'wc', wellness: 'bath', sauna: 'bath', laundry: 'laundry', utility: 'laundry', pantry: 'laundry', technical: 'laundry', hall: 'hall', corridor: 'hall', stairs: 'stairs', gym: 'office', playroom: 'kids', wine: 'office', custom: 'living' };
 export function roomKind(type) { return ROOM_KIND[type] || 'living'; }
 // Free stretches of a wall (length len) between blocking pieces [[a, b], ...], at least min long.
@@ -1951,6 +1954,18 @@ export function interiorScene(c, room) {
 	if (room) {
 		c = Object.assign({}, c);
 		['interior_style', 'wall_color', 'furniture_color', 'ceiling_height'].forEach(function (k) { if (room[k]) { c[k] = room[k]; } });
+		// what the room's own details override on the house setting (1.9.0): everything the visitor can
+		// choose per room shows up in this view too, not only in the prompt
+		var wetRoom = /^(bathroom|wc|wellness|sauna)$/.test(String(room.type || ''));
+		Object.keys(ROOM_OVERRIDE).forEach(function (k) {
+			var key = ROOM_OVERRIDE[k];
+			if (!room[k]) { return; }
+			// a wet room's wall covering is its tiling, everywhere else the wall finish
+			if (k === 'wall') { if (wetRoom) { c.bath_tiles = room[k]; } else { c.wall_finish = [room[k]]; } return; }
+			// choosing a curtain for the room turns the curtains on, "none" turns them off
+			if (k === 'curtains') { c.curtains = room[k] !== 'none'; if (room[k] === 'none') { return; } }
+			c[key] = room[k];
+		});
 	}
 	// this room's household items (the visitor's own assignment, or one fitting room per item); people only in the main living room
 	var K0 = L.SK(), rooms0 = K0._roomsOf(c), rid = room ? room.id || ((rooms0.filter(function (q) { return q.type === room.type; })[0] || {}).id) || 'virtual:' + room.type : '', RI = rid ? (K0._roomItems(c, rooms0)[rid] || []) : [], main0 = K0._mainRoom(rooms0);
@@ -1971,7 +1986,9 @@ export function interiorScene(c, room) {
 	var wallMat = wet ? tile : (Array.isArray(c.wall_finish) && c.wall_finish.indexOf('limewash') !== -1 ? L.pbr('render', { color: wallC, texture: 'coarse' }, { normal: 0.5 }) : L.solid(wallC, 0.92));
 	// floor slab with a light base around it, and the floor itself
 	hs.add(L.box(-0.35, -0.35, -0.25, W + 0.35, D + 0.35, -0.02, L.solid('#E4DFD7', 0.95)), false);
-	g.add(L.box(0, 0, -0.02, W, D, 0.0, L.roomFloorMat(c, L.roomFloorKey(c, type))));
+	// the room's own floor covering wins over the house's choice for this room type
+	var floorKey = (room && room.floor) ? room.floor : L.roomFloorKey(c, type);
+	g.add(L.box(0, 0, -0.02, W, D, 0.0, L.roomFloorMat(c, floorKey)));
 	// what stands where: blocking stretches on the back (x) and left (y measured from the front corner) walls
 	var occB = [], occL = [], ws = K._win(c), winW = Math.max(ws.w, 1.0), pano = c.window_style === 'panoramic';
 	var door = { u: wet && D < 2.6 ? 0.12 : 0.3, w: wet && D < 2.0 ? 0.8 : 0.9, style: pick(c, 'door_style') }, hasTV = false, rightFeat = null, fixes = [];
@@ -2479,7 +2496,7 @@ export function interiorScene(c, room) {
 		});
 		if (c.skirting && !wet) { BX(grp, 0, 0, 0, Wl.len, 0.08, 0.015, m.white); }
 		// feature wall on the far walls
-		if (!wet && fw.length && wi === 0 && kind !== 'kitchen' && kind !== 'living_kitchen') {
+		if (!wet && fw.length && wi === 0 && (!!(room && room.wall) || (kind !== 'kitchen' && kind !== 'living_kitchen'))) {
 			var fx0 = Wl.len * 0.08, fx1 = Wl.len * 0.92;
 			Wl.wins.forEach(function (o) { if (o.x < Wl.len / 2) { fx0 = Math.max(fx0, o.x + o.w + 0.1); } else { fx1 = Math.min(fx1, o.x - 0.1); } });
 			if (fx1 - fx0 > 0.8) { featureWall(grp, m, fw[0], fx0, fx1, H, wallC); }
@@ -2498,6 +2515,32 @@ export function interiorScene(c, room) {
 	fit.position.copy(L.X(W / 2, D / 2, H * 0.35)); hs.add(fit);
 	hs.room = { W: W, D: D, H: H, kind: kind, door: [D - door.u - door.w, D - door.u], fixes: fixes.filter(function (k, i) { return k && fixes.indexOf(k) === i; }) };
 	hs.items = R;   // the furniture of this room, as one group (the room test walks it)
+	// Every piece gets a slot name ("key#index"), so a hand-made arrangement can be saved and found
+	// again in the next build. Then whatever the visitor moved by hand is put back where they left it.
+	(function () {
+		var seen = {};
+		R.children.forEach(function (o) {
+			var key = (o.userData && (o.userData.item || o.userData.field)) || 'item';
+			seen[key] = (seen[key] || 0);
+			o.userData.slot = key + '#' + seen[key];
+			seen[key]++;
+		});
+		var lay = c.room_layout && !Array.isArray(c.room_layout) && rid ? c.room_layout[rid] : null;
+		if (!lay) { return; }
+		var moved = [];
+		R.children.forEach(function (o) {
+			var p2 = lay[o.userData.slot];
+			if (!p2) { return; }
+			// the saved place is never trusted blindly: the piece is turned first, then pushed back
+			// between the four walls as a whole (a narrower room, a new piece: it still fits)
+			o.position.x = L.num(p2.x, o.position.x);
+			o.position.z = L.num(p2.y, o.position.z);
+			o.rotation.y = L.num(p2.rot, 0) * D2R;
+			if (L.fitInRoom) { L.fitInRoom(o, W, D); }
+			moved.push(o.userData.slot);
+		});
+		hs.moved = moved;
+	})();
 	return hs;
 }
 // Kitchen in a room: runs along the back wall (and the left wall), island in front.

@@ -148,6 +148,11 @@ final class Planner {
 				$out['room_items'] = RoomProgram::item_rooms( $c );
 				continue;
 			}
+			if ( 'layout' === $def['type'] ) {
+				// the hand-made arrangement is not a parameter to interpret, it travels as it is
+				$out['room_layout'] = is_array( $v ) ? $v : array();
+				continue;
+			}
 			if ( 'rooms' === $def['type'] ) {
 				$out['rooms'] = array_map(
 					static fn( $r ) => array( 'id' => $r['id'], 'type' => $r['type'], 'name' => $r['name'], 'area' => $r['area'], 'level' => $r['level'] ),
@@ -334,7 +339,7 @@ final class Planner {
 		}
 		$schema_fields = array();
 		foreach ( Registry::fields() as $id => $def ) {
-			if ( ! empty( $def['hidden'] ) || in_array( $def['type'], array( 'rooms', 'roomitems', 'image', 'textarea' ), true ) || in_array( $id, array( 'project_name', 'house_name' ), true ) ) {
+			if ( ! empty( $def['hidden'] ) || in_array( $def['type'], array( 'rooms', 'roomitems', 'layout', 'image', 'textarea' ), true ) || in_array( $id, array( 'project_name', 'house_name' ), true ) ) {
 				continue;
 			}
 			$f = array( 'id' => $id, 'type' => 'catalog' === $def['type'] ? 'select' : $def['type'], 'label' => $def['label'] );

@@ -8721,3 +8721,48 @@ msgstr "Color"
 #: includes/Frontend/Strings.php
 msgid "Már használt színek"
 msgstr "Colores ya usados"
+
+#: includes/Frontend/Strings.php
+#. translators: %1$s: name of the grabbed piece of furniture
+msgid "%1$s megfogva – húzd a helyére, Shift vagy görgő forgat."
+msgstr "%1$s agarrado: arrástralo a su sitio; Mayús o la rueda lo gira."
+
+#: includes/Params/Definitions.php
+msgid "A belső nézetben egérrel áthelyezett és elforgatott tárgyak."
+msgstr "Objetos movidos y girados con el ratón en la vista interior."
+
+#: includes/Frontend/Strings.php
+msgid "A helyiség berendezése visszaállt automatikusra."
+msgstr "La habitación vuelve a amueblarse automáticamente."
+
+#: includes/Frontend/Strings.php
+msgid "A házzal megegyező"
+msgstr "Igual que la casa"
+
+#: includes/Frontend/Strings.php
+msgid "Berendezés visszaállítása"
+msgstr "Restablecer la disposición"
+
+#: includes/Frontend/Strings.php
+msgid "Ebben a helyiségben még nincs kézzel elhelyezett tárgy."
+msgstr "En esta habitación todavía no hay nada colocado a mano."
+
+#: includes/Frontend/Strings.php
+msgid "Elhelyezve."
+msgstr "Colocado."
+
+#: includes/Frontend/Strings.php
+msgid "Fogd meg egérrel a bútort, és tedd oda, ahova szeretnéd."
+msgstr "Agarra un mueble con el ratón y ponlo donde quieras."
+
+#: includes/Params/Definitions.php
+msgid "Kézi elrendezés"
+msgstr "Disposición manual"
+
+#: includes/Frontend/Strings.php
+msgid "Mozgatás visszavonása"
+msgstr "Deshacer el movimiento"
+
+#: includes/Frontend/Strings.php
+msgid "Utolsó mozgatás visszavonva."
+msgstr "Último movimiento deshecho."

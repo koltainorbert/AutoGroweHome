@@ -184,6 +184,7 @@ final class Strings {
 			'room_render'            => __( 'Látványterv', 'autogrowehome' ),
 			'room_render_help'       => __( 'Készüljön belső látványkép erről a helyiségről', 'autogrowehome' ),
 			'room_style'             => __( 'Belső stílus', 'autogrowehome' ),
+			'room_same_as_house'     => __( 'A házzal megegyező', 'autogrowehome' ),
 			'room_style_inherit'     => __( 'A ház stílusa szerint', 'autogrowehome' ),
 			'room_type'              => __( 'Típus', 'autogrowehome' ),
 			'room_wall'              => __( 'Falburkolat', 'autogrowehome' ),
@@ -264,6 +265,15 @@ final class Strings {
 			'items_elsewhere'        => __( 'Máshol: %1$s', 'autogrowehome' ),
 			/* translators: %1$s: list of items */
 			'fixed_items'            => __( 'Megoldva: %1$s – áthelyezve, hogy elférjen és látsszon.', 'autogrowehome' ),
+			/* translators: %1$s: name of the grabbed piece of furniture */
+			'layout_moving'          => __( '%1$s megfogva – húzd a helyére, Shift vagy görgő forgat.', 'autogrowehome' ),
+			'layout_saved'           => __( 'Elhelyezve.', 'autogrowehome' ),
+			'layout_undone'          => __( 'Utolsó mozgatás visszavonva.', 'autogrowehome' ),
+			'layout_reset'           => __( 'A helyiség berendezése visszaállt automatikusra.', 'autogrowehome' ),
+			'layout_none'            => __( 'Ebben a helyiségben még nincs kézzel elhelyezett tárgy.', 'autogrowehome' ),
+			'layout_hint'            => __( 'Fogd meg egérrel a bútort, és tedd oda, ahova szeretnéd.', 'autogrowehome' ),
+			'layout_reset_room'      => __( 'Berendezés visszaállítása', 'autogrowehome' ),
+			'layout_undo'            => __( 'Mozgatás visszavonása', 'autogrowehome' ),
 			'sketch_reset_view'      => __( 'Nézet visszaállítása', 'autogrowehome' ),
 			'style_pack_offer'       => __( 'A(z) „%1$s” stílushoz javasolt beállításcsomag is tartozik.', 'autogrowehome' ),
 			'sum_checks'             => __( 'Ellenőrzés', 'autogrowehome' ),

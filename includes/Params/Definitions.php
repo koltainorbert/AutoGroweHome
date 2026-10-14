@@ -1063,6 +1063,7 @@ final class Definitions {
 		// Which room each household item stands in (room id => item values). The item cards of the furniture,
 		// electronics and pets fields edit it in the interior view; items not placed go to a fitting room.
 		$f[] = array( 'id' => 'room_items', 'category' => 'furniture', 'type' => 'roomitems', 'label' => __( 'Tárgyak helyiségenként', 'autogrowehome' ), 'help' => '', 'default' => array(), 'prompt' => '' );
+		$f[] = array( 'id' => 'room_layout', 'category' => 'furniture', 'type' => 'layout', 'label' => __( 'Kézi elrendezés', 'autogrowehome' ), 'help' => __( 'A belső nézetben egérrel áthelyezett és elforgatott tárgyak.', 'autogrowehome' ), 'default' => array(), 'prompt' => '' );
 		$f[] = array_merge(
 			array( 'id' => 'pendant_style', 'category' => 'lighting', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Függőlámpa', 'autogrowehome' ), 'help' => '', 'default' => 'auto', 'prompt' => '{value}' ),
 			self::opts(

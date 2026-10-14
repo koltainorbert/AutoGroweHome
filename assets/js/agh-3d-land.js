@@ -54,7 +54,7 @@ var P = {
 	valley: { hill: 30, far: 180, farR: 560, tree: ['conifer', 'broad', 'birch'], n: 1050, near: 80, lake: [-60, -300, 70] },
 	alpine_forest: { hill: 32, far: 430, farR: 940, tree: ['conifer', 'conifer', 'conifer', 'birch'], n: 1500, near: 70, rock: 0.8, snow: 420 },
 	puszta: { hill: 2, far: 16, farR: 820, tree: ['broad', 'poplar'], n: 120, near: 150, fields: 1, dry: 0.8 },
-	town: { hill: 2, far: 25, farR: 700, tree: ['broad', 'broad', 'conifer'], n: 300, near: 120, fields: 0 },
+	town: { hill: 2, far: 18, farR: 700, tree: ['broad', 'broad', 'columnar'], n: 55, near: 165, fields: 0, blocks: 1 },
 	desert: { hill: 14, far: 140, farR: 700, tree: ['olive', 'cypress'], n: 90, near: 130, rock: 0.7, dry: 1 },
 	snowy: { hill: 20, far: 260, farR: 760, tree: ['conifer', 'conifer', 'birch'], n: 900, near: 90, snow: 10, rock: 0.5 }
 };
@@ -219,6 +219,37 @@ export function woods(c, k, thumb) {
 	var list = [];
 	Object.keys(by).forEach(function (t) { by[t].forEach(function (q5) { list.push([q5[0], q5[1], q5[2], t, q5[3], q5[4]]); }); });
 	g.add(treeSet(c, list));
+	if (p.blocks) { g.add(townBlocks(c, k, thumb)); }
+	return g;
+}
+// The town behind the street: blocks of flats and office buildings around the horizon, as one instanced
+// box each for the body and the roof parapet. Without them a town street stands in an empty meadow.
+var BLOCKGEO = null;
+function townBlocks(c, k, thumb) {
+	var g = new THREE.Group(), r = rng(409), n = thumb ? 40 : 130, m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), V = THREE.Vector3;
+	if (!BLOCKGEO) { BLOCKGEO = new THREE.BoxGeometry(1, 1, 1); BLOCKGEO.userData.shared = true; }
+	var col = new THREE.Color();
+	var mat = L.cached('townblock', function () { return L.stdMat({ color: '#FFFFFF', roughness: 0.9, metalness: 0 }); });
+	var body = new THREE.InstancedMesh(BLOCKGEO, mat, n), put = 0;
+	var tone = ['#C9C2B4', '#BDB7AC', '#D2CBBC', '#A9A79F', '#C2B6A4', '#B4BCC0'];
+	for (var i = 0; i < n * 6 && put < n; i++) {
+		var a = r() * Math.PI * 2, d = 165 + Math.pow(r(), 1.3) * 420, x = Math.cos(a) * d, z = Math.sin(a) * d;
+		// the street in front of the house stays open: no block standing in the middle of the view
+		if (z > ROAD - 30 && Math.abs(x) < 110) { continue; }
+		var h = heightAt(k, x, z);
+		if (h < WATER_Y + 0.6) { continue; }
+		var w = 14 + r() * 26, dp = 12 + r() * 22, hi = 9 + Math.pow(r(), 1.6) * 26;
+		q.setFromAxisAngle(new V(0, 1, 0), Math.round(r() * 4) * 1.5708 + (r() - 0.5) * 0.25);
+		m4.compose(new V(x, h + hi / 2, z), q, new V(w, hi, dp));
+		body.setMatrixAt(put, m4);
+		col.set(tone[Math.floor(r() * tone.length)]).multiplyScalar(0.86 + r() * 0.26);
+		body.setColorAt(put, col);
+		put++;
+	}
+	body.count = put;
+	body.castShadow = false; body.receiveShadow = false;
+	body.computeBoundingSphere();
+	g.add(body);
 	return g;
 }
 // Light trees for the distance, the street and the neighbours' gardens: a leaf-card crown and a trunk,
@@ -275,7 +306,7 @@ export function setRoad(y) { ROAD = y; }
 // The street in front of the plot: pavements, kerbs, the carriageway with markings, street trees and
 // lamp posts in town; a narrower country lane with verges elsewhere. A paved apron joins the driveway.
 export function street(c, pb, gp, k, night) {
-	var g = new THREE.Group(), town = k === 'suburb', y0 = pb.front, xa = -420, xb = 420;
+	var g = new THREE.Group(), urban = k === 'town', town = k === 'suburb' || urban, y0 = pb.front, xa = -420, xb = 420;
 	var asph = L.groundKind(c, 'asphalt'), pave = L.groundKind(c, 'slabs'), kerb = L.solid('#B9B6B0', 0.8);
 	var flat = function (x0, ya, x1, yb, z, mat) { g.add(L.box(x0, ya, z - 0.03, x1, yb, z, mat, { noCast: true })); };
 	var line = L.cached('roadline', function () { return L.solid('#E9E7E1', 0.6); });
@@ -301,6 +332,21 @@ export function street(c, pb, gp, k, night) {
 				}
 			}
 		}
+		if (urban) {
+			// town street: a zebra crossing and cars parked along the kerb
+			var white = L.cached('zebra', function () { return L.solid('#F2F0EA', 0.5); });
+			for (var zx = -5.4; zx < 5.4; zx += 1.6) { g.add(L.box(zx, y0 + 2.3, -0.018, zx + 0.8, y0 + 9.0, -0.015, white, { noCast: true })); }
+			var body = [L.solid('#2E3338', 0.35, 0.3), L.solid('#8E9196', 0.35, 0.4), L.solid('#5E6C7A', 0.35, 0.35), L.solid('#B9B4AA', 0.4, 0.3)];
+			var glassM = L.solid('#2B3238', 0.1, 0.6), tyre = L.solid('#1C1C1E', 0.9);
+			for (var cx = -120, ci = 0; cx <= 120; cx += 13, ci++) {
+				if (cx > pb.left - 8 && cx < pb.right + 8) { continue; }   // a saját kapubeálló szabadon marad
+				var far = ci % 2 === 1, cy = far ? y0 + 7.6 : y0 + 3.0, cm = body[ci % body.length];
+				g.add(L.box(cx, cy, 0.18, cx + 4.3, cy + 1.8, 0.78, cm, { noCast: true }));
+				g.add(L.box(cx + 0.9, cy + 0.08, 0.78, cx + 3.3, cy + 1.72, 1.32, glassM, { noCast: true }));
+				g.add(L.box(cx + 1.0, cy + 0.02, 0.84, cx + 3.2, cy + 1.78, 1.26, cm, { noCast: true }));
+				[[cx + 0.7, cy], [cx + 3.4, cy], [cx + 0.7, cy + 1.5], [cx + 3.4, cy + 1.5]].forEach(function (q) { g.add(L.box(q[0], q[1], 0.02, q[0] + 0.3, q[1] + 0.3, 0.6, tyre, { noCast: true })); });
+			}
+		}
 		g.add(treeSet(c, trees));
 	} else {
 		flat(xa, y0 + 1.2, xb, y0 + 1.6, 0.012, L.groundKind(c, 'gravel'));
@@ -311,6 +357,7 @@ export function street(c, pb, gp, k, night) {
 	if (gp && gp.drive) { flat(gp.drive.x0, gp.drive.y1 - 0.05, gp.drive.x1, y0 + (town ? 2.05 : 1.65), 0.025, L.groundKind(c, { gravel: 'gravel', grass: 'grasspavers', asphalt: 'asphalt' }[c.driveway] || 'pavers')); }
 	if (gp && gp.path && gp.path.y1 > y0 - 6) { flat(gp.path.x0, gp.path.y1 - 0.05, gp.path.x1, y0 + 0.02, 0.025, pave); }
 	g.traverse(function (o) { if (o.isMesh) { o.castShadow = false; } });
+	g.userData.street = urban ? 'urban' : (town ? 'town' : 'country');   // measurable: which street was built
 	return g;
 }
 
@@ -358,7 +405,10 @@ var HOODS = {};
 // The neighbouring houses (built once per style, season and light; only moved when the plot changes).
 // Town: two houses on either side and four across the street; in the country a few farmsteads.
 export function neighbours(c, k, night) {
-	var st = HOOD[c.arch_style] ? c.arch_style : 'modern_minimal', key = [st, c.season || 'summer', night ? 'n' : 'd', k === 'suburb' ? 'town' : 'country', c.window_style, c.window_frame_color].join('|');
+	// the kind of street is part of the cache key: an urban row, a suburban street and a country road
+	// are three different sets of neighbours, and the town street must not be served from a country one
+	var kind = 'town' === k ? 'urban' : ('suburb' === k ? 'town' : 'country');
+	var st = HOOD[c.arch_style] ? c.arch_style : 'modern_minimal', key = [st, c.season || 'summer', night ? 'n' : 'd', kind, c.window_style, c.window_frame_color].join('|');
 	if (HOODS[key]) { return HOODS[key]; }
 	// keep the last few streets only (merged house geometry is large; tree geometry is shared)
 	var keys = Object.keys(HOODS);
@@ -366,46 +416,67 @@ export function neighbours(c, k, night) {
 		HOODS[keys[0]].forEach(function (o) { o.root.traverse(function (m) { if (m.isMesh && !m.isInstancedMesh && m.geometry && !m.geometry.userData.shared) { m.geometry.dispose(); } }); });
 		delete HOODS[keys[0]];
 	}
-	var r = rng(911 + st.length * 37), n = k === 'suburb' ? 8 : 3, out = [];
+	var urban = k === 'town';
+	var r = rng(911 + st.length * 37), n = urban ? 10 : (k === 'suburb' ? 8 : 3), out = [];
 	for (var i = 0; i < n; i++) {
 		var nc = variant(c, i, r), hs;
+		if (urban) {
+			// a town street: narrow plots built right up to the pavement, two to four storeys, flat or hipped
+			nc = Object.assign({}, nc, {
+				property_type: 'row', massing: 'compact', footprint: 'rectangle',
+				levels: ['two', 'two', 'three', 'attic'][i % 4],
+				net_area: 150 + Math.round(r() * 120), building_width: 7 + Math.round(r() * 4), building_length: 11 + Math.round(r() * 5),
+				roof_type: ['flat', 'hip', 'gable', 'flat'][i % 4], garage: 'none', terrace_area: 0,
+				garden_style: 'minimal', garden_features: [], fence: 'none', balcony: r() < 0.5
+			});
+		}
 		try { hs = new L.House(nc, { mini: true }).build(); } catch (e) { continue; }
+		hs.root.userData.hood = urban ? 'urban' : (k === 'suburb' ? 'town' : 'country');   // measurable
 		// a garden of its own: lawn, a hedge along the street with the drive, a tree or two
 		hs.root.updateMatrixWorld(true);
-		var b = new THREE.Box3().setFromObject(hs.fit), sw = 4.5 + r() * 2.5, set = 6 + r() * 2.5;
+		var b = new THREE.Box3().setFromObject(hs.fit), sw = urban ? 0.15 : 4.5 + r() * 2.5, set = urban ? 1.2 : 6 + r() * 2.5;
 		var x0 = b.min.x - sw, x1 = b.max.x + sw, yB = b.min.z - 9, yF = b.max.z + set;
-		hs.add(L.box(x0, yB, 0, x1, yF, 0.012, L.groundKind(nc, 'grass'), { noCast: true }), false);
-		var dx = b.max.x - 1.5;
-		hs.add(L.box(dx - 3, b.max.z, 0, dx, yF, 0.022, L.groundKind(nc, 'pavers'), { noCast: true }), false);
-		var hm = nc.season === 'winter' ? L.pbr('snow', {}, { normal: 0.5 }) : L.pbr('hedge', { season: nc.season || 'summer' }, { normal: 2.5 });
-		if (r() < 0.7) { hs.add(L.box(x0 + 0.4, yF - 0.9, 0, dx - 3.6, yF - 0.3, 1.1 + r() * 0.4, hm), false); }
-		var tk = TREE_OF[st] || (r() < 0.5 ? 'broad' : 'birch'), tl = [[x0 + 2.2 + r() * 2, 0, yB + 3 + r() * 3, tk, r() * 0.5, r()]];
-		if (r() < 0.6) { tl.push([x1 - 2.5, 0, yB + 4 + r() * 4, r() < 0.5 ? 'columnar' : tk, r() * 0.4, r()]); }
-		var tset = treeSet(nc, tl);
+		var tset;
+		if (urban) {
+			// no front garden: the facade meets the pavement, a small yard behind the house
+			hs.add(L.box(x0, b.max.z, 0, x1, yF, 0.016, L.groundKind(nc, 'pavers'), { noCast: true }), false);
+			hs.add(L.box(x0, yB, 0, x1, b.min.z, 0.012, L.groundKind(nc, 'grass'), { noCast: true }), false);
+			tset = treeSet(nc, r() < 0.4 ? [[x0 + 1.5, 0, yB + 3 + r() * 2, 'columnar', r() * 0.3, r()]] : []);
+		} else {
+			hs.add(L.box(x0, yB, 0, x1, yF, 0.012, L.groundKind(nc, 'grass'), { noCast: true }), false);
+			var dx = b.max.x - 1.5;
+			hs.add(L.box(dx - 3, b.max.z, 0, dx, yF, 0.022, L.groundKind(nc, 'pavers'), { noCast: true }), false);
+			var hm = nc.season === 'winter' ? L.pbr('snow', {}, { normal: 0.5 }) : L.pbr('hedge', { season: nc.season || 'summer' }, { normal: 2.5 });
+			if (r() < 0.7) { hs.add(L.box(x0 + 0.4, yF - 0.9, 0, dx - 3.6, yF - 0.3, 1.1 + r() * 0.4, hm), false); }
+			var tk = TREE_OF[st] || (r() < 0.5 ? 'broad' : 'birch'), tl = [[x0 + 2.2 + r() * 2, 0, yB + 3 + r() * 3, tk, r() * 0.5, r()]];
+			if (r() < 0.6) { tl.push([x1 - 2.5, 0, yB + 4 + r() * 4, r() < 0.5 ? 'columnar' : tk, r() * 0.4, r()]); }
+			tset = treeSet(nc, tl);
+		}
 		// no lamps of their own (the scene's light count stays fixed), no shadows cast into the scene
 		var kill = [];
 		hs.root.traverse(function (o) { if (o.isLight) { kill.push(o); } if (o.isMesh) { o.castShadow = false; } });
 		kill.forEach(function (o) { o.parent.remove(o); });
 		L.mergeStatic(hs.root);
 		hs.root.add(tset);
-		out.push({ root: hs.root, w: x1 - x0, front: yF, back: yB, cx: (x0 + x1) / 2, across: k === 'suburb' ? i >= 4 : i === 2 });
+		out.push({ root: hs.root, w: x1 - x0, front: yF, back: yB, cx: (x0 + x1) / 2, across: urban ? i >= 5 : (k === 'suburb' ? i >= 4 : i === 2) });
 	}
 	HOODS[key] = out;
 	return out;
 }
 // Where the neighbours stand around this plot (pb: plot box in sketch metres).
 export function placeNeighbours(list, pb, k, rd) {
-	var town = k === 'suburb', L1 = pb.left, R1 = pb.right, across = 0, xA = (pb.left + pb.right) / 2 - 30;
+	var urban = k === 'town', town = k === 'suburb' || urban, L1 = pb.left, R1 = pb.right, across = 0, xA = (pb.left + pb.right) / 2 - 34;
+	var gap = urban ? 0.1 : 0.6;
 	list.forEach(function (o, i) {
 		var root = o.root; root.rotation.set(0, 0, 0);
 		if (town && !o.across) {
 			// same side of the street: the plot's street edge on the same line as ours
-			if (i % 2 === 0) { root.position.set(L1 - o.w / 2 - o.cx - 0.6, 0, pb.front - o.front); L1 -= o.w + 0.6; }
-			else { root.position.set(R1 + o.w / 2 - o.cx + 0.6, 0, pb.front - o.front); R1 += o.w + 0.6; }
+			if (i % 2 === 0) { root.position.set(L1 - o.w / 2 - o.cx - gap, 0, pb.front - o.front); L1 -= o.w + gap; }
+			else { root.position.set(R1 + o.w / 2 - o.cx + gap, 0, pb.front - o.front); R1 += o.w + gap; }
 		} else if (o.across) {
 			// across the street, facing it
 			root.rotation.y = Math.PI;
-			var x = town ? xA + across * 21 + (o.w - 20) * 0.5 : (pb.left + pb.right) / 2 - 15;
+			var x = urban ? xA + across * (o.w + gap) : (town ? xA + 4 + across * 21 + (o.w - 20) * 0.5 : (pb.left + pb.right) / 2 - 15);
 			root.position.set(x + o.cx, 0, (rd || pb.front + 11.3) + o.front + (town ? 0 : 25));
 			across++;
 		} else {

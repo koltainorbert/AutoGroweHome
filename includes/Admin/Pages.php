@@ -468,7 +468,7 @@ final class Pages {
 			echo '<td><input type="checkbox" name="ov[' . esc_attr( $id ) . '][advanced]" value="1" ' . checked( (bool) ( $o['advanced'] ?? $f['advanced'] ), true, false ) . '></td>';
 			echo '<td><input type="text" name="ov[' . esc_attr( $id ) . '][label]" value="' . esc_attr( (string) ( $o['label'] ?? '' ) ) . '" placeholder="' . esc_attr( $f['label'] ) . '"></td>';
 			echo '<td><input type="text" name="ov[' . esc_attr( $id ) . '][help]" value="' . esc_attr( (string) ( $o['help'] ?? '' ) ) . '"></td>';
-			echo '<td>' . ( in_array( $f['type'], array( 'rooms', 'roomitems' ), true ) ? '–' : '<input type="text" name="ov[' . esc_attr( $id ) . '][default]" value="' . esc_attr( $dvs ) . '" placeholder="' . esc_attr( is_array( $f['default'] ) ? implode( ',', $f['default'] ) : ( is_bool( $f['default'] ) ? ( $f['default'] ? '1' : '0' ) : (string) $f['default'] ) ) . '">' ) . '</td>';
+			echo '<td>' . ( in_array( $f['type'], array( 'rooms', 'roomitems', 'layout' ), true ) ? '–' : '<input type="text" name="ov[' . esc_attr( $id ) . '][default]" value="' . esc_attr( $dvs ) . '" placeholder="' . esc_attr( is_array( $f['default'] ) ? implode( ',', $f['default'] ) : ( is_bool( $f['default'] ) ? ( $f['default'] ? '1' : '0' ) : (string) $f['default'] ) ) . '">' ) . '</td>';
 			echo '<td><input type="number" style="width:70px" name="ov[' . esc_attr( $id ) . '][sort]" value="' . esc_attr( isset( $o['sort'] ) ? (string) $o['sort'] : '' ) . '"></td></tr>';
 		}
 		echo '</tbody></table>';

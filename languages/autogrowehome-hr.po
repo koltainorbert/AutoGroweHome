@@ -8723,3 +8723,48 @@ msgstr "Boja"
 #: includes/Frontend/Strings.php
 msgid "Már használt színek"
 msgstr "Već korištene boje"
+
+#: includes/Frontend/Strings.php
+#. translators: %1$s: name of the grabbed piece of furniture
+msgid "%1$s megfogva – húzd a helyére, Shift vagy görgő forgat."
+msgstr "%1$s uhvaćeno – povuci na mjesto, Shift ili kolutić okreće."
+
+#: includes/Params/Definitions.php
+msgid "A belső nézetben egérrel áthelyezett és elforgatott tárgyak."
+msgstr "Predmeti premješteni i okrenuti mišem u unutarnjem prikazu."
+
+#: includes/Frontend/Strings.php
+msgid "A helyiség berendezése visszaállt automatikusra."
+msgstr "Prostorija je ponovno uređena automatski."
+
+#: includes/Frontend/Strings.php
+msgid "A házzal megegyező"
+msgstr "Isto kao kuća"
+
+#: includes/Frontend/Strings.php
+msgid "Berendezés visszaállítása"
+msgstr "Vrati razmještaj"
+
+#: includes/Frontend/Strings.php
+msgid "Ebben a helyiségben még nincs kézzel elhelyezett tárgy."
+msgstr "U ovoj prostoriji još nije ništa postavljeno rukom."
+
+#: includes/Frontend/Strings.php
+msgid "Elhelyezve."
+msgstr "Postavljeno."
+
+#: includes/Frontend/Strings.php
+msgid "Fogd meg egérrel a bútort, és tedd oda, ahova szeretnéd."
+msgstr "Uhvati namještaj mišem i stavi ga gdje želiš."
+
+#: includes/Params/Definitions.php
+msgid "Kézi elrendezés"
+msgstr "Ručni razmještaj"
+
+#: includes/Frontend/Strings.php
+msgid "Mozgatás visszavonása"
+msgstr "Vrati premještanje"
+
+#: includes/Frontend/Strings.php
+msgid "Utolsó mozgatás visszavonva."
+msgstr "Zadnje premještanje vraćeno."

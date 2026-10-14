@@ -133,6 +133,31 @@ final class Validator {
 					$out[ $room ] = $list;
 				}
 				return $out;
+			case 'layout':
+				// room id => slot ("key#index") => hand placed position and angle in the room
+				$out = array();
+				foreach ( is_array( $value ) ? array_slice( $value, 0, 60, true ) : array() as $room => $slots ) {
+					$room = (string) $room;
+					if ( ! preg_match( '/^[A-Za-z0-9_:\-]{1,64}$/', $room ) || ! is_array( $slots ) ) {
+						continue;
+					}
+					$list = array();
+					foreach ( array_slice( $slots, 0, 64, true ) as $slot => $pos ) {
+						$slot = (string) $slot;
+						if ( ! preg_match( '/^[A-Za-z0-9_\-]{1,40}#[0-9]{1,3}$/', $slot ) || ! is_array( $pos ) ) {
+							continue;
+						}
+						$list[ $slot ] = array(
+							'x'   => round( min( 40, max( 0, (float) ( $pos['x'] ?? 0 ) ) ), 3 ),
+							'y'   => round( min( 40, max( 0, (float) ( $pos['y'] ?? 0 ) ) ), 3 ),
+							'rot' => (int) round( fmod( fmod( (float) ( $pos['rot'] ?? 0 ), 360 ) + 360, 360 ) ),
+						);
+					}
+					if ( $list ) {
+						$out[ $room ] = $list;
+					}
+				}
+				return $out;
 			case 'catalog':
 				$v = is_scalar( $value ) ? sanitize_key( (string) $value ) : '';
 				return ( '' === $v || Catalog::exists( $def['catalog'], $v ) ) ? $v : '';

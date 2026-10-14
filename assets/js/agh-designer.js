@@ -380,6 +380,9 @@
 			if (e.key === 'ArrowRight') { stepLightbox(1); }
 			if (e.key === 'ArrowLeft') { stepLightbox(-1); }
 		}
+		// Ctrl+Z: take back the last hand move in the room (never while text is being typed)
+		if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && S.view === 'int' && layoutUndo.length
+			&& !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); undoLayout(); }
 	}
 	function trapFocus(e) {
 		var scope = root.querySelector('.agh-dialog-wrap, .agh-lightbox') || shell;
@@ -599,7 +602,7 @@
 	function catFields(cat) {
 		var q = S.search.trim().toLowerCase();
 		return S.boot.schema.fields.filter(function (f) {
-			if (f.type === 'roomitems') { return false; }
+			if (f.type === 'roomitems' || f.type === 'layout') { return false; }
 			if (q) { return (f.label + ' ' + (f.help || '')).toLowerCase().indexOf(q) !== -1; }
 			if (f.category !== cat) { return false; }
 			if (S.mode === 'simple' && f.advanced) { return false; }
@@ -897,6 +900,66 @@
 		return box;
 	}
 	// The 3D room finds every item a place; when it had to move or shrink something, one short note says what.
+	/* ---------------------------------------------------------------- hand-made arrangement (1.9.0)
+	 * A piece dragged or turned in the room is kept per room and per piece in `room_layout`, so it stays
+	 * where the visitor put it. Ctrl+Z takes back the last move, and a room can be reset to the automatic
+	 * arrangement. */
+	var layoutUndo = [];
+	// The empty value comes from PHP as an empty list; as a list it would lose its room keys on the next
+	// JSON round trip, so it is read as a plain object everywhere.
+	function layoutAll() {
+		var v = S.config.room_layout;
+		return v && typeof v === 'object' && !Array.isArray(v) ? clone(v) : {};
+	}
+	function curRoomId() {
+		var r = curRoom();
+		return r ? (r.id || ('virtual:' + r.type)) : '';
+	}
+	function grabNote(key) {
+		var name = itemLabel(key) || (S.fields[key] ? S.fields[key].label : '');
+		if (name) { toast(tf('layout_moving', name), 'ok', 1400); }
+	}
+	function saveLayout(slot, pos) {
+		var id = curRoomId();
+		if (!id || !slot) { return; }
+		var all = layoutAll();
+		layoutUndo.push(layoutAll());
+		if (layoutUndo.length > 20) { layoutUndo.shift(); }
+		all[id] = all[id] || {};
+		all[id][slot] = pos;
+		S.config.room_layout = all;
+		S.explicit.room_layout = true;
+		S.dirty = true;
+		persist();
+		renderSummary();
+		refreshLayoutTools();
+		toast(t('layout_saved'), 'ok', 1200);
+	}
+	// The drag itself already moved the piece in the 3D room, so only the small control bar is redrawn.
+	function refreshLayoutTools() {
+		if (!els.previewBox) { return; }
+		var old = els.previewBox.querySelector('.agh-3d-lay');
+		if (old && old.parentNode) { old.parentNode.replaceChild(layoutTools(), old); }
+	}
+	function undoLayout() {
+		if (!layoutUndo.length) { return; }
+		S.config.room_layout = layoutUndo.pop();
+		S.dirty = true;
+		persist();
+		renderPreviewOnly();
+		toast(t('layout_undone'), 'ok', 1400);
+	}
+	function resetLayout() {
+		var id = curRoomId(), all = layoutAll();
+		if (!id || !all[id]) { toast(t('layout_none'), 'warn', 1600); return; }
+		layoutUndo.push(clone(all));
+		delete all[id];
+		S.config.room_layout = all;
+		S.dirty = true;
+		persist();
+		renderPreviewOnly();
+		toast(t('layout_reset'), 'ok', 1600);
+	}
 	// A tap on a part of the model: the settings jump to the field that part belongs to, and it lights up.
 	// A piece with no setting of its own (a household item placed by its own card) only says its name.
 	function jumpToField(hit) {
@@ -1356,6 +1419,24 @@
 				var inp = h('input', { class: 'agh-input', value: r[key] || '', maxlength: key === 'notes' ? 400 : 120, onchange: function (e) { updateRoom(idx, key, e.target.value); } });
 				d.appendChild(h('label', { class: full ? 'agh-full' : null }, label, inp));
 			}
+			// A részlet, aminek a házban is van beállítása: legördülő a ház mezőjének opcióiból, így a
+			// választás a 3D belső nézetben is látszik – nem lehet beleírni olyat, amit a program nem ért.
+			function pickOpt(key, label, fieldId, extra) {
+				var f2 = S.fields[fieldId];
+				if (!f2 || !f2.options) { txt(key, label); return; }
+				var sel2 = h('select', { class: 'agh-select', onchange: function (e) { updateRoom(idx, key, e.target.value); } });
+				sel2.appendChild(h('option', { value: '', text: t('room_same_as_house') }));
+				(extra || []).forEach(function (o) { sel2.appendChild(h('option', { value: o[0], selected: r[key] === o[0] ? 'selected' : null, text: o[1] })); });
+				f2.options.forEach(function (o) {
+					if (o.value === 'auto') { return; }
+					sel2.appendChild(h('option', { value: o.value, selected: r[key] === o.value ? 'selected' : null, text: o.label }));
+				});
+				// korábbi szabad szöveg: megmarad választható értékként, hogy ne vesszen el
+				if (r[key] && !f2.options.some(function (o) { return o.value === r[key]; }) && !(extra || []).some(function (o) { return o[0] === r[key]; })) {
+					sel2.appendChild(h('option', { value: r[key], selected: 'selected', text: r[key] }));
+				}
+				d.appendChild(h('label', null, label, sel2));
+			}
 			function num(key, label, min, max, step) {
 				d.appendChild(h('label', null, label, h('input', { class: 'agh-input', type: 'number', min: min, max: max, step: step, value: r[key] || '', onchange: function (e) { updateRoom(idx, key, e.target.value === '' ? '' : Number(e.target.value)); } })));
 			}
@@ -1370,19 +1451,19 @@
 			var st = h('select', { class: 'agh-select', onchange: function (e) { updateRoom(idx, 'interior_style', e.target.value); } }, h('option', { value: '', text: t('room_style_inherit') }));
 			S.boot.schema.interior_styles.forEach(function (s) { st.appendChild(h('option', { value: s.value, selected: r.interior_style === s.value ? 'selected' : null, text: s.label })); });
 			d.appendChild(h('label', null, t('room_style'), st));
-			txt('floor', t('room_floor'));
-			txt('wall', t('room_wall'));
+			pickOpt('floor', t('room_floor'), 'floor_main');
+			pickOpt('wall', t('room_wall'), /^(bathroom|wc|wellness|sauna)$/.test(r.type) ? 'bath_tiles' : 'wall_finish');
 			col('wall_color', t('room_wall_color'));
-			txt('ceiling', t('room_ceiling'));
-			txt('lighting', t('room_lighting'));
-			txt('furniture', t('room_furniture'));
+			pickOpt('ceiling', t('room_ceiling'), 'ceiling');
+			pickOpt('lighting', t('room_lighting'), 'ceiling_lights');
+			pickOpt('furniture', t('room_furniture'), 'furniture_style');
 			col('furniture_color', t('room_furniture_color'));
-			txt('decor', t('room_decor'));
-			txt('curtains', t('room_curtains'));
-			txt('doors', t('room_doors'));
-			txt('windows', t('room_windows'));
+			pickOpt('decor', t('room_decor'), 'art_amount');
+			pickOpt('curtains', t('room_curtains'), 'window_treatment');
+			pickOpt('doors', t('room_doors'), 'door_style');
+			pickOpt('windows', t('room_windows'), 'window_style');
 			txt('electrical', t('room_electrical'));
-			txt('heating', t('room_heating'));
+			pickOpt('heating', t('room_heating'), 'radiators');
 			txt('notes', t('room_notes'), true);
 			card.appendChild(d);
 		}
@@ -1566,8 +1647,8 @@
 		if (A3) {
 			// keep the live 3D canvas, replace everything else
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
-			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); A3.viewer().onPick = jumpToField; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
-			if (A3 && S.view === 'int') { box.appendChild(roomChips()); }
+			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); var vw = A3.viewer(); vw.onPick = jumpToField; vw.onLayout = saveLayout; vw.onGrab = grabNote; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
+			if (A3 && S.view === 'int') { box.appendChild(roomChips()); box.appendChild(layoutTools()); }
 			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
 		} else if (A3wait) {
 			clear(box);
@@ -1585,12 +1666,28 @@
 		var ch = S.lastChange;
 		if (ch && fresh && S.fields[ch.id]) {
 			var f = S.fields[ch.id], vis = ch.before ? ch.before !== box._aghSk : isVisual(ch.id);
-			var val = f.type === 'toggle' ? (S.config[ch.id] ? t('yes') : t('no')) : (f.options ? optLabel(f, S.config[ch.id]) : (f.type === 'color' || f.type === 'image' ? '' : String(S.config[ch.id] == null ? '' : S.config[ch.id]) + (f.unit ? ' ' + f.unit : '')));
+			var val = changeValueText(f);
 			box.appendChild(h('div', { class: 'agh-preview-chg' + (vis ? '' : ' is-hidden-param'), role: 'status' },
 				h('b', { text: f.label + (val ? ': ' + val : '') }),
 				vis ? null : h('span', { text: t('sketch_not_visual') })));
 		}
 		return box;
+	}
+	// Mit írjon ki a módosítás jelzése: a nem skalár értékek (pl. a helyiségprogram tömbje) sosem
+	// „[object Object]”-ként, hanem emberi szövegként.
+	function changeValueText(f) {
+		var v = S.config[f.id];
+		if (f.type === 'toggle') { return v ? t('yes') : t('no'); }
+		if (f.type === 'color' || f.type === 'image') { return ''; }
+		if (f.type === 'rooms' || (Array.isArray(v) && v.length && typeof v[0] === 'object')) {
+			var list = Array.isArray(v) ? v : [];
+			var names = list.map(function (r) { return r && r.name ? String(r.name) : ''; }).filter(Boolean);
+			return list.length + (names.length ? ' – ' + names.slice(0, 3).join(', ') + (names.length > 3 ? '…' : '') : '');
+		}
+		if (Array.isArray(v)) { return v.map(function (x) { return f.options ? optLabel(f, x) : String(x); }).filter(Boolean).join(', '); }
+		if (v && typeof v === 'object') { return ''; }
+		if (f.options) { return optLabel(f, v); }
+		return String(v == null ? '' : v) + (f.unit ? ' ' + f.unit : '');
 	}
 	function isVisual(id) {
 		var K = window.AGH_Sketch;
@@ -1682,6 +1779,15 @@
 			btn,
 			list.length > 1 ? h('button', { type: 'button', class: 'agh-3d-step is-next', title: t('view_next_room'), 'aria-label': t('view_next_room'), onclick: function () { step(1); } }, icon('chev', 'agh-ico-s')) : null,
 			menu);
+	}
+	// Hand-made arrangement controls, next to the room selector: take back the last move, or let the
+	// room arrange itself again. Both only show up once something in this room was moved by hand.
+	function layoutTools() {
+		var id = curRoomId(), all = layoutAll(), has = !!(id && all[id] && Object.keys(all[id]).length);
+		return h('div', { class: 'agh-3d-lay', role: 'group', 'aria-label': t('layout_reset_room') },
+			has ? h('button', { type: 'button', class: 'agh-3d-laybtn', title: t('layout_undo'), 'aria-label': t('layout_undo'), disabled: !layoutUndo.length, onclick: undoLayout }, icon('restart', 'agh-ico-s')) : null,
+			has ? h('button', { type: 'button', class: 'agh-3d-laybtn', title: t('layout_reset_room'), 'aria-label': t('layout_reset_room'), onclick: resetLayout }, icon('refresh', 'agh-ico-s')) : null,
+			h('span', { class: 'agh-3d-layhint', text: t('layout_hint') }));
 	}
 	function previewCaption(c) {
 		if (S.view === 'int' && A3) {
@@ -2189,7 +2295,7 @@
 		d = info;
 		var inWizard = {};
 		WIZ.forEach(function (st) { st.fields.forEach(function (id) { inWizard[id] = true; }); });
-		var more = S.boot.schema.fields.filter(function (f) { return !inWizard[f.id] && f.type !== 'roomitems' && visible(f); }).length;
+		var more = S.boot.schema.fields.filter(function (f) { return !inWizard[f.id] && f.type !== 'roomitems' && f.type !== 'layout' && visible(f); }).length;
 		d.appendChild(h('div', { class: 'agh-wiz-more' },
 			h('p', { text: tf('wiz_more', more) }),
 			h('button', { type: 'button', class: 'agh-btn', onclick: function () { exitWizard(false); } }, icon('sliders', 'agh-ico-s'), t('wiz_to_designer'))));

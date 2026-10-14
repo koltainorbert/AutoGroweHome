@@ -337,6 +337,31 @@ final class PromptEngine {
 		return implode( ', ', array_filter( array( trim( $a ), trim( $b ) ), 'strlen' ) );
 	}
 
+	/**
+	 * A room detail that is now chosen from the house's own option list (1.9.0): the English phrase of
+	 * that option, or the text itself when the visitor typed something of their own.
+	 *
+	 * @param string $field House field the detail maps to.
+	 * @param mixed  $value Room value.
+	 * @param array  $c     Configuration.
+	 */
+	private static function room_opt( string $field, $value, array $c ): string {
+		$value = is_array( $value ) ? ( $value[0] ?? '' ) : (string) $value;
+		if ( '' === $value ) {
+			return '';
+		}
+		$def = Registry::get( $field );
+		$opts = is_array( $def['options'] ?? null ) ? $def['options'] : array();
+		foreach ( $opts as $o ) {
+			if ( (string) ( $o['value'] ?? '' ) === $value ) {
+				$tmp = $c;
+				$tmp[ $field ] = 'wall_finish' === $field ? array( $value ) : $value;
+				$ph = self::phrase( $field, $tmp );
+				return '' !== $ph ? $ph : $value;
+			}
+		}
+		return $value;
+	}
 	private static function phrases( array $ids, array $c ): string {
 		$out = array();
 		foreach ( $ids as $id ) {
@@ -438,20 +463,20 @@ final class PromptEngine {
 			$is_def = Definitions::interior_styles();
 			$istyle_p = 'custom' === $istyle ? (string) ( $c['interior_style_custom'] ?? '' ) : ( $is_def[ $istyle ][1] ?? 'contemporary' ) . ' interior design';
 			$details = array();
-			$details[] = ! empty( $room['floor'] ) ? 'floor: ' . $room['floor'] : self::room_floor( (string) $room['type'], $c );
+			$details[] = ! empty( $room['floor'] ) ? 'floor: ' . self::room_opt( 'floor_main', $room['floor'], $c ) : self::room_floor( (string) $room['type'], $c );
 			$details[] = ! empty( $room['wall_color'] ) ? 'walls painted ' . Color::describe( $room['wall_color'] ) : self::phrase( 'wall_color', $c );
 			if ( ! empty( $room['wall'] ) ) {
-				$details[] = 'walls: ' . $room['wall'];
+				$details[] = 'walls: ' . self::room_opt( 'wall_finish', $room['wall'], $c );
 			} else {
 				$details[] = self::phrase( 'wall_finish', $c );
 			}
-			$details[] = ! empty( $room['ceiling'] ) ? 'ceiling: ' . $room['ceiling'] : self::phrase( 'ceiling', $c );
-			$details[] = ! empty( $room['lighting'] ) ? 'lighting: ' . $room['lighting'] : self::phrase( 'lighting', $c );
-			$details[] = ! empty( $room['furniture'] ) ? 'furniture: ' . $room['furniture'] : self::phrase( 'furniture_style', $c );
+			$details[] = ! empty( $room['ceiling'] ) ? 'ceiling: ' . self::room_opt( 'ceiling', $room['ceiling'], $c ) : self::phrase( 'ceiling', $c );
+			$details[] = ! empty( $room['lighting'] ) ? 'lighting: ' . self::room_opt( 'ceiling_lights', $room['lighting'], $c ) : self::phrase( 'lighting', $c );
+			$details[] = ! empty( $room['furniture'] ) ? 'furniture: ' . self::room_opt( 'furniture_style', $room['furniture'], $c ) : self::phrase( 'furniture_style', $c );
 			$details[] = ! empty( $room['furniture_color'] ) ? 'upholstery in ' . Color::describe( $room['furniture_color'] ) : self::phrase( 'furniture_color', $c );
-			$details[] = ! empty( $room['decor'] ) ? 'decor: ' . $room['decor'] : self::phrase( 'decor', $c );
+			$details[] = ! empty( $room['decor'] ) ? 'decor: ' . self::room_opt( 'art_amount', $room['decor'], $c ) : self::phrase( 'decor', $c );
 			if ( ! empty( $room['curtains'] ) ) {
-				$details[] = 'curtains: ' . $room['curtains'];
+				$details[] = 'curtains: ' . self::room_opt( 'window_treatment', $room['curtains'], $c );
 			} elseif ( ! empty( $c['curtains'] ) ) {
 				$wt        = self::phrase( 'window_treatment', $c );
 				$details[] = '' !== $wt ? $wt : 'sheer linen curtains';
@@ -484,6 +509,15 @@ final class PromptEngine {
 				$details[] = self::phrase( 'stair_type', $c );
 			}
 			$details[] = self::phrases( array( 'ceiling_lights', 'door_style', 'thresholds' ), $c );
+			// what the room overrides on its own (1.9.0): doors, windows, heating and the electrical note
+			foreach ( array( 'doors' => 'door_style', 'windows' => 'window_style', 'heating' => 'radiators' ) as $rk => $fid ) {
+				if ( ! empty( $room[ $rk ] ) ) {
+					$details[] = $rk . ': ' . self::room_opt( $fid, $room[ $rk ], $c );
+				}
+			}
+			if ( ! empty( $room['electrical'] ) ) {
+				$details[] = 'electrical: ' . Util::clean_text( (string) $room['electrical'], 120 );
+			}
 			// the household items standing in this very room (the visitor's placement, else a fitting room)
 			$ri = RoomProgram::item_rooms( $c )[ (string) ( $room['id'] ?? $room['type'] ) ] ?? array();
 			$cr = $c;
@@ -491,6 +525,12 @@ final class PromptEngine {
 				$cr[ $src ] = array_values( array_intersect( (array) ( $c[ $src ] ?? array() ), $ri ) );
 			}
 			$details[] = self::phrases( array( 'extra_furniture', 'electronics', 'pets' ), $cr );
+			// pieces the visitor moved by hand in the 3D room: the image must keep that arrangement (1.9.1)
+			$lay = $c['room_layout'][ (string) ( $room['id'] ?? $room['type'] ) ] ?? array();
+			if ( is_array( $lay ) && count( $lay ) ) {
+				$details[] = 'furniture layout: arranged by the client themselves, '
+					. count( $lay ) . ' pieces placed and turned by hand – keep that arrangement';
+			}
 			if ( ! empty( $room['notes'] ) ) {
 				$details[] = 'client notes (descriptive only): ' . $room['notes'];
 			}
