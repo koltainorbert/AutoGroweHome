@@ -1,5 +1,11 @@
 # Változásnapló
 
+## 1.9.0 – 2026-10-14
+
+- Kártyaképek: eltűnt a kanapé-helyettesítő. A pince, a padlás, az ajtókeret, a radiátor, a gyerekszoba és az akvárium kártyái a saját tartalmukat mutatják (pincemetszet angolaknás ablakkal és süllyesztett terasszal, fedélszék deszkázott födémmel, ajtónyílás tokkal és takaróléccal, a választott radiátortípus, a téma szerinti gyerekszoba-sarok, az adott formájú akvárium). Ha egy mezőhöz nincs saját jelenet, semleges falfelület jön, nem bútor, és a konzol figyelmeztet. Mérve: 55 mező, 321 opció, 0 esik az alapjelenetre. Új teszt: `tests/e2e/cards.js`.
+- Modern színválasztó: a színmezők nem az operációs rendszer régi palettáját nyitják meg, hanem a tervező saját panelját – telítettség/világosság mező, színárnyalat-csúszka, HEX-beírás, a tervben már használt színek és a katalógus palettái. Ujjal, egérrel és billentyűzettel is működik, Esc zárja. Mérve: a teljes felületen 0 natív színmező maradt, a beállítás mindkét képernyőméretben működik, 0 konzolhiba. Új teszt: `tests/e2e/color.js`.
+- Ereszcsatorna: a sarkokon nem jön le két lefolyó egymás mellett, csak egy. Mérve: 100 véletlen ház, 331 lefolyó, a legközelebbi két cső 2,1 m-re van egymástól, 0 duplikátum.
+
 ## 1.8.1 – 2026-10-14
 
 - Gyerekszoba berendezése (a 19 pontos lista 13. tétele): új mező – semleges, fiús, lányos, babaszoba, tini, vagy csak az alapbútorok. A fiús szobába íróasztal székkel, kisautó és labda kerül kék szőnyeggel; a lányosba baldachin az ágy fölé, fésülködőasztal kerek tükörrel, rózsaszín szőnyeg; a babaszobába pelenkázó és fiókos szekrény; a tinibe íróasztal, gamer szék és babzsák. Két gyerekszobánál a második automatikusan másik berendezést kap, hogy ne legyen egyforma a két szoba. Mérve: mind a hat beállítás felépül (4–13 ms, 140–164 mesh), 0 konzolhiba.

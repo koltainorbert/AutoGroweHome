@@ -65,6 +65,8 @@ final class Strings {
 			'interpret_none'         => __( 'Nincs új javaslat – a beállításaid már tükrözik a leírást.', 'autogrowehome' ),
 			'interpret_off'          => __( 'Az AI-értelmezés nincs bekapcsolva; a szöveges leírásod a generálásnál így is figyelembe vesszük.', 'autogrowehome' ),
 			'interpret_title'        => __( 'AI javaslatok', 'autogrowehome' ),
+			'color'                  => __( 'Szín', 'autogrowehome' ),
+			'color_used'             => __( 'Már használt színek', 'autogrowehome' ),
 			'invalid_hex'            => __( 'Érvénytelen színkód (pl. #A1B2C3).', 'autogrowehome' ),
 			'kpi_area'               => __( 'Alapterület', 'autogrowehome' ),
 			'kpi_bathrooms'          => __( 'Fürdőszoba', 'autogrowehome' ),

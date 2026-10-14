@@ -8713,3 +8713,11 @@ msgstr "Adolescente"
 #: includes/Params/Definitions.php
 msgid "Csak az alapbútorok"
 msgstr "Solo el mobiliario básico"
+
+#: includes/Frontend/Strings.php
+msgid "Szín"
+msgstr "Color"
+
+#: includes/Frontend/Strings.php
+msgid "Már használt színek"
+msgstr "Colores ya usados"

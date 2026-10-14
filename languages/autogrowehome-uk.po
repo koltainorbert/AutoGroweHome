@@ -8715,3 +8715,11 @@ msgstr "Для підлітка"
 #: includes/Params/Definitions.php
 msgid "Csak az alapbútorok"
 msgstr "Лише базові меблі"
+
+#: includes/Frontend/Strings.php
+msgid "Szín"
+msgstr "Колір"
+
+#: includes/Frontend/Strings.php
+msgid "Már használt színek"
+msgstr "Уже використані кольори"

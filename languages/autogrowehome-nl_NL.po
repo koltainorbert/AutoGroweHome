@@ -8713,3 +8713,11 @@ msgstr "Tienerkamer"
 #: includes/Params/Definitions.php
 msgid "Csak az alapbútorok"
 msgstr "Alleen de basismeubels"
+
+#: includes/Frontend/Strings.php
+msgid "Szín"
+msgstr "Kleur"
+
+#: includes/Frontend/Strings.php
+msgid "Már használt színek"
+msgstr "Al gebruikte kleuren"

@@ -8717,3 +8717,11 @@ msgstr "Najstniška"
 #: includes/Params/Definitions.php
 msgid "Csak az alapbútorok"
 msgstr "Samo osnovno pohištvo"
+
+#: includes/Frontend/Strings.php
+msgid "Szín"
+msgstr "Barva"
+
+#: includes/Frontend/Strings.php
+msgid "Már használt színek"
+msgstr "Že uporabljene barve"

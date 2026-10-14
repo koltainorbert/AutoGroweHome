@@ -8713,3 +8713,11 @@ msgstr "Jugendzimmer"
 #: includes/Params/Definitions.php
 msgid "Csak az alapbútorok"
 msgstr "Nur die Grundmöbel"
+
+#: includes/Frontend/Strings.php
+msgid "Szín"
+msgstr "Farbe"
+
+#: includes/Frontend/Strings.php
+msgid "Már használt színek"
+msgstr "Bereits verwendete Farben"

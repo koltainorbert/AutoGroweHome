@@ -8685,3 +8685,11 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "Csak az alapbútorok"
 msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Szín"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Már használt színek"
+msgstr ""

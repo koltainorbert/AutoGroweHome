@@ -992,16 +992,156 @@
 	}
 	var setValueQuiet = debounce(function (id, v) { markChange(id); autoView(id); S.config[id] = v; S.explicit[id] = true; S.dirty = true; renderPreviewOnly(); renderSummary(); updateWizardSide(); }, 60);
 
+	/* ---------------------------------------------------------------- colour picker (1.9.0)
+	 * The browser's own colour dialog is the operating system's old palette window, so the designer
+	 * brings its own: a saturation/brightness field with a hue slider, a HEX box, the colours already
+	 * used in this design and the palettes of the catalogue. It works with a finger and with the
+	 * keyboard, and Escape closes it. `onPick` gets every live change, `onDone` the committed one.
+	 */
+	function hsvToHex(hh, ss, vv) {
+		var i = Math.floor(hh * 6), fr = hh * 6 - i, p = vv * (1 - ss), q = vv * (1 - fr * ss), u = vv * (1 - (1 - fr) * ss), r, g2, b2;
+		switch (i % 6) {
+			case 0: r = vv; g2 = u; b2 = p; break;
+			case 1: r = q; g2 = vv; b2 = p; break;
+			case 2: r = p; g2 = vv; b2 = u; break;
+			case 3: r = p; g2 = q; b2 = vv; break;
+			case 4: r = u; g2 = p; b2 = vv; break;
+			default: r = vv; g2 = p; b2 = q;
+		}
+		return '#' + [r, g2, b2].map(function (x) { var n = Math.round(x * 255).toString(16); return n.length < 2 ? '0' + n : n; }).join('').toUpperCase();
+	}
+	function hexToHsv(hex) {
+		var x = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+		if (!x) { return { h: 0, s: 0, v: 1 }; }
+		var n = parseInt(x[1], 16), r = ((n >> 16) & 255) / 255, g2 = ((n >> 8) & 255) / 255, b2 = (n & 255) / 255;
+		var mx = Math.max(r, g2, b2), mn = Math.min(r, g2, b2), d = mx - mn, hh = 0;
+		if (d) {
+			if (mx === r) { hh = ((g2 - b2) / d + (g2 < b2 ? 6 : 0)) / 6; }
+			else if (mx === g2) { hh = ((b2 - r) / d + 2) / 6; }
+			else { hh = ((r - g2) / d + 4) / 6; }
+		}
+		return { h: hh, s: mx ? d / mx : 0, v: mx };
+	}
+	// every colour the design already uses, newest first (so a shade can be reused with one tap)
+	function usedColors() {
+		var out = [];
+		Object.keys(S.fields).forEach(function (id) {
+			if (S.fields[id].type !== 'color') { return; }
+			var val = S.config[id];
+			if (/^#[0-9a-fA-F]{6}$/.test(String(val)) && out.indexOf(val.toUpperCase()) === -1) { out.push(val.toUpperCase()); }
+		});
+		(S.config.rooms || []).forEach(function (r) {
+			['wall_color', 'furniture_color'].forEach(function (k) {
+				var val = r[k];
+				if (/^#[0-9a-fA-F]{6}$/.test(String(val)) && out.indexOf(val.toUpperCase()) === -1) { out.push(val.toUpperCase()); }
+			});
+		});
+		return out.slice(0, 12);
+	}
+	function colorPopover(start, label, onPick, onDone) {
+		var hsv = hexToHsv(start), cur = (start || '#FFFFFF').toUpperCase();
+		var pop = h('div', { class: 'agh-cp', role: 'dialog', 'aria-label': label || t('color') });
+		var area = h('div', { class: 'agh-cp-area', tabindex: '0', role: 'slider', 'aria-label': t('color') });
+		var dot = h('span', { class: 'agh-cp-dot' });
+		area.appendChild(dot);
+		var hue = h('input', { class: 'agh-cp-hue', type: 'range', min: 0, max: 360, step: 1, value: Math.round(hsv.h * 360), 'aria-label': 'HUE' });
+		var prev = h('span', { class: 'agh-cp-prev' });
+		var hexIn = h('input', { class: 'agh-input agh-cp-hex', type: 'text', maxlength: 7, value: cur, 'aria-label': 'HEX', spellcheck: 'false' });
+		function paint(live) {
+			cur = hsvToHex(hsv.h, hsv.s, hsv.v);
+			area.style.background = 'linear-gradient(to top, #000, rgba(0,0,0,0)), linear-gradient(to right, #fff, ' + hsvToHex(hsv.h, 1, 1) + ')';
+			dot.style.left = (hsv.s * 100) + '%';
+			dot.style.top = ((1 - hsv.v) * 100) + '%';
+			dot.style.background = cur;
+			prev.style.background = cur;
+			if (document.activeElement !== hexIn) { hexIn.value = cur; }
+			area.setAttribute('aria-valuetext', cur);
+			if (onPick && live !== false) { onPick(cur); }
+		}
+		function fromPoint(e) {
+			var r = area.getBoundingClientRect(), p = e.touches && e.touches[0] ? e.touches[0] : e;
+			hsv.s = Math.min(1, Math.max(0, (p.clientX - r.left) / Math.max(1, r.width)));
+			hsv.v = 1 - Math.min(1, Math.max(0, (p.clientY - r.top) / Math.max(1, r.height)));
+			paint();
+		}
+		var dragging = false;
+		area.addEventListener('pointerdown', function (e) { dragging = true; area.setPointerCapture && area.setPointerCapture(e.pointerId); fromPoint(e); e.preventDefault(); });
+		area.addEventListener('pointermove', function (e) { if (dragging) { fromPoint(e); } });
+		area.addEventListener('pointerup', function () { if (dragging) { dragging = false; if (onDone) { onDone(cur); } } });
+		area.addEventListener('pointercancel', function () { dragging = false; });
+		area.addEventListener('keydown', function (e) {
+			var step = e.shiftKey ? 0.1 : 0.02, k = e.key;
+			if (k === 'ArrowLeft') { hsv.s = Math.max(0, hsv.s - step); }
+			else if (k === 'ArrowRight') { hsv.s = Math.min(1, hsv.s + step); }
+			else if (k === 'ArrowUp') { hsv.v = Math.min(1, hsv.v + step); }
+			else if (k === 'ArrowDown') { hsv.v = Math.max(0, hsv.v - step); }
+			else { return; }
+			e.preventDefault(); paint(); if (onDone) { onDone(cur); }
+		});
+		hue.addEventListener('input', function (e) { hsv.h = Number(e.target.value) / 360; paint(); });
+		hue.addEventListener('change', function () { if (onDone) { onDone(cur); } });
+		hexIn.addEventListener('change', function (e) {
+			var x = e.target.value.trim();
+			if (x.charAt(0) !== '#') { x = '#' + x; }
+			if (/^#[0-9a-fA-F]{6}$/.test(x)) { hsv = hexToHsv(x); hue.value = Math.round(hsv.h * 360); paint(); if (onDone) { onDone(cur); } }
+			else { e.target.value = cur; toast(t('invalid_hex'), 'warn'); }
+		});
+		pop.appendChild(area);
+		pop.appendChild(h('div', { class: 'agh-cp-row' }, prev, hue));
+		pop.appendChild(h('div', { class: 'agh-cp-row' }, hexIn));
+		function swatchRow(title, list) {
+			if (!list || !list.length) { return; }
+			var row = h('div', { class: 'agh-cp-sw' });
+			list.forEach(function (col) {
+				row.appendChild(h('button', { type: 'button', class: 'agh-swatch', style: { background: col }, title: col, 'aria-label': col, onclick: function () { hsv = hexToHsv(col); hue.value = Math.round(hsv.h * 360); paint(); if (onDone) { onDone(cur); } } }));
+			});
+			pop.appendChild(h('div', { class: 'agh-cp-grp' }, h('span', { class: 'agh-cp-ttl', text: title }), row));
+		}
+		swatchRow(t('color_used'), usedColors());
+		(S.boot.schema.color_collections || []).slice(0, 4).forEach(function (c2) { swatchRow(c2.name, c2.colors); });
+		paint(false);
+		return pop;
+	}
+	// A colour button that opens the picker in a popover; `get`/`set` tie it to the value it edits.
+	function colorButton(label, get, set, commit) {
+		var btn = h('button', { type: 'button', class: 'agh-colorbtn', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: label });
+		var chip = h('span', { class: 'agh-colorbtn-chip' });
+		var txt2 = h('span', { class: 'agh-colorbtn-hex' });
+		btn.appendChild(chip); btn.appendChild(txt2);
+		function sync() { var v2 = (get() || '#FFFFFF').toUpperCase(); chip.style.background = v2; txt2.textContent = v2; }
+		sync();
+		var open2 = null;
+		function close2() {
+			if (!open2) { return; }
+			open2.remove(); open2 = null; btn.setAttribute('aria-expanded', 'false');
+			document.removeEventListener('pointerdown', away, true);
+			document.removeEventListener('keydown', esc, true);
+		}
+		function away(e) { if (open2 && !open2.contains(e.target) && e.target !== btn && !btn.contains(e.target)) { close2(); } }
+		function esc(e) { if (e.key === 'Escape') { close2(); btn.focus(); } }
+		btn.addEventListener('click', function () {
+			if (open2) { close2(); return; }
+			open2 = colorPopover(get(), label, function (c3) { set(c3); sync(); }, function (c3) { set(c3); if (commit) { commit(c3); } sync(); });
+			btn.parentNode.appendChild(open2);
+			btn.setAttribute('aria-expanded', 'true');
+			// keep it inside the panel on a narrow screen
+			var r = open2.getBoundingClientRect();
+			if (r.right > window.innerWidth - 8) { open2.style.left = 'auto'; open2.style.right = '0'; }
+			setTimeout(function () { document.addEventListener('pointerdown', away, true); document.addEventListener('keydown', esc, true); }, 0);
+			var fa = open2.querySelector('.agh-cp-area'); if (fa) { fa.focus(); }
+		});
+		btn.aghSync = sync;
+		return btn;
+	}
+
 	function renderColor(f, v) {
 		var box = h('div', { class: 'agh-color' });
-		var picker = h('input', { type: 'color', value: v || '#ffffff', 'aria-label': f.label });
+		var picker = colorButton(f.label, function () { return S.config[f.id] || v || '#FFFFFF'; }, function (c2) { hex.value = c2; }, function (c2) { setValue(f.id, c2); });
 		var hex = h('input', { class: 'agh-input', type: 'text', value: v || '', maxlength: 7, 'aria-label': f.label + ' HEX', id: 'agh-f-' + f.id });
-		picker.addEventListener('input', function (e) { hex.value = e.target.value.toUpperCase(); });
-		picker.addEventListener('change', function (e) { setValue(f.id, e.target.value.toUpperCase()); });
 		hex.addEventListener('change', function (e) {
 			var x = e.target.value.trim();
 			if (x.charAt(0) !== '#') { x = '#' + x; }
-			if (/^#[0-9a-fA-F]{6}$/.test(x)) { picker.value = x; e.target.value = x.toUpperCase(); setValue(f.id, x.toUpperCase()); }
+			if (/^#[0-9a-fA-F]{6}$/.test(x)) { e.target.value = x.toUpperCase(); setValue(f.id, x.toUpperCase()); if (picker.aghSync) { picker.aghSync(); } }
 			else { e.target.value = S.config[f.id]; toast(t('invalid_hex'), 'warn'); }
 		});
 		box.appendChild(picker);
@@ -1011,7 +1151,7 @@
 			var sw = h('div', { class: 'agh-swatches' });
 			(S.boot.schema.color_collections || []).forEach(function (c) {
 				var g = h('div', { class: 'agh-swatch-group' }, h('span', { text: c.name }));
-				c.colors.forEach(function (col) { g.appendChild(h('button', { type: 'button', class: 'agh-swatch', style: { background: col }, title: c.name + ' ' + col, 'aria-label': col, onclick: function () { picker.value = col; hex.value = col; setValue(f.id, col, true); } })); });
+				c.colors.forEach(function (col) { g.appendChild(h('button', { type: 'button', class: 'agh-swatch', style: { background: col }, title: c.name + ' ' + col, 'aria-label': col, onclick: function () { hex.value = col; setValue(f.id, col, true); if (picker.aghSync) { picker.aghSync(); } } })); });
 				sw.appendChild(g);
 			});
 			box.appendChild(sw);
@@ -1220,7 +1360,9 @@
 				d.appendChild(h('label', null, label, h('input', { class: 'agh-input', type: 'number', min: min, max: max, step: step, value: r[key] || '', onchange: function (e) { updateRoom(idx, key, e.target.value === '' ? '' : Number(e.target.value)); } })));
 			}
 			function col(key, label) {
-				d.appendChild(h('label', null, label, h('input', { type: 'color', value: r[key] || '#F4F1EC', style: { width: '100%', height: '34px', 'border-radius': '10px', border: '1px solid var(--agh-line-2)' }, onchange: function (e) { updateRoom(idx, key, e.target.value.toUpperCase()); } })));
+				var hold = { v: r[key] || '#F4F1EC' };
+				var btn2 = colorButton(label, function () { return hold.v; }, function (c2) { hold.v = c2; }, function (c2) { hold.v = c2; updateRoom(idx, key, c2.toUpperCase()); });
+				d.appendChild(h('label', { class: 'agh-cp-field' }, label, btn2));
 			}
 			num('width', t('room_width'), 0.8, 30, 0.1);
 			num('length', t('room_length'), 0.8, 30, 0.1);
@@ -2502,5 +2644,5 @@
 	}
 	function errToast(err) { toast((err && err.message) || t('err_network'), 'error', 7000); }
 
-	window.AGH_Designer = { open: open, close: close, version: '1.1.0', config: function () { return clone(S.config); } };
+	window.AGH_Designer = { open: open, close: close, version: '1.1.0', config: function () { return clone(S.config); }, schema: function () { return S.boot && S.boot.schema ? clone(S.boot.schema) : null; } };
 })();

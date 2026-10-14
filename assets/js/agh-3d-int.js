@@ -2634,6 +2634,121 @@ function studio(hs, c, m, opt) {
 	if (opt.left) { var lw = new THREE.Mesh(planeGeo(6, 4.2), wallM); lw.rotation.y = Math.PI / 2; lw.position.set(opt.left, 2.1, 3); lw.receiveShadow = true; hs.add(lw, false); }
 	if (opt.ceiling) { var cl = new THREE.Mesh(planeGeo(10, 6), L.solid('#F7F6F3', 0.9)); cl.rotation.x = Math.PI / 2; cl.position.set(0, opt.ceiling, 3); hs.add(cl, false); }
 }
+/* ---------------------------------------------------------------- card scenes (1.9.0)
+   Small stand-alone scenes for the option cards of the fields that have no furniture of their own:
+   a piece of wall, a doorway, a cut through the basement, the roof truss and a children's corner. */
+// A piece of wall with a skirting and a floor strip: the backdrop of a wall-mounted card.
+function wallPanelCard(m, w, h) {
+	var g = G();
+	BX(g, -w / 2, 0, 0, w / 2, h, 0.08, L.solid('#EFEBE4', 0.92));
+	BX(g, -w / 2, 0, 0.08, w / 2, 0.08, 0.1, m.white);
+	BX(g, -w / 2 - 0.1, -0.02, 0.08, w / 2 + 0.1, 0, 0.7, L.solid('#D9D2C7', 0.95));
+	return g;
+}
+// A doorway in a piece of wall with its casing in the chosen colour, and the door leaf ajar.
+function doorCard(m, c, kind) {
+	var g = wallPanelCard(m, 1.7, 2.35), dw = 0.9, dh = 2.1;
+	var cas = { white: m.white, wood: m.wood, black: m.black, wall: L.solid('#EFEBE4', 0.92), none: null }[kind];
+	if (kind === 'auto' || kind === undefined) { cas = ['scandinavian', 'japandi', 'wood_stone', 'mediterranean', 'rustic'].indexOf(m.st) !== -1 ? m.wood : m.white; }
+	// the opening: a dark reveal, the leaf slightly open
+	BX(g, -dw / 2, 0, -0.14, dw / 2, dh, 0.085, L.solid('#2A2724', 0.9));
+	var leaf = G(); RB(leaf, 0, 0, 0, dw - 0.03, dh - 0.04, 0.04, 0.004, kind === 'wood' || m.st === 'rustic' ? m.wood : m.white, 1);
+	RB(leaf, 0.06, 0.1, 0.04, dw - 0.09, dh - 0.14, 0.05, 0.004, L.solid('#E8E4DD', 0.7), 1);
+	leaf.position.set(-dw / 2 + 0.02, 0, 0.02); leaf.rotation.y = -0.55; g.add(leaf);
+	ROD(leaf, [dw - 0.12, 1.05, 0.05], [dw - 0.12, 1.05, 0.12], 0.016, m.metal, 10);
+	if (cas) {
+		BX(g, -dw / 2 - 0.07, 0, 0.08, -dw / 2, dh + 0.07, 0.1, cas);
+		BX(g, dw / 2, 0, 0.08, dw / 2 + 0.07, dh + 0.07, 0.1, cas);
+		BX(g, -dw / 2 - 0.07, dh, 0.08, dw / 2 + 0.07, dh + 0.07, 0.1, cas);
+	}
+	return g;
+}
+// A cut through the lowest level: ground, basement wall, a cellar window in its light well, and for
+// the walkout version the sunken terrace with its steps.
+function basementCard(m, kind) {
+	var g = G(), conc = L.pbr ? L.pbr('concrete', { color: '#C4C0B8' }, { normal: 0.6 }) : L.solid('#C4C0B8', 0.9);
+	var wallM = L.solid('#EFEBE4', 0.92), soil = L.solid('#6E5B46', 1), grass = L.solid('#7A8F55', 1);
+	var deep = kind === 'full' ? 2.4 : (kind === 'walkout' ? 2.4 : 1.5), W = 2.6, D = 1.2;
+	// the house above, cut
+	BX(g, -W / 2, 0, -D, W / 2, 1.5, 0, wallM);
+	BX(g, -W / 2 - 0.06, 1.5, -D - 0.06, W / 2 + 0.06, 1.62, 0.06, L.solid('#D6D0C6', 0.9));
+	// the basement box below ground
+	BX(g, -W / 2, -deep, -D, W / 2, 0, 0, conc);
+	BX(g, -W / 2 - 0.5, -deep - 0.1, -D - 0.4, -W / 2, 0.02, 0.6, soil);
+	BX(g, W / 2, -deep - 0.1, -D - 0.4, W / 2 + 0.5, 0.02, 0.6, soil);
+	BX(g, -W / 2 - 0.5, 0, 0.0, W / 2 + 0.5, 0.04, 0.6, grass);
+	// partial: the basement only reaches half way under the house
+	if (kind === 'partial') { BX(g, 0, -deep, -D, W / 2, 0, 0, soil); }
+	if (kind === 'walkout') {
+		// dug out in front: terrace, door, steps
+		BX(g, -W / 2, -deep, 0, W / 2, -deep + 0.1, 1.1, conc);
+		BX(g, -0.45, -deep + 0.1, -0.02, 0.45, -deep + 2.2, 0.04, L.glassMat ? L.glassMat({}, false) : glass('#DCEAEF', 0.2));
+		BX(g, -0.5, -deep + 0.1, -0.04, -0.45, -deep + 2.25, 0.06, m.dark); BX(g, 0.45, -deep + 0.1, -0.04, 0.5, -deep + 2.25, 0.06, m.dark);
+		for (var i = 0; i < 8; i++) { BX(g, W / 2 - 0.9, -deep + i * (deep / 8), 0.5 + i * 0.07, W / 2, -deep + (i + 1) * (deep / 8), 1.1, conc); }
+	} else {
+		// a cellar window in its light well
+		BX(g, -0.45, -0.95, -0.06, 0.45, -0.4, 0.02, m.dark);
+		BX(g, -0.4, -0.9, -0.02, 0.4, -0.45, 0.01, glass('#DCEAEF', 0.2));
+		BX(g, -0.6, -1.05, 0.0, 0.6, -0.3, 0.55, conc);
+		BX(g, -0.56, -1.0, 0.04, 0.56, -0.96, 0.5, L.solid('#9A9388', 0.9));
+	}
+	return g;
+}
+// The roof space: the truss over a boarded floor, with a roof window for the converted version.
+function atticCard(m, kind) {
+	var g = G(), tw = L.pbr ? L.pbr('wood', { color: '#8A6A4C' }, { normal: 1 }) : m.wood;
+	var W = 3.0, D = 1.6, Hh = 1.7;
+	BX(g, -W / 2, 0, -D / 2, W / 2, 0.06, D / 2, L.pbr ? L.pbr('wood', { color: '#B99A72' }, { normal: 1 }) : m.wood);
+	if (kind === 'none') {
+		// no attic: the ceiling follows the roof, so only the two slopes and a flat soffit
+		[-1, 1].forEach(function (s) { var p = G(); RB(p, 0, 0, -D / 2, 0.08, Math.hypot(W / 2, Hh), D / 2, 0.01, L.solid('#EFEBE4', 0.92), 1); p.position.set(s * W / 2, 0.06, 0); p.rotation.z = -s * Math.atan2(W / 2, Hh); g.add(p); });
+		return g;
+	}
+	for (var z = -D / 2 + 0.2; z <= D / 2 - 0.1; z += 0.55) {
+		ROD(g, [-W / 2, 0.1, z], [0, Hh, z], 0.05, tw, 6);
+		ROD(g, [W / 2, 0.1, z], [0, Hh, z], 0.05, tw, 6);
+		if (kind !== 'habitable') { ROD(g, [-W * 0.26, Hh * 0.58, z], [W * 0.26, Hh * 0.58, z], 0.04, tw, 6); }
+	}
+	ROD(g, [0, Hh, -D / 2 + 0.1], [0, Hh, D / 2 - 0.1], 0.06, tw, 6);
+	if (kind === 'habitable') {
+		// lined slopes with a knee wall and a roof window
+		[-1, 1].forEach(function (s) { var p2 = G(); RB(p2, 0, 0, -D / 2 + 0.1, 0.05, Math.hypot(W / 2, Hh) - 0.1, D / 2 - 0.1, 0.01, L.solid('#F4F1EC', 0.95), 1); p2.position.set(s * (W / 2 - 0.08), 0.12, 0); p2.rotation.z = -s * Math.atan2(W / 2, Hh); g.add(p2); });
+		var win = G(); RB(win, -0.3, 0, -0.22, 0.3, 0.04, 0.22, 0.01, m.white, 1); RB(win, -0.26, 0.04, -0.18, 0.26, 0.06, 0.18, 0.01, glass('#DCEAEF', 0.25), 1);
+		win.position.set(-W * 0.3, Hh * 0.62, 0); win.rotation.z = Math.atan2(W / 2, Hh); g.add(win);
+	} else {
+		// stored boxes and the hatch
+		[[-0.8, -0.3], [0.7, 0.2], [1.1, -0.35]].forEach(function (q, i) { var bx5 = G(); RB(bx5, -0.26, 0.06, -0.2, 0.26, 0.44, 0.2, 0.01, i % 2 ? m.wood : L.solid('#BCA78C', 0.9), 1); bx5.position.set(q[0], 0, q[1]); bx5.rotation.y = i * 0.4; g.add(bx5); });
+		BX(g, 0.1, 0.0, D / 2 - 0.55, 0.9, 0.07, D / 2 - 0.1, m.dark);
+	}
+	return g;
+}
+// A corner of a children's room in the chosen theme.
+function kidsCard(m, c, th) {
+	var g = G(), acc = { boy: '#3C6E9F', girl: '#D58AA6', baby: '#E6D7B8', teen: '#4A4A52', neutral: '#8FA896' }[th] || '#8FA896';
+	var soft = L.solid(acc, 0.9);
+	g.add(wallPanelCard(m, 2.4, 1.9));
+	var bd = bed(m, th === 'baby' ? 'wood' : 'wood', false); bd.position.set(-0.6, 0, 0.75); g.add(bd);
+	RB(g, -1.05, 0.52, 0.55, -0.15, 0.6, 1.55, 0.04, soft, 2);   // a blanket in the theme colour
+	var rg2 = G(); RB(rg2, -0.55, 0, -0.3, 0.55, 0.02, 0.3, 0.12, soft, 2); rg2.position.set(0.5, 0, 1.5); g.add(rg2);
+	if (th === 'girl' || th === 'baby') {
+		var cp2 = G(); CY(cp2, 0, 1.5, 0, 0.05, 0.22, 0.32, L.solid('#FFFFFF', 0.95), 16, true);
+		for (var a2 = 0; a2 < 7; a2++) { var an2 = a2 / 7 * Math.PI * 2; ROD(cp2, [Math.cos(an2) * 0.22, 1.5, Math.sin(an2) * 0.22], [Math.cos(an2) * 0.5, 0.55, Math.sin(an2) * 0.5], 0.01, L.solid('#FFF8F4', 0.98), 5); }
+		cp2.position.set(-0.6, 0, 0.75); g.add(cp2);
+	}
+	if (th === 'boy' || th === 'teen') {
+		var dk2 = G(); RB(dk2, -0.42, 0.68, 0, 0.42, 0.72, 0.42, 0.006, m.oak || m.wood, 1);
+		[[-0.38, 0.05], [0.38, 0.05], [-0.38, 0.36], [0.38, 0.36]].forEach(function (q) { ROD(dk2, [q[0], 0, q[1]], [q[0], 0.68, q[1]], 0.014, m.metal, 6); });
+		bookStack(dk2, m, 0.2, 0.72, 0.2, 3, 4); dk2.position.set(0.85, 0, 0.45); g.add(dk2);
+		var gc2 = G(); RB(gc2, -0.2, 0.4, -0.2, 0.2, 0.46, 0.2, 0.04, th === 'teen' ? soft : m.fab, 2); RB(gc2, -0.18, 0.46, -0.24, 0.18, 0.95, -0.16, 0.04, th === 'teen' ? L.solid('#2E3033', 0.6) : soft, 2);
+		CY(gc2, 0, 0, 0, 0.04, 0.04, 0.4, m.metal, 10); gc2.position.set(0.85, 0, 1.0); gc2.rotation.y = Math.PI; g.add(gc2);
+	}
+	if (th === 'baby') {
+		var ct2 = G(); RB(ct2, -0.38, 0.3, 0, 0.38, 0.86, 0.45, 0.01, m.white, 1); RB(ct2, -0.37, 0.86, 0.03, 0.37, 0.94, 0.42, 0.04, soft, 2);
+		ct2.position.set(0.85, 0, 0.45); g.add(ct2);
+	}
+	if (th === 'neutral') { var tb = G(); RB(tb, -0.3, 0, -0.22, 0.3, 0.4, 0.22, 0.05, soft, 2); tb.position.set(0.85, 0, 0.6); g.add(tb); }
+	return g;
+}
 export function itemScene(cIn, it) {
 	var f = it.field, v = it.value && it.value !== 'auto' ? it.value : pick(cIn, f), c = Object.assign({}, cIn);
 	if (f) { c[f] = f === 'wall_finish' || f === 'bath_fixtures' || MULTI_ITEM[f] ? [v] : v; }
@@ -2738,7 +2853,33 @@ export function itemScene(cIn, it) {
 			break;
 		}
 		case 'furniture_style': { var lv = sofa(m, 'straight', 1.7); lv.position.set(-0.3, 0, 0.5); g.add(lv); var stb = sideTable(m, true); stb.position.set(0.85, 0, 0.4); g.add(stb); var chr = diningChair(m, 'upholstered'); chr.position.set(1.3, 0, 1.3); chr.rotation.y = -0.8; g.add(chr); cam = [24, 14]; break; }
-		default: at2(sofa(m, 'straight', 2.2), 0, 0.6);
+		// ---- 1.9.0: the cards of the newer fields show what they are about, never a stand-in sofa
+		case 'radiators': {
+			var rtp = v === 'auto' ? 'panel' : v;
+			if (rtp === 'none') { at2(wallPanelCard(m, 1.4, 1.1), 0, 0.2); cam = [16, 10]; break; }
+			at2(wallPanelCard(m, 1.5, 1.2), 0, 0.1);
+			var rad1 = radiator(m, rtp, rtp === 'towel' ? 0.6 : 1.1, 0.6); rad1.position.set(0, 0, 0.14); g.add(rad1);
+			cam = [16, 12]; break;
+		}
+		case 'door_frame': {
+			at2(doorCard(m, c, v), 0, 0.1); cam = [14, 8]; break;
+		}
+		case 'basement_type': {
+			at2(basementCard(m, v || 'partial'), 0, 0.2); cam = [26, 22]; break;
+		}
+		case 'attic_use': {
+			at2(atticCard(m, v || 'storage'), 0, 0.3); cam = [24, 18]; break;
+		}
+		case 'aquarium_shape': {
+			at2(aquarium(m, v || 'large', c.aquarium_water, v === 'small' ? 0.8 : 1.3), 0, 0.3); cam = [22, 16]; break;
+		}
+		case 'kids_theme': {
+			at2(kidsCard(m, c, v || 'neutral'), 0, 0.4); cam = [24, 18]; opt.room = 'kids'; break;
+		}
+		default:
+			// no scene of its own: a plain backdrop instead of a sofa that has nothing to do with the field
+			if (f) { try { console.warn('AGH: nincs kártyajelenet ehhez a mezőhöz: ' + f); } catch (e2) {} }
+			at2(wallPanelCard(m, 1.6, 1.3), 0, 0.1); cam = [16, 10];
 	}
 	studio(hs, c, m, opt);
 	hs.room = { kind: 'item', cam: cam };

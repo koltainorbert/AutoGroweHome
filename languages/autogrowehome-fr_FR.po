@@ -8713,3 +8713,11 @@ msgstr "Ado"
 #: includes/Params/Definitions.php
 msgid "Csak az alapbútorok"
 msgstr "Seulement les meubles de base"
+
+#: includes/Frontend/Strings.php
+msgid "Szín"
+msgstr "Couleur"
+
+#: includes/Frontend/Strings.php
+msgid "Már használt színek"
+msgstr "Couleurs déjà utilisées"

@@ -737,11 +737,17 @@ House.prototype.pitchedRoof = function (v, rd, type) {
 		if (L.width === 0.17) {
 			m = solid(L.color, 0.35, L.color === '#B87333' ? 0.9 : 0.5);
 			self.add(rod(a.clone().setY(a.y - 0.1), b.clone().setY(b.y - 0.1), 0.075, m, 10));
-			// downpipe at the end with the larger x (or z), against the wall
+			// downpipe at the end with the larger x (or z), against the wall – but only one per corner:
+			// where two eaves meet, both gutters used to drop their own pipe side by side
 			var e = a.x + a.z > b.x + b.z ? a : b, px, pz;
 			if (Math.abs(a.z - b.z) < 0.01) { px = clamp(e.x, v.x0 + 0.2, v.x1 - 0.2); pz = e.z > v.y1 ? v.y1 + 0.1 : v.y0 - 0.1; }
 			else { pz = clamp(e.z, v.y0 + 0.2, v.y1 - 0.2); px = e.x > v.x1 ? v.x1 + 0.1 : v.x0 - 0.1; }
-			self.add(rod(new THREE.Vector3(px, e.y - 0.12, pz), new THREE.Vector3(px, 0.08, pz), 0.05, m, 8));
+			self.pipes = self.pipes || [];
+			var near = self.pipes.some(function (q) { return Math.abs(q[0] - px) < 1.2 && Math.abs(q[1] - pz) < 1.2; });
+			if (!near) {
+				self.pipes.push([px, pz]);
+				self.add(rod(new THREE.Vector3(px, e.y - 0.12, pz), new THREE.Vector3(px, 0.08, pz), 0.05, m, 8));
+			}
 		} else if (L.width >= 0.2 && L.width < 0.22 + 1e-6 && L.color !== '#3A3D40') { self.add(beam(a, b, 0.06, 0.24, solid(L.color, 0.6, L.color === '#3E4245' ? 0.5 : 0))); }
 		else if (L.width === 0.1) { self.add(beam(a, b, 0.09, 0.12, solid(L.color, 0.75))); }
 		else if (L.width === 0.07) { self.add(rod(a, b, 0.025, solid('#C9CDD0', 0.3, 0.8), 6)); }
