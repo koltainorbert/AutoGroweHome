@@ -8768,3 +8768,70 @@ msgstr "Скасувати переміщення"
 #: includes/Frontend/Strings.php
 msgid "Utolsó mozgatás visszavonva."
 msgstr "Останнє переміщення скасовано."
+
+#: includes/Admin/Admin.php
+msgid "A védett tárhely könyvtár HTTP-n keresztül elérhető! A szerver nem veszi figyelembe a .htaccess tiltást (pl. Nginx). Itt vannak a koncepciókép-fájlok és a kivitelezői ZIP az ügyfél adataival, ezért ezt ki kell javítani."
+msgstr "Захищена тека сховища доступна через HTTP! Сервер не враховує заборону з .htaccess (наприклад, Nginx). Тут лежать зображення концепцій і ZIP для виконавця з даними клієнта, тож це треба виправити."
+
+#: includes/Admin/Admin.php
+msgid "Az érintett könyvtár:"
+msgstr "Про яку теку йдеться:"
+
+#: includes/Admin/Admin.php
+msgid "1. megoldás (bármilyen szerveren jó): tedd a webgyökéren kívülre."
+msgstr "Рішення 1 (годиться на будь-якому сервері): винеси її за межі кореня сайту."
+
+#: includes/Admin/Admin.php
+msgid "A wp-config.php-ba, a „That’s all, stop editing” sor fölé:"
+msgstr "У wp-config.php, над рядком «That’s all, stop editing»:"
+
+#: includes/Admin/Admin.php
+msgid "A könyvtárnak léteznie kell, a webszerver felhasználójának írnia kell tudnia bele, és nem lehet a public_html alatt. Utána ezen a lapon egy gombbal áthozhatod a meglévő fájlokat."
+msgstr "Тека має існувати, користувач вебсервера повинен мати право запису в неї, і вона не може бути під public_html. Потім однією кнопкою на цій сторінці перенесеш наявні файли."
+
+#: includes/Admin/Admin.php
+msgid "2. megoldás (Nginx): tiltás a szerver beállításában."
+msgstr "Рішення 2 (Nginx): заборона в налаштуванні сервера."
+
+#: includes/Admin/Admin.php
+msgid "A site szerverblokkjába, majd nginx újratöltés:"
+msgstr "У блок server цього сайту, потім перезавантаж nginx:"
+
+#: includes/Admin/Admin.php
+msgid "Apache esetén az AllowOverride All hiányzik: a .htaccess-t a vhost nem engedi érvényesülni."
+msgstr "В Apache бракує AllowOverride All: vhost не дає .htaccess спрацювати."
+
+#: includes/Admin/Admin.php
+msgid "Ellenőrzés újra"
+msgstr "Перевірити знову"
+
+#: includes/Admin/Admin.php
+#. translators: %d: number of project folders
+msgid "Az AGH_PRIVATE_DIR be van állítva, de a régi helyen (uploads) még %d projekt fájljai vannak, ezekre a tervek hivatkoznak. Hozd át őket az új helyre."
+msgstr "AGH_PRIVATE_DIR задано, але файли %d проєктів ще на старому місці (uploads), і плани посилаються на них. Перенеси їх на нове місце."
+
+#: includes/Admin/Admin.php
+msgid "Fájlok áthozása"
+msgstr "Перенести файли"
+
+#: includes/Admin/Admin.php
+msgid "A védett könyvtár továbbra is elérhető HTTP-n. A szerverbeállítás után töltsd újra ezt a lapot."
+msgstr "Захищена тека все ще доступна через HTTP. Після зміни налаштувань сервера перезавантаж цю сторінку."
+
+#: includes/Admin/Admin.php
+msgid "Az ellenőrzés nem futott le (a próbakérés nem ment át). Nézd meg a hibaüzenetet a naplóban."
+msgstr "Перевірка не виконалася (пробний запит не пройшов). Подивися повідомлення про помилку в журналі."
+
+#: includes/Admin/Admin.php
+msgid "Rendben: a védett tárhely könyvtár kívülről nem érhető el."
+msgstr "Гаразд: захищена тека сховища ззовні недоступна."
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files
+msgid "Áthozva %1$d projekt, %2$d fájl az új, védett helyre."
+msgstr "Перенесено %1$d проєктів, %2$d файлів на нове захищене місце."
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files, 3: files left behind
+msgid "Áthozva %1$d projekt (%2$d fájl), de %3$d fájl a régi helyen maradt (már létezett a célban vagy nem volt írható)."
+msgstr "Перенесено %1$d проєктів (%2$d файлів), але %3$d файлів лишилися на старому місці (вже були в цілі або не було права запису)."

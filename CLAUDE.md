@@ -34,6 +34,7 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 - `node tests/sketch-test.js` (élő vázlat, WordPress nélkül fut)
 - Sor/generálás változott: `php tests/stuck-project-test.php` (tesztoldalon; beragadt projekt őrző) és `node tests/e2e/cancel.js` (leállítás beragadt szervernél).
 - Licencközpont változott: `php tests/license-hub-test.php` (a tesztoldalon, a valódi ügyfél-LicenseManagerrel; 40/40).
+- Tárhely vagy az admin figyelmeztetései változtak: `php tests/storage-test.php` (a tesztoldalon; 10/10 + 11/11, a próbafájl HTTP-n, az AGH_PRIVATE_DIR és a fájlok áthozása).
 - `find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 php -l`
 - Fordítás változott: `python3 bin/po-tools.py check` (0 hiba), majd `python3 bin/po-tools.py compile` (.mo újragenerálása).
 - Felület változott: `bin/test-wp.sh` (eldobható WordPress + SQLite a 8899-es porton, teszt képszolgáltatóval), majd `node tests/e2e/responsive.js /tmp`, `node tests/e2e/wizard.js /tmp`, `node tests/e2e/gen.js`, `node tests/e2e/sketch.js` és `AGH_3D=1 node tests/e2e/sketch.js` (3D, SwiftShaderrel lassú, ~5 perc) (mobil+asztali mérés, varázsló végigléptetése, generálás indítása, minden mező hatása az élő vázlatra; konzolhiba 0). Táblázat: `python3 tests/e2e/table.py <kimenet.json>`.

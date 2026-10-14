@@ -8768,3 +8768,70 @@ msgstr "Anulează mutarea"
 #: includes/Frontend/Strings.php
 msgid "Utolsó mozgatás visszavonva."
 msgstr "Ultima mutare a fost anulată."
+
+#: includes/Admin/Admin.php
+msgid "A védett tárhely könyvtár HTTP-n keresztül elérhető! A szerver nem veszi figyelembe a .htaccess tiltást (pl. Nginx). Itt vannak a koncepciókép-fájlok és a kivitelezői ZIP az ügyfél adataival, ezért ezt ki kell javítani."
+msgstr "Directorul de stocare protejat este accesibil prin HTTP! Serverul nu ține cont de interdicția din .htaccess (de exemplu Nginx). Aici sunt imaginile de concept și arhiva ZIP pentru constructor cu datele clientului, deci trebuie remediat."
+
+#: includes/Admin/Admin.php
+msgid "Az érintett könyvtár:"
+msgstr "Directorul în cauză:"
+
+#: includes/Admin/Admin.php
+msgid "1. megoldás (bármilyen szerveren jó): tedd a webgyökéren kívülre."
+msgstr "Soluția 1 (bună pe orice server): pune-l în afara rădăcinii web."
+
+#: includes/Admin/Admin.php
+msgid "A wp-config.php-ba, a „That’s all, stop editing” sor fölé:"
+msgstr "În wp-config.php, deasupra liniei „That’s all, stop editing”:"
+
+#: includes/Admin/Admin.php
+msgid "A könyvtárnak léteznie kell, a webszerver felhasználójának írnia kell tudnia bele, és nem lehet a public_html alatt. Utána ezen a lapon egy gombbal áthozhatod a meglévő fájlokat."
+msgstr "Directorul trebuie să existe, utilizatorul serverului web trebuie să poată scrie în el și nu poate fi sub public_html. Apoi, cu un buton de pe această pagină aduci fișierele existente."
+
+#: includes/Admin/Admin.php
+msgid "2. megoldás (Nginx): tiltás a szerver beállításában."
+msgstr "Soluția 2 (Nginx): interdicție în configurația serverului."
+
+#: includes/Admin/Admin.php
+msgid "A site szerverblokkjába, majd nginx újratöltés:"
+msgstr "În blocul server al site-ului, apoi reîncarcă nginx:"
+
+#: includes/Admin/Admin.php
+msgid "Apache esetén az AllowOverride All hiányzik: a .htaccess-t a vhost nem engedi érvényesülni."
+msgstr "La Apache lipsește AllowOverride All: vhost-ul nu lasă .htaccess să aibă efect."
+
+#: includes/Admin/Admin.php
+msgid "Ellenőrzés újra"
+msgstr "Verifică din nou"
+
+#: includes/Admin/Admin.php
+#. translators: %d: number of project folders
+msgid "Az AGH_PRIVATE_DIR be van állítva, de a régi helyen (uploads) még %d projekt fájljai vannak, ezekre a tervek hivatkoznak. Hozd át őket az új helyre."
+msgstr "AGH_PRIVATE_DIR este setat, dar fișierele a %d proiecte sunt încă în locul vechi (uploads), iar planurile trimit la ele. Adu-le în locul nou."
+
+#: includes/Admin/Admin.php
+msgid "Fájlok áthozása"
+msgstr "Adu fișierele"
+
+#: includes/Admin/Admin.php
+msgid "A védett könyvtár továbbra is elérhető HTTP-n. A szerverbeállítás után töltsd újra ezt a lapot."
+msgstr "Directorul protejat este în continuare accesibil prin HTTP. După schimbarea configurației serverului, reîncarcă această pagină."
+
+#: includes/Admin/Admin.php
+msgid "Az ellenőrzés nem futott le (a próbakérés nem ment át). Nézd meg a hibaüzenetet a naplóban."
+msgstr "Verificarea nu s-a executat (cererea de test nu a trecut). Vezi mesajul de eroare în jurnal."
+
+#: includes/Admin/Admin.php
+msgid "Rendben: a védett tárhely könyvtár kívülről nem érhető el."
+msgstr "În regulă: directorul de stocare protejat nu este accesibil din exterior."
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files
+msgid "Áthozva %1$d projekt, %2$d fájl az új, védett helyre."
+msgstr "Aduse %1$d proiecte, %2$d fișiere în noul loc protejat."
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files, 3: files left behind
+msgid "Áthozva %1$d projekt (%2$d fájl), de %3$d fájl a régi helyen maradt (már létezett a célban vagy nem volt írható)."
+msgstr "Aduse %1$d proiecte (%2$d fișiere), dar %3$d fișiere au rămas în locul vechi (existau deja în destinație sau nu se putea scrie)."

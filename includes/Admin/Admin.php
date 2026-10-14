@@ -458,6 +458,12 @@ final class Admin {
 		update_option( 'agh_design_history', array_slice( $hist, 0, 10 ), false );
 	}
 
+	/** A small admin-post button for a warning (nonce-protected, back to the current page). */
+	private static function action_link( string $do, string $label ): string {
+		$url = wp_nonce_url( admin_url( 'admin-post.php?action=agh_action&do=' . rawurlencode( $do ) . '&back=agh-dashboard' ), 'agh_action_' . $do );
+		return '<a class="button button-secondary" href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>';
+	}
+
 	public static function handle_action(): void {
 		$do = isset( $_REQUEST['do'] ) ? sanitize_key( wp_unslash( $_REQUEST['do'] ) ) : '';
 		check_admin_referer( 'agh_action_' . $do );
@@ -468,6 +474,29 @@ final class Admin {
 		}
 		$p = wp_unslash( $_REQUEST ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized per action below.
 		switch ( $do ) {
+			case 'storage_recheck':
+				delete_transient( 'agh_storage_health' );
+				$h = Storage::health();
+				set_transient( 'agh_storage_health', $h, HOUR_IN_SECONDS );
+				if ( true === $h['public'] ) {
+					self::redirect( $back, __( 'A védett könyvtár továbbra is elérhető HTTP-n. A szerverbeállítás után töltsd újra ezt a lapot.', 'autogrowehome' ), true );
+				} elseif ( null === $h['public'] ) {
+					self::redirect( $back, __( 'Az ellenőrzés nem futott le (a próbakérés nem ment át). Nézd meg a hibaüzenetet a naplóban.', 'autogrowehome' ), true );
+				} else {
+					self::redirect( $back, __( 'Rendben: a védett tárhely könyvtár kívülről nem érhető el.', 'autogrowehome' ) );
+				}
+				break;
+			case 'storage_move':
+				$m = Storage::move_from_uploads();
+				delete_transient( 'agh_storage_health' );
+				if ( $m['failed'] > 0 ) {
+					/* translators: 1: moved projects, 2: moved files, 3: files left behind */
+					self::redirect( $back, sprintf( __( 'Áthozva %1$d projekt (%2$d fájl), de %3$d fájl a régi helyen maradt (már létezett a célban vagy nem volt írható).', 'autogrowehome' ), $m['moved'], $m['files'], $m['failed'] ), true );
+				} else {
+					/* translators: 1: moved projects, 2: moved files */
+					self::redirect( $back, sprintf( __( 'Áthozva %1$d projekt, %2$d fájl az új, védett helyre.', 'autogrowehome' ), $m['moved'], $m['files'] ) );
+				}
+				break;
 			case 'prompt_save':
 				if ( ! Features::enabled( 'prompt_editor' ) ) {
 					self::redirect( $back, __( 'A promptszerkesztő ebben a csomagban nem érhető el.', 'autogrowehome' ), true );
@@ -793,7 +822,25 @@ final class Admin {
 			$w[] = array( 'error', __( 'A védett tárhely könyvtár nem írható.', 'autogrowehome' ) );
 		}
 		if ( true === $health['public'] ) {
-			$w[] = array( 'error', __( 'A védett tárhely könyvtár HTTP-n keresztül elérhető! A szerver nem veszi figyelembe a .htaccess tiltást (pl. Nginx). Állíts be tiltást vagy használd az AGH_PRIVATE_DIR konstanst webgyökéren kívüli útvonallal.', 'autogrowehome' ) );
+			$dir = untrailingslashit( Storage::base_dir() );
+			// the real URL path of the directory (a custom uploads folder or a subdirectory install too)
+			$loc = (string) ( wp_parse_url( Storage::base_url(), PHP_URL_PATH ) ?: '/wp-content/uploads/' . basename( $dir ) . '/' );
+			$txt  = __( 'A védett tárhely könyvtár HTTP-n keresztül elérhető! A szerver nem veszi figyelembe a .htaccess tiltást (pl. Nginx). Itt vannak a koncepciókép-fájlok és a kivitelezői ZIP az ügyfél adataival, ezért ezt ki kell javítani.', 'autogrowehome' );
+			$txt .= '<br><strong>' . esc_html__( 'Az érintett könyvtár:', 'autogrowehome' ) . '</strong> <code>' . esc_html( $dir ) . '</code>';
+			$txt .= '<br><strong>' . esc_html__( '1. megoldás (bármilyen szerveren jó): tedd a webgyökéren kívülre.', 'autogrowehome' ) . '</strong> ' . esc_html__( 'A wp-config.php-ba, a „That’s all, stop editing” sor fölé:', 'autogrowehome' );
+			$txt .= '<br><code>define( \'AGH_PRIVATE_DIR\', \'/home/FELHASZNALO/agh-private/\' );</code> ';
+			$txt .= esc_html__( 'A könyvtárnak léteznie kell, a webszerver felhasználójának írnia kell tudnia bele, és nem lehet a public_html alatt. Utána ezen a lapon egy gombbal áthozhatod a meglévő fájlokat.', 'autogrowehome' );
+			$txt .= '<br><strong>' . esc_html__( '2. megoldás (Nginx): tiltás a szerver beállításában.', 'autogrowehome' ) . '</strong> ' . esc_html__( 'A site szerverblokkjába, majd nginx újratöltés:', 'autogrowehome' );
+			// "^~" beats every regex location, so an image rule cannot match the directory first
+			$txt .= '<br><code>location ^~ ' . esc_html( $loc ) . ' { deny all; return 403; }</code>';
+			$txt .= '<br><em>' . esc_html__( 'Apache esetén az AllowOverride All hiányzik: a .htaccess-t a vhost nem engedi érvényesülni.', 'autogrowehome' ) . '</em> ';
+			$txt .= self::action_link( 'storage_recheck', __( 'Ellenőrzés újra', 'autogrowehome' ) );
+			$w[] = array( 'error', $txt );
+		}
+		$stray = Storage::stray_projects();
+		if ( $stray > 0 ) {
+			/* translators: %d: number of project folders */
+			$w[] = array( 'error', sprintf( __( 'Az AGH_PRIVATE_DIR be van állítva, de a régi helyen (uploads) még %d projekt fájljai vannak, ezekre a tervek hivatkoznak. Hozd át őket az új helyre.', 'autogrowehome' ), $stray ) . ' ' . self::action_link( 'storage_move', __( 'Fájlok áthozása', 'autogrowehome' ) ) );
 		}
 		if ( ! extension_loaded( 'zip' ) ) {
 			$w[] = array( 'error', __( 'A PHP zip kiterjesztés hiányzik – a kivitelezői ZIP csomag nem készíthető.', 'autogrowehome' ) );

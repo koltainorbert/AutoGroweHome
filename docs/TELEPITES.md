@@ -253,7 +253,9 @@ curl -s -o /dev/null -w '%{http_code}\n' "https://example.hu/wp-content/uploads/
 
 Elvárt eredmény: **403** vagy **404**. Ha **200**, a könyvtár nyilvános – javítsd a webszerver-beállítást, vagy használd az `AGH_PRIVATE_DIR` konstanst.
 
-Az admin önellenőrzése: **Súgó és rendszer** → „Tárhely nyilvános?” sor (minden megnyitáskor élőben fut). A vezérlőpulti figyelmeztetés eredményét a plugin 1 órára gyorsítótárazza (`agh_storage_health` tranziens).
+Az admin önellenőrzése: **Súgó és rendszer** → „Tárhely nyilvános?” sor (minden megnyitáskor élőben fut). A vezérlőpulti figyelmeztetés eredményét a plugin 1 órára gyorsítótárazza (`agh_storage_health` tranziens), de a figyelmeztetés mellett ott az **„Ellenőrzés újra”** gomb: törli a gyorsítótárat és azonnal újra mér, így a szerverbeállítás után rögtön látszik, sikerült-e.
+
+A figyelmeztetés magában hordja a megoldást is: kiírja az érintett könyvtár valódi útvonalát, a `wp-config.php`-ba másolható `define( 'AGH_PRIVATE_DIR', … );` sort és az ehhez a telepítéshez tartozó Nginx `location` blokkot.
 
 ### 6.4 Tárhely a webgyökéren kívül: `AGH_PRIVATE_DIR`
 
@@ -266,7 +268,7 @@ define( 'AGH_PRIVATE_DIR', '/var/lib/autogrowehome/example.hu/' );
 
 - Abszolút útvonal legyen, a PHP-folyamat számára írható; a záró `/`-t a plugin pótolja.
 - Ilyenkor nincs nyilvános URL, az önellenőrzés eredménye „Custom path outside web root.” (`includes/Support/Storage.php`).
-- **Meglévő telepítés átállítása:** a fájlok útvonala relatívan van tárolva, ezért a korábbi `agh-private-<utótag>/` könyvtár **tartalmát át kell másolni** az új helyre, különben a régi képek és csomagok „File missing” hibát adnak.
+- **Meglévő telepítés átállítása:** a fájlok útvonala relatívan van tárolva, ezért a korábbi `agh-private-<utótag>/` könyvtár tartalmát át kell hozni az új helyre, különben a régi képek és csomagok „File missing” hibát adnak. A konstans beállítása után a vezérlőpulton megjelenik, hány projekt fájljai maradtak a régi helyen, és a **„Fájlok áthozása”** gomb átmozgatja őket (létező célfájlt soha nem ír felül, és a kiürült régi könyvtárat törli). Kézzel másolva ugyanez: a UUID-nevű projektmappák mennek át, a védőfájlok nem.
 - Eltávolításkor egyedi könyvtárban csak a plugin saját tartalma törlődik (11. fejezet).
 
 ---

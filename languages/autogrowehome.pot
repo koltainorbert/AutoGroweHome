@@ -8738,3 +8738,70 @@ msgstr ""
 #: includes/Frontend/Strings.php
 msgid "Utolsó mozgatás visszavonva."
 msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A védett tárhely könyvtár HTTP-n keresztül elérhető! A szerver nem veszi figyelembe a .htaccess tiltást (pl. Nginx). Itt vannak a koncepciókép-fájlok és a kivitelezői ZIP az ügyfél adataival, ezért ezt ki kell javítani."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Az érintett könyvtár:"
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "1. megoldás (bármilyen szerveren jó): tedd a webgyökéren kívülre."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A wp-config.php-ba, a „That’s all, stop editing” sor fölé:"
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A könyvtárnak léteznie kell, a webszerver felhasználójának írnia kell tudnia bele, és nem lehet a public_html alatt. Utána ezen a lapon egy gombbal áthozhatod a meglévő fájlokat."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "2. megoldás (Nginx): tiltás a szerver beállításában."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A site szerverblokkjába, majd nginx újratöltés:"
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Apache esetén az AllowOverride All hiányzik: a .htaccess-t a vhost nem engedi érvényesülni."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Ellenőrzés újra"
+msgstr ""
+
+#: includes/Admin/Admin.php
+#. translators: %d: number of project folders
+msgid "Az AGH_PRIVATE_DIR be van állítva, de a régi helyen (uploads) még %d projekt fájljai vannak, ezekre a tervek hivatkoznak. Hozd át őket az új helyre."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Fájlok áthozása"
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A védett könyvtár továbbra is elérhető HTTP-n. A szerverbeállítás után töltsd újra ezt a lapot."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Az ellenőrzés nem futott le (a próbakérés nem ment át). Nézd meg a hibaüzenetet a naplóban."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Rendben: a védett tárhely könyvtár kívülről nem érhető el."
+msgstr ""
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files
+msgid "Áthozva %1$d projekt, %2$d fájl az új, védett helyre."
+msgstr ""
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files, 3: files left behind
+msgid "Áthozva %1$d projekt (%2$d fájl), de %3$d fájl a régi helyen maradt (már létezett a célban vagy nem volt írható)."
+msgstr ""

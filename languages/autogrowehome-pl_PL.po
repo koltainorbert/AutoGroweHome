@@ -8768,3 +8768,70 @@ msgstr "Cofnij przesunięcie"
 #: includes/Frontend/Strings.php
 msgid "Utolsó mozgatás visszavonva."
 msgstr "Ostatnie przesunięcie cofnięte."
+
+#: includes/Admin/Admin.php
+msgid "A védett tárhely könyvtár HTTP-n keresztül elérhető! A szerver nem veszi figyelembe a .htaccess tiltást (pl. Nginx). Itt vannak a koncepciókép-fájlok és a kivitelezői ZIP az ügyfél adataival, ezért ezt ki kell javítani."
+msgstr "Chroniony katalog plików jest dostępny przez HTTP! Serwer nie uwzględnia zakazu z .htaccess (na przykład Nginx). Są tu obrazy koncepcyjne i ZIP dla wykonawcy z danymi klienta, więc trzeba to naprawić."
+
+#: includes/Admin/Admin.php
+msgid "Az érintett könyvtár:"
+msgstr "Katalog, o który chodzi:"
+
+#: includes/Admin/Admin.php
+msgid "1. megoldás (bármilyen szerveren jó): tedd a webgyökéren kívülre."
+msgstr "Rozwiązanie 1 (dobre na każdym serwerze): umieść go poza katalogiem głównym serwera."
+
+#: includes/Admin/Admin.php
+msgid "A wp-config.php-ba, a „That’s all, stop editing” sor fölé:"
+msgstr "W wp-config.php, nad linią „That’s all, stop editing”:"
+
+#: includes/Admin/Admin.php
+msgid "A könyvtárnak léteznie kell, a webszerver felhasználójának írnia kell tudnia bele, és nem lehet a public_html alatt. Utána ezen a lapon egy gombbal áthozhatod a meglévő fájlokat."
+msgstr "Katalog musi istnieć, użytkownik serwera WWW musi mieć prawo zapisu, i nie może leżeć pod public_html. Potem jednym przyciskiem na tej stronie przeniesiesz istniejące pliki."
+
+#: includes/Admin/Admin.php
+msgid "2. megoldás (Nginx): tiltás a szerver beállításában."
+msgstr "Rozwiązanie 2 (Nginx): zakaz w konfiguracji serwera."
+
+#: includes/Admin/Admin.php
+msgid "A site szerverblokkjába, majd nginx újratöltés:"
+msgstr "Do bloku server tej witryny, potem przeładuj nginx:"
+
+#: includes/Admin/Admin.php
+msgid "Apache esetén az AllowOverride All hiányzik: a .htaccess-t a vhost nem engedi érvényesülni."
+msgstr "W Apache brakuje AllowOverride All: vhost nie pozwala zadziałać plikowi .htaccess."
+
+#: includes/Admin/Admin.php
+msgid "Ellenőrzés újra"
+msgstr "Sprawdź ponownie"
+
+#: includes/Admin/Admin.php
+#. translators: %d: number of project folders
+msgid "Az AGH_PRIVATE_DIR be van állítva, de a régi helyen (uploads) még %d projekt fájljai vannak, ezekre a tervek hivatkoznak. Hozd át őket az új helyre."
+msgstr "AGH_PRIVATE_DIR jest ustawiony, ale pliki %d projektów są nadal w starym miejscu (uploads), a projekty się do nich odwołują. Przenieś je w nowe miejsce."
+
+#: includes/Admin/Admin.php
+msgid "Fájlok áthozása"
+msgstr "Przenieś pliki"
+
+#: includes/Admin/Admin.php
+msgid "A védett könyvtár továbbra is elérhető HTTP-n. A szerverbeállítás után töltsd újra ezt a lapot."
+msgstr "Chroniony katalog nadal jest dostępny przez HTTP. Po zmianie konfiguracji serwera przeładuj tę stronę."
+
+#: includes/Admin/Admin.php
+msgid "Az ellenőrzés nem futott le (a próbakérés nem ment át). Nézd meg a hibaüzenetet a naplóban."
+msgstr "Sprawdzenie się nie wykonało (żądanie testowe nie przeszło). Zobacz komunikat błędu w dzienniku."
+
+#: includes/Admin/Admin.php
+msgid "Rendben: a védett tárhely könyvtár kívülről nem érhető el."
+msgstr "W porządku: chroniony katalog plików nie jest dostępny z zewnątrz."
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files
+msgid "Áthozva %1$d projekt, %2$d fájl az új, védett helyre."
+msgstr "Przeniesiono %1$d projektów, %2$d plików w nowe, chronione miejsce."
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files, 3: files left behind
+msgid "Áthozva %1$d projekt (%2$d fájl), de %3$d fájl a régi helyen maradt (már létezett a célban vagy nem volt írható)."
+msgstr "Przeniesiono %1$d projektów (%2$d plików), ale %3$d plików zostało w starym miejscu (już istniały w celu albo brak prawa zapisu)."

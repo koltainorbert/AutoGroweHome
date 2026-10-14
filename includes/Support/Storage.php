@@ -29,6 +29,120 @@ final class Storage {
 		return trailingslashit( $up['basedir'] ) . 'agh-private-' . $suffix . '/';
 	}
 
+	/**
+	 * The plugin's own directory under uploads (the default place), whatever AGH_PRIVATE_DIR says.
+	 * After the constant is set the files left there have to be moved; this is where they are.
+	 */
+	public static function uploads_dir(): string {
+		$suffix = (string) get_option( 'agh_private_suffix', '' );
+		if ( '' === $suffix ) {
+			return '';
+		}
+		$up = wp_upload_dir( null, false );
+		return trailingslashit( $up['basedir'] ) . 'agh-private-' . $suffix . '/';
+	}
+
+	/**
+	 * Is there anything left in the old uploads directory while a custom path is in use?
+	 *
+	 * @return int Number of project folders still there (0: nothing to move).
+	 */
+	public static function stray_projects(): int {
+		if ( ! defined( 'AGH_PRIVATE_DIR' ) || ! AGH_PRIVATE_DIR ) {
+			return 0;
+		}
+		$old = self::uploads_dir();
+		if ( '' === $old || ! is_dir( $old ) || rtrim( $old, '/' ) === rtrim( self::base_dir(), '/' ) ) {
+			return 0;
+		}
+		$n = 0;
+		foreach ( (array) scandir( $old ) as $e ) {
+			if ( Util::is_uuid( (string) $e ) && is_dir( $old . $e ) ) {
+				$n++;
+			}
+		}
+		return $n;
+	}
+
+	/**
+	 * Move the project folders left in the old uploads directory to the directory in use now.
+	 * An existing file in the target is never overwritten; whatever could not be moved is counted.
+	 * When the old directory is left with the protection files only, it is removed.
+	 *
+	 * @return array{moved:int,files:int,failed:int,removed:bool}
+	 */
+	public static function move_from_uploads(): array {
+		$out = array( 'moved' => 0, 'files' => 0, 'failed' => 0, 'removed' => false );
+		if ( ! self::stray_projects() ) {
+			return $out;
+		}
+		$old = self::uploads_dir();
+		$new = self::base_dir();
+		wp_mkdir_p( $new );
+		foreach ( (array) scandir( $old ) as $e ) {
+			$e = (string) $e;
+			if ( ! Util::is_uuid( $e ) || ! is_dir( $old . $e ) ) {
+				continue;
+			}
+			$ok = true;
+			$it = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $old . $e, \FilesystemIterator::SKIP_DOTS ), \RecursiveIteratorIterator::SELF_FIRST );
+			foreach ( $it as $f ) {
+				$rel = substr( $f->getPathname(), strlen( $old ) );
+				$dst = $new . $rel;
+				if ( $f->isDir() ) {
+					wp_mkdir_p( $dst );
+					continue;
+				}
+				if ( file_exists( $dst ) ) {
+					$out['failed']++;
+					$ok = false;
+					continue;
+				}
+				wp_mkdir_p( dirname( $dst ) );
+				if ( @rename( $f->getPathname(), $dst ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors
+					$out['files']++;
+				} elseif ( @copy( $f->getPathname(), $dst ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors
+					unlink( $f->getPathname() ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+					$out['files']++;
+				} else {
+					$out['failed']++;
+					$ok = false;
+				}
+			}
+			if ( $ok ) {
+				self::rmtree_empty( $old . $e );
+				$out['moved']++;
+			}
+		}
+		// nothing of ours left: the protection files and the probe may go with the directory
+		if ( ! self::stray_projects() ) {
+			foreach ( array( '.htaccess', 'web.config', 'index.php', 'index.html', 'agh-probe.txt' ) as $name ) {
+				if ( is_file( $old . $name ) ) {
+					unlink( $old . $name ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+				}
+			}
+			$rest = array_diff( (array) scandir( $old ), array( '.', '..' ) );
+			if ( ! $rest ) {
+				$out['removed'] = rmdir( $old ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			}
+		}
+		return $out;
+	}
+
+	/** Remove a directory tree that holds no files any more. */
+	private static function rmtree_empty( string $dir ): void {
+		if ( ! is_dir( $dir ) ) {
+			return;
+		}
+		$it = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $dir, \FilesystemIterator::SKIP_DOTS ), \RecursiveIteratorIterator::CHILD_FIRST );
+		foreach ( $it as $f ) {
+			if ( $f->isDir() ) {
+				@rmdir( $f->getPathname() ); // phpcs:ignore
+			}
+		}
+		@rmdir( $dir ); // phpcs:ignore
+	}
+
 	public static function base_url(): string {
 		if ( defined( 'AGH_PRIVATE_DIR' ) && AGH_PRIVATE_DIR ) {
 			return '';

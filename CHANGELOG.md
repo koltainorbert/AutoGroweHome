@@ -1,5 +1,13 @@
 # Változásnapló
 
+## 1.9.2 – 2026-10-14
+
+- Védett tárhely: a „A védett tárhely könyvtár HTTP-n keresztül elérhető!” figyelmeztetés mostantól elvégezhető feladat. Kiírja az érintett könyvtár valódi útvonalát, és odaadja mindkét megoldást másolható formában: a `wp-config.php`-ba való `define( 'AGH_PRIVATE_DIR', … );` sort (webgyökéren kívüli útvonallal) és az ehhez a telepítéshez tartozó Nginx `location ^~ … { deny all; return 403; }` blokkot. Azt is megmondja, mi van a könyvtárban (koncepcióképek és a kivitelezői ZIP az ügyfél adataival), tehát miért kell javítani.
+- Új „Ellenőrzés újra” gomb a figyelmeztetés mellett: törli az órás gyorsítótárat (`agh_storage_health`) és azonnal újra mér, így a szerverbeállítás után rögtön látszik, sikerült-e. Eddig akár egy órát kellett várni az eredményre.
+- Új „Fájlok áthozása” gomb: ha az `AGH_PRIVATE_DIR` utólag kerül be, a régi `uploads/agh-private-<utótag>/` könyvtárban maradt projektfájlokat egy kattintással áthozza az új, védett helyre (létező célfájlt soha nem ír felül, a kiürült régi könyvtárat törli). Eddig kézzel kellett másolni, különben a régi képek „File missing” hibát adtak.
+- Új teszt: `tests/storage-test.php` (valódi WordPressen, két szakaszban). Mérve: alapállapotban a próbafájl HTTP-n elérhető (10/10 ellenőrzés), `AGH_PRIVATE_DIR` mellett nincs URL-je és a health nem jelez, 2 projekt 4 fájlja áthozva 0 hibával, mind a 4 olvasható az új helyen, az útvonal-ellenőrzés `..`-t és abszolút utat továbbra sem enged (11/11).
+- 16 új felirat 15 nyelven (nyelvenként 2111 szöveg, 0 hiba). A telepítési útmutató 6.3 és 6.4 szakasza is frissült.
+
 ## 1.9.1 – 2026-10-14
 
 - Tárgyak megfogása egérrel (a 7 pontos lista 7. tétele): a belső nézetben bármelyik bútor megfogható, a padlón oda húzható, ahova a látogató szeretné, és el is forgatható (egérgörgő vagy Shift + oldalra húzás, 15 fokos lépésekben). Érintőképernyőn rövid nyomva tartás fogja meg a tárgyat, így a nézet forgatása változatlanul működik. A falra akasztott dolgok (kép, fali polc) nem lebegnek be a szoba közepére: a legközelebbi falra simulnak, és azzal együtt fordulnak. Minden elhelyezés mentődik helyiségenként és tárgyanként (`room_layout`), újratöltés után is megmarad, és bekerül a koncepciókép promptjába is. Ctrl+Z visszavonja az utolsó mozgatást, a jobb felső sarokban lévő gomb visszaállítja a helyiséget automatikus berendezésre. Egy tárgy sem tud kilógni a falon: a program a teljes testét tartja a szobán belül, nem csak a középpontját. Mérve: 15 tárgyból 15 megfogható, 8 mozgatva és forgatva, 0 kilógó, újratöltés után 8/8 a helyén, visszaállítás működik, 0 konzolhiba. Új teszt: `tests/e2e/layout.js`.

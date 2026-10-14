@@ -8766,3 +8766,70 @@ msgstr "Verplaatsen ongedaan maken"
 #: includes/Frontend/Strings.php
 msgid "Utolsó mozgatás visszavonva."
 msgstr "Laatste verplaatsing ongedaan gemaakt."
+
+#: includes/Admin/Admin.php
+msgid "A védett tárhely könyvtár HTTP-n keresztül elérhető! A szerver nem veszi figyelembe a .htaccess tiltást (pl. Nginx). Itt vannak a koncepciókép-fájlok és a kivitelezői ZIP az ügyfél adataival, ezért ezt ki kell javítani."
+msgstr "De beschermde opslagmap is via HTTP bereikbaar! De server houdt geen rekening met het verbod in .htaccess (bijvoorbeeld Nginx). Hier staan de conceptbeelden en de ZIP voor de aannemer met de klantgegevens, dus dit moet verholpen worden."
+
+#: includes/Admin/Admin.php
+msgid "Az érintett könyvtár:"
+msgstr "Betrokken map:"
+
+#: includes/Admin/Admin.php
+msgid "1. megoldás (bármilyen szerveren jó): tedd a webgyökéren kívülre."
+msgstr "Oplossing 1 (werkt op elke server): zet hem buiten de webroot."
+
+#: includes/Admin/Admin.php
+msgid "A wp-config.php-ba, a „That’s all, stop editing” sor fölé:"
+msgstr "In wp-config.php, boven de regel “That’s all, stop editing”:"
+
+#: includes/Admin/Admin.php
+msgid "A könyvtárnak léteznie kell, a webszerver felhasználójának írnia kell tudnia bele, és nem lehet a public_html alatt. Utána ezen a lapon egy gombbal áthozhatod a meglévő fájlokat."
+msgstr "De map moet bestaan, de gebruiker van de webserver moet erin kunnen schrijven, en hij mag niet onder public_html staan. Daarna haal je de bestaande bestanden met één knop op deze pagina over."
+
+#: includes/Admin/Admin.php
+msgid "2. megoldás (Nginx): tiltás a szerver beállításában."
+msgstr "Oplossing 2 (Nginx): verbod in de serverconfiguratie."
+
+#: includes/Admin/Admin.php
+msgid "A site szerverblokkjába, majd nginx újratöltés:"
+msgstr "In het serverblok van de site, daarna nginx herladen:"
+
+#: includes/Admin/Admin.php
+msgid "Apache esetén az AllowOverride All hiányzik: a .htaccess-t a vhost nem engedi érvényesülni."
+msgstr "Bij Apache ontbreekt AllowOverride All: de vhost laat de .htaccess niet werken."
+
+#: includes/Admin/Admin.php
+msgid "Ellenőrzés újra"
+msgstr "Opnieuw controleren"
+
+#: includes/Admin/Admin.php
+#. translators: %d: number of project folders
+msgid "Az AGH_PRIVATE_DIR be van állítva, de a régi helyen (uploads) még %d projekt fájljai vannak, ezekre a tervek hivatkoznak. Hozd át őket az új helyre."
+msgstr "AGH_PRIVATE_DIR is ingesteld, maar de bestanden van %d projecten staan nog op de oude plek (uploads) en de ontwerpen verwijzen ernaar. Haal ze naar de nieuwe plek."
+
+#: includes/Admin/Admin.php
+msgid "Fájlok áthozása"
+msgstr "Bestanden overhalen"
+
+#: includes/Admin/Admin.php
+msgid "A védett könyvtár továbbra is elérhető HTTP-n. A szerverbeállítás után töltsd újra ezt a lapot."
+msgstr "De beschermde map is nog steeds via HTTP bereikbaar. Herlaad deze pagina na het aanpassen van de serverconfiguratie."
+
+#: includes/Admin/Admin.php
+msgid "Az ellenőrzés nem futott le (a próbakérés nem ment át). Nézd meg a hibaüzenetet a naplóban."
+msgstr "De controle is niet uitgevoerd (het testverzoek kwam er niet door). Bekijk de foutmelding in het logboek."
+
+#: includes/Admin/Admin.php
+msgid "Rendben: a védett tárhely könyvtár kívülről nem érhető el."
+msgstr "In orde: de beschermde opslagmap is van buitenaf niet bereikbaar."
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files
+msgid "Áthozva %1$d projekt, %2$d fájl az új, védett helyre."
+msgstr "%1$d projecten, %2$d bestanden naar de nieuwe, beschermde plek gehaald."
+
+#: includes/Admin/Admin.php
+#. translators: 1: moved projects, 2: moved files, 3: files left behind
+msgid "Áthozva %1$d projekt (%2$d fájl), de %3$d fájl a régi helyen maradt (már létezett a célban vagy nem volt írható)."
+msgstr "%1$d projecten (%2$d bestanden) gehaald, maar %3$d bestanden bleven op de oude plek (bestonden al in het doel of waren niet beschrijfbaar)."
