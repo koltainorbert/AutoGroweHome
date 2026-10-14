@@ -8627,3 +8627,59 @@ msgstr "Američki moderni, ravni krov"
 #: includes/Params/Definitions.php
 msgid "Sivatagi modern (Palm Springs)"
 msgstr "Pustinjski moderni (Palm Springs)"
+
+#: includes/Params/Definitions.php
+msgid "Pince kialakítása"
+msgstr "Izvedba podruma"
+
+#: includes/Params/Definitions.php
+msgid "Részleges alápincézés"
+msgstr "Djelomično podrumljenje"
+
+#: includes/Params/Definitions.php
+msgid "Teljes alápincézés"
+msgstr "Potpuno podrumljenje"
+
+#: includes/Params/Definitions.php
+msgid "Pinceszint külső lejárattal"
+msgstr "Podrum s vanjskim ulazom"
+
+#: includes/Params/Definitions.php
+msgid "Padlás"
+msgstr "Tavan"
+
+#: includes/Params/Definitions.php
+msgid "Pince"
+msgstr "Podrum"
+
+#: includes/Params/Definitions.php
+msgid "A tető alatti tér: beépítetlen padlás vagy beépített tetőtér."
+msgstr "Prostor ispod krova: neuređeno tavanište ili uređeno potkrovlje."
+
+#: includes/Params/Definitions.php
+msgid "A szintek szerint"
+msgstr "Prema broju etaža"
+
+#: includes/Params/Definitions.php
+msgid "Beépítetlen padlás"
+msgstr "Neuređeno tavanište"
+
+#: includes/Params/Definitions.php
+msgid "Beépített tetőtér"
+msgstr "Uređeno potkrovlje"
+
+#: includes/Params/Definitions.php
+msgid "Nincs padlástér"
+msgstr "Bez tavanskog prostora"
+
+#: includes/Params/Definitions.php
+msgid "Pince – gépészet"
+msgstr "Podrum – strojarnica"
+
+#: includes/Params/Definitions.php
+msgid "Pince – tároló"
+msgstr "Podrum – spremište"
+
+#: includes/Params/Definitions.php
+msgid "Pince – mosókonyha"
+msgstr "Podrum – praonica"

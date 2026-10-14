@@ -8625,3 +8625,59 @@ msgstr "American modern, flat-roofed"
 #: includes/Params/Definitions.php
 msgid "Sivatagi modern (Palm Springs)"
 msgstr "Desert modern (Palm Springs)"
+
+#: includes/Params/Definitions.php
+msgid "Pince kialakítása"
+msgstr "Basement layout"
+
+#: includes/Params/Definitions.php
+msgid "Részleges alápincézés"
+msgstr "Partial basement"
+
+#: includes/Params/Definitions.php
+msgid "Teljes alápincézés"
+msgstr "Full basement"
+
+#: includes/Params/Definitions.php
+msgid "Pinceszint külső lejárattal"
+msgstr "Walkout basement with its own entrance"
+
+#: includes/Params/Definitions.php
+msgid "Padlás"
+msgstr "Attic"
+
+#: includes/Params/Definitions.php
+msgid "Pince"
+msgstr "Basement"
+
+#: includes/Params/Definitions.php
+msgid "A tető alatti tér: beépítetlen padlás vagy beépített tetőtér."
+msgstr "The space under the roof: an unconverted attic or a habitable loft."
+
+#: includes/Params/Definitions.php
+msgid "A szintek szerint"
+msgstr "As the storeys dictate"
+
+#: includes/Params/Definitions.php
+msgid "Beépítetlen padlás"
+msgstr "Unconverted attic"
+
+#: includes/Params/Definitions.php
+msgid "Beépített tetőtér"
+msgstr "Habitable loft"
+
+#: includes/Params/Definitions.php
+msgid "Nincs padlástér"
+msgstr "No attic space"
+
+#: includes/Params/Definitions.php
+msgid "Pince – gépészet"
+msgstr "Basement – plant room"
+
+#: includes/Params/Definitions.php
+msgid "Pince – tároló"
+msgstr "Basement – storage"
+
+#: includes/Params/Definitions.php
+msgid "Pince – mosókonyha"
+msgstr "Basement – laundry"

@@ -92,6 +92,23 @@ final class RoomProgram {
 				$add( 'corridor', $l, $l === 0 ? 5 : 4 );
 			}
 		}
+		// the basement is its own level (-1): the plant room, storage, the laundry and, on a hillside, a wine cellar
+		if ( ! empty( $c['basement'] ) ) {
+			$full = ( $c['basement_type'] ?? 'partial' ) !== 'partial';
+			$add( 'stairs', -1, 6 );
+			$add( 'technical', -1, 6, __( 'Pince – gépészet', 'autogrowehome' ) );
+			$add( 'pantry', -1, $full ? 12 : 8, __( 'Pince – tároló', 'autogrowehome' ) );
+			if ( $full ) {
+				$add( 'laundry', -1, 7, __( 'Pince – mosókonyha', 'autogrowehome' ) );
+			}
+			if ( $full || ( $c['landscape'] ?? '' ) === 'vineyard' || ( $c['arch_style'] ?? '' ) === 'wine_cellar' ) {
+				$add( 'wine', -1, $full ? 10 : 7, __( 'Borospince', 'autogrowehome' ) );
+			}
+		}
+		// an unused attic is a room of its own too: the roof truss, the ladder and the attic window
+		if ( ( $c['attic_use'] ?? 'auto' ) === 'storage' || ( ( $c['attic_use'] ?? 'auto' ) === 'auto' && ( $c['levels'] ?? 'single' ) !== 'attic' && ( $c['roof_type'] ?? 'gable' ) !== 'flat' ) ) {
+			$add( 'attic', $levels, max( 12, $net * 0.12 ), __( 'Padlás', 'autogrowehome' ) );
+		}
 
 		// Scale to the requested net area (keep circulation & wet rooms close to their sizes).
 		$sum = array_sum( wp_list_pluck( $rooms, 'area' ) );
@@ -124,7 +141,7 @@ final class RoomProgram {
 	/**
 	 * Sanitize a user-provided room list.
 	 */
-	public static function sanitize( $rooms, int $max_level = 2 ): array {
+	public static function sanitize( $rooms, int $max_level = 2, bool $basement = false ): array {
 		if ( ! is_array( $rooms ) ) {
 			return array();
 		}
@@ -147,7 +164,8 @@ final class RoomProgram {
 				'type'   => $type,
 				'name'   => Util::clean_text( $r['name'] ?? $types[ $type ][0], 60 ) ?: $types[ $type ][0],
 				'area'   => self::num( $r['area'] ?? $types[ $type ][2], 1, 250 ),
-				'level'  => (int) max( 0, min( $max_level, (int) ( $r['level'] ?? 0 ) ) ),
+				// level -1 is the basement: only kept when the house has one
+				'level'  => (int) max( $basement ? -1 : 0, min( $max_level, (int) ( $r['level'] ?? 0 ) ) ),
 				'render' => ! empty( $r['render'] ),
 			);
 			foreach ( array( 'width', 'length' ) as $dim ) {

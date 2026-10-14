@@ -438,6 +438,9 @@ House.prototype.volume = function (v, idx, type, vpl) {
 			var ph = pl.plinth, e = 0.03;
 			this.add(box(v.x0 - e, v.y0 - e, 0, v.x1 + e, v.y1 + e, ph, pm));
 		}
+		// a basement shows on the outside: cellar windows in light wells along the front, and for a
+		// walkout basement the level itself is cut into the slope with its own door
+		if (c.basement && v.main && !z0) { this.basementFace(v, pl); }
 	}
 	// the underside of a floating (cantilevered) volume
 	if (z0 > 0) { this.add(box(v.x0, v.y0, z0 - 0.28, v.x1, v.y1, z0 + 0.02, solid(shadeHex(col(c.facade_color, '#F2EFE9'), -0.06), 0.85))); }
@@ -445,6 +448,50 @@ House.prototype.volume = function (v, idx, type, vpl) {
 	if (type === 'flat') { this.flatRoof(v, r); } else { this.pitchedRoof(v, rd, type); }
 	this.roofItems(v, type, rd ? rd.info : null, pl);
 	this.frontExtras(v, fp, type, pl);
+};
+// What a basement shows above ground: cellar windows in their light wells along the garden side, and
+// for a walkout basement a sunken level with its own door and outside steps.
+House.prototype.basementFace = function (v, pl) {
+	var c = this.c, self = this, prev = this.tagNow;
+	this.tagNow = 'basement';
+	var kind = c.basement_type || 'partial', ph = pl.plinth;
+	var wallC = col(c.facade_color, '#F2EFE9'), wm = solid(shadeHex(wallC, -0.18), 0.9);
+	var conc = pbr('concrete', { color: '#C4C0B8' }, { normal: 0.6 }), fm = frameMat(c), gm = glassMat(c, this.night);
+	var W = v.x1 - v.x0, deep = kind === 'walkout' ? 2.4 : 1.1;
+	// light wells with a window: two on the garden side, one on the left, all under the plinth line
+	var wells = [[v.x0 + W * 0.3, v.y1, 1], [v.x0 + W * 0.68, v.y1, 1]];
+	if (v.y1 - v.y0 > 7) { wells.push([v.x0, v.y0 + (v.y1 - v.y0) * 0.5, 0]); }
+	wells.forEach(function (q) {
+		var front = q[2] === 1, x = q[0], y = q[1], ww = 0.9, wh = 0.55, z0 = Math.max(0.08, ph - 0.72);
+		// the well: a concrete box sunk into the ground in front of the window
+		if (front) {
+			self.add(box(x - ww / 2 - 0.08, y, z0 - 0.05, x + ww / 2 + 0.08, y + 0.55, z0 + wh + 0.1, conc));
+			self.add(box(x - ww / 2, y - 0.14, z0, x + ww / 2, y + 0.02, z0 + wh, fm));
+			self.add(box(x - ww / 2 + 0.05, y - 0.1, z0 + 0.05, x + ww / 2 - 0.05, y - 0.02, z0 + wh - 0.05, gm));
+		} else {
+			self.add(box(x - 0.55, y - ww / 2 - 0.08, z0 - 0.05, x + 0.02, y + ww / 2 + 0.08, z0 + wh + 0.1, conc));
+			self.add(box(x - 0.02, y - ww / 2, z0, x + 0.14, y + ww / 2, z0 + wh, fm));
+			self.add(box(x + 0.02, y - ww / 2 + 0.05, z0 + 0.05, x + 0.1, y + ww / 2 - 0.05, z0 + wh - 0.05, gm));
+		}
+	});
+	if (kind === 'walkout') {
+		// the garden side is dug out: a sunken terrace with a door down to the basement and steps up
+		var bx0 = v.x0 + W * 0.08, bx1 = bx0 + Math.min(4.2, W * 0.42), y0 = v.y1, y1 = v.y1 + 2.6;
+		self.add(box(bx0 - 0.2, y0, -deep, bx1 + 0.2, y1, -deep + 0.12, pbr('slabs', { color: '#C9C2B6' }, { normal: 1 })));
+		[[bx0 - 0.2, bx0], [bx1, bx1 + 0.2]].forEach(function (s) { self.add(box(s[0], y0, -deep, s[1], y1, 0.02, conc)); });
+		self.add(box(bx0 - 0.2, y1 - 0.2, -deep, bx1 + 0.2, y1, 0.02, conc));
+		self.add(box(bx0 + 0.3, y0 - 0.16, -deep + 0.12, bx0 + 1.3, y0 + 0.02, -deep + 2.22, fm));
+		self.add(box(bx0 + 0.36, y0 - 0.12, -deep + 0.18, bx0 + 1.24, y0 - 0.04, -deep + 2.16, gm));
+		self.add(box(bx0 + 1.6, y0 - 0.16, -deep + 0.12, bx0 + 2.5, y0 + 0.02, -deep + 1.5, fm));
+		self.add(box(bx0 + 1.66, y0 - 0.12, -deep + 0.18, bx0 + 2.44, y0 - 0.04, -deep + 1.44, gm));
+		var nst = Math.max(6, Math.round(deep / 0.17)), sh = deep / nst, sw = Math.min(1.2, (bx1 - bx0) * 0.4);
+		for (var i = 0; i < nst; i++) { self.add(box(bx1 - sw, y1 - 0.3 - i * 0.28, -deep + i * sh, bx1, y1 - 0.02, -deep + (i + 1) * sh, conc)); }
+		self.add(rod(X(bx1 - sw - 0.05, y1 - 0.3, 0.95), X(bx1 - sw - 0.05, y1 - 0.3 - nst * 0.28, -deep + 0.95), 0.025, solid('#8C9196', 0.3, 0.9)));
+	} else {
+		// otherwise only the retaining band of the basement wall shows at ground level
+		self.add(box(v.x0 - 0.05, v.y1, -0.35, v.x1 + 0.05, v.y1 + 0.12, Math.max(0.1, ph - 0.1), wm));
+	}
+	this.tagNow = prev;
 };
 // A slab following the outline of a rounded volume (e: outward offset), from z0 to z1.
 function roundSlab(v, r, e, z0, z1, mat, hole) {
@@ -1904,6 +1951,8 @@ function roomFloorKey(c, type) {
 	if (/^(master|bedroom|guest|kids|wardrobe|playroom)$/.test(type)) { return same(c.floor_bedrooms); }
 	if (type === 'kitchen') { return same(c.floor_kitchen); }
 	if (/^(hall|corridor|stairs)$/.test(type)) { return same(c.floor_entry); }
+	if (type === 'attic') { return 'laminate'; }   // boarded attic floor, whatever the house has below
+	if (/^(technical|pantry|wine)$/.test(type)) { return c.floor_wet || 'tiles'; }
 	return c.floor_main || 'parquet';
 }
 function roomFloorMat(c, key) {

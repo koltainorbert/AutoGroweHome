@@ -1824,7 +1824,7 @@ export function threshold(m, type, w) {
 }
 
 /* ================================================================== rooms */
-var ROOM_KIND = { living: 'living', living_kitchen: 'living_kitchen', dining: 'dining', kitchen: 'kitchen', master: 'bed', bedroom: 'bed', guest: 'bed', kids: 'kids', office: 'office', wardrobe: 'wardrobe', bathroom: 'bath', wc: 'wc', wellness: 'bath', sauna: 'bath', laundry: 'laundry', utility: 'laundry', pantry: 'laundry', technical: 'laundry', hall: 'hall', corridor: 'hall', stairs: 'stairs', gym: 'office', playroom: 'kids', wine: 'office', custom: 'living' };
+var ROOM_KIND = { attic: 'attic', living: 'living', living_kitchen: 'living_kitchen', dining: 'dining', kitchen: 'kitchen', master: 'bed', bedroom: 'bed', guest: 'bed', kids: 'kids', office: 'office', wardrobe: 'wardrobe', bathroom: 'bath', wc: 'wc', wellness: 'bath', sauna: 'bath', laundry: 'laundry', utility: 'laundry', pantry: 'laundry', technical: 'laundry', hall: 'hall', corridor: 'hall', stairs: 'stairs', gym: 'office', playroom: 'kids', wine: 'office', custom: 'living' };
 export function roomKind(type) { return ROOM_KIND[type] || 'living'; }
 // Free stretches of a wall (length len) between blocking pieces [[a, b], ...], at least min long.
 function freeSpans(occ, len, min) {
@@ -2034,6 +2034,29 @@ export function interiorScene(c, room) {
 		RB(lg, 0, 0.85, 0, Math.min(W - 0.1, 2.2), 0.89, 0.64, 0.004, kMats(m).top, 1); RB(lg, 1.5, 0.89, 0.1, 1.9, 1.15, 0.45, 0.03, rattanMat('#B89566'), 2);
 		[1.5, 1.9].forEach(function (y) { BX(lg, 0, y, 0, Math.min(W - 0.1, 2.0), y + 0.025, 0.3, m.oak); }); bottle(lg, m, 0.3, 1.525, 0.15, 1.2, m.potW); bottle(lg, m, 0.5, 1.525, 0.15, 1.1, m.acc2.color ? m.potD : m.potD);
 		P(lg, 0.1, 0.02, 0); lg.position.x = 0.1; occB.push([0, Math.min(W, 2.3), 9]);
+	} else if (kind === 'attic') {
+		// unconverted attic: the timber truss over a boarded floor, a loft ladder at the hatch, stored boxes
+		var tw = L.pbr ? L.pbr('wood', { color: '#8A6A4C' }, { normal: 1 }) : m.wood, pitch = L.clamp(L.num(c.roof_pitch, 38), 15, 55) * D2R;
+		var span = Math.min(W, 9), ridgeH = Math.min(H + 1.6, 0.5 + Math.tan(pitch) * span / 2);
+		for (var ry = 0.6; ry < D - 0.3; ry += 0.9) {
+			// a pair of rafters, a collar beam and the purlin posts
+			ROD(R, [0.1, 0.25, ry], [W / 2, ridgeH, ry], 0.055, tw, 6);
+			ROD(R, [W - 0.1, 0.25, ry], [W / 2, ridgeH, ry], 0.055, tw, 6);
+			ROD(R, [W * 0.25, ridgeH * 0.55 + 0.1, ry], [W * 0.75, ridgeH * 0.55 + 0.1, ry], 0.045, tw, 6);
+		}
+		ROD(R, [W / 2, ridgeH, 0.2], [W / 2, ridgeH, D - 0.2], 0.07, tw, 6);   // ridge beam
+		[0.28, 0.72].forEach(function (f2) { ROD(R, [W * f2, ridgeH * 0.55 + 0.1, 0.3], [W * f2, ridgeH * 0.55 + 0.1, D - 0.3], 0.06, tw, 6); });
+		BX(R, 0, -0.02, 0, W, 0.04, D, L.pbr ? L.pbr('wood', { color: '#B99A72' }, { normal: 1 }) : m.wood);   // boarded floor
+		// the hatch with the loft ladder
+		var hx = L.clamp(W - 1.6, 0.8, W - 0.9);
+		BX(R, hx - 0.45, 0.0, D - 1.5, hx + 0.45, 0.06, D - 0.6, m.dark);
+		for (var st2 = 0; st2 < 5; st2++) { ROD(R, [hx - 0.32, st2 * 0.22, D - 1.4 + st2 * 0.12], [hx + 0.32, st2 * 0.22, D - 1.4 + st2 * 0.12], 0.022, tw, 6); }
+		[[0.9, 1.0], [1.9, 0.7], [2.9, 1.3]].forEach(function (q, i) {
+			if (q[0] > W - 0.6) { return; }
+			var bx4 = G(); RB(bx4, -0.3, 0, 0, 0.3, 0.42, 0.44, 0.01, i % 2 ? m.wood : L.solid('#BCA78C', 0.9), 1);
+			P(tag(bx4, 'attic_use'), q[0], Math.min(D - 0.6, q[1]), i * 24);
+		});
+		pendantAt(W / 2, D / 2, 'none');
 	} else if (kind === 'hall' || kind === 'stairs') {
 		var multi = c.levels && c.levels !== 'single';
 		// A multi-level home always shows its staircase here; in a narrow hall a shape that fits takes over.

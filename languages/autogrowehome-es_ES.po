@@ -8625,3 +8625,59 @@ msgstr "Moderno americano de tejado plano"
 #: includes/Params/Definitions.php
 msgid "Sivatagi modern (Palm Springs)"
 msgstr "Moderno del desierto (Palm Springs)"
+
+#: includes/Params/Definitions.php
+msgid "Pince kialakítása"
+msgstr "Configuración del sótano"
+
+#: includes/Params/Definitions.php
+msgid "Részleges alápincézés"
+msgstr "Sótano parcial"
+
+#: includes/Params/Definitions.php
+msgid "Teljes alápincézés"
+msgstr "Sótano completo"
+
+#: includes/Params/Definitions.php
+msgid "Pinceszint külső lejárattal"
+msgstr "Sótano con salida propia"
+
+#: includes/Params/Definitions.php
+msgid "Padlás"
+msgstr "Desván"
+
+#: includes/Params/Definitions.php
+msgid "Pince"
+msgstr "Sótano"
+
+#: includes/Params/Definitions.php
+msgid "A tető alatti tér: beépítetlen padlás vagy beépített tetőtér."
+msgstr "El espacio bajo el tejado: desván sin acondicionar o ático habitable."
+
+#: includes/Params/Definitions.php
+msgid "A szintek szerint"
+msgstr "Según las plantas"
+
+#: includes/Params/Definitions.php
+msgid "Beépítetlen padlás"
+msgstr "Desván sin acondicionar"
+
+#: includes/Params/Definitions.php
+msgid "Beépített tetőtér"
+msgstr "Ático habitable"
+
+#: includes/Params/Definitions.php
+msgid "Nincs padlástér"
+msgstr "Sin espacio bajo cubierta"
+
+#: includes/Params/Definitions.php
+msgid "Pince – gépészet"
+msgstr "Sótano – sala técnica"
+
+#: includes/Params/Definitions.php
+msgid "Pince – tároló"
+msgstr "Sótano – trastero"
+
+#: includes/Params/Definitions.php
+msgid "Pince – mosókonyha"
+msgstr "Sótano – lavadero"

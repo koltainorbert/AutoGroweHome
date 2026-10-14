@@ -1172,7 +1172,7 @@
 	/* ------------------------------------------------------------------ rooms editor */
 	function roomType(v) { return S.boot.schema.room_types.filter(function (r) { return r.value === v; })[0] || { label: v, area: 10 }; }
 	function levelCount() { return { single: 1, attic: 2, two: 2, three: 3 }[S.config.levels] || 1; }
-	function levelName(i) { return i === 0 ? t('level_ground') : (S.config.levels === 'attic' ? t('level_attic') : tf('level_n', i)); }
+	function levelName(i) { return i < 0 ? t('level_basement') : (i === 0 ? t('level_ground') : (S.config.levels === 'attic' && i === 1 ? t('level_attic') : tf('level_n', i))); }
 
 	function renderRooms() {
 		var box = h('div', { style: { display: 'flex', 'flex-direction': 'column', gap: '8px' } });
@@ -1205,7 +1205,7 @@
 		var typeSel = h('select', { class: 'agh-select', 'aria-label': t('room_type'), onchange: function (e) { updateRoom(idx, 'type', e.target.value, true); } });
 		types.forEach(function (rt) { typeSel.appendChild(h('option', { value: rt.value, selected: rt.value === r.type ? 'selected' : null, text: rt.label })); });
 		var lvl = h('select', { class: 'agh-select', 'aria-label': t('room_level'), onchange: function (e) { updateRoom(idx, 'level', Number(e.target.value)); } });
-		for (var i = 0; i < levelCount(); i++) { lvl.appendChild(h('option', { value: i, selected: Number(r.level) === i ? 'selected' : null, text: levelName(i) })); }
+		for (var i = S.config.basement ? -1 : 0; i < levelCount(); i++) { lvl.appendChild(h('option', { value: i, selected: Number(r.level) === i ? 'selected' : null, text: levelName(i) })); }
 		var render = h('label', { class: 'agh-switch', title: t('room_render_help') }, h('input', { type: 'checkbox', checked: r.render ? 'checked' : null, onchange: function (e) { updateRoom(idx, 'render', e.target.checked); } }), h('span', { class: 'agh-switch-track' }), h('span', { class: 'agh-small', text: t('room_render') }));
 		var see = A3 ? h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-room-see', title: t('view_room'), 'aria-label': t('view_room') + ': ' + r.name, onclick: function () { setView('int', String(r.id || r.type)); } }, icon('eye', 'agh-ico-s')) : null;
 		var more = h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', 'aria-expanded': S.openRooms[r.id] ? 'true' : 'false', onclick: function () { S.openRooms[r.id] = !S.openRooms[r.id]; renderFields(); } }, t('room_details'));

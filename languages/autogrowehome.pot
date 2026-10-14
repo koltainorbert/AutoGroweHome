@@ -8597,3 +8597,59 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "Sivatagi modern (Palm Springs)"
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Pince kialakítása"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Részleges alápincézés"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Teljes alápincézés"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Pinceszint külső lejárattal"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Padlás"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Pince"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A tető alatti tér: beépítetlen padlás vagy beépített tetőtér."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "A szintek szerint"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Beépítetlen padlás"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Beépített tetőtér"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Nincs padlástér"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Pince – gépészet"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Pince – tároló"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Pince – mosókonyha"
+msgstr ""

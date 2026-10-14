@@ -8627,3 +8627,59 @@ msgstr "Американський модерн із пласким дахом"
 #: includes/Params/Definitions.php
 msgid "Sivatagi modern (Palm Springs)"
 msgstr "Пустельний модерн (Палм-Спрінгс)"
+
+#: includes/Params/Definitions.php
+msgid "Pince kialakítása"
+msgstr "Облаштування підвалу"
+
+#: includes/Params/Definitions.php
+msgid "Részleges alápincézés"
+msgstr "Частковий підвал"
+
+#: includes/Params/Definitions.php
+msgid "Teljes alápincézés"
+msgstr "Повний підвал"
+
+#: includes/Params/Definitions.php
+msgid "Pinceszint külső lejárattal"
+msgstr "Цокольний поверх з окремим входом"
+
+#: includes/Params/Definitions.php
+msgid "Padlás"
+msgstr "Горище"
+
+#: includes/Params/Definitions.php
+msgid "Pince"
+msgstr "Підвал"
+
+#: includes/Params/Definitions.php
+msgid "A tető alatti tér: beépítetlen padlás vagy beépített tetőtér."
+msgstr "Простір під дахом: нежитлове горище або житлова мансарда."
+
+#: includes/Params/Definitions.php
+msgid "A szintek szerint"
+msgstr "Відповідно до поверхів"
+
+#: includes/Params/Definitions.php
+msgid "Beépítetlen padlás"
+msgstr "Нежитлове горище"
+
+#: includes/Params/Definitions.php
+msgid "Beépített tetőtér"
+msgstr "Житлова мансарда"
+
+#: includes/Params/Definitions.php
+msgid "Nincs padlástér"
+msgstr "Без горищного простору"
+
+#: includes/Params/Definitions.php
+msgid "Pince – gépészet"
+msgstr "Підвал – технічне приміщення"
+
+#: includes/Params/Definitions.php
+msgid "Pince – tároló"
+msgstr "Підвал – комора"
+
+#: includes/Params/Definitions.php
+msgid "Pince – mosókonyha"
+msgstr "Підвал – пральня"

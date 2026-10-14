@@ -8627,3 +8627,59 @@ msgstr "Americký moderný s plochou strechou"
 #: includes/Params/Definitions.php
 msgid "Sivatagi modern (Palm Springs)"
 msgstr "Púštny moderný (Palm Springs)"
+
+#: includes/Params/Definitions.php
+msgid "Pince kialakítása"
+msgstr "Prevedenie pivnice"
+
+#: includes/Params/Definitions.php
+msgid "Részleges alápincézés"
+msgstr "Čiastočné podpivničenie"
+
+#: includes/Params/Definitions.php
+msgid "Teljes alápincézés"
+msgstr "Úplné podpivničenie"
+
+#: includes/Params/Definitions.php
+msgid "Pinceszint külső lejárattal"
+msgstr "Suterén s vlastným vstupom"
+
+#: includes/Params/Definitions.php
+msgid "Padlás"
+msgstr "Povala"
+
+#: includes/Params/Definitions.php
+msgid "Pince"
+msgstr "Pivnica"
+
+#: includes/Params/Definitions.php
+msgid "A tető alatti tér: beépítetlen padlás vagy beépített tetőtér."
+msgstr "Priestor pod strechou: nevyužitá povala alebo obytné podkrovie."
+
+#: includes/Params/Definitions.php
+msgid "A szintek szerint"
+msgstr "Podľa počtu podlaží"
+
+#: includes/Params/Definitions.php
+msgid "Beépítetlen padlás"
+msgstr "Nevyužitá povala"
+
+#: includes/Params/Definitions.php
+msgid "Beépített tetőtér"
+msgstr "Obytné podkrovie"
+
+#: includes/Params/Definitions.php
+msgid "Nincs padlástér"
+msgstr "Bez povalového priestoru"
+
+#: includes/Params/Definitions.php
+msgid "Pince – gépészet"
+msgstr "Pivnica – technická miestnosť"
+
+#: includes/Params/Definitions.php
+msgid "Pince – tároló"
+msgstr "Pivnica – sklad"
+
+#: includes/Params/Definitions.php
+msgid "Pince – mosókonyha"
+msgstr "Pivnica – práčovňa"

@@ -8625,3 +8625,59 @@ msgstr "Moderne américain à toit plat"
 #: includes/Params/Definitions.php
 msgid "Sivatagi modern (Palm Springs)"
 msgstr "Moderne du désert (Palm Springs)"
+
+#: includes/Params/Definitions.php
+msgid "Pince kialakítása"
+msgstr "Aménagement du sous-sol"
+
+#: includes/Params/Definitions.php
+msgid "Részleges alápincézés"
+msgstr "Sous-sol partiel"
+
+#: includes/Params/Definitions.php
+msgid "Teljes alápincézés"
+msgstr "Sous-sol complet"
+
+#: includes/Params/Definitions.php
+msgid "Pinceszint külső lejárattal"
+msgstr "Sous-sol avec accès extérieur"
+
+#: includes/Params/Definitions.php
+msgid "Padlás"
+msgstr "Grenier"
+
+#: includes/Params/Definitions.php
+msgid "Pince"
+msgstr "Sous-sol"
+
+#: includes/Params/Definitions.php
+msgid "A tető alatti tér: beépítetlen padlás vagy beépített tetőtér."
+msgstr "L'espace sous le toit : grenier non aménagé ou combles habitables."
+
+#: includes/Params/Definitions.php
+msgid "A szintek szerint"
+msgstr "Selon les niveaux"
+
+#: includes/Params/Definitions.php
+msgid "Beépítetlen padlás"
+msgstr "Grenier non aménagé"
+
+#: includes/Params/Definitions.php
+msgid "Beépített tetőtér"
+msgstr "Combles aménagés"
+
+#: includes/Params/Definitions.php
+msgid "Nincs padlástér"
+msgstr "Pas de comble"
+
+#: includes/Params/Definitions.php
+msgid "Pince – gépészet"
+msgstr "Sous-sol – local technique"
+
+#: includes/Params/Definitions.php
+msgid "Pince – tároló"
+msgstr "Sous-sol – rangement"
+
+#: includes/Params/Definitions.php
+msgid "Pince – mosókonyha"
+msgstr "Sous-sol – buanderie"

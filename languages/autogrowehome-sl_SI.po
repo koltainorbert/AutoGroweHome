@@ -8629,3 +8629,59 @@ msgstr "Ameriški moderni z ravno streho"
 #: includes/Params/Definitions.php
 msgid "Sivatagi modern (Palm Springs)"
 msgstr "Puščavski moderni (Palm Springs)"
+
+#: includes/Params/Definitions.php
+msgid "Pince kialakítása"
+msgstr "Izvedba kleti"
+
+#: includes/Params/Definitions.php
+msgid "Részleges alápincézés"
+msgstr "Delna podkletitev"
+
+#: includes/Params/Definitions.php
+msgid "Teljes alápincézés"
+msgstr "Popolna podkletitev"
+
+#: includes/Params/Definitions.php
+msgid "Pinceszint külső lejárattal"
+msgstr "Klet z zunanjim vhodom"
+
+#: includes/Params/Definitions.php
+msgid "Padlás"
+msgstr "Podstrešje"
+
+#: includes/Params/Definitions.php
+msgid "Pince"
+msgstr "Klet"
+
+#: includes/Params/Definitions.php
+msgid "A tető alatti tér: beépítetlen padlás vagy beépített tetőtér."
+msgstr "Prostor pod streho: neizkoriščeno podstrešje ali bivalna mansarda."
+
+#: includes/Params/Definitions.php
+msgid "A szintek szerint"
+msgstr "Glede na etaže"
+
+#: includes/Params/Definitions.php
+msgid "Beépítetlen padlás"
+msgstr "Neizkoriščeno podstrešje"
+
+#: includes/Params/Definitions.php
+msgid "Beépített tetőtér"
+msgstr "Bivalna mansarda"
+
+#: includes/Params/Definitions.php
+msgid "Nincs padlástér"
+msgstr "Brez podstrešnega prostora"
+
+#: includes/Params/Definitions.php
+msgid "Pince – gépészet"
+msgstr "Klet – strojnica"
+
+#: includes/Params/Definitions.php
+msgid "Pince – tároló"
+msgstr "Klet – shramba"
+
+#: includes/Params/Definitions.php
+msgid "Pince – mosókonyha"
+msgstr "Klet – pralnica"

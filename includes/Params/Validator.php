@@ -29,7 +29,7 @@ final class Validator {
 			$out[ $id ] = self::sanitize_value( $def, $value );
 		}
 		$levels       = RoomProgram::level_count( $out );
-		$out['rooms'] = RoomProgram::sanitize( $raw['rooms'] ?? array(), $levels - 1 );
+		$out['rooms'] = RoomProgram::sanitize( $raw['rooms'] ?? array(), $levels - 1, ! empty( $out['basement'] ) );
 		if ( empty( $out['rooms'] ) ) {
 			$out['rooms'] = RoomProgram::auto( $out );
 		}

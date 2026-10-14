@@ -258,6 +258,27 @@ final class Definitions {
 		$f[] = array( 'id' => 'outdoor_covered', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'További fedett kültéri tér', 'autogrowehome' ), 'help' => __( 'Pl. nyári konyha, fedett pihenő.', 'autogrowehome' ), 'default' => false, 'advanced' => true, 'prompt' => 'additional covered outdoor living area' );
 		$f[] = array( 'id' => 'exterior_steps', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Külső lépcsők', 'autogrowehome' ), 'help' => __( 'Lejtős telek vagy megemelt padlószint esetén.', 'autogrowehome' ), 'default' => false, 'advanced' => true, 'prompt' => 'a few exterior steps to the entrance' );
 		$f[] = array( 'id' => 'basement', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Pince / alagsor', 'autogrowehome' ), 'help' => '', 'default' => false, 'prompt' => 'partial basement' );
+		$f[] = array_merge(
+			array( 'id' => 'basement_type', 'category' => 'massing', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Pince kialakítása', 'autogrowehome' ), 'help' => '', 'default' => 'partial', 'show_if' => array( 'field' => 'basement', 'op' => '=', 'value' => true ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'partial' => array( __( 'Részleges alápincézés', 'autogrowehome' ), 'a partial basement under part of the house' ),
+					'full'    => array( __( 'Teljes alápincézés', 'autogrowehome' ), 'a full basement under the whole house' ),
+					'walkout' => array( __( 'Pinceszint külső lejárattal', 'autogrowehome' ), 'a walkout basement level cut into the slope with its own outside entrance' ),
+				)
+			)
+		);
+		$f[] = array_merge(
+			array( 'id' => 'attic_use', 'category' => 'massing', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Padlás', 'autogrowehome' ), 'help' => __( 'A tető alatti tér: beépítetlen padlás vagy beépített tetőtér.', 'autogrowehome' ), 'default' => 'auto', 'show_if' => array( 'field' => 'roof_type', 'op' => '!=', 'value' => 'flat' ), 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'      => array( __( 'A szintek szerint', 'autogrowehome' ), '' ),
+					'storage'   => array( __( 'Beépítetlen padlás', 'autogrowehome' ), 'an unconverted attic with the timber roof truss visible, a loft ladder and an attic window' ),
+					'habitable' => array( __( 'Beépített tetőtér', 'autogrowehome' ), 'a converted habitable attic with sloping ceilings and roof windows' ),
+					'none'      => array( __( 'Nincs padlástér', 'autogrowehome' ), 'no attic space, the ceiling follows the roof' ),
+				)
+			)
+		);
 		$f[] = array( 'id' => 'technical_room', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Gépészeti helyiség', 'autogrowehome' ), 'help' => '', 'default' => true, 'advanced' => true, 'prompt' => '' );
 		$f[] = array( 'id' => 'chimney', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Kémény / kandalló', 'autogrowehome' ), 'help' => '', 'default' => false, 'prompt' => 'one chimney for a fireplace' );
 		$f[] = array_merge(
@@ -1754,6 +1775,7 @@ final class Definitions {
 			'gym'       => array( __( 'Edzőterem', 'autogrowehome' ), 'home gym', 14, false, 'day', 8 ),
 			'playroom'  => array( __( 'Játszószoba', 'autogrowehome' ), 'playroom', 12, false, 'day', 6 ),
 			'wine'      => array( __( 'Borospince', 'autogrowehome' ), 'wine cellar', 8, false, 'service', 3 ),
+			'attic'     => array( __( 'Padlás', 'autogrowehome' ), 'unconverted attic roof space with the timber truss', 20, true, 'day', 6 ),
 			'custom'    => array( __( 'Egyéb helyiség', 'autogrowehome' ), 'room', 10, false, 'day', 2 ),
 		);
 	}

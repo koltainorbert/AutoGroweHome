@@ -80,6 +80,7 @@ final class Strings {
 			'kpi_type'               => __( 'Típus', 'autogrowehome' ),
 			'language'               => __( 'Nyelv', 'autogrowehome' ),
 			'level_attic'            => __( 'Tetőtér', 'autogrowehome' ),
+			'level_basement'         => __( 'Pince', 'autogrowehome' ),
 			'level_ground'           => __( 'Földszint', 'autogrowehome' ),
 			/* translators: %1$s: floor number. */
 			'level_n'                => __( '%1$s. emelet', 'autogrowehome' ),
