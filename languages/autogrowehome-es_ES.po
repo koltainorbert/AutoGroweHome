@@ -8845,3 +8845,43 @@ msgstr "Envía la imagen del modelo 3D del visitante como structure reference pa
 #: includes/Admin/Admin.php
 msgid "Mennyire kösse a kép a 3D modell formáját: 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70 felett a kép a rendert másolja és elveszti a fotórealizmust."
 msgstr "Cuánto sigue la imagen la forma del modelo 3D: 20–30 suelto, 40–60 reconociblemente la misma casa, por encima de 70 la imagen copia el render y pierde el fotorrealismo."
+
+#: includes/Admin/Admin.php
+msgid "Hűség a 3D modellhez"
+msgstr "Fidelidad al modelo 3D"
+
+#: includes/Admin/Admin.php
+msgid "Mennyire kösse a kép a felépített ház formáját. Szabad: szép, de szabadon értelmez. Kiegyensúlyozott: felismerhetően ugyanaz a ház. Hű (ajánlott): a tömeg, a tető és a nyílások követik a modellt. Klón: a lehető legpontosabb forma, cserébe a kép kicsit „renderesebb”. Egyedi: a lenti szám érvényes."
+msgstr "Cuánto sigue la imagen la forma de la casa construida. Libre: bonita, pero interpreta con libertad. Equilibrada: reconociblemente la misma casa. Fiel (recomendado): el volumen, el tejado y los huecos siguen el modelo. Clon: la forma más exacta posible, a cambio de una imagen algo más «de render». Personalizada: vale el número de abajo."
+
+#: includes/Admin/Admin.php
+msgid "Szabad (25)"
+msgstr "Libre (25)"
+
+#: includes/Admin/Admin.php
+msgid "Kiegyensúlyozott (45)"
+msgstr "Equilibrada (45)"
+
+#: includes/Admin/Admin.php
+msgid "Hű (65) – ajánlott"
+msgstr "Fiel (65) – recomendado"
+
+#: includes/Admin/Admin.php
+msgid "Klón (80)"
+msgstr "Clon (80)"
+
+#: includes/Admin/Admin.php
+msgid "Egyedi (a lenti érték)"
+msgstr "Personalizada (el valor de abajo)"
+
+#: includes/Admin/Admin.php
+msgid "Egyedi hűség értéke"
+msgstr "Valor de fidelidad personalizado"
+
+#: includes/Admin/Admin.php
+msgid "Csak akkor számít, ha a hűség „Egyedi”. 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70 felett a kép a rendert másolja és elveszti a fotorealizmust."
+msgstr "Solo cuenta si la fidelidad es «Personalizada». 20–30 suelto, 40–60 reconociblemente la misma casa, por encima de 70 la imagen copia el render y pierde el fotorrealismo."
+
+#: includes/Admin/Admin.php
+msgid "A 3840 px alatti képeket felskálázza (külön költség). Akkor éri meg, ha a kiválasztott koncepció képei nyomtatásba vagy nagy bemutatóba kerülnek; képernyőn a 4k enélkül is elég. A felskálázott képek jelölve vannak."
+msgstr "Amplía las imágenes de menos de 3840 px (coste aparte). Merece la pena si las imágenes del concepto elegido van a imprenta o a una presentación grande; en pantalla el 4k basta. Las imágenes ampliadas están marcadas."

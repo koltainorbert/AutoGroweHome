@@ -21,6 +21,7 @@ require $agh_wp_dir . '/wp-load.php';
 use AutoGroweHome\Generation\JobQueue;
 use AutoGroweHome\Generation\Pipeline;
 use AutoGroweHome\Projects\Repository;
+use AutoGroweHome\Prompt\PromptEngine;
 use AutoGroweHome\Support\Settings;
 use AutoGroweHome\Support\Storage;
 
@@ -48,11 +49,13 @@ function agh_shot( int $w = 1344, int $h = 768 ): string {
 }
 
 /** Mit kapott a képszolgáltató: nézetenként a vezetőkép hossza. */
-$seen = array();
+$seen   = array();
+$prompt = array();
 add_filter(
 	'agh_provider_request',
-	function ( $req, $asset ) use ( &$seen ) {
-		$seen[ (string) $asset['view'] ] = strlen( (string) ( $req['structure_image'] ?? '' ) );
+	function ( $req, $asset ) use ( &$seen, &$prompt ) {
+		$seen[ (string) $asset['view'] ]   = strlen( (string) ( $req['structure_image'] ?? '' ) );
+		$prompt[ (string) $asset['view'] ] = (string) ( $req['prompt'] ?? '' );
 		return $req;
 	},
 	10,
@@ -100,17 +103,43 @@ for ( $i = 0; $i < 12 && empty( $seen['hero'] ); $i++ ) {
 }
 $t( 'a sor lefutott', $ran > 0 );
 $t( 'a hero kapott vezetőképet', isset( $seen['hero'] ) && $seen['hero'] > 4096 );
+$t( 'a hero promptja megmondja, mi a referenciakép', isset( $prompt['hero'] ) && false !== strpos( $prompt['hero'], 'reference image' ) );
 $assets = array_filter( Repository::assets( (int) $pr['id'] ), function ( $a ) { return 'render' === $a['kind'] && 'hero' === $a['view']; } );
 $done   = array_filter( $assets, function ( $a ) { return 'done' === $a['status']; } );
 $t( 'készült koncepciókép', count( $done ) > 0 );
 
 /* ---------------------------------------------------------------- 3. vezetőkép nélkül: a régi út */
-$seen = array();
-$pr2  = Pipeline::start( $cfg, array( 'user_id' => 0, 'guest_hash' => 'guidetest2', 'ip_hash' => 'guidetest-ip2', 'lang' => 'hu_HU', 'reserved' => array() ) );
+$seen   = array();
+$prompt = array();
+$pr2    = Pipeline::start( $cfg, array( 'user_id' => 0, 'guest_hash' => 'guidetest2', 'ip_hash' => 'guidetest-ip2', 'lang' => 'hu_HU', 'reserved' => array() ) );
 for ( $i = 0; $i < 12 && ! array_key_exists( 'hero', $seen ); $i++ ) {
 	JobQueue::run( 25.0, (int) $pr2['id'] );
 }
 $t( 'vezetőkép nélkül a hero nem kap structure referenciát', array_key_exists( 'hero', $seen ) && 0 === $seen['hero'] );
+$t( 'vezetőkép nélkül a prompt sem említ referenciát', isset( $prompt['hero'] ) && false === strpos( $prompt['hero'], 'reference image' ) );
+
+/* ---------------------------------------------------------------- 4. hűség: erősség és mondat */
+$strength = array();
+foreach ( array( 'free' => 25, 'balanced' => 45, 'faithful' => 65, 'clone' => 80, 'custom' => 37 ) as $mode => $want ) {
+	Settings::update_group( 'magnific', array( 'fidelity' => $mode, 'structure_strength' => 37 ) );
+	Settings::flush();
+	$strength[ $mode ] = PromptEngine::fidelity_strength();
+}
+$t( 'minden hűségszint a várt erősséget adja', array( 25, 45, 65, 80, 37 ) === array_values( $strength ) );
+
+Settings::update_group( 'magnific', array( 'fidelity' => 'clone' ) );
+Settings::flush();
+$note = PromptEngine::reference_note();
+$t( 'a klón mondat a referenciaképre hivatkozik', false !== strpos( $note, 'exact 3D model' ) && false !== strpos( $note, 'one to one' ) );
+$t( 'a mondat nem hosszabb 700 karakternél', strlen( $note ) < 700 );
+Settings::update_group( 'magnific', array( 'fidelity' => 'free' ) );
+Settings::flush();
+$t( 'szabad módban rövidebb, lazább mondat', strlen( PromptEngine::reference_note() ) < strlen( $note ) );
+Settings::update_group( 'magnific', array( 'fidelity' => 'faithful' ) );
+Settings::flush();
+
+// a vezetőképes projekt promptjában ott van a mondat, a vezetőkép nélküliében nincs
+$t( 'a vezetőképes hero promptja hivatkozik a referenciára', isset( $prompt['hero'] ) );
 
 /* ---------------------------------------------------------------- takarítás */
 foreach ( array( $uuid, (string) $pr['uuid'], (string) $pr2['uuid'] ) as $u ) {

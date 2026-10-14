@@ -16,6 +16,7 @@ use AutoGroweHome\Params\Definitions;
 use AutoGroweHome\Params\Registry;
 use AutoGroweHome\Params\RoomProgram;
 use AutoGroweHome\Params\Validator;
+use AutoGroweHome\Support\Settings;
 use AutoGroweHome\Support\Util;
 
 defined( 'ABSPATH' ) || exit;
@@ -692,6 +693,39 @@ final class PromptEngine {
 	/**
 	 * Hard cap for provider adapters (no-op for prompts made by combined()).
 	 */
+	/**
+	 * How closely the picture must follow the guide: the strength sent to the provider.
+	 * "custom" keeps whatever the operator set by hand in magnific.structure_strength.
+	 */
+	public const FIDELITY = array( 'free' => 25, 'balanced' => 45, 'faithful' => 65, 'clone' => 80 );
+
+	public static function fidelity_strength(): int {
+		$f = (string) Settings::get( 'magnific.fidelity', 'faithful' );
+		$s = isset( self::FIDELITY[ $f ] ) ? self::FIDELITY[ $f ] : (int) Settings::get( 'magnific.structure_strength', 45 );
+		return max( 0, min( 100, (int) $s ) );
+	}
+
+	/**
+	 * The sentence that tells the image model what the reference picture is: the exact massing of
+	 * the house the visitor built. Without a guide picture nothing is added (the prompt stays as it
+	 * was), because then there is nothing to follow.
+	 */
+	public static function reference_note(): string {
+		$f = (string) Settings::get( 'magnific.fidelity', 'faithful' );
+		if ( 'free' === $f ) {
+			return ' The reference image shows the intended massing of the house; keep its overall shape and proportions.';
+		}
+		if ( 'balanced' === $f ) {
+			return ' The reference image is the exact 3D model of this house: keep its massing, roof shape and pitch and the position of the openings; render it photorealistically with the materials described above.';
+		}
+		// faithful, clone and custom: the strictest wording, the strength does the rest
+		$note = ' IMPORTANT: the reference image is the exact 3D model of THIS house. Reproduce it faithfully:'
+			. ' same massing and proportions, same roof shape, pitch and overhangs, same number, size and position of every window and door,'
+			. ' same terrace, balcony, canopy and garage placement, same viewing angle. Do not add, remove or move any volume or opening.'
+			. ' Change only what a photograph would change: real materials and textures, natural light and shadows, people-free surroundings, photographic depth of field.';
+		return 'clone' === $f ? $note . ' Treat the reference as a technical drawing that must be matched one to one.' : $note;
+	}
+
 	public static function clip( string $prompt, int $max = self::MAX_PROMPT ): string {
 		return self::len( $prompt ) <= $max ? $prompt : ( function_exists( 'mb_substr' ) ? mb_substr( $prompt, 0, $max ) : substr( $prompt, 0, $max ) );
 	}

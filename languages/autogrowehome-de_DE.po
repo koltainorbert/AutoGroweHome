@@ -8845,3 +8845,43 @@ msgstr "Sendet das Bild des 3D-Modells des Besuchers als Structure-Reference fü
 #: includes/Admin/Admin.php
 msgid "Mennyire kösse a kép a 3D modell formáját: 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70 felett a kép a rendert másolja és elveszti a fotórealizmust."
 msgstr "Wie stark das Bild der Form des 3D-Modells folgt: 20–30 locker, 40–60 erkennbar dasselbe Haus, über 70 kopiert das Bild das Rendering und verliert den Fotorealismus."
+
+#: includes/Admin/Admin.php
+msgid "Hűség a 3D modellhez"
+msgstr "Treue zum 3D-Modell"
+
+#: includes/Admin/Admin.php
+msgid "Mennyire kösse a kép a felépített ház formáját. Szabad: szép, de szabadon értelmez. Kiegyensúlyozott: felismerhetően ugyanaz a ház. Hű (ajánlott): a tömeg, a tető és a nyílások követik a modellt. Klón: a lehető legpontosabb forma, cserébe a kép kicsit „renderesebb”. Egyedi: a lenti szám érvényes."
+msgstr "Wie genau das Bild der Form des gebauten Hauses folgt. Frei: schön, aber frei interpretiert. Ausgewogen: erkennbar dasselbe Haus. Treu (empfohlen): Baukörper, Dach und Öffnungen folgen dem Modell. Klon: die genaueste Form, dafür wirkt das Bild etwas „renderhafter“. Eigen: der Wert unten gilt."
+
+#: includes/Admin/Admin.php
+msgid "Szabad (25)"
+msgstr "Frei (25)"
+
+#: includes/Admin/Admin.php
+msgid "Kiegyensúlyozott (45)"
+msgstr "Ausgewogen (45)"
+
+#: includes/Admin/Admin.php
+msgid "Hű (65) – ajánlott"
+msgstr "Treu (65) – empfohlen"
+
+#: includes/Admin/Admin.php
+msgid "Klón (80)"
+msgstr "Klon (80)"
+
+#: includes/Admin/Admin.php
+msgid "Egyedi (a lenti érték)"
+msgstr "Eigen (Wert unten)"
+
+#: includes/Admin/Admin.php
+msgid "Egyedi hűség értéke"
+msgstr "Eigener Treuewert"
+
+#: includes/Admin/Admin.php
+msgid "Csak akkor számít, ha a hűség „Egyedi”. 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70 felett a kép a rendert másolja és elveszti a fotorealizmust."
+msgstr "Gilt nur, wenn die Treue „Eigen“ ist. 20–30 locker, 40–60 erkennbar dasselbe Haus, über 70 kopiert das Bild das Rendering und verliert den Fotorealismus."
+
+#: includes/Admin/Admin.php
+msgid "A 3840 px alatti képeket felskálázza (külön költség). Akkor éri meg, ha a kiválasztott koncepció képei nyomtatásba vagy nagy bemutatóba kerülnek; képernyőn a 4k enélkül is elég. A felskálázott képek jelölve vannak."
+msgstr "Skaliert Bilder unter 3840 px hoch (zusätzliche Kosten). Lohnt sich, wenn die Bilder des gewählten Konzepts in den Druck oder in eine große Präsentation gehen; am Bildschirm reicht 4k auch ohne. Hochskalierte Bilder sind gekennzeichnet."

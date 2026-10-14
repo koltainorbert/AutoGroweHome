@@ -8845,3 +8845,43 @@ msgstr "Envoie l’image du modèle 3D du visiteur comme structure reference pou
 #: includes/Admin/Admin.php
 msgid "Mennyire kösse a kép a 3D modell formáját: 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70 felett a kép a rendert másolja és elveszti a fotórealizmust."
 msgstr "À quel point l’image suit la forme du modèle 3D : 20–30 souple, 40–60 la même maison de façon reconnaissable, au-delà de 70 l’image copie le rendu et perd son photoréalisme."
+
+#: includes/Admin/Admin.php
+msgid "Hűség a 3D modellhez"
+msgstr "Fidélité au modèle 3D"
+
+#: includes/Admin/Admin.php
+msgid "Mennyire kösse a kép a felépített ház formáját. Szabad: szép, de szabadon értelmez. Kiegyensúlyozott: felismerhetően ugyanaz a ház. Hű (ajánlott): a tömeg, a tető és a nyílások követik a modellt. Klón: a lehető legpontosabb forma, cserébe a kép kicsit „renderesebb”. Egyedi: a lenti szám érvényes."
+msgstr "À quel point l’image suit la forme de la maison construite. Libre : belle, mais interprétée librement. Équilibrée : la même maison de façon reconnaissable. Fidèle (recommandé) : le volume, la toiture et les ouvertures suivent le modèle. Clone : la forme la plus exacte possible, au prix d’une image un peu plus « rendu ». Personnalisée : la valeur ci-dessous s’applique."
+
+#: includes/Admin/Admin.php
+msgid "Szabad (25)"
+msgstr "Libre (25)"
+
+#: includes/Admin/Admin.php
+msgid "Kiegyensúlyozott (45)"
+msgstr "Équilibrée (45)"
+
+#: includes/Admin/Admin.php
+msgid "Hű (65) – ajánlott"
+msgstr "Fidèle (65) – recommandé"
+
+#: includes/Admin/Admin.php
+msgid "Klón (80)"
+msgstr "Clone (80)"
+
+#: includes/Admin/Admin.php
+msgid "Egyedi (a lenti érték)"
+msgstr "Personnalisée (valeur ci-dessous)"
+
+#: includes/Admin/Admin.php
+msgid "Egyedi hűség értéke"
+msgstr "Valeur de fidélité personnalisée"
+
+#: includes/Admin/Admin.php
+msgid "Csak akkor számít, ha a hűség „Egyedi”. 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70 felett a kép a rendert másolja és elveszti a fotorealizmust."
+msgstr "Ne compte que si la fidélité est « Personnalisée ». 20–30 souple, 40–60 la même maison de façon reconnaissable, au-delà de 70 l’image copie le rendu et perd son photoréalisme."
+
+#: includes/Admin/Admin.php
+msgid "A 3840 px alatti képeket felskálázza (külön költség). Akkor éri meg, ha a kiválasztott koncepció képei nyomtatásba vagy nagy bemutatóba kerülnek; képernyőn a 4k enélkül is elég. A felskálázott képek jelölve vannak."
+msgstr "Agrandit les images de moins de 3840 px (coût supplémentaire). Utile quand les images du concept choisi partent à l’impression ou dans une grande présentation ; à l’écran, la 4k suffit. Les images agrandies sont signalées."

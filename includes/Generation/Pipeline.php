@@ -422,10 +422,16 @@ final class Pipeline {
 				}
 			}
 		}
+		// With a guide picture the prompt also says what that picture is, otherwise the model only
+		// gets a structure hint and no instruction to follow it.
+		$prompt = (string) $asset['prompt'];
+		if ( '' !== $structure ) {
+			$prompt .= PromptEngine::reference_note();
+		}
 		$request = array(
 			'op'              => $op,
 			'view'            => $asset['view'],
-			'prompt'          => (string) $asset['prompt'],
+			'prompt'          => $prompt,
 			'aspect'          => '16:9',
 			'resolution'      => 'hero' === $asset['view'] && 'all' === Settings::get( 'limits.gallery_mode' ) ? self::max_res( (string) Settings::get( 'magnific.final_resolution', '4k' ) ) : self::max_res( (string) Settings::get( 'magnific.preview_resolution', '2k' ) ),
 			'reference_image' => $reference,

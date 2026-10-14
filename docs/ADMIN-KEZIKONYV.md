@@ -336,6 +336,39 @@ Webhelyszinten egyszerre legfeljebb `limits.max_parallel_jobs` feladat fut (alap
 
 ---
 
+## 5.1 Mit tud és mit nem tud a képgenerálás
+
+A koncepcióképet nem renderelő készíti, hanem képmodell (Magnific Mystic, `realism`). A látogató
+3D modelljéről készült kép **structure referenciaként** megy vele (lásd 1.10.0), és a prompt meg is
+mondja, hogy az a ház pontos tömege.
+
+**Amit tartani tud:** a tömeg és az arányok, a tetőforma, -hajlás és az ereszkiülés, a nyílások
+száma, mérete és helye, a terasz, erkély, előtető és garázs helye, a nézőpont, és a promptban
+megnevezett anyagok, színek, környezet, fény és évszak.
+
+**Ami képenként változik:** az ablakosztás apró részletei, a kő- és faminta rajzolata, a növényzet
+és az égbolt, a járdák és a bútorok pontos alakja, a visszatükröződések. Három koncepció = három
+értelmezés; ezért van három.
+
+**A hűség kapcsolója** (AI-szolgáltatók → Magnific): minél erősebb, annál pontosabb a forma, és
+annál inkább „render” jellegű a kép; minél gyengébb, annál szebb fotó, de annál szabadabban
+értelmezi a házat.
+
+| Beállítás | Mire jó |
+|---|---|
+| Szabad (25) | Hangulatkép, amikor a forma még nem fontos. |
+| Kiegyensúlyozott (45) | Felismerhetően ugyanaz a ház, nagyon fotószerű kép. |
+| **Hű (65) – alapértelmezés** | A tömeg, a tető és a nyílások követik a modellt, a kép még fotó. |
+| Klón (80) | A lehető legpontosabb forma; a kép kicsit renderesebb lehet. |
+| Egyedi | A „Egyedi hűség értéke” mező (0–100) érvényes. |
+
+**Ha a kép szép, de nem a te házad:** emeld a hűséget (65 → 80). **Ha a kép pontos, de műanyagos:**
+csökkentsd (80 → 65 → 45), és inkább a promptban erősítsd az anyagokat (Promptmotor).
+
+A felbontás: a koncepcióképek 2k-ban készülnek (gyors, olcsó), a kiválasztott koncepció galériája
+4k-ban. Nyomtatáshoz vagy nagy bemutatóhoz a „Felskálázás a kiválasztott galériánál” kapcsoló tesz
+rá még egy lépést (külön költség).
+
 ## 6. Gyakori feladatok röviden
 
 | Feladat | Lépések |

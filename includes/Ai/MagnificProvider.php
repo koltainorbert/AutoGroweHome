@@ -135,7 +135,7 @@ final class MagnificProvider implements ImageProviderInterface {
 			);
 			if ( ! empty( $r['structure_image'] ) && Settings::get( 'magnific.structure_guidance', true ) ) {
 				$body['structure_reference'] = (string) $r['structure_image'];
-				$body['structure_strength']  = (int) Settings::get( 'magnific.structure_strength', 30 );
+				$body['structure_strength']  = PromptEngine::fidelity_strength();
 			}
 			if ( $use_reference ) {
 				$body['style_reference'] = (string) $r['reference_image'];

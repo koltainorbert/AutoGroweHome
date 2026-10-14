@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.11.0 – 2026-10-14
+
+- **Hűség a 3D modellhez – egy kapcsolóval.** Az AI-szolgáltatók oldalon új választás: Szabad (25) · Kiegyensúlyozott (45) · **Hű (65, alapértelmezés)** · Klón (80) · Egyedi (a kézzel megadott érték). Eddig egyetlen nyers 0–100-as számot kellett eltalálni; mostantól a súgó is megmondja, melyik mit ad, és hogy a nagyobb hűség pontosabb formát, de kissé „renderesebb” képet jelent.
+- **A prompt megmondja a képmodellnek, mi a referenciakép.** Eddig a 3D kép ment vele, de egy szó sem szólt róla, tehát a modell nem tudta, hogy azt a tömeget kell követnie. Mostantól vezetőkép mellett a prompt végére kerül a hűség szerinti mondat; „Hű” és „Klón” fokozaton a legszigorúbb: ugyanaz a tömeg és arány, ugyanaz a tetőforma, -hajlás és ereszkiülés, minden ablak és ajtó ugyanannyi, ugyanakkora és ugyanott, ugyanaz a terasz, erkély, előtető és garázs, ugyanaz a nézőpont – csak az anyagok, a fény és az árnyékok legyenek fotórealisztikusak. Vezetőkép nélkül a prompt változatlan.
+- A felskálázás súgója megmondja, mikor éri meg (nyomtatás, nagy bemutató) – képernyőn a 4k enélkül is elég.
+- Új szakasz az adminkézikönyvben: mit tud és mit nem tud a képgenerálás (mi tartható: tömeg, tető, nyílások, anyagok; mi változik képenként: ablakosztás, kőminta, növényzet, égbolt), és melyik hűségszint mire való.
+- Mérve: `tests/guide-test.php` 21/21 – mind az öt hűségszint a várt erősséget adja (25/45/65/80/egyedi), a klón mondat hivatkozik a referenciaképre, vezetőképpel a hero promptja tartalmazza a mondatot, vezetőkép nélkül nem. `tests/e2e/gen.js` 202, 0 konzolhiba.
+- 10 új felirat 15 nyelven (nyelvenként 2124 szöveg, 0 hiba).
+
 ## 1.10.0 – 2026-10-14
 
 - **A generált kép a 3D modellt követi.** Eddig a három koncepciókép tisztán szövegből készült: a `Pipeline::render()` csak a homlokzati nézetekhez (front/back/left/right) küldött geometriai vezetést, a `hero`-hoz nem – és az első körben kizárólag hero készül, a többi nézet csak a koncepció kiválasztása után. Így minden látott kép vezetés nélkül jött. Ráadásul ahol volt vezetés, az sem a 3D volt, hanem a `GuideRenderer` lapos tömegvázlata a szerveroldali modellből. Mostantól a böngésző a látogató saját 3D modelljéről készít képet, és azt küldi a generálással; a hero pontosan abból a kameraállásból, ahogy a látogató a házat a képernyőn látja. Mérve: 6 nézet (hero, front, back, left, right, aerial) 1152×656 pixelen, 93–130 KB, a `/generate` kérésben a hero, a galéria nézetei utána a háttérben; a szerveren a hero kérése 4 KB-nál nagyobb structure referenciát kap (korábban 0-t).
