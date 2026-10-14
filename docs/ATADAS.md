@@ -1,10 +1,10 @@
-# ÁTADÁS – AutoGroweHome (2026-10-14, az 1.8.0 kiadása után)
+# ÁTADÁS – AutoGroweHome (2026-10-14, az 1.8.1 kiadása után)
 
 Új chat elején: 1) CLAUDE.md a repóban, 2) claude/ALLAPOT.md, 3) ez a dokumentum, 4) `docs/FELADAT-1.8.0.md` (a 19 pontos lista promptja). Utána azonnal lehet dolgozni.
 
 ## Hol tartunk
-- **Ügyfélplugin 1.8.0** kiadva, `main` ág. `dist/autogrowehome-1.8.0.zip` (5 997 961 bájt, sha256 2b7b4f4c…544af5a5).
-- **Norbi 19 pontos listája (2026-10-13) mind a 19 ponton elkészült**, egy verzióban. A munkaprompt: `docs/FELADAT-1.8.0.md`.
+- **Ügyfélplugin 1.8.1** kiadva, `main` ág. `dist/autogrowehome-1.8.1.zip` (6 009 892 bájt, sha256 17457c3f…57885a48).
+- **Norbi 19 pontos listája (2026-10-13) mind a 19 ponton elkészült** (1–12., 14–19. az 1.8.0-ban, a 13. az 1.8.1-ben). A munkaprompt: `docs/FELADAT-1.8.0.md`.
 - **Licencközpont 1.0.0** (`license-hub/`) változatlan.
 - Tesztoldal: `bin/test-wp.sh` (eldobható WordPress + SQLite, 8899-es port). Új chatben új konténer jön, ezért újra kell indítani. **Új mező vagy új stílus után újra kell indítani**, mert a stíluskártyák alapértékei aktiváláskor kerülnek a katalógusba.
 
@@ -21,7 +21,7 @@
 10. **Padlás**: `attic_use` mező és új `attic` helyiségtípus látszó fedélszékkel, deszkázott födémmel, feljáróval.
 11. **Ajtókeret**: 7 cm tok és takaróléc minden belső ajtó körül, `door_frame` mezővel.
 12. **Radiátorok**: `radiators` mező; ablak alá, különben szabad falra, szűk helyen keskenyebben; fürdőbe törölközőszárító, amely a mosdó és a WC fölé is felkerülhet.
-13. **Gyerekszoba**: a `kids` helyiség berendezése és a `room_items` rendszer változatlanul működik; külön fiús/lányos berendezéscsomag **nem készült el** – ez az egyetlen pont, amit csak részben fed az 1.8.0 (lásd Nyitott tételek).
+13. **Gyerekszoba** (1.8.1): `kids_theme` mező – semleges, fiús, lányos, babaszoba, tini, vagy csak az alapbútorok; két gyerekszobánál a második automatikusan másik berendezést kap.
 14. **Akvárium**: 6 forma, édesvízi/tengeri, világítás, halak, növények vagy korallok, akváriumbútor.
 15. **Komód, könyvespolc** (már megvolt, ellenőrizve) **+ fali rejtett polc** (új).
 16. **Lépcső**: többszintes háznál mindig látszik (`stairFit`), keskeny helyen csiga vagy váltott fokú; ha nincs előtér, a nappaliba kerül.
@@ -43,12 +43,11 @@
 - Valódi GPU-n és telefonon nincs mérés.
 
 ## Nyitott tételek
-- **13. pont kiegészítése**: külön fiús/lányos/baba/tini gyerekszoba-berendezés (ágytípusok, falszín, textil, dekoráció), két gyerekszobánál eltérő berendezéssel.
 - htombau: az 1.8.0 telepítése és visszajelzés képernyőképekkel.
 - 3D sebesség telefonon; valódi GPU-s mérés.
 - Licencközpont telepítése Norbi oldalára, utána szerver URL és nyilvános kulcs az ügyfélpluginba.
 - A GitHub repó nyilvános, privátra kell állítani.
-- Fordítások lektorálása (1.8.0: 58 új felirat 15 nyelven).
+- Fordítások lektorálása (1.8.0–1.8.1: 66 új felirat 15 nyelven).
 - Magnific/Anthropic kulcs, éles végigteszt; fizetés → automatikus kulcskiadás; BRAMAC-katalógus, jogi szövegek; MySQL, SMTP, éles cron teszt.
 - Kézi szöveg külön a külsőhöz és a belsőhöz, a promptba építve.
 

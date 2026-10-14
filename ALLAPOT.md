@@ -1,8 +1,8 @@
 # ALLAPOT – AutoGroweHome (frissítve: 2026-10-14)
 
-**Verzió:** ügyfélplugin 1.8.0 (dist/autogrowehome-1.8.0.zip, 5 997 961 bájt, sha256 2b7b4f4c…544af5a5) · Licencközpont 1.0.0 (license-hub/) · Repó: github.com/koltainorbert/AutoGroweHome (main). Chat elején: repó bekötése, CLAUDE.md, claude/FELADAT-*.md, tesztoldal `bin/test-wp.sh`.
+**Verzió:** ügyfélplugin 1.8.1 (dist/autogrowehome-1.8.1.zip, 6 009 892 bájt, sha256 17457c3f…57885a48) · Licencközpont 1.0.0 (license-hub/) · Repó: github.com/koltainorbert/AutoGroweHome (main). Chat elején: repó bekötése, CLAUDE.md, claude/FELADAT-*.md, tesztoldal `bin/test-wp.sh`.
 
-**Mérve (1.8.0):** autoloader 119/119 · PHP lint 0 · 15 nyelv × 2074 szöveg, 0 hiba · vázlat 1247 rajz, 600 kert, 0 hiba · 157 mező, 2D és 3D 0 hiba, konzol 0 · responsive 24 nézet 0 túllógás · wizard 48 lépés 0 hiba · beragadt projekt 9/9 · kereső 0 fókuszvesztés · koppintás 122 rész 8 mező · 56 szoba 311 tárgy 0 kilógó 0 ajtóban · belső nézet kitöltés 89% · 16 táj 90–218 ms · 6 új stílus 0 hiba.
+**Mérve (1.8.1):** autoloader 119/119 · PHP lint 0 · 15 nyelv × 2082 szöveg, 0 hiba · vázlat 1247 rajz, 600 kert, 0 hiba · 158 mező, 2D és 3D 0 hiba, konzol 0 · responsive 24 nézet 0 túllógás · wizard 48 lépés 0 hiba · beragadt projekt 9/9 · kereső 0 fókuszvesztés · koppintás 122 rész 8 mező · 56 szoba 311 tárgy 0 kilógó 0 ajtóban · belső nézet kitöltés 89% · 16 táj 90–218 ms · 6 új stílus 0 hiba.
 
 **Döntések**
 - Norbi minden szövegéből először tökéletes prompt készül fájlba (`docs/FELADAT-<verzió>.md`), csak utána kezdődik a munka; a prompt semmit nem hagy ki és semmit nem vesz el a meglévőből.
