@@ -1,24 +1,25 @@
-# ALLAPOT – AutoGroweHome (frissítve: 2026-10-13)
+# ALLAPOT – AutoGroweHome (frissítve: 2026-10-14)
 
-**Verzió:** ügyfélplugin 1.7.0 (dist/autogrowehome-1.7.0.zip: tárgyak helyiségenként, önjavító berendezés, táj/domborzat a stílushoz, valódi szomszédházak, utca, Újrakezdés gomb; 1.6.0 erkély, napelem, autók/emberek/állatok; 1.5.0 profi belső terek) · Licencközpont 1.0.0 (license-hub/) · Repó: github.com/koltainorbert/AutoGroweHome (main). Chat elején: repó bekötése, CLAUDE.md, tesztoldal `bin/test-wp.sh`.
+**Verzió:** ügyfélplugin 1.8.0 (dist/autogrowehome-1.8.0.zip, 5 997 961 bájt, sha256 2b7b4f4c…544af5a5) · Licencközpont 1.0.0 (license-hub/) · Repó: github.com/koltainorbert/AutoGroweHome (main). Chat elején: repó bekötése, CLAUDE.md, claude/FELADAT-*.md, tesztoldal `bin/test-wp.sh`.
 
-**Mérve:** autoloader 119/119 · lint 0 · 15 nyelv × 2016 szöveg, 0 hiba · vázlat 1247 rajz, 600 kert, 0 hiba · felületi lefedettség 154 mező, 2D és 3D 0 hiba, konzol 0 · responsive, wizard, gen E2E rendben · 342 tárgykártya, 512 házváltozat, 0 hiba · 300 véletlen szoba / 628 tárgy: 0 kilógó, 0 ajtóban · táj első felépítése 120–215 ms, változás 15–57 ms (SwiftShader) · Licencközpont 40/40.
+**Mérve (1.8.0):** autoloader 119/119 · PHP lint 0 · 15 nyelv × 2074 szöveg, 0 hiba · vázlat 1247 rajz, 600 kert, 0 hiba · 157 mező, 2D és 3D 0 hiba, konzol 0 · responsive 24 nézet 0 túllógás · wizard 48 lépés 0 hiba · beragadt projekt 9/9 · kereső 0 fókuszvesztés · koppintás 122 rész 8 mező · 56 szoba 311 tárgy 0 kilógó 0 ajtóban · belső nézet kitöltés 89% · 16 táj 90–218 ms · 6 új stílus 0 hiba.
 
 **Döntések**
 - Norbi minden szövegéből először tökéletes prompt készül fájlba (`docs/FELADAT-<verzió>.md`), csak utána kezdődik a munka; a prompt semmit nem hagy ki és semmit nem vesz el a meglévőből.
 - Minden változtatás automatikusan a repóba (teszt → commit → push main); minden új ZIP új verzió (bin/bump-version.sh, központnál bin/bump-hub-version.sh).
 - Két plugin: gyökér = ügyfélplugin; license-hub/ = licencszerver Norbi HTTPS-oldalára (Ed25519 {data, signature}). Saját oldalon: `AGH_OWNER_MODE`.
-- Stílus = 1. lépés; stílusonként tömegforma, szintszám, tető, anyag javaslat (Catalog::style_seed).
-- Közös terv az `agh-sketch.js`-ben, a 3D ugyanebből épít: volumes, _solarFaces (napelem modulok a tetősíkon belül), _balconies/_balcMark (erkély + ajtók), _garden (növények, járművek, emberek, állatok), _pool, _terrace, _plot.
-- Előnézet 3D (three.js r170), 2D csak tartalék. Sebesség: egy WebGL-környezet, kártyaképek IndexedDB-ben, modul-előtöltés, árnyaló-előfordítás, mergeStatic, textúrák 4 workerben.
-- Belső tér: agh-3d-int.js (tárgyépítők, szobák, `itemScene` kártyaképek; `pick()` = „auto” a stílus szerint). Látszó falak: hátsó + bal; jobb és első fal kivágott → oda nem kerül háttal semmi; önellenőrzés (szobán belül, ajtósáv szabad), `hs.room.fixes` → „Megoldva” üzenet. Tárgyak helyiségenként: `room_items` (mezőtípus `roomitems`), JS `_roomItems` = PHP `RoomProgram::item_rooms`.
-- Környezet: agh-3d-land.js (domborzat, erdők, víz, utca, szomszédok); `landscape` mező, „auto” = stílus szerint (JS STYLE_LAND = PHP `Definitions::landscape_for_style`).
+- Stílus = 1. lépés; stílusonként tömegforma, szintszám, tető, anyag javaslat (Catalog::style_seed, 22 stílus). Új stílusnál: Definitions arch_style + style_seed + STYLES + STYLE_LAND (JS és PHP) + HOOD.
+- Közös terv az `agh-sketch.js`-ben, a 3D ugyanebből épít: volumes, _solarFaces, _balconies/_balcMark, _garden, _pool, _terrace, _plot. Erkély: tetőtérnél az oromfalon, földszintesnél franciaerkély.
+- Koppintás a modellre: minden rész `userData.field`-et kap (House.add + fázisonkénti címke), a nézegető `collectPicks` dobozokat tesz el az összevonás ELŐTT, `pickAt` a legkisebb tartalmazó dobozt adja, a tervező `jumpToField`-del ugrik a mezőre.
+- Belső tér: agh-3d-int.js; látszó falak hátsó + bal, jobb és első kivágva; önellenőrzés (szobán belül, ajtósáv szabad), `hs.room.fixes` → „Megoldva”; `hs.items` = a szoba bútorcsoportja (teszt). Kamera: `Viewer.fitFrame` keretezi a szoba dobozát.
+- Környezet: agh-3d-land.js, 16 táj; `landscape` mező, „auto” = stílus szerint (JS STYLE_LAND = PHP `Definitions::landscape_for_style`).
+- Pince a helyiségprogram -1. szintje (`RoomProgram::sanitize($rooms, $max, $basement)`); padlás külön helyiségtípus (`attic`).
 - 1 kérés = 3 koncepció = 1 egység; BRAMAC magastetőnél kötelező. Licenc nélkül Starter: a beállítások egy része látszik.
 
 **Nyitott tételek**
-- 1.8.0 munkaprompt kész: `docs/FELADAT-1.8.0.md` (19 pont: kereső fókusz, tetőszellőző, hófogó, dryvit dekor, belső nézet újratervezés, kattintás→mező, több táj, 5 új stílus, pince, padlás, ajtókeret, radiátor, gyerekszoba, akvárium, komód/polc, lépcső, erkély, bentre állat, falikép). Implementálás még nem kezdődött.
-- Kézi szöveg külön a külsőhöz és a belsőhöz, beépítve a promptba.
+- htombau: az 1.8.0 telepítése és visszajelzés képernyőképekkel; 3D sebesség telefonon (valódi GPU-n nem mérve).
+- Belső nézet: zsúfolt szobában egy bútor a padló közepére kerülhet (az üzenet jelzi); valódi kétpontos perspektíva (eltolt frustum) még nincs.
 - Licencközpont telepítése Norbi oldalára → szerver URL + nyilvános kulcs az ügyfélpluginba.
-- htombau: 1.7.0 telepítése; 3D sebesség telefonon (valódi GPU-n nem mérve); Magnific/Anthropic kulcs, éles végigteszt.
-- GitHub repó NYILVÁNOS → privátra. Fordítások lektorálása (új: táj, újrakezdés, tárgyak helyiségenként).
-- Fizetés → automatikus kulcskiadás; BRAMAC-katalógus, jogi szövegek; MySQL/SMTP/éles cron teszt.
+- GitHub repó NYILVÁNOS → privátra. Fordítások lektorálása (1.8.0: 58 új felirat).
+- Magnific/Anthropic kulcs, éles végigteszt; fizetés → automatikus kulcskiadás; BRAMAC-katalógus, jogi szövegek; MySQL/SMTP/éles cron teszt.
+- Kézi szöveg külön a külsőhöz és a belsőhöz, beépítve a promptba.

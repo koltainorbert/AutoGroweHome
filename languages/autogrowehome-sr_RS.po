@@ -8683,3 +8683,35 @@ msgstr "Podrum – ostava"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Podrum – perionica"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Uređenje dečje sobe"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Kod dve dečje sobe druga dobija drugačije uređenje."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutralno, u skladu sa stilom"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Dečačka"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Devojačka"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Soba za bebu"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Tinejdžerska"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Samo osnovni nameštaj"

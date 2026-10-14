@@ -8683,3 +8683,35 @@ msgstr "Sklep – sklad"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Sklep – prádelna"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Zařízení dětského pokoje"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Při dvou dětských pokojích dostane druhý jiné zařízení."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutrální, podle stylu"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Pro kluka"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Pro holku"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Dětský pokojík"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Pro teenagera"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Jen základní nábytek"

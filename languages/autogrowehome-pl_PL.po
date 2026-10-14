@@ -8683,3 +8683,35 @@ msgstr "Piwnica – schowek"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Piwnica – pralnia"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Wyposażenie pokoju dziecięcego"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Przy dwóch pokojach dziecięcych drugi jest urządzony inaczej."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutralnie, zgodnie ze stylem"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Chłopięcy"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Dziewczęcy"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Pokój niemowlęcy"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Nastolatek"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Tylko podstawowe meble"

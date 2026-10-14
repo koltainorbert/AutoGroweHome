@@ -8681,3 +8681,35 @@ msgstr "Keller – Abstellraum"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Keller – Waschküche"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Einrichtung des Kinderzimmers"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Bei zwei Kinderzimmern wird das zweite anders eingerichtet."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutral, zum Stil passend"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Für einen Jungen"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Für ein Mädchen"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Babyzimmer"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Jugendzimmer"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Nur die Grundmöbel"

@@ -8681,3 +8681,35 @@ msgstr "Basement – storage"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Basement – laundry"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Children's room furnishing"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "With two children's rooms the second one is furnished differently."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutral, matching the style"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Boy's room"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Girl's room"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Nursery"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Teenager"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Only the basic furniture"

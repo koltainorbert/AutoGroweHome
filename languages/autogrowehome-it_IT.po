@@ -8681,3 +8681,35 @@ msgstr "Cantina – ripostiglio"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Cantina – lavanderia"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Arredo della cameretta"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Con due camerette, la seconda viene arredata diversamente."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutro, in linea con lo stile"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Da maschio"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Da femmina"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Cameretta del neonato"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Da adolescente"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Solo i mobili di base"

@@ -8683,3 +8683,35 @@ msgstr "Subsol – depozit"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Subsol – spălătorie"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Mobilarea camerei copilului"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "La două camere de copii, a doua este mobilată diferit."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutru, potrivit stilului"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Pentru băiat"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Pentru fată"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Camera bebelușului"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Adolescent"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Doar mobilierul de bază"

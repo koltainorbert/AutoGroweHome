@@ -960,6 +960,19 @@ final class Definitions {
 			)
 		);
 		$f[] = array_merge(
+			array( 'id' => 'kids_theme', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Gyerekszoba berendezése', 'autogrowehome' ), 'help' => __( 'Két gyerekszobánál a második másik bútorzatot kap.', 'autogrowehome' ), 'default' => 'auto', 'prompt' => '{value}' ),
+			self::opts(
+				array(
+					'auto'    => array( __( 'Semleges, a stílushoz illő', 'autogrowehome' ), 'a neutral children\'s room matching the style' ),
+					'boy'     => array( __( 'Fiús', 'autogrowehome' ), 'a boy\'s room in blue tones with a desk, a toy car and a ball' ),
+					'girl'    => array( __( 'Lányos', 'autogrowehome' ), 'a girl\'s room in soft pink tones with a canopy over the bed and a dressing table' ),
+					'baby'    => array( __( 'Babaszoba', 'autogrowehome' ), 'a nursery with a cot, a changing table and soft warm tones' ),
+					'teen'    => array( __( 'Tini', 'autogrowehome' ), 'a teenager\'s room with a desk, a gaming chair and a beanbag' ),
+					'none'    => array( __( 'Csak az alapbútorok', 'autogrowehome' ), '' ),
+				)
+			)
+		);
+		$f[] = array_merge(
 			array( 'id' => 'aquarium_shape', 'category' => 'furniture', 'type' => 'cards', 'visual' => 'item', 'label' => __( 'Akvárium mérete, formája', 'autogrowehome' ), 'help' => '', 'default' => 'large', 'show_if' => array( 'field' => 'extra_furniture', 'op' => 'in', 'value' => array( 'aquarium' ) ), 'prompt' => '{value}' ),
 			self::opts(
 				array(

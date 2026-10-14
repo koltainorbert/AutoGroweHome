@@ -8653,3 +8653,35 @@ msgstr ""
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr ""

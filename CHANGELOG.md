@@ -1,5 +1,10 @@
 # Változásnapló
 
+## 1.8.1 – 2026-10-14
+
+- Gyerekszoba berendezése (a 19 pontos lista 13. tétele): új mező – semleges, fiús, lányos, babaszoba, tini, vagy csak az alapbútorok. A fiús szobába íróasztal székkel, kisautó és labda kerül kék szőnyeggel; a lányosba baldachin az ágy fölé, fésülködőasztal kerek tükörrel, rózsaszín szőnyeg; a babaszobába pelenkázó és fiókos szekrény; a tinibe íróasztal, gamer szék és babzsák. Két gyerekszobánál a második automatikusan másik berendezést kap, hogy ne legyen egyforma a két szoba. Mérve: mind a hat beállítás felépül (4–13 ms, 140–164 mesh), 0 konzolhiba.
+- 8 új felirat 15 nyelven.
+
 ## 1.8.0 – 2026-10-14
 
 - Kereső: egy betű után már nem dobja ki a fókuszt. A paraméterlista fejléce (cím + keresőmező) egyszer épül fel, gépelés közben nem építi újra a lista – korábban a mező DOM-ja minden leütésnél új helyre került, és ezzel elveszett a fókusz és a kurzor. Új E2E teszt: `tests/e2e/search.js` (2 képernyőméret × 6 leütés, 0 fókuszvesztés, 0 konzolhiba).

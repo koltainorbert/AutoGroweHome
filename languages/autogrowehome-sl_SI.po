@@ -8685,3 +8685,35 @@ msgstr "Klet – shramba"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Klet – pralnica"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Oprema otroške sobe"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Pri dveh otroških sobah je druga opremljena drugače."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Nevtralno, skladno s slogom"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Fantovska"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Dekliška"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Soba za dojenčka"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Najstniška"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Samo osnovno pohištvo"

@@ -8683,3 +8683,35 @@ msgstr "Pivnica – sklad"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Pivnica – práčovňa"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Zariadenie detskej izby"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Pri dvoch detských izbách dostane druhá iné zariadenie."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutrálne, podľa štýlu"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Pre chlapca"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Pre dievča"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Detská izbička"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Pre tínedžera"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Len základný nábytok"

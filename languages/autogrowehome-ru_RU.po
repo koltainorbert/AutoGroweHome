@@ -8683,3 +8683,35 @@ msgstr "Подвал – кладовая"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Подвал – прачечная"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Обстановка детской комнаты"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "При двух детских вторая обставляется иначе."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Нейтрально, в духе стиля"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Для мальчика"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Для девочки"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Детская для малыша"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Для подростка"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Только базовая мебель"

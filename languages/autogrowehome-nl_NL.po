@@ -8681,3 +8681,35 @@ msgstr "Kelder – berging"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Kelder – wasruimte"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Inrichting van de kinderkamer"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Bij twee kinderkamers wordt de tweede anders ingericht."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutraal, passend bij de stijl"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Jongenskamer"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Meisjeskamer"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Babykamer"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Tienerkamer"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Alleen de basismeubels"

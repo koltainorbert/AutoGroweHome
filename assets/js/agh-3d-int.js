@@ -1503,6 +1503,62 @@ export function stairs(m, type, w, H, run) {
 	}
 	return g;
 }
+// The furnishing of a children's room by theme: neutral, a boy's, a girl's, a baby's or a teenager's room.
+// Only the pieces the theme adds are built here; the bed, the shelf and the toy box stand already.
+function kidsTheme(R, m, c, W, D, H, bx, bw, P, tag, alt) {
+	var th = c.kids_theme || 'auto';
+	if (th === 'auto') { th = 'neutral'; }
+	// the second children's room is furnished differently, so two kids do not get the same room
+	if (alt) { th = { boy: 'girl', girl: 'boy', teen: 'boy', baby: 'girl', neutral: 'teen' }[th] || th; }
+	if (th === 'none') { return; }
+	var acc = { boy: '#3C6E9F', girl: '#D58AA6', baby: '#E6D7B8', teen: '#4A4A52', neutral: '#8FA896' }[th] || '#8FA896';
+	var soft = L.solid(acc, 0.9), wood = m.oak || m.wood, white = m.white;
+	function at2(o, x, z, rot) { P(tag(o, 'kids_theme'), L.clamp(x, 0.35, W - 0.35), L.clamp(z, 0.35, D - 0.35), rot || 0); }
+	// a rug of the theme's colour in front of the bed, and a garland or canopy over it
+	var rg = G(); RB(rg, -0.8, 0, -0.55, 0.8, 0.02, 0.55, 0.2, soft, 2); at2(rg, bx, Math.min(D - 0.7, 2.7));
+	if (th === 'girl' || th === 'baby') {
+		// canopy over the bed
+		var cp = G(); CY(cp, 0, H - 0.5, 0, 0.06, 0.3, 0.5, L.solid('#FFFFFF', 0.95), 18, true);
+		for (var a = 0; a < 8; a++) { var an = a / 8 * Math.PI * 2; ROD(cp, [Math.cos(an) * 0.3, H - 0.5, Math.sin(an) * 0.3], [Math.cos(an) * 0.75, H - 1.9, Math.sin(an) * 0.75], 0.012, L.solid('#FFF8F4', 0.98), 5); }
+		at2(cp, bx, 1.05);
+	}
+	if (th === 'boy' || th === 'teen') {
+		// a desk with a chair and, for a teenager, a beanbag
+		var dk = G(); RB(dk, -0.6, 0.7, 0, 0.6, 0.74, 0.58, 0.006, wood, 1);
+		[[-0.55, 0.05], [0.55, 0.05], [-0.55, 0.52], [0.55, 0.52]].forEach(function (q) { ROD(dk, [q[0], 0, q[1]], [q[0], 0.7, q[1]], 0.016, m.metal, 6); });
+		bookStack(dk, m, 0.34, 0.74, 0.26, 3, 6); tableLamp(dk, m, -0.42, 0.74, 0.26);
+		at2(dk, 1.0, 0.35);
+		var ch = diningChair(m, 'cantilever'); at2(ch, 1.0, 1.1, 180);
+		if (th === 'teen') { var bg = G(); RB(bg, -0.42, 0, -0.42, 0.42, 0.5, 0.42, 0.3, soft, 3); at2(bg, W - 0.9, D - 0.9, 20); }
+	}
+	if (th === 'boy') {
+		// a toy car and a ball on the floor, a pennant chain on the wall
+		var car = G(); RB(car, -0.17, 0.03, -0.09, 0.17, 0.13, 0.09, 0.03, L.solid('#C0392B', 0.5), 2); RB(car, -0.08, 0.13, -0.07, 0.07, 0.2, 0.07, 0.02, L.solid('#2E3033', 0.4), 2);
+		[[-0.11, -0.09], [0.11, -0.09], [-0.11, 0.09], [0.11, 0.09]].forEach(function (q) { CY(car, q[0], 0.0, q[1], 0.045, 0.045, 0.03, m.black, 10); });
+		car.rotation.y = 0.6; at2(car, bx - 0.9, Math.min(D - 0.8, 2.4));
+		var ball = M(new THREE.SphereGeometry(0.11, 16, 12), soft); ball.position.set(0, 0.11, 0); var bg2 = G(); bg2.add(ball); at2(bg2, W - 1.3, Math.min(D - 0.6, 2.9));
+	}
+	if (th === 'girl') {
+		// a dressing table with a round mirror and a soft toy on the bed
+		var dt = G(); RB(dt, -0.45, 0.68, 0, 0.45, 0.72, 0.4, 0.006, white, 1);
+		[[-0.4, 0.05], [0.4, 0.05], [-0.4, 0.34], [0.4, 0.34]].forEach(function (q) { ROD(dt, [q[0], 0, q[1]], [q[0], 0.68, q[1]], 0.014, wood, 6); });
+		var mr = M(new THREE.TorusGeometry(0.21, 0.016, 8, 36), m.brass || m.metal); mr.position.set(0, 1.05, 0.06); dt.add(mr);
+		var mg = M(new THREE.CircleGeometry(0.2, 32), mirror(), false); mg.position.set(0, 1.05, 0.055); dt.add(mg);
+		vase(dt, m, -0.28, 0.72, 0.18, 0.7);
+		at2(dt, 0.9, 0.42);
+	}
+	if (th === 'baby') {
+		// a changing table and a small chest of drawers
+		var ct = G(); RB(ct, -0.45, 0.3, 0, 0.45, 0.9, 0.55, 0.01, white, 1); RB(ct, -0.44, 0.9, 0.03, 0.44, 0.98, 0.52, 0.04, soft, 2);
+		RB(ct, -0.4, 0.34, 0.55, 0.4, 0.62, 0.56, 0.01, m.woodQ || wood, 1); RB(ct, -0.4, 0.66, 0.55, 0.4, 0.86, 0.56, 0.01, m.woodQ || wood, 1);
+		at2(ct, 1.0, 0.4);
+	}
+	if (th === 'teen') {
+		// a desk chair swapped for a gaming chair look: a tall back in the theme colour
+		var gc = G(); RB(gc, -0.26, 0.44, -0.26, 0.26, 0.5, 0.26, 0.05, soft, 2); RB(gc, -0.24, 0.5, -0.3, 0.24, 1.1, -0.2, 0.05, L.solid('#2E3033', 0.6), 2);
+		CY(gc, 0, 0, 0, 0.05, 0.05, 0.44, m.metal, 10); at2(gc, 1.0, 1.15, 180);
+	}
+}
 // A staircase that fits the room: the chosen type where there is room for it, a space-saving shape where
 // there is not. Never returns nothing – a multi-level home must show its stairs.
 export function stairFit(m, c, W, D, H) {
@@ -2013,7 +2069,16 @@ export function interiorScene(c, room) {
 		if (pend !== 'none' && c.lighting === 'statement') { pendantAt(bx2, 1.4, pend); }
 		var wt = pick(c, 'wardrobe_type'), wl = Math.min(D - (door.u + door.w + 0.35), 2.4);
 		if (wl >= 1.2) { var wg = wardrobe(m, wt, wl, H - 0.15); wg.rotation.y = Math.PI / 2; wg.position.set(0.31, 0, 0.05 + wl / 2); R.add(wg); occL.push([D - 0.05 - wl, D - 0.05]); }
-		if (kind === 'kids') { var sh = G(); RB(sh, -0.45, 0, 0, 0.45, 1.6, 0.32, 0.005, m.white, 1); for (var y = 0.4; y < 1.6; y += 0.4) { BX(sh, -0.43, y, 0.01, 0.43, y + 0.02, 0.3, m.oak); bookRow(sh, m, -0.4, 0.4, y + 0.02, 0.16, 0.18, 0.24, Math.round(y * 10)); } P(sh, W - 0.6, 0.02, 0); RB(R, 0.4, 0, D - 1.2, 1.0, 0.45, D - 0.6, 0.06, m.acc2, 3); }
+		if (kind === 'kids') {
+			// a children's room by theme: the open shelf with books, a toy box, a desk and the theme's own pieces
+			var sh = G(); RB(sh, -0.45, 0, 0, 0.45, 1.6, 0.32, 0.005, m.white, 1);
+			for (var y = 0.4; y < 1.6; y += 0.4) { BX(sh, -0.43, y, 0.01, 0.43, y + 0.02, 0.3, m.oak); bookRow(sh, m, -0.4, 0.4, y + 0.02, 0.16, 0.18, 0.24, Math.round(y * 10)); }
+			P(tag(sh, 'kids_theme'), W - 0.6, 0.02, 0);
+			RB(R, 0.4, 0, D - 1.2, 1.0, 0.45, D - 0.6, 0.06, m.acc2, 3);   // toy box
+			var kIdx = -1, kSeen = 0;
+			rooms0.forEach(function (q) { if (q.type === 'kids') { if (q.id === rid) { kIdx = kSeen; } kSeen++; } });
+			kidsTheme(R, m, c, W, D, H, bx2, bw2, P, tag, kIdx > 0);
+		}
 		else if (D > 3.6 && W > 3.0) { P(armchair(m, pick(c, 'armchair_type') === 'none' ? 'barrel' : pick(c, 'armchair_type')), W - 0.65, D - 1.0, -135); }
 		cornerPlant(W - 0.38, Math.min(D - 0.4, 2.6), 0.95);
 		if (deco && bt !== 'panel' && bt !== 'canopy') { backArt = [bx2, bw2 + 0.4]; }

@@ -8681,3 +8681,35 @@ msgstr "Sótano – trastero"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Sótano – lavadero"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Mobiliario de la habitación infantil"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Con dos habitaciones infantiles, la segunda se amuebla de otra forma."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutro, acorde al estilo"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "De niño"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "De niña"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Habitación de bebé"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Adolescente"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Solo el mobiliario básico"

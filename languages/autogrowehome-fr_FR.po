@@ -8681,3 +8681,35 @@ msgstr "Sous-sol – rangement"
 #: includes/Params/Definitions.php
 msgid "Pince – mosókonyha"
 msgstr "Sous-sol – buanderie"
+
+#: includes/Params/Definitions.php
+msgid "Gyerekszoba berendezése"
+msgstr "Aménagement de la chambre d'enfant"
+
+#: includes/Params/Definitions.php
+msgid "Két gyerekszobánál a második másik bútorzatot kap."
+msgstr "Avec deux chambres d'enfant, la seconde est meublée différemment."
+
+#: includes/Params/Definitions.php
+msgid "Semleges, a stílushoz illő"
+msgstr "Neutre, assorti au style"
+
+#: includes/Params/Definitions.php
+msgid "Fiús"
+msgstr "Pour garçon"
+
+#: includes/Params/Definitions.php
+msgid "Lányos"
+msgstr "Pour fille"
+
+#: includes/Params/Definitions.php
+msgid "Babaszoba"
+msgstr "Chambre de bébé"
+
+#: includes/Params/Definitions.php
+msgid "Tini"
+msgstr "Ado"
+
+#: includes/Params/Definitions.php
+msgid "Csak az alapbútorok"
+msgstr "Seulement les meubles de base"
