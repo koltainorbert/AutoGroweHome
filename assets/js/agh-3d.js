@@ -1629,6 +1629,9 @@ Viewer.prototype.update = function (cfg, mode) {
 	// indoors practically no haze – but the same kind of fog, so the shaders stay the same
 	this.scene.fog = new THREE.FogExp2(hz, inner ? 0.000001 : (overcast ? 0.0032 : 0.0017));
 	this.ground.visible = !inner; this.treeline.visible = !inner; this.hood.visible = !inner && !c._item && mode !== 'facade' && mode !== 'floor';
+	// a clean guide picture for the image model: no tree line of simple cones and no haze behind the
+	// house – the model paints the surroundings for real from the prompt instead of copying the shapes
+	if (c._clean && !inner) { this.treeline.visible = false; this.scene.fog.density = 0.00002; }
 	if (this.water) { this.water.visible = !inner; }
 	// rebuild the house
 	if (this.house) { this.scene.remove(this.house.root); disposeTree(this.house.root); }
@@ -2348,18 +2351,41 @@ onTexture(function () {
 /* ------------------------------------------------------------------ guide pictures
  * The picture the image model follows: the very house the visitor built, from the angle of the view
  * being generated. "hero" is the visitor's own camera (what they see on screen), the others are fixed
- * angles. Rendered off-screen through the same renderer, so nothing on screen changes.
+ * angles, "interior_<room id>" is the interior view of that room. Rendered off-screen through the same
+ * renderer, so nothing on screen changes.
+ * opts.clean: vehicles, people, pets, the tree line and the haze are left off – in the model they are
+ *   simple shapes, and a structure reference makes the image model copy those shapes (toy-like cars,
+ *   cone trees); without them it paints them for real from the prompt.
+ * opts.camera: "auto" keeps the visitor's direction but takes the hero from photographer height when
+ *   the visitor looks from high above (above 18°, unless the main camera is set to "elevated");
+ *   "visitor" keeps the exact camera.
+ * opts.rooms: { room id: { id, type, area, … } } for the interior views.
  * Returns { view: dataURL } – an empty object when there is no WebGL or no house yet. */
 var GUIDE_CAM = { front: [0, 8], back: [180, 8], left: [270, 8], right: [90, 8], aerial: [36, 42] };
-function guides(views, w, h, out) {
-	out = out || {};
+var GUIDE_CLEAN = { vehicles: [], people: 'none', pets: [], _clean: true };
+var EYE_MAX = 18, EYE_EL = 9;
+// direction of a camera as [azimuth, elevation] in degrees, the same convention as the presets
+function camPose(v) {
+	var t = v.controls ? v.controls.target : new THREE.Vector3(), off = v.camera.position.clone().sub(t), len = off.length() || 1;
+	return [Math.atan2(off.x, off.z) / D2R, Math.asin(clamp(off.y / len, -1, 1)) / D2R];
+}
+function guides(views, w, h, out, opts) {
+	out = out || {}; opts = opts || {};
 	if (!live || !live.house || !live.c) { return Promise.resolve(out); }
 	w = w || 1152; h = h || 656;   // enough for structure guidance, a third less to upload
-	views = (views && views.length ? views : ['hero', 'front', 'back', 'left', 'right', 'aerial']).slice(0, 8);
-	var base = live.c, fixed = views.filter(function (v) { return 'hero' !== v; });
+	views = (views && views.length ? views : ['hero', 'front', 'back', 'left', 'right', 'aerial']).slice(0, 16);
+	// the house from outside, whatever the visitor is looking at right now
+	var base = Object.assign({}, live.c, opts.clean ? GUIDE_CLEAN : {});
+	delete base._int; delete base._item; delete base._cam;
+	var heroLive = !live.c._int && !live.c._item;
+	var pose = heroLive ? camPose(live) : null;
+	var lowered = !!pose && opts.camera !== 'visitor' && pose[1] > EYE_MAX && live.c.camera !== 'elevated';
+	var exact = views.indexOf('hero') !== -1 && heroLive && !opts.clean && !lowered;
+	var fixed = views.filter(function (v) { return v.indexOf('interior_') !== 0 && (v !== 'hero' || !exact); });
+	var rooms = views.filter(function (v) { return v.indexOf('interior_') === 0 && opts.rooms && opts.rooms[v.slice(9)]; });
 	var step = function (fn) { return new Promise(function (res) { setTimeout(function () { try { fn(res); } catch (e) { res(); } }, 0); }); };
 	var job = texturesReady();
-	if (views.indexOf('hero') !== -1) {
+	if (exact) {
 		// exactly the visitor's own view: the live camera, only the picture shape differs
 		job = job.then(function () {
 			return step(function (res) {
@@ -2392,14 +2418,52 @@ function guides(views, w, h, out) {
 			job = job.then(function () {
 				return step(function (res) {
 					var v = sharedThumb();
-					v.c._cam = GUIDE_CAM[view] || GUIDE_CAM.front;
-					v.fitCamera(true);
+					if (view === 'hero') {
+						if (lowered) { v.c._cam = [pose[0], EYE_EL]; v.fitCamera(true); }
+						else if (heroLive) {
+							// the visitor's very camera, on the clean scene
+							v.c._cam = null; v.fitCamera(true);
+							v.camera.position.copy(live.camera.position); v.camera.quaternion.copy(live.camera.quaternion);
+							v.camera.fov = live.camera.fov; v.camera.aspect = w / h; v.camera.updateProjectionMatrix();
+						} else { v.c._cam = null; v.fitCamera(true); }   // visitor is inside: the main camera preset
+					} else {
+						v.c._cam = GUIDE_CAM[view] || GUIDE_CAM.front;
+						v.fitCamera(true);
+					}
 					out[view] = thumbPixels(v, w, h);
 					res();
 				});
 			});
 		});
 	}
+	rooms.forEach(function (view) {
+		// every room is its own scene: built, its shaders prepared, then taken from the interior camera
+		job = job.then(function () {
+			return step(function (res) {
+				var v = sharedThumb();
+				v.setSize(w, h);
+				v.update(Object.assign({}, base, { _int: opts.rooms[view.slice(9)] }), 'guide');
+				if (!v.rtA || v.rtA.width !== w || v.rtA.height !== h) { thumbPixels.prep(v, w, h); }
+				v.compileFor(v.scene, v.rtA).then(function () {
+					try {
+						// a photographer's position, not the cut-away: standing inside the open corner at eye
+						// height with a wide lens, looking across the room to the far corner – the right and
+						// front walls (cut away from outside) and the ceiling close the room as in a real photo
+						var rm = v.house && v.house.room;
+						if (rm && rm.W && rm.D) {
+							var eye = Math.min(1.5, rm.H * 0.55), cam = v.camera;
+							cam.fov = 62; cam.aspect = w / h;
+							cam.position.set(rm.W - 0.3, eye, rm.D - 0.3);
+							cam.lookAt(rm.W * 0.3, eye * 0.9, rm.D * 0.3);
+							cam.updateProjectionMatrix();
+						}
+						out[view] = thumbPixels(v, w, h);
+					} catch (e) { /* this room goes without */ }
+					res();
+				}, res);
+			});
+		});
+	});
 	return job.then(function () { return out; });
 }
 var api = { attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-2' };

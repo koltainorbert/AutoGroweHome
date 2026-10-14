@@ -176,6 +176,12 @@ final class Admin {
 		}
 		$locales = I18n::SUPPORTED;
 		$image_providers = array();
+		// one style sample photo per architectural style (the style reference of the hero)
+		$style_refs = array();
+		$style_def  = Registry::get( 'arch_style' );
+		foreach ( (array) ( $style_def['options'] ?? array() ) as $sid => $slabel ) {
+			$style_refs[] = array( 'style_ref_' . sanitize_key( (string) $sid ), 'media', sprintf( /* translators: %s: style name */ __( 'Mintakép: %s', 'autogrowehome' ), (string) $slabel ) );
+		}
 		foreach ( Providers::images() as $id => $p ) {
 			$image_providers[ $id ] = $p->label();
 		}
@@ -216,10 +222,19 @@ final class Admin {
 					array( 'reference_endpoint', 'text', __( 'Referenciás végpont', 'autogrowehome' ) ),
 					array( 'reference_width', 'number', __( 'Referenciás kép szélesség', 'autogrowehome' ), '', array( 'min' => 256, 'max' => 1440, 'unit' => 'px' ) ),
 					array( 'reference_height', 'number', __( 'Referenciás kép magasság', 'autogrowehome' ), '', array( 'min' => 256, 'max' => 1440, 'unit' => 'px' ) ),
-					array( 'style_adherence', 'number', __( 'Stílusreferencia erőssége', 'autogrowehome' ), '', array( 'min' => 0, 'max' => 100 ) ),
+					array( 'style_adherence', 'number', __( 'Nézetek: a fő kép mint referencia (adherence)', 'autogrowehome' ), __( 'A galéria nézeteinél, amikor a fő kép a stílusreferencia. A Mystic értelmezése szerint nagyobb érték = jobban követi a szöveget, kisebb = jobban a referenciaképet.', 'autogrowehome' ), array( 'min' => 0, 'max' => 100 ) ),
 					array( 'structure_guidance', 'bool', __( 'Geometriai vezetés (3D modell)', 'autogrowehome' ), __( 'A látogató 3D modelljéről készült képet küldi structure referenceként minden nézethez (a koncepcióképhez is, pontosan abból a kameraállásból, amit a látogató beállított). Ha a böngésző nem tudott képet küldeni, a szerver a homlokzati nézetekhez a saját tömegvázlatát rajzolja.', 'autogrowehome' ) ),
-					array( 'fidelity', 'select', __( 'Hűség a 3D modellhez', 'autogrowehome' ), __( 'Mennyire kösse a kép a felépített ház formáját. Szabad: szép, de szabadon értelmez. Kiegyensúlyozott: felismerhetően ugyanaz a ház. Hű (ajánlott): a tömeg, a tető és a nyílások követik a modellt. Klón: a lehető legpontosabb forma, cserébe a kép kicsit „renderesebb”. Egyedi: a lenti szám érvényes.', 'autogrowehome' ), array( 'options' => array( 'free' => __( 'Szabad (25)', 'autogrowehome' ), 'balanced' => __( 'Kiegyensúlyozott (45)', 'autogrowehome' ), 'faithful' => __( 'Hű (65) – ajánlott', 'autogrowehome' ), 'clone' => __( 'Klón (80)', 'autogrowehome' ), 'custom' => __( 'Egyedi (a lenti érték)', 'autogrowehome' ) ) ) ),
-					array( 'structure_strength', 'number', __( 'Egyedi hűség értéke', 'autogrowehome' ), __( 'Csak akkor számít, ha a hűség „Egyedi”. 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70 felett a kép a rendert másolja és elveszti a fotorealizmust.', 'autogrowehome' ), array( 'min' => 0, 'max' => 100 ) ),
+					array( 'fidelity', 'select', __( 'Hűség a 3D modellhez', 'autogrowehome' ), __( 'Mennyire kösse a kép a felépített ház formáját (structure erősség). Szabad: szép, de szabadon értelmez. Kiegyensúlyozott: felismerhetően ugyanaz a ház. Hű (ajánlott): a tömeg, a tető és a nyílások követik a modellt. Klón: a lehető legpontosabb forma. Egyedi: a lenti szám érvényes. A bevált recept: structure 70–85 és mellé stílusminta 40–50.', 'autogrowehome' ), array( 'options' => array( 'free' => __( 'Szabad (25)', 'autogrowehome' ), 'balanced' => __( 'Kiegyensúlyozott (45)', 'autogrowehome' ), 'faithful' => __( 'Hű (75) – ajánlott', 'autogrowehome' ), 'clone' => __( 'Klón (85)', 'autogrowehome' ), 'custom' => __( 'Egyedi (a lenti érték)', 'autogrowehome' ) ) ) ),
+					array( 'structure_strength', 'number', __( 'Egyedi hűség értéke', 'autogrowehome' ), __( 'Csak akkor számít, ha a hűség „Egyedi”. 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70–85 a forma pontosan a modellé – a fotószerűséget ilyenkor a stílusminta adja.', 'autogrowehome' ), array( 'min' => 0, 'max' => 100 ) ),
+					array( 'h3s', 'heading', __( 'Fotószerűség: stílusminta, negatív prompt, vezetőkép', 'autogrowehome' ), __( 'A 3D modell adja a formát (structure), a stílusminta a fotó hatását (style). Stílusonként egy valódi, szemmagasságból készült építészeti fotót tölts fel a kívánt fénnyel és hangulattal; minta nélkül a kép csak a szövegből kapja a hangulatot.', 'autogrowehome' ) ),
+					array( 'style_strength', 'number', __( 'Stílusminta erőssége', 'autogrowehome' ), __( 'Mennyire vegye át a kép a mintafotó hatását (fény, színek, anyagszerűség). 40–50 ajánlott; felette a minta épülete is átszivároghat. A Mystic felé adherence = 100 − ez az érték.', 'autogrowehome' ), array( 'min' => 0, 'max' => 100 ) ),
+					array( 'hdr', 'number', __( 'HDR / részletesség', 'autogrowehome' ), __( 'Csak stílusminta mellett hat. Kisebb érték természetesebb, fotószerűbb; nagyobb részletesebb, de „AI-szerűbb”. 30–40 ajánlott.', 'autogrowehome' ), array( 'min' => 0, 'max' => 100 ) ),
+					array( 'negative_inline', 'bool', __( 'Negatív prompt a szöveg végén', 'autogrowehome' ), __( 'A konfigurációból készülő tiltólista (a választott értékek téves alternatívái: rossz tetőforma, rossz tetőszín, plusz szint, pajta…). A Mysticnek nincs külön negatív mezője, ezért „Avoid: …” mondatként a prompt végére kerül. Ha egy tiltott szín mégis megjelenik a képen, kapcsold ki.', 'autogrowehome' ) ),
+					array( 'guide_clean', 'bool', __( 'Tiszta vezetőkép', 'autogrowehome' ), __( 'A 3D vezetőképről lekerülnek a járművek, az emberek, az állatok, a háttér fái és a pára. Ezek a 3D-ben egyszerű tömbök, és a képmodell a formájukat másolná; így a szövegből valódi formában festi meg őket.', 'autogrowehome' ) ),
+					array( 'hero_camera', 'select', __( 'Fő kép kameramagassága', 'autogrowehome' ), __( 'Automatikus: a látogató iránya marad, de magas nézőpontnál a vezetőkép fotós szemmagasságból készül (az építészeti fotók így készülnek). Látogatóé: pontosan az a kameraállás, amit a látogató beállított.', 'autogrowehome' ), array( 'options' => array( 'auto' => __( 'Automatikus (ajánlott)', 'autogrowehome' ), 'visitor' => __( 'A látogató kameraállása', 'autogrowehome' ) ) ) ),
+					array( 'style_ref_default', 'media', __( 'Általános mintakép', 'autogrowehome' ), __( 'Akkor megy, ha a választott stílusnak nincs saját mintaképe.', 'autogrowehome' ) ),
+					array( 'style_ref_interior', 'media', __( 'Belső tér mintakép', 'autogrowehome' ), __( 'A belső nézetek stílusmintája.', 'autogrowehome' ) ),
+					...$style_refs,
 					array( 'upscale_enabled', 'bool', __( 'Felskálázás a kiválasztott galériánál', 'autogrowehome' ), __( 'A 3840 px alatti képeket felskálázza (külön költség). Akkor éri meg, ha a kiválasztott koncepció képei nyomtatásba vagy nagy bemutatóba kerülnek; képernyőn a 4k enélkül is elég. A felskálázott képek jelölve vannak.', 'autogrowehome' ) ),
 					array( 'upscale_endpoint', 'text', __( 'Felskálázó végpont', 'autogrowehome' ) ),
 					array( 'upscale_sharpen', 'number', __( 'Élesítés', 'autogrowehome' ), '', array( 'min' => 0, 'max' => 100 ) ),

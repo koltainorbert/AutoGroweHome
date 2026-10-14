@@ -1,4 +1,5 @@
 // Vezetőkép E2E: a tervező a 3D modellről készít képeket, és elküldi őket a generálással.
+// 1.12.0: tiszta vezetőkép, szemmagasság magas kameránál, belső nézetek vezetőképe.
 // Méri, hány nézet készült el, mekkorák, és hogy a /generate kérés testében tényleg ott vannak-e.
 // Használat: node tests/e2e/guide.js   (tesztoldal: bin/test-wp.sh)
 const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/opt/npm-tools/node_modules/playwright'); } })();
@@ -64,6 +65,30 @@ function jpegSize(dataUrl) {
     return out;
   });
 
+  // 1b. tiszta vezetőkép (járművek, emberek, háttérfák és pára nélkül) és szemmagasság: más kép,
+  //     mint az élő nézet; a belső nézet vezetőképe a helyiség saját kamerájából
+  const extra = await page.evaluate(async () => {
+    const A = window.AGH_3D, v = A.viewer();
+    const live = await A.guides(['hero'], 1152, 700, null, { camera: 'visitor' });
+    const clean = await A.guides(['hero'], 1152, 700, null, { clean: true, camera: 'visitor' });
+    // magasról néző látogató: "auto" módban a vezetőkép szemmagasságból készül
+    const cam = v.camera, tgt = v.controls.target, keep = cam.position.clone();
+    const off = cam.position.clone().sub(tgt), len = off.length();
+    cam.position.set(tgt.x + off.x * 0.3, tgt.y + len * 0.9, tgt.z + off.z * 0.3); cam.lookAt(tgt);
+    const high = await A.guides(['hero'], 1152, 700, null, { camera: 'visitor' });
+    const auto = await A.guides(['hero'], 1152, 700, null, { camera: 'auto' });
+    cam.position.copy(keep); cam.lookAt(tgt);
+    const rooms = {};
+    (v.c.rooms || []).filter(r => r && r.render && r.id).slice(0, 2).forEach(r => { rooms[String(r.id).toLowerCase().replace(/[^a-z0-9_]/g, '')] = { id: String(r.id), type: r.type, area: Number(r.area) || 0 }; });
+    const inner = await A.guides(Object.keys(rooms).map(k => 'interior_' + k), 1152, 700, null, { clean: true, rooms: rooms });
+    return {
+      cleanDiffers: !!live.hero && !!clean.hero && live.hero !== clean.hero,
+      autoDiffers: !!high.hero && !!auto.hero && high.hero !== auto.hero,
+      rooms: Object.keys(rooms).length,
+      inner: Object.keys(inner).map(k => ({ view: k, kb: Math.round(inner[k].length * 0.75 / 1024) })),
+    };
+  });
+
   // 2. a generálás tényleg elküldi-e
   await page.$eval('.agh-btn-primary.agh-btn-lg', b => b.click());
   await page.waitForSelector('.agh-dialog-wrap', { timeout: 10000 });
@@ -78,8 +103,10 @@ function jpegSize(dataUrl) {
   const got = sent && sent[0] && sent[0].h ? sent[0].w / sent[0].h : 0;
   const aspectOk = got > 0 && Math.abs(got - want) <= want * 0.02;
   const sentOk = Array.isArray(sent) && sent.length === 1 && sent[0].view === 'hero' && sent[0].kb > 8 && /image\/(png|jpeg)/.test(sent[0].type);
-  const laterOk = Array.isArray(later) && later.length >= 4;
-  const ok = ok6 && sentOk && laterOk && aspectOk && !errors.length;
-  console.log(`vezetőkép: ${shots.length} nézet, a generálással a hero ment ${sent ? sent.map(s => s.w + 'x' + s.h + '/' + s.kb + 'KB').join(',') : '–'} (képarány ${got.toFixed(3)}, kell ${want.toFixed(3)}, ${aspectOk ? 'ok' : 'eltér'}), utána a galéria nézetei ${later ? later.join(',') : '–'}, konzolhiba ${errors.length}`);
+  const laterOk = Array.isArray(later) && later.filter(v => v.indexOf('interior_') !== 0).length >= 4;
+  const laterRooms = Array.isArray(later) ? later.filter(v => v.indexOf('interior_') === 0).length : 0;
+  const innerOk = extra.rooms > 0 && extra.inner.length === extra.rooms && extra.inner.every(s => s.kb > 8) && laterRooms > 0;
+  const ok = ok6 && sentOk && laterOk && aspectOk && innerOk && extra.cleanDiffers && extra.autoDiffers && !errors.length;
+  console.log(`vezetőkép: ${shots.length} nézet, a generálással a hero ment ${sent ? sent.map(s => s.w + 'x' + s.h + '/' + s.kb + 'KB').join(',') : '–'} (képarány ${got.toFixed(3)}, kell ${want.toFixed(3)}, ${aspectOk ? 'ok' : 'eltér'}), utána a galéria nézetei ${later ? later.join(',') : '–'}; tiszta hero ${extra.cleanDiffers ? 'eltér' : 'AZONOS'}, szemmagasság ${extra.autoDiffers ? 'eltér' : 'AZONOS'}, belső vezetőkép ${extra.inner.length}/${extra.rooms} (${extra.inner.map(s => s.kb + 'KB').join(',')}); konzolhiba ${errors.length}`);
   process.exit(ok ? 0 : 1);
 })();

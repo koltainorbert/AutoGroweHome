@@ -192,8 +192,9 @@ final class Storage {
 
 	/**
 	 * Guide pictures of the visitor's own 3D model, stored for the image generator.
-	 * Only PNG and JPEG, at most 1.5 MB and 2048 px each, at most 8 per project; everything else is
-	 * dropped silently, because a missing guide only means the server draws its own one.
+	 * Only PNG and JPEG, at most 1.5 MB and 2048 px each; the eight exterior views plus at most eight
+	 * rooms ("interior_<room id>") per call; everything else is dropped silently, because a missing
+	 * guide only means the server draws its own one (or the room goes without one, as before).
 	 *
 	 * @param array<string,string> $shots view => data URL.
 	 * @return int Number of pictures stored.
@@ -201,9 +202,11 @@ final class Storage {
 	public static function put_guides( string $project_uuid, array $shots ): int {
 		$views = array( 'hero', 'front', 'back', 'left', 'right', 'aerial', 'garden', 'evening' );
 		$n     = 0;
+		$rooms = 0;
 		foreach ( $shots as $view => $data ) {
 			$view = sanitize_key( (string) $view );
-			if ( ! in_array( $view, $views, true ) || $n >= 8 || ! is_string( $data ) ) {
+			$room = 1 === preg_match( '/^interior_[a-z0-9_]{1,24}$/', $view );
+			if ( ( ! $room && ! in_array( $view, $views, true ) ) || ( $room && $rooms >= 8 ) || $n >= 16 || ! is_string( $data ) ) {
 				continue;
 			}
 			if ( ! preg_match( '#^data:image/(png|jpe?g);base64,#i', $data, $m ) ) {
@@ -221,6 +224,7 @@ final class Storage {
 			try {
 				self::put( $project_uuid, 'guides/' . $view . '.' . $ext, $raw );
 				$n++;
+				$rooms += $room ? 1 : 0;
 			} catch ( \Throwable $e ) {
 				continue;
 			}
@@ -234,7 +238,7 @@ final class Storage {
 	 * @return string Absolute path ('' when there is none).
 	 */
 	public static function guide_path( string $project_uuid, string $view ): string {
-		if ( ! Util::is_uuid( $project_uuid ) || ! preg_match( '/^[a-z_]{3,20}$/', $view ) ) {
+		if ( ! Util::is_uuid( $project_uuid ) || ! preg_match( '/^[a-z][a-z0-9_]{2,33}$/', $view ) ) {
 			return '';
 		}
 		// put() flattens a folder in the name ("guides/hero.jpg" is stored as "guides-hero.jpg")

@@ -217,7 +217,7 @@ Jelmagyarázat: a „Tartomány” oszlop az admin űrlap min./max. értéke (me
 | `base_url` | Alap URL | `https://api.magnific.com` | csak `https://` URL | |
 | `hero_endpoint` | Fő kép végpont (Mystic) | `/v1/ai/mystic` | relatív útvonal | A kapcsolatteszt is ezt használja |
 | `mystic_model` | Mystic modell | `realism` | realism, super_real, flexible, fluid, zen, editorial_portraits | |
-| `mystic_engine` | Mystic engine | `automatic` | automatic, magnific_illusio, magnific_sharpy, magnific_sparkle | |
+| `mystic_engine` | Mystic engine | `magnific_sharpy` (1.12.0-tól; korábban `automatic`) | automatic, magnific_illusio, magnific_sharpy, magnific_sparkle | A Magnific dokumentációja szerint a Sharpy a fotórealizmusé. Már elmentett beállításnál a tárolt érték marad – kézzel kell átállítani. |
 | `creative_detailing` | Creative detailing | 33 | 0–100 | |
 | `preview_resolution` | Koncepcióképek felbontása | `2k` | 1k / 2k / 4k | A három fő kép és a galériaképek felbontása (költség!) |
 | `final_resolution` | Végleges felbontás | `4k` | 2k / 4k | Csak „Mindhárom házhoz azonnal” galériamódban, a fő képekre |
@@ -226,9 +226,18 @@ Jelmagyarázat: a „Tartomány” oszlop az admin űrlap min./max. értéke (me
 | `reference_endpoint` | Referenciás végpont | `/v1/ai/text-to-image/flux-2-pro` | relatív útvonal | |
 | `reference_width` | Referenciás kép szélesség | 1440 px | 256–1440 | |
 | `reference_height` | Referenciás kép magasság | 816 px | 256–1440 | |
-| `style_adherence` | Stílusreferencia erőssége | 60 | 0–100 | `style` stratégiánál |
-| `structure_guidance` | Geometriai vezetés (tömegvázlat) | be | be/ki | A tervvázlatból renderelt tömegvázlat structure referenceként megy az elöl-, hátul- és oldalnézetekhez (GD kell) |
-| `structure_strength` | Geometriai vezetés erőssége | 30 | 0–100 | |
+| `style_adherence` | Nézetek: a fő kép mint referencia (adherence) | 60 | 0–100 | `style` stratégiánál a nézetek a fő képet kapják stílusreferenciának. Mystic-értelmezés: nagyobb = jobban követi a szöveget, kisebb = jobban a referenciát |
+| `structure_guidance` | Geometriai vezetés (3D modell) | be | be/ki | A látogató 3D modelljéről készült kép structure referenceként megy a fő képhez, a nézetekhez és (1.12.0-tól) a belső nézetekhez; vezetőkép nélkül a homlokzati nézetek a szerver tömegvázlatát kapják |
+| `fidelity` | Hűség a 3D modellhez | `faithful` | free 25 · balanced 45 · faithful 75 · clone 85 · custom | A structure erősség; Hű és Klón fokozaton a referenciablokk a prompt elején áll |
+| `structure_strength` | Egyedi hűség értéke | 75 | 0–100 | Csak `custom` hűségnél |
+| `style_strength` | Stílusminta erőssége | 45 | 0–100 | A stílusonkénti mintafotó súlya; Mystic felé `adherence = 100 − érték` |
+| `hdr` | HDR / részletesség | 35 | 0–100 | Csak stílusreferencia mellett megy; kisebb = természetesebb |
+| `negative_inline` | Negatív prompt a szöveg végén | be | be/ki | A konfigurációból készülő tiltólista „Also avoid: …” mondatként a prompt végén (a Mysticnek nincs negatív mezője) |
+| `guide_clean` | Tiszta vezetőkép | be | be/ki | A vezetőképről lekerülnek a járművek, emberek, állatok, a háttér fái és a pára |
+| `hero_camera` | Fő kép kameramagassága | `auto` | auto / visitor | auto: 18° feletti látogatói nézőpontnál a hero vezetőkép 9°-ról, a látogató irányából készül (kivéve „Madártávlat” kameránál) |
+| `style_ref_default` | Általános mintakép | 0 | médiatár-kép | Ha a stílusnak nincs saját mintája |
+| `style_ref_interior` | Belső tér mintakép | 0 | médiatár-kép | A belső nézetek stílusmintája |
+| `style_ref_<stílus>` | Mintakép: <stílus> | 0 | médiatár-kép | Stílusonként (22 + egyedi). Sorrend: ez → a stílus katalógusképe (Katalógus → Stílusok) → általános minta. A szerver 1536 px-re kicsinyítve, JPEG-ben küldi |
 | `upscale_enabled` | Felskálázás a kiválasztott galériánál | ki | be/ki | A kiválasztott koncepció kész galériájában a 3840 px alatti, nem teszt képeket felskálázza (külön költség); a felskálázott képek jelölve, fájlnevük `…-upscaled` végű |
 | `upscale_endpoint` | Felskálázó végpont | `/v1/ai/image-upscaler-precision` | relatív útvonal | |
 | `upscale_sharpen` | Élesítés | 40 | 0–100 | |

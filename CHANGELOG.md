@@ -1,5 +1,20 @@
 # Változásnapló
 
+## 1.12.0 – 2026-10-14
+
+Norbi kézi receptje (3D = structure 70–85, mintafotó = style 40–50, negatív prompt a téves alternatívákra) beépítve, és a kapott kép összevetése a kívánt minőséggel. A képek száma, nézetei, formája és adatai változatlanok – csak a minőség a cél.
+
+- **Stílusonkénti mintakép style referenciaként.** AI-szolgáltatók → Magnific → „Fotószerűség”: stílusonként (22 + egyedi) egy médiatár-kép, plusz általános és belső tér minta. A fő kép és a Mystic-úton készülő nézetek `style_reference`-ként kapják, 1536 px-re kicsinyítve, JPEG-ben. Sorrend: a beállított minta → a stílus katalógusképe → az általános minta. Minta nélkül minden a mai úton megy.
+- **Két külön erősség.** A hűség-kapcsoló a structure erősség (Hű **75**, Klón **85** – eddig 65/80), az új „Stílusminta erőssége” (alap 45) a mintáé; a Mystic felé `adherence = 100 − érték` (a Mystic-ben a nagyobb adherence a szöveget, a kisebb a mintát követi). Új `hdr` beállítás (alap 35, csak stílusreferencia mellett megy; kisebb = természetesebb). Az új telepítéseken a `mystic_engine` alapja `magnific_sharpy` (a doksi szerint a fotórealizmusé) – elmentett beállításnál kézzel kell átállítani.
+- **Negatív prompt a konfigurációból.** `PromptEngine::config_negative()`: a választott értékek téves alternatívái (tetőforma, tetőszín-család, szintszám, homlokzatanyag és -szín, ablakkeretszín, garázs, medence, erkély, kémény, napelem, emberek, autók), kívül a pajta/második ház/plusz szárny, belül a plusz bútor és nyílás. A ház saját értéke soha nem kerül rá. A kérés `negative_prompt` mezőben is viszi; a Mysticnek nincs ilyen mezője (docs.magnific.com), ezért „Also avoid: …” mondatként a prompt végére kerül – ez kikapcsolható.
+- **3D vezetés a belső nézetekhez is.** A tervező a renderelendő helyiségekről (legfeljebb 8) vezetőképet készít, a szoba nyitott sarkából, szemmagasságból, széles látószöggel – nem a kivágott „babaház” nézetből, mert azt a képmodell lemásolná. A belső kérés structure referenciát és saját nyitóblokkot kap (ugyanaz a szoba, falak, nyílások, bútorhelyek; nincs plusz bútor).
+- **Tiszta vezetőkép** (a 2. kép hibáiból): a vezetőképről lekerülnek a járművek, emberek, állatok, a háttér kúpfái és a pára. Ezek a 3D-ben egyszerű tömbök, és a structure referencia a formájukat adta tovább (részlet nélküli „játékautók”, kúp alakú fák); a szövegből így valódi formában készülnek.
+- **Fotós kameramagasság.** Ha a látogató 18°-nál magasabbról nézi a házat (és a fő kép kameraállása nem „Madártávlat”), a hero vezetőképe az ő irányából, de 9°-ról készül – az építészeti fotók szemmagasságból készülnek. „A látogató kameraállása” beállítással a mai pontos kamera marad.
+- **A prompt hossza újraszámolva.** Nyitóblokk + prompt + negatív lista együtt fér a 3900 karakterbe, a negatív lista soha nem vágódik le; a kérés pontos szövege az asset promptjába kerül.
+- Mérve: `tests/guide-test.php` **62/62** (a régi 31 + 31 új: negatív lista tartalma és fordított esete, a Magnific-kérés teste hálózat nélkül – structure 75, adherence 55, hdr 35, minta nélkül nincs style referencia, a nézetek régi adherence-e 60 –, mintakép 1536 px JPEG, általános és belső minta, belső vezetőkép és nyitóblokk, hosszhatár túl hosszú szöveggel is); `tests/e2e/guide.js` 6 nézet + 4 belső vezetőkép feltöltve, a tiszta és a szemmagasságú hero eltér az élő képtől, 0 konzolhiba; `AGH_3D=1 sketch` 144 mező, 3D 91 változás, 0 hiba; gen 202 / 0 konzolhiba; tárhely 10/10 + 11/11; beragadt projekt 9/9; autoloader 119/119; lint 0.
+- **Nem mérhető itt:** a kép szépsége (a tesztoldalon nincs éles Magnific-kulcs). Az alapértékek a Magnific dokumentációjából és Norbi kézi receptjéből jönnek.
+- 25 új felirat 15 nyelven (nyelvenként 2149 szöveg, 0 hiba).
+
 ## 1.11.1 – 2026-10-14
 
 Norbi összehasonlította a 3D modelljét a kapott koncepcióképpel: a képen négy-öt épület volt egy helyett (hosszú fa pajta, plusz szárnyak), antracit tető a vörösbarna helyett, pergola és zsalugáter nélkül, madártávlatból. Négy gyökérok volt, mind a négy javítva.

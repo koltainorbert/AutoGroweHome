@@ -8885,3 +8885,104 @@ msgstr "Solo cuenta si la fidelidad es «Personalizada». 20–30 suelto, 40–6
 #: includes/Admin/Admin.php
 msgid "A 3840 px alatti képeket felskálázza (külön költség). Akkor éri meg, ha a kiválasztott koncepció képei nyomtatásba vagy nagy bemutatóba kerülnek; képernyőn a 4k enélkül is elég. A felskálázott képek jelölve vannak."
 msgstr "Amplía las imágenes de menos de 3840 px (coste aparte). Merece la pena si las imágenes del concepto elegido van a imprenta o a una presentación grande; en pantalla el 4k basta. Las imágenes ampliadas están marcadas."
+
+#: includes/Admin/Admin.php
+#, php-format
+msgid "Mintakép: %s"
+msgstr "Foto de muestra: %s"
+
+#: includes/Admin/Admin.php
+msgid "Nézetek: a fő kép mint referencia (adherence)"
+msgstr "Vistas: la imagen principal como referencia (adherence)"
+
+#: includes/Admin/Admin.php
+msgid "A galéria nézeteinél, amikor a fő kép a stílusreferencia. A Mystic értelmezése szerint nagyobb érték = jobban követi a szöveget, kisebb = jobban a referenciaképet."
+msgstr "Para las vistas de la galería, cuando la imagen principal es la referencia de estilo. Según Mystic, un valor más alto sigue más el texto y uno más bajo, más la imagen de referencia."
+
+#: includes/Admin/Admin.php
+msgid "Mennyire kösse a kép a felépített ház formáját (structure erősség). Szabad: szép, de szabadon értelmez. Kiegyensúlyozott: felismerhetően ugyanaz a ház. Hű (ajánlott): a tömeg, a tető és a nyílások követik a modellt. Klón: a lehető legpontosabb forma. Egyedi: a lenti szám érvényes. A bevált recept: structure 70–85 és mellé stílusminta 40–50."
+msgstr "Cuánto sigue la imagen la forma de la casa construida (fuerza de structure). Libre: bonita pero interpretada libremente. Equilibrada: claramente la misma casa. Fiel (recomendado): volumen, cubierta y huecos siguen el modelo. Clon: la forma más exacta posible. Personalizada: vale el número de abajo. La receta probada: structure 70–85 y una muestra de estilo de 40–50."
+
+#: includes/Admin/Admin.php
+msgid "Hű (75) – ajánlott"
+msgstr "Fiel (75) – recomendado"
+
+#: includes/Admin/Admin.php
+msgid "Klón (85)"
+msgstr "Clon (85)"
+
+#: includes/Admin/Admin.php
+msgid "Csak akkor számít, ha a hűség „Egyedi”. 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70–85 a forma pontosan a modellé – a fotószerűséget ilyenkor a stílusminta adja."
+msgstr "Solo cuenta con fidelidad «Personalizada». 20–30 seguimiento suelto, 40–60 claramente la misma casa, 70–85 la forma es exactamente la del modelo; el aspecto fotográfico lo aporta entonces la muestra de estilo."
+
+#: includes/Admin/Admin.php
+msgid "Fotószerűség: stílusminta, negatív prompt, vezetőkép"
+msgstr "Realismo fotográfico: muestra de estilo, prompt negativo, imagen guía"
+
+#: includes/Admin/Admin.php
+msgid "A 3D modell adja a formát (structure), a stílusminta a fotó hatását (style). Stílusonként egy valódi, szemmagasságból készült építészeti fotót tölts fel a kívánt fénnyel és hangulattal; minta nélkül a kép csak a szövegből kapja a hangulatot."
+msgstr "El modelo 3D da la forma (structure) y la muestra de estilo el aspecto de foto (style). Sube por estilo una foto real de arquitectura tomada a la altura de los ojos, con la luz y el ambiente deseados; sin muestra, la imagen toma el ambiente solo del texto."
+
+#: includes/Admin/Admin.php
+msgid "Stílusminta erőssége"
+msgstr "Fuerza de la muestra de estilo"
+
+#: includes/Admin/Admin.php
+msgid "Mennyire vegye át a kép a mintafotó hatását (fény, színek, anyagszerűség). 40–50 ajánlott; felette a minta épülete is átszivároghat. A Mystic felé adherence = 100 − ez az érték."
+msgstr "Cuánto adopta la imagen el aspecto de la foto de muestra (luz, colores, materiales). Se recomienda 40–50; por encima puede filtrarse el edificio de la muestra. A Mystic va adherence = 100 − este valor."
+
+#: includes/Admin/Admin.php
+msgid "HDR / részletesség"
+msgstr "HDR / detalle"
+
+#: includes/Admin/Admin.php
+msgid "Csak stílusminta mellett hat. Kisebb érték természetesebb, fotószerűbb; nagyobb részletesebb, de „AI-szerűbb”. 30–40 ajánlott."
+msgstr "Solo actúa con muestra de estilo. Más bajo resulta más natural y fotográfico; más alto, más detallado pero más «de IA». Se recomienda 30–40."
+
+#: includes/Admin/Admin.php
+msgid "Negatív prompt a szöveg végén"
+msgstr "Prompt negativo al final del texto"
+
+#: includes/Admin/Admin.php
+msgid "A konfigurációból készülő tiltólista (a választott értékek téves alternatívái: rossz tetőforma, rossz tetőszín, plusz szint, pajta…). A Mysticnek nincs külön negatív mezője, ezért „Avoid: …” mondatként a prompt végére kerül. Ha egy tiltott szín mégis megjelenik a képen, kapcsold ki."
+msgstr "La lista de exclusión creada a partir de la configuración (las alternativas erróneas de los valores elegidos: forma o color de cubierta equivocados, planta de más, granero…). Mystic no tiene campo negativo propio, por eso va al final del prompt como frase «Avoid: …». Si un color excluido aparece igualmente, desactívalo."
+
+#: includes/Admin/Admin.php
+msgid "Tiszta vezetőkép"
+msgstr "Imagen guía limpia"
+
+#: includes/Admin/Admin.php
+msgid "A 3D vezetőképről lekerülnek a járművek, az emberek, az állatok, a háttér fái és a pára. Ezek a 3D-ben egyszerű tömbök, és a képmodell a formájukat másolná; így a szövegből valódi formában festi meg őket."
+msgstr "Se quitan de la imagen guía 3D los vehículos, las personas, los animales, los árboles del fondo y la bruma. En 3D son formas simples y el modelo de imagen copiaría su forma; así los pinta de verdad a partir del texto."
+
+#: includes/Admin/Admin.php
+msgid "Fő kép kameramagassága"
+msgstr "Altura de cámara de la imagen principal"
+
+#: includes/Admin/Admin.php
+msgid "Automatikus: a látogató iránya marad, de magas nézőpontnál a vezetőkép fotós szemmagasságból készül (az építészeti fotók így készülnek). Látogatóé: pontosan az a kameraállás, amit a látogató beállított."
+msgstr "Automático: se mantiene la dirección del visitante, pero desde un punto de vista alto la imagen guía se toma a la altura de los ojos de un fotógrafo (así se hacen las fotos de arquitectura). Del visitante: exactamente la posición de cámara que fijó el visitante."
+
+#: includes/Admin/Admin.php
+msgid "Automatikus (ajánlott)"
+msgstr "Automático (recomendado)"
+
+#: includes/Admin/Admin.php
+msgid "A látogató kameraállása"
+msgstr "Posición de cámara del visitante"
+
+#: includes/Admin/Admin.php
+msgid "Általános mintakép"
+msgstr "Foto de muestra general"
+
+#: includes/Admin/Admin.php
+msgid "Akkor megy, ha a választott stílusnak nincs saját mintaképe."
+msgstr "Se usa cuando el estilo elegido no tiene foto de muestra propia."
+
+#: includes/Admin/Admin.php
+msgid "Belső tér mintakép"
+msgstr "Foto de muestra de interior"
+
+#: includes/Admin/Admin.php
+msgid "A belső nézetek stílusmintája."
+msgstr "La muestra de estilo de las vistas interiores."

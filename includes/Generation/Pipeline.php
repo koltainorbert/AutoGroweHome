@@ -407,10 +407,19 @@ final class Pipeline {
 			}
 		}
 		// Geometry guidance. First choice is the picture of the 3D model the visitor built and sent
-		// with the request (the hero is their very camera angle); without one the server draws its own
-		// massing guide for the elevation views, as before.
+		// with the request (the hero is their very camera angle, a room its interior view); without one
+		// the server draws its own massing guide for the elevation views, as before.
+		$room = null;
+		if ( 'interior' === $op ) {
+			$rid = (string) ( $job['payload']['room'] ?? '' );
+			foreach ( (array) ( $p['config']['rooms'] ?? array() ) as $r ) {
+				if ( is_array( $r ) && (string) ( $r['id'] ?? '' ) === $rid ) {
+					$room = $r;
+				}
+			}
+		}
 		$structure  = '';
-		$guide_view = 'interior' === $op ? '' : (string) $asset['view'];
+		$guide_view = 'interior' === $op ? ( null !== $room ? 'interior_' . preg_replace( '/[^a-z0-9_]/', '', strtolower( (string) $room['id'] ) ) : '' ) : (string) $asset['view'];
 		if ( '' !== $guide_view && $provider->capabilities()['structure'] && Settings::get( 'magnific.structure_guidance', true ) ) {
 			$shot = Storage::guide_path( (string) $p['uuid'], $guide_view );
 			if ( '' !== $shot ) {
@@ -422,14 +431,27 @@ final class Pipeline {
 				}
 			}
 		}
-		// With a guide picture the prompt also says what that picture is, otherwise the model only
-		// gets a structure hint and no instruction to follow it.
-		$prompt = (string) $asset['prompt'];
+		// The style sample: a real photograph of the chosen architectural style (or of an interior),
+		// picked by the operator. It gives the picture its photographic look; the 3D guide gives the
+		// form. Views that follow the hero keep the hero as their reference.
+		$style_image = '' === $reference && $provider->capabilities()['reference'] ? self::style_sample( 'interior' === $op ? 'interior' : (string) ( $p['config']['arch_style'] ?? '' ) ) : '';
+		// The prompt is put together again here, so the binding block in front, the closing reference
+		// sentence and the negative list (with the wrong alternatives of this configuration) all fit the
+		// length limit together and the negative list is never cut off.
+		$built  = PromptEngine::build( $p['config'], $concept, 'interior' === $op ? 'interior' : (string) $asset['view'], $room, (int) $p['prompt_version'] );
+		$lead   = '';
+		$note   = '';
 		if ( '' !== $structure ) {
 			// Faithful and clone open with the binding block; the gentler levels only add a closing
 			// sentence. Both together would not fit the prompt limit and would say the same twice.
-			$lead   = PromptEngine::reference_lead();
-			$prompt = '' !== $lead ? $lead . $prompt : $prompt . PromptEngine::reference_note();
+			$lead = 'interior' === $op ? PromptEngine::interior_lead() : PromptEngine::reference_lead();
+			$note = '' !== $lead ? '' : ( 'interior' === $op ? PromptEngine::interior_note() : PromptEngine::reference_note() );
+		}
+		$inline = ! ( $provider->capabilities()['negative'] ?? false ) && Settings::get( 'magnific.negative_inline', true );
+		$prompt = PromptEngine::compose( $built, $lead, $note, $inline );
+		if ( $prompt !== (string) $asset['prompt'] ) {
+			// every asset keeps the exact prompt that went out
+			Repository::update_asset( $asset['id'], array( 'prompt' => $prompt ) );
 		}
 		$request = array(
 			'op'              => $op,
@@ -439,6 +461,8 @@ final class Pipeline {
 			'resolution'      => 'hero' === $asset['view'] && 'all' === Settings::get( 'limits.gallery_mode' ) ? self::max_res( (string) Settings::get( 'magnific.final_resolution', '4k' ) ) : self::max_res( (string) Settings::get( 'magnific.preview_resolution', '2k' ) ),
 			'reference_image' => $reference,
 			'structure_image' => $structure,
+			'style_image'     => $style_image,
+			'negative_prompt' => (string) $built['negative'],
 			'building'        => $concept['building'],
 			'config'          => $p['config'],
 			'label'           => $concept['variant'] . ' – ' . $asset['label'],
@@ -474,6 +498,50 @@ final class Pipeline {
 		);
 		$asset = Repository::asset( $asset['id'] );
 		self::consume( $job, $asset, $p, $concept, $provider, $res );
+	}
+
+	/**
+	 * The style sample photo for a style (or "interior"), base64 JPEG at most 1536 px. Order: the
+	 * sample set in Settings → Magnific, the style's reference picture in the catalog, the general
+	 * sample; '' when there is none. Media library pictures
+	 * only – these are the operator's reference photos, not client data.
+	 */
+	public static function style_sample( string $style ): string {
+		$key = 'interior' === $style ? 'style_ref_interior' : 'style_ref_' . sanitize_key( $style );
+		$id  = (int) Settings::get( 'magnific.' . $key, 0 );
+		if ( $id <= 0 && 'interior' !== $style && '' !== $style ) {
+			// the reference picture of the style in the catalog (Katalógus → Stílusok), if there is one
+			$row = \AutoGroweHome\Catalog\Catalog::get( 'style', sanitize_key( $style ) );
+			$id  = $row ? (int) ( $row['image_id'] ?? 0 ) : 0;
+		}
+		if ( $id <= 0 && 'interior' !== $style ) {
+			$id = (int) Settings::get( 'magnific.style_ref_default', 0 );
+		}
+		if ( $id <= 0 ) {
+			return '';
+		}
+		$file = (string) get_attached_file( $id );
+		if ( '' === $file || ! is_file( $file ) || ! wp_attachment_is_image( $id ) ) {
+			return '';
+		}
+		$editor = wp_get_image_editor( $file );
+		if ( is_wp_error( $editor ) ) {
+			$raw = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			return strlen( $raw ) > 0 && strlen( $raw ) < 4194304 ? base64_encode( $raw ) : '';
+		}
+		$size = $editor->get_size();
+		if ( max( (int) $size['width'], (int) $size['height'] ) > 1536 ) {
+			$editor->resize( 1536, 1536, false );
+		}
+		$editor->set_quality( 86 );
+		// a temporary file only (wp_tempnam() is an admin-side function, not loaded in the queue)
+		$res = $editor->save( trailingslashit( get_temp_dir() ) . 'agh-style-' . wp_generate_password( 12, false ) . '.jpg', 'image/jpeg' );
+		if ( is_wp_error( $res ) || empty( $res['path'] ) ) {
+			return '';
+		}
+		$raw = (string) file_get_contents( $res['path'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		@unlink( $res['path'] ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		return base64_encode( $raw );
 	}
 
 	private static function max_res( string $res ): string {

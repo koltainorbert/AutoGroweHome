@@ -8887,3 +8887,104 @@ msgstr "Vrijedi samo kod vjernosti „Vlastito”. 20–30 labavo, 40–60 prepo
 #: includes/Admin/Admin.php
 msgid "A 3840 px alatti képeket felskálázza (külön költség). Akkor éri meg, ha a kiválasztott koncepció képei nyomtatásba vagy nagy bemutatóba kerülnek; képernyőn a 4k enélkül is elég. A felskálázott képek jelölve vannak."
 msgstr "Povećava slike ispod 3840 px (poseban trošak). Isplati se kad slike odabranog koncepta idu u tisak ili u veliku prezentaciju; na zaslonu je 4k dovoljan. Povećane slike su označene."
+
+#: includes/Admin/Admin.php
+#, php-format
+msgid "Mintakép: %s"
+msgstr "Uzorna fotografija: %s"
+
+#: includes/Admin/Admin.php
+msgid "Nézetek: a fő kép mint referencia (adherence)"
+msgstr "Pogledi: glavna slika kao referenca (adherence)"
+
+#: includes/Admin/Admin.php
+msgid "A galéria nézeteinél, amikor a fő kép a stílusreferencia. A Mystic értelmezése szerint nagyobb érték = jobban követi a szöveget, kisebb = jobban a referenciaképet."
+msgstr "Za poglede galerije, kada je glavna slika stilska referenca. Prema Mysticu veća vrijednost više slijedi tekst, manja više referentnu sliku."
+
+#: includes/Admin/Admin.php
+msgid "Mennyire kösse a kép a felépített ház formáját (structure erősség). Szabad: szép, de szabadon értelmez. Kiegyensúlyozott: felismerhetően ugyanaz a ház. Hű (ajánlott): a tömeg, a tető és a nyílások követik a modellt. Klón: a lehető legpontosabb forma. Egyedi: a lenti szám érvényes. A bevált recept: structure 70–85 és mellé stílusminta 40–50."
+msgstr "Koliko slika slijedi oblik izgrađene kuće (jačina structure). Slobodno: lijepo, ali slobodno protumačeno. Uravnoteženo: prepoznatljivo ista kuća. Vjerno (preporučeno): masa, krov i otvori slijede model. Klon: najtočniji mogući oblik. Vlastito: vrijedi broj ispod. Provjereni recept: structure 70–85 i uz to stilski uzorak 40–50."
+
+#: includes/Admin/Admin.php
+msgid "Hű (75) – ajánlott"
+msgstr "Vjerno (75) – preporučeno"
+
+#: includes/Admin/Admin.php
+msgid "Klón (85)"
+msgstr "Klon (85)"
+
+#: includes/Admin/Admin.php
+msgid "Csak akkor számít, ha a hűség „Egyedi”. 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70–85 a forma pontosan a modellé – a fotószerűséget ilyenkor a stílusminta adja."
+msgstr "Vrijedi samo uz vjernost „Vlastito”. 20–30 labavo, 40–60 prepoznatljivo ista kuća, 70–85 oblik je točno onaj iz modela – fotografski dojam tada daje stilski uzorak."
+
+#: includes/Admin/Admin.php
+msgid "Fotószerűség: stílusminta, negatív prompt, vezetőkép"
+msgstr "Fotorealizam: stilski uzorak, negativni prompt, vodeća slika"
+
+#: includes/Admin/Admin.php
+msgid "A 3D modell adja a formát (structure), a stílusminta a fotó hatását (style). Stílusonként egy valódi, szemmagasságból készült építészeti fotót tölts fel a kívánt fénnyel és hangulattal; minta nélkül a kép csak a szövegből kapja a hangulatot."
+msgstr "3D model daje oblik (structure), stilski uzorak dojam fotografije (style). Za svaki stil učitaj jednu pravu arhitektonsku fotografiju snimljenu u visini očiju, sa željenim svjetlom i ugođajem; bez uzorka slika ugođaj dobiva samo iz teksta."
+
+#: includes/Admin/Admin.php
+msgid "Stílusminta erőssége"
+msgstr "Jačina stilskog uzorka"
+
+#: includes/Admin/Admin.php
+msgid "Mennyire vegye át a kép a mintafotó hatását (fény, színek, anyagszerűség). 40–50 ajánlott; felette a minta épülete is átszivároghat. A Mystic felé adherence = 100 − ez az érték."
+msgstr "Koliko slika preuzima dojam uzorne fotografije (svjetlo, boje, materijali). Preporučeno 40–50; iznad toga može procuriti i zgrada s uzorka. Mysticu ide adherence = 100 − ova vrijednost."
+
+#: includes/Admin/Admin.php
+msgid "HDR / részletesség"
+msgstr "HDR / detalji"
+
+#: includes/Admin/Admin.php
+msgid "Csak stílusminta mellett hat. Kisebb érték természetesebb, fotószerűbb; nagyobb részletesebb, de „AI-szerűbb”. 30–40 ajánlott."
+msgstr "Djeluje samo uz stilski uzorak. Niže djeluje prirodnije i fotografskije; više je detaljnije, ali „više kao AI”. Preporučeno 30–40."
+
+#: includes/Admin/Admin.php
+msgid "Negatív prompt a szöveg végén"
+msgstr "Negativni prompt na kraju teksta"
+
+#: includes/Admin/Admin.php
+msgid "A konfigurációból készülő tiltólista (a választott értékek téves alternatívái: rossz tetőforma, rossz tetőszín, plusz szint, pajta…). A Mysticnek nincs külön negatív mezője, ezért „Avoid: …” mondatként a prompt végére kerül. Ha egy tiltott szín mégis megjelenik a képen, kapcsold ki."
+msgstr "Popis zabrana izrađen iz konfiguracije (pogrešne alternative odabranih vrijednosti: pogrešan oblik ili boja krova, kat viška, štala…). Mystic nema zasebno negativno polje, pa ide na kraj prompta kao rečenica „Avoid: …”. Ako se zabranjena boja ipak pojavi, isključi ovo."
+
+#: includes/Admin/Admin.php
+msgid "Tiszta vezetőkép"
+msgstr "Čista vodeća slika"
+
+#: includes/Admin/Admin.php
+msgid "A 3D vezetőképről lekerülnek a járművek, az emberek, az állatok, a háttér fái és a pára. Ezek a 3D-ben egyszerű tömbök, és a képmodell a formájukat másolná; így a szövegből valódi formában festi meg őket."
+msgstr "S 3D vodeće slike uklanjaju se vozila, ljudi, životinje, stabla u pozadini i izmaglica. U 3D-u su to jednostavni oblici koje bi model slike kopirao; ovako ih iz teksta naslika stvarno."
+
+#: includes/Admin/Admin.php
+msgid "Fő kép kameramagassága"
+msgstr "Visina kamere glavne slike"
+
+#: includes/Admin/Admin.php
+msgid "Automatikus: a látogató iránya marad, de magas nézőpontnál a vezetőkép fotós szemmagasságból készül (az építészeti fotók így készülnek). Látogatóé: pontosan az a kameraállás, amit a látogató beállított."
+msgstr "Automatski: smjer posjetitelja ostaje, ali s visokog stajališta vodeća slika nastaje iz visine očiju fotografa (tako se snima arhitektura). Posjetiteljev: točno položaj kamere koji je posjetitelj postavio."
+
+#: includes/Admin/Admin.php
+msgid "Automatikus (ajánlott)"
+msgstr "Automatski (preporučeno)"
+
+#: includes/Admin/Admin.php
+msgid "A látogató kameraállása"
+msgstr "Položaj kamere posjetitelja"
+
+#: includes/Admin/Admin.php
+msgid "Általános mintakép"
+msgstr "Opća uzorna fotografija"
+
+#: includes/Admin/Admin.php
+msgid "Akkor megy, ha a választott stílusnak nincs saját mintaképe."
+msgstr "Koristi se kada odabrani stil nema vlastitu uzornu fotografiju."
+
+#: includes/Admin/Admin.php
+msgid "Belső tér mintakép"
+msgstr "Uzorna fotografija interijera"
+
+#: includes/Admin/Admin.php
+msgid "A belső nézetek stílusmintája."
+msgstr "Stilski uzorak pogleda u interijer."

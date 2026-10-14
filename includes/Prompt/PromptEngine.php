@@ -641,6 +641,13 @@ final class PromptEngine {
 		}
 		$prompt   = self::tidy( implode( ' ', array_filter( $parts ) ) );
 		$negative = false !== strpos( (string) $vdef['modules'], 'negative' ) ? self::tidy( self::fill( $modules['negative'], $vars ) ) : '';
+		// The wrong alternatives of what the visitor chose (a flat roof when they built a gable, an
+		// anthracite roof when theirs is red-brown, a second storey on a bungalow): always part of the
+		// negative list, whatever the prompt version says.
+		$wrong = self::config_negative( $c, 'interior' === $view );
+		if ( ! empty( $wrong ) ) {
+			$negative = self::tidy( trim( $negative . ' Also avoid: ' . implode( ', ', $wrong ) . '.' ) );
+		}
 		return array(
 			'prompt'   => $prompt,
 			'negative' => $negative,
@@ -702,7 +709,7 @@ final class PromptEngine {
 	 * How closely the picture must follow the guide: the strength sent to the provider.
 	 * "custom" keeps whatever the operator set by hand in magnific.structure_strength.
 	 */
-	public const FIDELITY = array( 'free' => 25, 'balanced' => 45, 'faithful' => 65, 'clone' => 80 );
+	public const FIDELITY = array( 'free' => 25, 'balanced' => 45, 'faithful' => 75, 'clone' => 85 );
 
 	public static function fidelity_strength(): int {
 		$f = (string) Settings::get( 'magnific.fidelity', 'faithful' );
@@ -750,6 +757,191 @@ final class PromptEngine {
 			. ' and nothing that the reference shows may be left out.'
 			. ' Keep the camera position and the horizon of the reference.'
 			. ' Everything below describes the materials, colours, light and surroundings of that same single building. ';
+	}
+
+	/**
+	 * How much the style sample photo counts (0–100), set apart from the structure strength.
+	 * Mystic calls the opposite "adherence": a high adherence follows the prompt, a low one the
+	 * style reference – so the value sent is 100 minus this.
+	 */
+	public static function style_strength(): int {
+		return max( 0, min( 100, (int) Settings::get( 'magnific.style_strength', 45 ) ) );
+	}
+
+	public static function style_adherence(): int {
+		return 100 - self::style_strength();
+	}
+
+	/**
+	 * The opening block for a room: the interior counterpart of reference_lead().
+	 */
+	public static function interior_lead(): string {
+		$f = (string) Settings::get( 'magnific.fidelity', 'faithful' );
+		if ( ! in_array( $f, array( 'faithful', 'clone', 'custom' ), true ) ) {
+			return '';
+		}
+		return 'Photorealistic interior photograph of EXACTLY the room shown in the reference image.'
+			. ' The reference image is a 3D model of this very room and it is binding:'
+			. ' the same walls and ceiling height, the same windows, doors and openings in the same places,'
+			. ' the same furniture pieces in the same positions and sizes.'
+			. ' Do NOT add any further furniture, doors, windows, columns or rooms, and leave nothing out.'
+			. ' Keep the camera position and the horizon of the reference.'
+			. ' Everything below describes the materials, colours and light of that same room. ';
+	}
+
+	public static function interior_note(): string {
+		return ' The reference image is the 3D model of this room: keep its layout, the openings and the furniture positions; render it photorealistically with the materials described above.';
+	}
+
+	/**
+	 * The final text for one request: the binding block in front (when there is one), the closing
+	 * reference sentence after the body, the negative list last – all of it within $max, and the
+	 * negative list is never cut by the length limit (see combined()). With $inline_negative false
+	 * the negative list is left out (the provider gets it in a field of its own, or not at all).
+	 */
+	public static function compose( array $built, string $lead = '', string $note = '', bool $inline_negative = true, int $max = self::MAX_PROMPT ): string {
+		if ( ! $inline_negative ) {
+			$built['negative'] = '';
+		}
+		if ( '' !== trim( $note ) ) {
+			$built['prompt'] = self::tidy( (string) ( $built['prompt'] ?? '' ) . ' ' . trim( $note ) );
+			if ( isset( $built['parts'] ) && is_array( $built['parts'] ) ) {
+				$built['parts']['refnote'] = trim( $note );   // not in TRIM_ORDER: never shortened
+			}
+		}
+		return $lead . self::combined( $built, $max - self::len( $lead ) );
+	}
+
+	/**
+	 * The wrong alternatives of the visitor's own choices, for the negative prompt: what an image
+	 * model tends to put in instead (an anthracite roof instead of a red-brown one, a flat roof
+	 * instead of a gable, a second storey on a bungalow, a barn next to a farmhouse). Only values the
+	 * visitor did NOT choose are listed, never their own ones.
+	 *
+	 * @return string[] Short English phrases.
+	 */
+	public static function config_negative( array $c, bool $interior = false ): array {
+		$out = array();
+		$has = static function ( $list, string $v ): bool {
+			return in_array( $v, array_map( 'strval', (array) $list ), true );
+		};
+		if ( $interior ) {
+			$out = array( 'extra doors or windows', 'furniture that is not in the reference', 'exterior view of the house' );
+			if ( 'none' === (string) ( $c['people'] ?? 'none' ) ) {
+				$out[] = 'people';
+			}
+			if ( empty( $c['pets'] ) ) {
+				$out[] = 'pets';
+			}
+			return $out;
+		}
+		// one house: every further building or wing is an invention of the model
+		$out[] = 'barn';
+		$out[] = 'second house';
+		$out[] = 'extra wing or annex';
+		$levels = array(
+			'single' => array( 'second storey', 'two-storey house' ),
+			'attic'  => array( 'full-height second floor', 'three-storey house' ),
+			'two'    => array( 'single-storey bungalow', 'third storey' ),
+			'three'  => array( 'single-storey bungalow', 'two-storey house' ),
+		);
+		$out  = array_merge( $out, $levels[ (string) ( $c['levels'] ?? '' ) ] ?? array() );
+		$roof = (string) ( $c['roof_type'] ?? '' );
+		$roofs = array(
+			'flat'     => array( 'pitched roof', 'gable roof', 'hipped roof' ),
+			'gable'    => array( 'flat roof', 'hipped roof', 'mansard roof' ),
+			'hip'      => array( 'flat roof', 'gable ends' ),
+			'half_hip' => array( 'flat roof', 'plain gable ends' ),
+			'pyramid'  => array( 'flat roof', 'gable roof' ),
+			'shed'     => array( 'flat roof', 'gable roof' ),
+			'multi'    => array( 'flat roof' ),
+			'complex'  => array( 'flat roof' ),
+		);
+		$out = array_merge( $out, $roofs[ $roof ] ?? array() );
+		if ( '' !== $roof && 'flat' !== $roof ) {
+			$out = array_merge( $out, self::wrong_colours( (string) ( $c['roof_color'] ?? '' ), 'roof' ) );
+		}
+		$main   = (string) ( $c['facade_main'] ?? '' );
+		$accent = array_map( 'strval', (array) ( $c['facade_accent'] ?? array() ) );
+		$mats   = array(
+			'render' => array( 'exposed brick facade', 'timber cladding', 'stone cladding' ),
+			'stone'  => array( 'plain rendered facade', 'brick facade' ),
+			'brick'  => array( 'plain rendered facade', 'stone facade' ),
+			'wood'   => array( 'plain rendered facade', 'brick facade' ),
+			'other'  => array( 'brick facade', 'timber cladding' ),
+		);
+		$kind = in_array( $main, array( 'render', 'stone', 'brick' ), true ) ? $main
+			: ( in_array( $main, array( 'clinker', 'brick_white' ), true ) ? 'brick'
+			: ( in_array( $main, array( 'wood', 'wood_horizontal', 'board_batten', 'charred_wood' ), true ) ? 'wood' : ( '' !== $main ? 'other' : '' ) ) );
+		foreach ( $mats[ $kind ] ?? array() as $m ) {
+			// a material the visitor uses as an accent is not a wrong one
+			if ( ( false !== strpos( $m, 'timber' ) && array_intersect( $accent, array( 'wood', 'timber' ) ) )
+				|| ( false !== strpos( $m, 'stone' ) && in_array( 'stone', $accent, true ) )
+				|| ( false !== strpos( $m, 'brick' ) && array_intersect( $accent, array( 'brick', 'clinker' ) ) ) ) {
+				continue;
+			}
+			$out[] = $m;
+		}
+		if ( in_array( $main, array( 'render', 'panel', 'fiber_cement', 'concrete' ), true ) ) {
+			$out = array_merge( $out, self::wrong_colours( (string) ( $c['facade_color'] ?? '' ), 'facade' ) );
+		}
+		$out = array_merge( $out, self::wrong_colours( (string) ( $c['window_frame_color'] ?? '' ), 'window frames' ) );
+		$garage = array(
+			'none'     => array( 'garage', 'carport' ),
+			'carport'  => array( 'closed garage' ),
+			'garage_1' => array( 'detached garage building', 'double garage' ),
+			'garage_2' => array( 'detached garage building' ),
+			'separate' => array( 'garage attached to the house' ),
+		);
+		$out = array_merge( $out, $garage[ (string) ( $c['garage'] ?? '' ) ] ?? array() );
+		if ( ! $has( $c['garden_features'] ?? array(), 'pool' ) ) {
+			$out[] = 'swimming pool';
+		}
+		if ( array_key_exists( 'balcony', $c ) && empty( $c['balcony'] ) ) {
+			$out[] = 'balcony';
+		}
+		if ( array_key_exists( 'chimney', $c ) && empty( $c['chimney'] ) ) {
+			$out[] = 'chimney';
+		}
+		if ( array_key_exists( 'roof_solar', $c ) && empty( $c['roof_solar'] ) && 'flat' !== $roof ) {
+			$out[] = 'solar panels';
+		}
+		if ( 'none' === (string) ( $c['people'] ?? 'none' ) ) {
+			$out[] = 'people';
+		}
+		if ( array_key_exists( 'vehicles', $c ) && empty( $c['vehicles'] ) ) {
+			$out[] = 'parked cars';
+		}
+		/**
+		 * The wrong alternatives listed in the negative prompt.
+		 *
+		 * @param string[] $out      Phrases.
+		 * @param array    $c        Configuration.
+		 * @param bool     $interior Interior view.
+		 */
+		return array_values( array_unique( (array) apply_filters( 'agh_config_negative', $out, $c, $interior ) ) );
+	}
+
+	/**
+	 * The colour families a model would wrongly use instead of the chosen one.
+	 *
+	 * @return string[]
+	 */
+	private static function wrong_colours( string $hex, string $what ): array {
+		$name = Color::describe( $hex );
+		if ( '' === $name ) {
+			return array();
+		}
+		$warm  = (bool) preg_match( '/red|terracotta|brown|burgundy|coral|oak|ochre|orange|mustard/', $name );
+		$dark  = (bool) preg_match( '/anthracite|charcoal|black|dark/', $name );
+		$light = (bool) preg_match( '/white|cream|beige|sand|pale|light|greige/', $name );
+		if ( 'roof' === $what ) {
+			return $warm ? array( 'anthracite roof', 'black roof', 'grey roof' ) : ( $dark ? array( 'red roof tiles', 'terracotta roof', 'brown roof' ) : array( 'anthracite roof', 'red roof tiles' ) );
+		}
+		if ( 'facade' === $what ) {
+			return $light ? array( 'dark facade' ) : ( $dark ? array( 'white facade' ) : array( 'white facade', 'grey facade' ) );
+		}
+		return $dark ? array( 'white window frames' ) : ( $light ? array( 'black window frames' ) : array( 'white plastic window frames' ) );
 	}
 
 	public static function clip( string $prompt, int $max = self::MAX_PROMPT ): string {

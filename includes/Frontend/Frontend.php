@@ -282,7 +282,15 @@ final class Frontend {
 			),
 			'limits'    => RateLimiter::status_for_current(),
 			// the shape of the guide picture taken from the 3D model: the same as the finished image
-			'guide'     => array( 'aspect' => (float) Settings::get( 'magnific.guide_aspect', 1.645 ) ),
+			// clean: no vehicles, people, pets, background trees and haze on the guide (the model paints
+			// them for real from the prompt); camera: "auto" lowers a high hero camera to photographer height
+			// rooms: how many rooms get an interior guide
+			'guide'     => array(
+				'aspect' => (float) Settings::get( 'magnific.guide_aspect', 1.645 ),
+				'clean'  => (bool) Settings::get( 'magnific.guide_clean', true ),
+				'camera' => (string) Settings::get( 'magnific.hero_camera', 'auto' ),
+				'rooms'  => min( 8, (int) Settings::get( 'limits.interiors_max', 4 ) ),
+			),
 			'consents'  => QuoteService::consents(),
 			'tour'      => Help::tour(),
 			'docs'      => array(

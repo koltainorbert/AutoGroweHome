@@ -38,6 +38,7 @@ final class TestImageProvider implements ImageProviderInterface {
 			'native_4k' => false,
 			'upscale'   => false,
 			'is_test'   => true,
+			'negative'  => false,
 		);
 	}
 

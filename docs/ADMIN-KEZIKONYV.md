@@ -358,12 +358,37 @@ annál inkább „render” jellegű a kép; minél gyengébb, annál szebb fot�
 |---|---|
 | Szabad (25) | Hangulatkép, amikor a forma még nem fontos. |
 | Kiegyensúlyozott (45) | Felismerhetően ugyanaz a ház, nagyon fotószerű kép. |
-| **Hű (65) – alapértelmezés** | A tömeg, a tető és a nyílások követik a modellt, a kép még fotó. |
-| Klón (80) | A lehető legpontosabb forma; a kép kicsit renderesebb lehet. |
+| **Hű (75) – alapértelmezés** | A tömeg, a tető és a nyílások követik a modellt. |
+| Klón (85) | A lehető legpontosabb forma. |
 | Egyedi | A „Egyedi hűség értéke” mező (0–100) érvényes. |
 
-**Ha a kép szép, de nem a te házad:** emeld a hűséget (65 → 80). **Ha a kép pontos, de műanyagos:**
-csökkentsd (80 → 65 → 45), és inkább a promptban erősítsd az anyagokat (Promptmotor).
+### 5.2 A bevált recept: forma a 3D-ből, fotó a mintából (1.12.0)
+
+A kép két külön forrásból dolgozik, két külön erősséggel:
+
+1. **Forma = a 3D modell** (structure, 70–85 → „Hű” vagy „Klón”). A vezetőkép „tiszta”: a járművek,
+   emberek, állatok, a háttér fái és a pára lekerülnek róla, mert ezek a 3D-ben egyszerű tömbök, és a
+   képmodell a formájukat másolná (játékautó, kúp alakú fa). A szövegből ezeket valódi formában festi meg.
+   Magas látogatói nézőpontnál a fő kép vezetőképe szemmagasság-közeliből készül (az építészeti fotók így
+   készülnek); ez a „Fő kép kameramagassága” beállítással kapcsolható ki.
+2. **Fotó hatás = a stílusminta** (style, 40–50). AI-szolgáltatók → Magnific → „Fotószerűség” rész:
+   stílusonként egy médiatár-kép. **Ez adja a „csodát”**: a minta fénye, színei, anyagszerűsége megy át.
+   Jó minta: valódi építészeti fotó, szemmagasságból, a kívánt napszakkal (pl. arany óra, belül meleg
+   fények), lehetőleg hasonló léptékű házzal. 50 felett a minta épülete is átszivároghat.
+3. **Negatív prompt** a választott értékek téves alternatíváira (rossz tetőforma és -szín, plusz szint,
+   pajta, második ház, nem kért medence…). A Mysticnek nincs negatív mezője, ezért a prompt végére kerül;
+   ha egy tiltott elem épp emiatt jelenne meg, a „Negatív prompt a szöveg végén” kapcsolóval kivehető.
+4. **Belső nézetek**: a renderelt helyiségekről is készül 3D vezetőkép, a szoba sarkából, szemmagasságból,
+   és a prompt saját belső nyitóblokkal kezdődik (ugyanaz a szoba, nincs plusz bútor). Belső mintakép
+   külön állítható.
+
+Mystic-beállítások a fotóhatáshoz (a Magnific dokumentációja alapján, éles kulccsal nem mérve):
+`mystic_engine = magnific_sharpy`, `hdr = 35`, `creative_detailing = 33`. Már elmentett beállításnál az
+engine kézzel állítandó át.
+
+**Ha a kép szép, de nem a te házad:** emeld a hűséget (75 → 85). **Ha a kép pontos, de műanyagos:**
+először tölts fel stílusmintát, és emeld a stílusminta erősségét (45 → 50); ha ez sem elég, csökkentsd a
+hűséget (85 → 75 → 45).
 
 A felbontás: a koncepcióképek 2k-ban készülnek (gyors, olcsó), a kiválasztott koncepció galériája
 4k-ban. Nyomtatáshoz vagy nagy bemutatóhoz a „Felskálázás a kiválasztott galériánál” kapcsoló tesz

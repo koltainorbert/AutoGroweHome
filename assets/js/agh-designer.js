@@ -2316,10 +2316,29 @@
 		var w = 1152;
 		return [w, Math.round(w / a)];
 	}
+	// How the guide pictures are taken (Settings → Magnific): a clean scene without the simple
+	// stand-in shapes, the hero from photographer height, and which rooms get an interior guide –
+	// the same rooms, in the same order, that the server renders interiors for.
+	function guideRooms() {
+		var max = Math.max(0, Math.min(8, Number(S.boot && S.boot.guide && S.boot.guide.rooms) || 4)), out = {}, n = 0;
+		(S.config.rooms || []).forEach(function (r) {
+			if (!r || !r.render || !r.id || n >= max) { return; }
+			var id = String(r.id).toLowerCase().replace(/[^a-z0-9_]/g, '');
+			if (!id || out[id]) { return; }
+			var o = { id: String(r.id), type: r.type, area: Number(r.area) || 0 };
+			['width', 'length', 'ceiling_height', 'interior_style', 'wall_color', 'furniture_color'].forEach(function (k) { if (r[k] !== undefined && r[k] !== '') { o[k] = r[k]; } });
+			out[id] = o; n++;
+		});
+		return out;
+	}
+	function guideOpts() {
+		var g = (S.boot && S.boot.guide) || {};
+		return { clean: g.clean !== false, camera: g.camera || 'auto', rooms: guideRooms() };
+	}
 	function startGuides() {
 		if (!A3 || !A3.guides) { guideJob = null; return; }
 		var out = {}, sz = guideSize();
-		try { guideJob = { out: out, p: A3.guides(['hero'], sz[0], sz[1], out).catch(function () { return out; }) }; }
+		try { guideJob = { out: out, p: A3.guides(['hero'], sz[0], sz[1], out, guideOpts()).catch(function () { return out; }) }; }
 		catch (e) { guideJob = null; }
 	}
 	function guideShots() {
@@ -2333,14 +2352,15 @@
 			j.p.then(finish, finish);
 		});
 	}
-	// The remaining views (front, back, sides, aerial) for the gallery: they are taken after the
-	// generation has started and uploaded on their own, so they never delay anything.
+	// The remaining views (front, back, sides, aerial) and the rooms for the gallery: they are taken
+	// after the generation has started and uploaded on their own, so they never delay anything.
 	function sendRestGuides(uuid) {
 		if (!A3 || !A3.guides || !uuid) { return; }
 		setTimeout(function () {
 			try {
-				var sz = guideSize();
-				A3.guides(['front', 'back', 'left', 'right', 'aerial'], sz[0], sz[1]).then(function (g) {
+				var sz = guideSize(), opts = guideOpts();
+				var views = ['front', 'back', 'left', 'right', 'aerial'].concat(Object.keys(opts.rooms).map(function (id) { return 'interior_' + id; }));
+				A3.guides(views, sz[0], sz[1], null, opts).then(function (g) {
 					if (g && Object.keys(g).length) { api('POST', 'projects/' + uuid + '/guides', { guides: g }, 60000).catch(function () { /* the server draws its own guide */ }); }
 				}).catch(function () { /* no guide for the gallery this time */ });
 			} catch (e) { /* no WebGL */ }

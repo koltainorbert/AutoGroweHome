@@ -12,7 +12,8 @@
  *    model, engine, creative_detailing, filter_nsfw (setting
  *    magnific.filter_nsfw, default true); optionally structure_reference +
  *    structure_strength (structure guidance), style_reference + adherence
- *    (consistency with the hero), fixed_generation, webhook_url.
+ *    (consistency with the hero, or the operator's style sample photo) + hdr,
+ *    fixed_generation, webhook_url. There is no negative-prompt field.
  *    → {data:{task_id,status,generated[]}}; GET /v1/ai/mystic/{task-id}.
  *  - POST /v1/ai/text-to-image/flux-2-pro (views with the reference
  *    strategy): prompt, width, height (256–1440), input_image (hero);
@@ -74,6 +75,9 @@ final class MagnificProvider implements ImageProviderInterface {
 			'native_4k' => true,
 			'upscale'   => true,
 			'is_test'   => false,
+			// Mystic and Flux have no negative-prompt field (docs.magnific.com, 2026-10): the list
+			// goes at the end of the prompt text instead (PromptEngine::compose()).
+			'negative'  => false,
 		);
 	}
 
@@ -140,6 +144,15 @@ final class MagnificProvider implements ImageProviderInterface {
 			if ( $use_reference ) {
 				$body['style_reference'] = (string) $r['reference_image'];
 				$body['adherence']       = (int) Settings::get( 'magnific.style_adherence', 60 );
+			} elseif ( ! empty( $r['style_image'] ) ) {
+				// the operator's sample photo of the style: the photographic look, while the 3D guide
+				// keeps the form (style strength 40–50 → adherence 60–50)
+				$body['style_reference'] = (string) $r['style_image'];
+				$body['adherence']       = PromptEngine::style_adherence();
+			}
+			if ( isset( $body['style_reference'] ) ) {
+				// only works together with a style reference: lower looks more natural, higher more "AI"
+				$body['hdr'] = max( 0, min( 100, (int) Settings::get( 'magnific.hdr', 35 ) ) );
 			}
 			if ( ! empty( $r['fixed'] ) ) {
 				$body['fixed_generation'] = true;
