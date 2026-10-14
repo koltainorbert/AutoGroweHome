@@ -1,8 +1,8 @@
 # ALLAPOT – AutoGroweHome (frissítve: 2026-10-14)
 
-**Verzió:** ügyfélplugin 1.9.1 (dist/autogrowehome-1.9.1.zip, 6 044 874 bájt, sha256 a7a638e4…96e4bf21) · Licencközpont 1.0.0 (license-hub/) · Repó: github.com/koltainorbert/AutoGroweHome (main). Chat elején: repó bekötése, CLAUDE.md, claude/FELADAT-*.md, tesztoldal `bin/test-wp.sh`.
+**Verzió:** ügyfélplugin 1.9.2 (dist/autogrowehome-1.9.2.zip, 6 094 349 bájt, sha256 ef5859fc…9905845d) · Licencközpont 1.0.0 (license-hub/) · Repó: github.com/koltainorbert/AutoGroweHome (main). Chat elején: repó bekötése, CLAUDE.md, claude/FELADAT-*.md, tesztoldal `bin/test-wp.sh`.
 
-**Mérve (1.9.1):** autoloader 119/119 · PHP lint 0 · 15 nyelv × 2095 szöveg, 0 hiba · vázlat 1247 rajz, 0 hiba · 144 mező, 2D 57 / 3D 91 változás, 0 hiba · responsive 24 nézet 0 túllógás · wizard 48 lépés 0 hiba · kereső 0 fókuszvesztés · koppintás 122 rész 8 mező · 60 szoba 347 tárgy 0 kilógó 0 ajtóban · belső nézet kitöltés 89% · kártyaképek 55 mező 321 opció 0 alapjelenet · 0 natív színmező · helyiségrészletek 22/30 · kézi elrendezés 15/15 fogható, 8/8 marad újratöltés után · utcasor 16 helyszín, városin 10 sorház · betöltés helyben 2,8 s / 1,9 MB (tömörítés nélküli tesztszerver, gzipelve ~0,42 MB).
+**Mérve (1.9.2):** tárhely 10/10 + 11/11 (próbafájl HTTP-n, AGH_PRIVATE_DIR, fájlok áthozása) · autoloader 119/119 · PHP lint 0 · 15 nyelv × 2111 szöveg, 0 hiba · vázlat 1247 rajz, 0 hiba · 144 mező, 2D 57 / 3D 91 változás, 0 hiba · responsive 24 nézet 0 túllógás · wizard 48 lépés 0 hiba · kereső 0 fókuszvesztés · koppintás 122 rész 8 mező · 60 szoba 347 tárgy 0 kilógó 0 ajtóban · belső nézet kitöltés 89% · kártyaképek 55 mező 321 opció 0 alapjelenet · 0 natív színmező · helyiségrészletek 22/30 · kézi elrendezés 15/15 fogható, 8/8 marad újratöltés után · utcasor 16 helyszín, városin 10 sorház · betöltés helyben 2,8 s / 1,9 MB (tömörítés nélküli tesztszerver, gzipelve ~0,42 MB).
 
 **Döntések**
 - Norbi minden szövegéből először tökéletes prompt készül fájlba (`docs/FELADAT-<verzió>.md`), csak utána kezdődik a munka; a prompt semmit nem hagy ki és semmit nem vesz el a meglévőből.
@@ -18,9 +18,10 @@
 - 1 kérés = 3 koncepció = 1 egység; BRAMAC magastetőnél kötelező. Licenc nélkül Starter.
 
 **Nyitott tételek**
+- Védett tárhely éles oldalon: a figyelmeztetés mostantól kiírja a megoldást, de a szerverbeállítást (AGH_PRIVATE_DIR vagy Nginx location) Norbinak kell elvégeznie; utána „Ellenőrzés újra”, és ha a konstans utólag került be, „Fájlok áthozása”.
 - htombau: telepítés és visszajelzés képernyőképekkel; 3D sebesség telefonon valódi GPU-n nem mérve.
 - Betöltés: a tesztszerver nem tömörít; éles kiszolgálón gzip kell (1,9 MB → ~0,42 MB). További csökkentés: az `agh-3d-int.js` (77 KB gzip) csak a belső nézet első megnyitásakor töltődjön – nagyobb átalakítás, nincs megcsinálva.
 - Belső nézet: zsúfolt szobában egy bútor a padló közepére kerülhet (az üzenet jelzi); valódi kétpontos perspektíva még nincs.
 - Licencközpont telepítése Norbi oldalára → szerver URL + nyilvános kulcs az ügyfélpluginba.
-- GitHub repó NYILVÁNOS → privátra. Fordítások lektorálása (1.9.x: 69 új felirat).
+- GitHub repó NYILVÁNOS → privátra. Fordítások lektorálása (1.9.x: 85 új felirat).
 - Magnific/Anthropic kulcs, éles végigteszt; fizetés → automatikus kulcskiadás; BRAMAC-katalógus, jogi szövegek; MySQL/SMTP/éles cron teszt.
