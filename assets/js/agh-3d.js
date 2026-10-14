@@ -1748,7 +1748,8 @@ Viewer.prototype.fitCamera = function (reset) {
 	var aspect = this.camera.aspect || 1.5, hfov = 2 * Math.atan(Math.tan(vfov * D2R / 2) * aspect);
 	var dist = sph.radius / Math.sin(Math.min(vfov * D2R, hfov) / 2) * (this.thumb ? 0.68 : 0.8);
 	var room = this.house && this.house.room;
-	var preset = room ? (room.cam || [38, 20]) : { three_quarter: [36, 14], frontal: [4, 8], low: [30, 4], elevated: [40, 38] }[c.camera || 'three_quarter'];
+	// `_cam`: a fixed [azimuth, elevation] pair, used by the guide pictures sent to the image model
+	var preset = room ? (room.cam || [38, 20]) : (Array.isArray(c._cam) ? c._cam : { three_quarter: [36, 14], frontal: [4, 8], low: [30, 4], elevated: [40, 38] }[c.camera || 'three_quarter']);
 	var target = sph.center.clone(); if (!(room && room.cam)) { target.y = Math.max(1.2, sph.center.y * 0.75); }
 	if (room && !room.cam && room.W) {
 		// A room is framed by the room itself, not by everything in the scene: the camera looks in from the
@@ -2344,6 +2345,63 @@ onTexture(function () {
 	if (texTimer) { return; }
 	texTimer = setTimeout(function () { texTimer = 0; if (live && !live.disposed) { live.shadowDirty = true; live.requestRender(); } }, 90);
 });
-var api = { attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, version: 'r170-2' };
+/* ------------------------------------------------------------------ guide pictures
+ * The picture the image model follows: the very house the visitor built, from the angle of the view
+ * being generated. "hero" is the visitor's own camera (what they see on screen), the others are fixed
+ * angles. Rendered off-screen through the same renderer, so nothing on screen changes.
+ * Returns { view: dataURL } – an empty object when there is no WebGL or no house yet. */
+var GUIDE_CAM = { front: [0, 8], back: [180, 8], left: [270, 8], right: [90, 8], aerial: [36, 42] };
+function guides(views, w, h, out) {
+	out = out || {};
+	if (!live || !live.house || !live.c) { return Promise.resolve(out); }
+	w = w || 1152; h = h || 656;   // enough for structure guidance, a third less to upload
+	views = (views && views.length ? views : ['hero', 'front', 'back', 'left', 'right', 'aerial']).slice(0, 8);
+	var base = live.c, fixed = views.filter(function (v) { return 'hero' !== v; });
+	var step = function (fn) { return new Promise(function (res) { setTimeout(function () { try { fn(res); } catch (e) { res(); } }, 0); }); };
+	var job = texturesReady();
+	if (views.indexOf('hero') !== -1) {
+		// exactly the visitor's own view: the live camera, only the picture shape differs
+		job = job.then(function () {
+			return step(function (res) {
+				var cam = live.camera, keep = cam.aspect;
+				cam.aspect = w / h; cam.updateProjectionMatrix();
+				if (!live.rtA || live.rtA.width !== w || live.rtA.height !== h) { thumbPixels.prep(live, w, h); }
+				out.hero = thumbPixels(live, w, h);
+				cam.aspect = keep; cam.updateProjectionMatrix();
+				if (live.rtA) { live.rtA.dispose(); live.rtB.dispose(); live.rtA = live.rtB = null; }
+				live.requestRender();
+				res();
+			});
+		});
+	}
+	if (fixed.length) {
+		// the house is built once off-screen; the other views only move the camera, which is what
+		// makes this fast enough to run while the visitor is still reading the dialog
+		job = job.then(function () {
+			return step(function (res) {
+				var v = sharedThumb();
+				v.setSize(w, h);
+				// a copy: the camera of each view is written into it, and the live preview's own
+				// configuration must not be touched by that
+				v.update(Object.assign({}, base), 'guide');
+				if (!v.rtA || v.rtA.width !== w || v.rtA.height !== h) { thumbPixels.prep(v, w, h); }
+				v.compileFor(v.scene, v.rtA).then(res);
+			});
+		});
+		fixed.forEach(function (view) {
+			job = job.then(function () {
+				return step(function (res) {
+					var v = sharedThumb();
+					v.c._cam = GUIDE_CAM[view] || GUIDE_CAM.front;
+					v.fitCamera(true);
+					out[view] = thumbPixels(v, w, h);
+					res();
+				});
+			});
+		});
+	}
+	return job.then(function () { return out; });
+}
+var api = { attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-2' };
 window.AGH_3D = api;
 export default api;

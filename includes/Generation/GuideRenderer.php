@@ -23,6 +23,19 @@ final class GuideRenderer {
 	}
 
 	/**
+	 * The test-mode band: what the picture is, and that it is not an AI render.
+	 *
+	 * @param \GdImage|resource $img Image.
+	 */
+	public static function stamp( $img, string $label ): void {
+		$w    = (int) imagesx( $img );
+		$band = imagecolorallocatealpha( $img, 255, 255, 255, 30 );
+		imagefilledrectangle( $img, 0, 0, $w, 46, $band );
+		imagestring( $img, 5, 16, 14, self::ascii( $label ), imagecolorallocate( $img, 30, 34, 38 ) );
+		imagestring( $img, 5, max( 340, $w - 330 ), 14, 'TESZT KEP - NEM AI GENERALAS', imagecolorallocate( $img, 194, 85, 63 ) );
+	}
+
+	/**
 	 * @param array  $m      Building model.
 	 * @param array  $c      Config.
 	 * @param string $view   front|back|left|right|hero|aerial|garden|evening.
@@ -150,11 +163,7 @@ final class GuideRenderer {
 		}
 
 		if ( '' !== $label ) {
-			$band = imagecolorallocatealpha( $img, 255, 255, 255, 30 );
-			imagefilledrectangle( $img, 0, 0, self::W, 46, $band );
-			imagestring( $img, 5, 16, 14, self::ascii( $label ), $ink );
-			$red = imagecolorallocate( $img, 194, 85, 63 );
-			imagestring( $img, 5, self::W - 330, 14, 'TESZT KEP - NEM AI GENERALAS', $red );
+			self::stamp( $img, $label );
 		}
 
 		ob_start();

@@ -1,0 +1,124 @@
+<?php
+/**
+ * A 3D modellről küldött vezetőkép útja: a tervezőtől a képgenerálóig (tesztoldal, WordPress-szel).
+ *
+ * 1. A `Storage::put_guides()` csak valódi, méretes PNG/JPEG-et vesz át, és a védett tárhelyre teszi.
+ * 2. A `Pipeline::render()` a koncepcióképhez (hero) is a mentett 3D képet küldi structure
+ *    referenciaként – a kérést az `agh_provider_request` szűrővel fogjuk el, hálózat nélkül.
+ * 3. Vezetőkép nélkül a homlokzati nézet a szerver saját tömegvázlatát kapja, a hero semmit –
+ *    vagyis a korábbi viselkedés megmarad.
+ *
+ * Használat: php tests/guide-test.php [/path/to/test/wordpress]   (alap: /home/claude/wpsite)
+ */
+
+$agh_wp_dir = $argv[1] ?? '/home/claude/wpsite';
+define( 'WP_USE_THEMES', false );
+$_SERVER['HTTP_HOST']   = '127.0.0.1:8899';
+$_SERVER['REQUEST_URI'] = '/';
+$_SERVER['REMOTE_ADDR'] = '203.0.113.11';
+require $agh_wp_dir . '/wp-load.php';
+
+use AutoGroweHome\Generation\JobQueue;
+use AutoGroweHome\Generation\Pipeline;
+use AutoGroweHome\Projects\Repository;
+use AutoGroweHome\Support\Settings;
+use AutoGroweHome\Support\Storage;
+
+$ok   = 0;
+$fail = 0;
+$t    = function ( string $name, bool $cond ) use ( &$ok, &$fail ) {
+	if ( $cond ) {
+		$ok++;
+	} else {
+		$fail++;
+		echo "HIBA: {$name}\n";
+	}
+};
+
+/** Valódi, 1344x768-as JPEG (GD), hogy a méret- és típusellenőrzés élesben fusson. */
+function agh_shot( int $w = 1344, int $h = 768 ): string {
+	$img = imagecreatetruecolor( $w, $h );
+	imagefilledrectangle( $img, 0, 0, $w, $h, imagecolorallocate( $img, 180, 200, 220 ) );
+	imagefilledrectangle( $img, (int) ( $w * 0.25 ), (int) ( $h * 0.3 ), (int) ( $w * 0.75 ), (int) ( $h * 0.8 ), imagecolorallocate( $img, 230, 225, 215 ) );
+	ob_start();
+	imagejpeg( $img, null, 82 );
+	$raw = (string) ob_get_clean();
+	imagedestroy( $img );
+	return 'data:image/jpeg;base64,' . base64_encode( $raw );
+}
+
+/** Mit kapott a képszolgáltató: nézetenként a vezetőkép hossza. */
+$seen = array();
+add_filter(
+	'agh_provider_request',
+	function ( $req, $asset ) use ( &$seen ) {
+		$seen[ (string) $asset['view'] ] = strlen( (string) ( $req['structure_image'] ?? '' ) );
+		return $req;
+	},
+	10,
+	2
+);
+
+Settings::update_group( 'magnific', array( 'structure_guidance' => true ) );
+Settings::update_group( 'images', array( 'allow_test_provider' => true, 'provider' => 'test' ) );
+Settings::flush();
+
+// érvényes alapkonfiguráció (a tervező is ebből indul), különben a tervezés validálásnál elbukik
+$cfg = \AutoGroweHome\Params\Validator::sanitize( \AutoGroweHome\Params\Registry::defaults() );
+$t( 'az alapkonfiguráció érvényes', empty( \AutoGroweHome\Params\Validator::check( $cfg )['errors'] ) );
+
+/* ---------------------------------------------------------------- 1. tárolás és ellenőrzés */
+$p1   = Repository::create_project( $cfg, 0, 'guidetest', 'guidetest-ip', 'hu_HU', 1 );
+$uuid = (string) $p1['uuid'];
+$n    = Storage::put_guides(
+	$uuid,
+	array(
+		'hero'  => agh_shot(),
+		'front' => agh_shot(),
+		'bogus' => agh_shot(),                                            // nincs ilyen nézet
+		'back'  => 'data:image/gif;base64,R0lGOD',                        // nem PNG/JPEG
+		'left'  => 'data:image/png;base64,' . base64_encode( 'rövid' ),   // túl kevés adat
+		'right' => agh_shot( 64, 64 ),                                    // túl kicsi kép
+	)
+);
+$t( 'csak a két jó kép került be', 2 === $n );
+$t( 'a hero képe megvan', '' !== Storage::guide_path( $uuid, 'hero' ) );
+$t( 'a front képe megvan', '' !== Storage::guide_path( $uuid, 'front' ) );
+$t( 'ismeretlen nézet nincs eltárolva', '' === Storage::guide_path( $uuid, 'bogus' ) );
+$t( 'nem képi adat nincs eltárolva', '' === Storage::guide_path( $uuid, 'back' ) );
+$t( 'túl kicsi kép nincs eltárolva', '' === Storage::guide_path( $uuid, 'right' ) );
+$t( 'a vezetőkép a védett tárhelyen van', 0 === strpos( Storage::guide_path( $uuid, 'hero' ), Storage::base_dir() ) );
+$t( 'a vezetőkép mérete életszerű', filesize( Storage::guide_path( $uuid, 'hero' ) ) > 4096 );
+$t( 'az útvonal-ellenőrzés nem enged ki', '' === Storage::guide_path( $uuid, '../../etc' ) );
+
+/* ---------------------------------------------------------------- 2. vezetőképpel generálva */
+$pr = Pipeline::start( $cfg, array( 'user_id' => 0, 'guest_hash' => 'guidetest', 'ip_hash' => 'guidetest-ip', 'lang' => 'hu_HU', 'reserved' => array() ) );
+Storage::put_guides( (string) $pr['uuid'], array( 'hero' => agh_shot(), 'front' => agh_shot() ) );
+$ran = 0;
+for ( $i = 0; $i < 12 && empty( $seen['hero'] ); $i++ ) {
+	$ran += JobQueue::run( 25.0, (int) $pr['id'] );
+}
+$t( 'a sor lefutott', $ran > 0 );
+$t( 'a hero kapott vezetőképet', isset( $seen['hero'] ) && $seen['hero'] > 4096 );
+$assets = array_filter( Repository::assets( (int) $pr['id'] ), function ( $a ) { return 'render' === $a['kind'] && 'hero' === $a['view']; } );
+$done   = array_filter( $assets, function ( $a ) { return 'done' === $a['status']; } );
+$t( 'készült koncepciókép', count( $done ) > 0 );
+
+/* ---------------------------------------------------------------- 3. vezetőkép nélkül: a régi út */
+$seen = array();
+$pr2  = Pipeline::start( $cfg, array( 'user_id' => 0, 'guest_hash' => 'guidetest2', 'ip_hash' => 'guidetest-ip2', 'lang' => 'hu_HU', 'reserved' => array() ) );
+for ( $i = 0; $i < 12 && ! array_key_exists( 'hero', $seen ); $i++ ) {
+	JobQueue::run( 25.0, (int) $pr2['id'] );
+}
+$t( 'vezetőkép nélkül a hero nem kap structure referenciát', array_key_exists( 'hero', $seen ) && 0 === $seen['hero'] );
+
+/* ---------------------------------------------------------------- takarítás */
+foreach ( array( $uuid, (string) $pr['uuid'], (string) $pr2['uuid'] ) as $u ) {
+	Storage::delete_project( $u );
+}
+foreach ( array( $p1, $pr, $pr2 ) as $prj ) {
+	Repository::update_project( (int) $prj['id'], array( 'status' => 'deleted' ) );
+}
+
+echo 'vezetőkép: ' . $ok . '/' . ( $ok + $fail ) . ( $fail ? ' – ' . $fail . ' hiba' : '' ) . ', hero vezetőkép ' . (int) ( $seen['hero'] ?? 0 ) . ' bájt vezetés nélkül' . "\n";
+exit( $fail ? 1 : 0 );

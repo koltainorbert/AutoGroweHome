@@ -57,6 +57,7 @@ final class RestController {
 		);
 		register_rest_route( $ns, '/projects/' . $uuid . '/select', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'select' ), 'permission_callback' => $front ) );
 		register_rest_route( $ns, '/projects/' . $uuid . '/save', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'save' ), 'permission_callback' => $front ) );
+		register_rest_route( $ns, '/projects/' . $uuid . '/guides', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'guides' ), 'permission_callback' => $front ) );
 		register_rest_route( $ns, '/projects/' . $uuid . '/regenerate', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'regenerate' ), 'permission_callback' => $front ) );
 		register_rest_route( $ns, '/projects/' . $uuid . '/cancel', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'cancel' ), 'permission_callback' => $front ) );
 		register_rest_route( $ns, '/projects/' . $uuid . '/quote', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'quote' ), 'permission_callback' => $front ) );
@@ -193,11 +194,26 @@ final class RestController {
 				'reserved'   => $res['reserved'],
 			)
 		);
+		// The pictures of the 3D model the visitor built: the image generator follows this geometry.
+		Storage::put_guides( (string) $project['uuid'], (array) ( $r->get_param( 'guides' ) ?: array() ) );
 		Stats::inc( 'generate_request' );
 		foreach ( (array) ( $c['_explicit'] ?? array() ) as $f ) {
 			Stats::inc( 'param', $f );
 		}
 		return new \WP_REST_Response( array( 'project' => $project['uuid'], 'reused' => false, 'limits' => RateLimiter::status_for_current(), 'test_mode' => $status['image_is_test'] ), 202 );
+	}
+
+	/**
+	 * The remaining pictures of the visitor's 3D model, sent after the generation started: they are
+	 * used by the gallery views (front, back, sides, aerial).
+	 */
+	public static function guides( \WP_REST_Request $r ): \WP_REST_Response {
+		$p = self::load_owned( (string) $r['id'] );
+		if ( ! $p ) {
+			return self::error( 'agh_not_found', __( 'A projekt nem található.', 'autogrowehome' ), 404 );
+		}
+		$n = Storage::put_guides( (string) $p['uuid'], (array) ( $r->get_param( 'guides' ) ?: array() ) );
+		return new \WP_REST_Response( array( 'stored' => $n ), 200 );
 	}
 
 	private static function load_owned( string $uuid ): ?array {
@@ -459,6 +475,8 @@ final class RestController {
 		// Everything up to queueing the render job is free of provider cost:
 		// on any failure in this part the reserved rebuild unit is given back.
 		try {
+			// Fresh pictures of the 3D model (the visitor may have turned or changed it since).
+			Storage::put_guides( (string) $p['uuid'], (array) ( $r->get_param( 'guides' ) ?: array() ) );
 			// Optional parameter changes for this concept: rebuild geometry & drawings.
 			$changes = $r->get_param( 'config' );
 			if ( is_array( $changes ) ) {

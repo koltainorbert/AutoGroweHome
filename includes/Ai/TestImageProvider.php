@@ -32,7 +32,9 @@ final class TestImageProvider implements ImageProviderInterface {
 	public function capabilities(): array {
 		return array(
 			'reference' => false,
-			'structure' => false,
+			// the guide picture of the visitor's own 3D model is accepted: in test mode that very
+			// picture comes back (watermarked), so the whole path is visible without an AI service
+			'structure' => true,
 			'native_4k' => false,
 			'upscale'   => false,
 			'is_test'   => true,
@@ -46,7 +48,11 @@ final class TestImageProvider implements ImageProviderInterface {
 		if ( empty( $model ) ) {
 			return array( 'ok' => false, 'status' => 'failed', 'task' => '', 'urls' => array(), 'bytes' => '', 'error' => 'Missing building model', 'transient' => false );
 		}
-		$png = GuideRenderer::render( $model, $config, 'interior' === ( $r['op'] ?? '' ) ? 'garden' : $view, (string) ( $r['label'] ?? $view ) );
+		// The visitor's own 3D picture if their browser sent one; otherwise the server's massing guide.
+		$png = self::from_guide( (string) ( $r['structure_image'] ?? '' ), (string) ( $r['label'] ?? $view ) );
+		if ( '' === $png ) {
+			$png = GuideRenderer::render( $model, $config, 'interior' === ( $r['op'] ?? '' ) ? 'garden' : $view, (string) ( $r['label'] ?? $view ) );
+		}
 		return array(
 			'ok'                => '' !== $png,
 			'status'            => '' !== $png ? 'completed' : 'failed',
@@ -59,6 +65,29 @@ final class TestImageProvider implements ImageProviderInterface {
 			'model'             => 'test-massing',
 			'cost_key'          => '',
 		);
+	}
+
+	/**
+	 * The guide picture (base64) as a labelled PNG, so test mode shows what was really sent.
+	 */
+	private static function from_guide( string $b64, string $label ): string {
+		if ( '' === $b64 || ! GuideRenderer::available() ) {
+			return '';
+		}
+		$raw = base64_decode( $b64, true );
+		if ( false === $raw || strlen( $raw ) < 1024 ) {
+			return '';
+		}
+		$img = @imagecreatefromstring( $raw ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		if ( ! $img ) {
+			return '';
+		}
+		GuideRenderer::stamp( $img, $label . ' – TESZT (a 3D modellből)' );
+		ob_start();
+		imagepng( $img );
+		$png = (string) ob_get_clean();
+		imagedestroy( $img );
+		return $png;
 	}
 
 	public function status( string $task ): array {

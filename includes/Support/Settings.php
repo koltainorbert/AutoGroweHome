@@ -65,7 +65,7 @@ final class Settings {
 				'reference_height'   => 816,
 				'style_adherence'    => 60,
 				'structure_guidance' => true,
-				'structure_strength' => 30,
+				'structure_strength' => 45,
 				'upscale_enabled'    => false,
 				'upscale_endpoint'   => '/v1/ai/image-upscaler-precision',
 				'upscale_sharpen'    => 40,

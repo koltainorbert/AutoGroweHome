@@ -191,6 +191,63 @@ final class Storage {
 	}
 
 	/**
+	 * Guide pictures of the visitor's own 3D model, stored for the image generator.
+	 * Only PNG and JPEG, at most 1.5 MB and 2048 px each, at most 8 per project; everything else is
+	 * dropped silently, because a missing guide only means the server draws its own one.
+	 *
+	 * @param array<string,string> $shots view => data URL.
+	 * @return int Number of pictures stored.
+	 */
+	public static function put_guides( string $project_uuid, array $shots ): int {
+		$views = array( 'hero', 'front', 'back', 'left', 'right', 'aerial', 'garden', 'evening' );
+		$n     = 0;
+		foreach ( $shots as $view => $data ) {
+			$view = sanitize_key( (string) $view );
+			if ( ! in_array( $view, $views, true ) || $n >= 8 || ! is_string( $data ) ) {
+				continue;
+			}
+			if ( ! preg_match( '#^data:image/(png|jpe?g);base64,#i', $data, $m ) ) {
+				continue;
+			}
+			$raw = base64_decode( substr( $data, strlen( $m[0] ) ), true );
+			if ( false === $raw || strlen( $raw ) < 1024 || strlen( $raw ) > 1572864 ) {
+				continue;
+			}
+			$size = @getimagesizefromstring( $raw ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+			if ( ! $size || $size[0] < 256 || $size[0] > 2048 || $size[1] < 144 || $size[1] > 2048 ) {
+				continue;
+			}
+			$ext = IMAGETYPE_PNG === ( $size[2] ?? 0 ) ? 'png' : 'jpg';
+			try {
+				self::put( $project_uuid, 'guides/' . $view . '.' . $ext, $raw );
+				$n++;
+			} catch ( \Throwable $e ) {
+				continue;
+			}
+		}
+		return $n;
+	}
+
+	/**
+	 * The stored guide picture of a view, if the visitor's browser sent one.
+	 *
+	 * @return string Absolute path ('' when there is none).
+	 */
+	public static function guide_path( string $project_uuid, string $view ): string {
+		if ( ! Util::is_uuid( $project_uuid ) || ! preg_match( '/^[a-z_]{3,20}$/', $view ) ) {
+			return '';
+		}
+		// put() flattens a folder in the name ("guides/hero.jpg" is stored as "guides-hero.jpg")
+		foreach ( array( 'jpg', 'png' ) as $ext ) {
+			$abs = self::path( $project_uuid . '/guides-' . $view . '.' . $ext );
+			if ( '' !== $abs && is_file( $abs ) ) {
+				return $abs;
+			}
+		}
+		return '';
+	}
+
+	/**
 	 * Resolve a relative path safely (no traversal outside the base dir).
 	 */
 	public static function path( string $rel ): string {

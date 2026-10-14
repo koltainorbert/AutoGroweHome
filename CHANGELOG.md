@@ -1,5 +1,16 @@
 # Változásnapló
 
+## 1.10.0 – 2026-10-14
+
+- **A generált kép a 3D modellt követi.** Eddig a három koncepciókép tisztán szövegből készült: a `Pipeline::render()` csak a homlokzati nézetekhez (front/back/left/right) küldött geometriai vezetést, a `hero`-hoz nem – és az első körben kizárólag hero készül, a többi nézet csak a koncepció kiválasztása után. Így minden látott kép vezetés nélkül jött. Ráadásul ahol volt vezetés, az sem a 3D volt, hanem a `GuideRenderer` lapos tömegvázlata a szerveroldali modellből. Mostantól a böngésző a látogató saját 3D modelljéről készít képet, és azt küldi a generálással; a hero pontosan abból a kameraállásból, ahogy a látogató a házat a képernyőn látja. Mérve: 6 nézet (hero, front, back, left, right, aerial) 1152×656 pixelen, 93–130 KB, a `/generate` kérésben a hero, a galéria nézetei utána a háttérben; a szerveren a hero kérése 4 KB-nál nagyobb structure referenciát kap (korábban 0-t).
+- A vezetőképek a védett tárhelyre kerülnek (`guides-<nézet>.jpg`), nyilvános URL nélkül. Csak PNG/JPEG, legfeljebb 1,5 MB és 2048 px, projektenként legfeljebb 8 – minden más csendben kimarad.
+- A képkészítés soha nem lassítja a generálást: a hero képe akkor indul, amikor a megerősítő kérdés megjelenik, és ha 15 másodperc alatt nincs kész (nagyon lassú gép, nincs WebGL), a generálás kép nélkül indul, pontosan úgy, mint eddig. A galéria nézetei a generálás után, külön hívásban mennek fel.
+- A geometriai vezetés erőssége új telepítésen 45 (volt 30), és a beállítás súgója megmondja, mit jelent a szám: 20–30 laza követés, 40–60 felismerhetően ugyanaz a ház, 70 felett a kép a rendert másolja.
+- Teszt módban a „generált” kép maga a 3D vezetőkép (jelöléssel), így szabad szemmel is látszik, mi megy ki a képgenerálónak.
+- Új szűrő bővítéshez: `agh_provider_request` (a képszolgáltatónak menő teljes kérés).
+- Új tesztek: `php tests/guide-test.php` (14/14 – tárolás, ellenőrzés, a hero kap vezetőképet, vezetőkép nélkül a régi viselkedés) és `node tests/e2e/guide.js` (6 nézet, a kérés tartalma, 0 konzolhiba).
+- 3 új felirat 15 nyelven (nyelvenként 2114 szöveg, 0 hiba).
+
 ## 1.9.2 – 2026-10-14
 
 - Védett tárhely: a „A védett tárhely könyvtár HTTP-n keresztül elérhető!” figyelmeztetés mostantól elvégezhető feladat. Kiírja az érintett könyvtár valódi útvonalát, és odaadja mindkét megoldást másolható formában: a `wp-config.php`-ba való `define( 'AGH_PRIVATE_DIR', … );` sort (webgyökéren kívüli útvonallal) és az ehhez a telepítéshez tartozó Nginx `location ^~ … { deny all; return 403; }` blokkot. Azt is megmondja, mi van a könyvtárban (koncepcióképek és a kivitelezői ZIP az ügyfél adataival), tehát miért kell javítani.

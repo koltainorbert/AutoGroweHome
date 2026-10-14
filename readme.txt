@@ -4,7 +4,7 @@ Tags: house designer, ai, configurator, quote request, construction
 Requires at least: 6.2
 Tested up to: 7.2
 Requires PHP: 8.0
-Stable tag: 1.9.2
+Stable tag: 1.10.0
 License: Commercial
 License URI: https://infostudio.hu/autogrowehome
 
@@ -46,6 +46,12 @@ További kérdések: `docs/GYIK.md`.
 * three.js r170 (MIT licenc) – a 3D élő előnézethez: `assets/js/vendor/three/` (licenc: `assets/js/vendor/three/LICENSE`).
 
 == Changelog ==
+
+= 1.10.0 =
+* A koncepcióképek a látogató 3D modelljét követik (structure reference a saját kameraállásból).
+* A vezetőképek a védett tárhelyre kerülnek, a generálást nem lassítják.
+* Teszt módban a generált kép maga a 3D vezetőkép.
+* Részletek: CHANGELOG.md.
 
 = 1.9.2 =
 * A védett tárhely figyelmeztetése megmondja a pontos megoldást (wp-config vagy Nginx).

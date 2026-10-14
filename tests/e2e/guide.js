@@ -1,0 +1,61 @@
+// Vezetőkép E2E: a tervező a 3D modellről készít képeket, és elküldi őket a generálással.
+// Méri, hány nézet készült el, mekkorák, és hogy a /generate kérés testében tényleg ott vannak-e.
+// Használat: node tests/e2e/guide.js   (tesztoldal: bin/test-wp.sh)
+const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/opt/npm-tools/node_modules/playwright'); } })();
+const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
+
+(async () => {
+  const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('agh_tour_done', 'true'); localStorage.setItem('agh_ui', '"designer"'); localStorage.setItem('agh_3d_thumbs', 'false'); } catch (e) {} });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('console', m => { if (m.type() === 'error') errors.push(m.text().slice(0, 160)); });
+  page.on('pageerror', e => errors.push('pageerror: ' + e.message.slice(0, 160)));
+
+  // mi megy ki a /generate kérésben, és mi a gyűjtőhívásban
+  let sent = null, later = null;
+  page.on('request', r => {
+    if (r.method() === 'POST' && /\/agh\/v1\/projects\/[^/]+\/guides/.test(r.url())) {
+      try { later = Object.keys(JSON.parse(r.postData() || '{}').guides || {}); } catch (e) { later = []; }
+    }
+    if (r.method() === 'POST' && /\/agh\/v1\/generate/.test(r.url())) {
+      try {
+        const b = JSON.parse(r.postData() || '{}');
+        const g = b.guides || {};
+        sent = Object.keys(g).map(k => ({ view: k, kb: Math.round((g[k] || '').length * 0.75 / 1024), type: (String(g[k]).split(';')[0] || '').replace('data:', '') }));
+      } catch (e) { sent = []; }
+    }
+  });
+
+  await page.goto(URL, { waitUntil: 'networkidle' });
+  await page.click('[data-agh-open]');
+  await page.waitForSelector('.agh-shell .agh-preview-box.has-3d canvas', { timeout: 60000 });
+  await page.waitForTimeout(3000);
+
+  // 1. a képkészítés önmagában (mind a hat nézet)
+  const shots = await page.evaluate(async () => {
+    const g = await window.AGH_3D.guides();
+    const out = [];
+    for (const k of Object.keys(g)) {
+      const sz = await new Promise(res => { const im = new Image(); im.onload = () => res([im.naturalWidth, im.naturalHeight]); im.onerror = () => res([0, 0]); im.src = g[k]; });
+      out.push({ view: k, kb: Math.round(g[k].length * 0.75 / 1024), w: sz[0], h: sz[1] });
+    }
+    return out;
+  });
+
+  // 2. a generálás tényleg elküldi-e
+  await page.$eval('.agh-btn-primary.agh-btn-lg', b => b.click());
+  await page.waitForSelector('.agh-dialog-wrap', { timeout: 10000 });
+  await page.click('.agh-dialog-foot .agh-btn-primary');
+  await page.waitForTimeout(60000);   // a hátralévő nézetek a háttérben készülnek (szoftveres GPU: lassú)
+
+  await browser.close();
+  if (errors.length) { console.error(errors.slice(0, 4)); }
+  const ok6 = shots.length >= 6 && shots.every(s => s.kb > 8 && s.w >= 1024 && s.h >= 512);
+  const sentOk = Array.isArray(sent) && sent.length === 1 && sent[0].view === 'hero' && sent[0].kb > 8 && /image\/(png|jpeg)/.test(sent[0].type);
+  const laterOk = Array.isArray(later) && later.length >= 4;
+  const ok = ok6 && sentOk && laterOk && !errors.length;
+  console.log(`vezetőkép: ${shots.length} nézet (${shots.map(s => s.view + ' ' + s.w + 'x' + s.h + '/' + s.kb + 'KB').join(', ')}), a generálással a hero ment ${sent ? sent.map(s => s.view + ' ' + s.kb + 'KB').join(',') : '–'}, utána a galéria nézetei ${later ? later.join(',') : '–'}, konzolhiba ${errors.length}`);
+  process.exit(ok ? 0 : 1);
+})();

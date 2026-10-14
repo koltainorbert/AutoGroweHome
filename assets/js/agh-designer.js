@@ -2302,6 +2302,41 @@
 	}
 
 	/* ------------------------------------------------------------------ generation */
+	/* The picture of the 3D model goes with the request, so the image generator follows this very
+	 * house. Only the hero (the visitor's own camera) is waited for, and the taking of it starts when
+	 * the confirmation dialog opens – by the time the visitor clicks, it is usually ready. The other
+	 * views are sent afterwards, in the background, for the gallery. Nothing here can hold up a
+	 * generation: without WebGL, on an error or after 15 seconds the request simply goes without them. */
+	var guideJob = null;
+	function startGuides() {
+		if (!A3 || !A3.guides) { guideJob = null; return; }
+		var out = {};
+		try { guideJob = { out: out, p: A3.guides(['hero'], 0, 0, out).catch(function () { return out; }) }; }
+		catch (e) { guideJob = null; }
+	}
+	function guideShots() {
+		if (!guideJob) { startGuides(); }
+		if (!guideJob) { return Promise.resolve(null); }
+		var j = guideJob, done = false;
+		guideJob = null;
+		return new Promise(function (res) {
+			var finish = function () { if (!done) { done = true; res(Object.keys(j.out).length ? j.out : null); } };
+			setTimeout(finish, 15000);
+			j.p.then(finish, finish);
+		});
+	}
+	// The remaining views (front, back, sides, aerial) for the gallery: they are taken after the
+	// generation has started and uploaded on their own, so they never delay anything.
+	function sendRestGuides(uuid) {
+		if (!A3 || !A3.guides || !uuid) { return; }
+		setTimeout(function () {
+			try {
+				A3.guides(['front', 'back', 'left', 'right', 'aerial']).then(function (g) {
+					if (g && Object.keys(g).length) { api('POST', 'projects/' + uuid + '/guides', { guides: g }, 60000).catch(function () { /* the server draws its own guide */ }); }
+				}).catch(function () { /* no guide for the gallery this time */ });
+			} catch (e) { /* no WebGL */ }
+		}, 1200);
+	}
 	function generate() {
 		// A request is already on its way: say so instead of ignoring the click.
 		if (S.busy) { toast(t('status_generating'), 'warn'); return; }
@@ -2310,7 +2345,10 @@
 			S.busy = true;
 			genBusy(true);
 			event('design_start');
-			api('POST', 'generate', { config: payloadConfig(), force: !!force }, 60000).then(function (r) {
+			// The pictures of the model the visitor built go with the request: the image generator
+			// follows this geometry (the hero from the very camera angle on screen).
+			guideShots().then(function (guides) {
+			api('POST', 'generate', { config: payloadConfig(), force: !!force, guides: guides }, 60000).then(function (r) {
 				S.busy = false;
 				genBusy(false);
 				if (r.limits) { S.boot.limits = r.limits; }
@@ -2318,6 +2356,7 @@
 				// Leave the wizard first: its exit re-renders the stage, which would reset the view.
 				if (S.wiz) { exitWizard(true); }
 				S.projectId = r.project;
+				sendRestGuides(r.project);
 				S.selected = null;
 				S.view = 'concepts';
 				S.dirty = false;
@@ -2338,8 +2377,10 @@
 				if (err.data && err.data.limits) { S.boot.limits = err.data.limits; renderSummary(); }
 				errToast(err);
 			});
+			});
 		};
 		var msg = lim.limit ? tf('confirm_generate', lim.remaining, lim.limit) : t('confirm_generate_nolimit');
+		startGuides();   // a látogató olvassa a kérdést, közben elkészül a kép
 		confirmDialog(t('generate'), msg, t('generate_go'), function () { go(false); });
 	}
 
@@ -2410,14 +2451,17 @@
 	function regenerate(c) {
 		var left = rebuildsLeft();
 		var msg = t('regenerate_confirm') + (left === null ? '' : ' ' + (left > 0 ? tf('regenerate_left', left) : t('regenerate_none')));
+		startGuides();
 		confirmDialog(t('regenerate'), msg, t('regenerate_go'), function () {
-			api('POST', 'projects/' + S.project.id + '/regenerate', { concept: c.id, config: payloadConfig() }).then(function (p) {
+			guideShots().then(function (guides) {
+			api('POST', 'projects/' + S.project.id + '/regenerate', { concept: c.id, config: payloadConfig(), guides: guides }).then(function (p) {
 				// One rebuild unit was reserved by the server.
 				if (rebuildsLeft() !== null) { S.boot.limits.gallery_remaining = Math.max(0, rebuildsLeft() - 1); }
 				S.project = p; renderStage(); renderSummary(); renderActionbar(); schedulePoll(); toast(t('regenerate_started'), 'ok');
 			}).catch(function (err) {
 				if (err.data && err.data.limits) { S.boot.limits = err.data.limits; }
 				errToast(err);
+			});
 			});
 		});
 	}

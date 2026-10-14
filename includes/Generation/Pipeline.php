@@ -406,12 +406,20 @@ final class Pipeline {
 				}
 			}
 		}
-		$structure = '';
-		$guide_view = 'interior' === $op ? '' : ( 'hero' === $asset['view'] ? 'hero' : $asset['view'] );
-		if ( '' !== $guide_view && $provider->capabilities()['structure'] && Settings::get( 'magnific.structure_guidance', true ) && in_array( $guide_view, array( 'front', 'back', 'left', 'right' ), true ) ) {
-			$png = GuideRenderer::render( $concept['building'], $p['config'], $guide_view );
-			if ( '' !== $png ) {
-				$structure = base64_encode( $png );
+		// Geometry guidance. First choice is the picture of the 3D model the visitor built and sent
+		// with the request (the hero is their very camera angle); without one the server draws its own
+		// massing guide for the elevation views, as before.
+		$structure  = '';
+		$guide_view = 'interior' === $op ? '' : (string) $asset['view'];
+		if ( '' !== $guide_view && $provider->capabilities()['structure'] && Settings::get( 'magnific.structure_guidance', true ) ) {
+			$shot = Storage::guide_path( (string) $p['uuid'], $guide_view );
+			if ( '' !== $shot ) {
+				$structure = base64_encode( (string) file_get_contents( $shot ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			} elseif ( in_array( $guide_view, array( 'front', 'back', 'left', 'right' ), true ) ) {
+				$png = GuideRenderer::render( $concept['building'], $p['config'], $guide_view );
+				if ( '' !== $png ) {
+					$structure = base64_encode( $png );
+				}
 			}
 		}
 		$request = array(
@@ -429,7 +437,15 @@ final class Pipeline {
 		if ( Settings::get( 'magnific.use_webhook', false ) && 'magnific' === $provider->id() ) {
 			$request['webhook_url'] = rest_url( AGH_REST_NS . '/webhook/magnific/' . Util::webhook_token() );
 		}
-		$res = $provider->submit( $request );
+		/**
+		 * The whole request going to the image provider (prompt, guide picture, reference).
+		 *
+		 * @param array $request Request.
+		 * @param array $asset   Asset row.
+		 * @param array $p       Project.
+		 */
+		$request = (array) apply_filters( 'agh_provider_request', $request, $asset, $p );
+		$res     = $provider->submit( $request );
 		Stats::inc( $res['ok'] ? 'provider_ok' : 'provider_fail', $provider->id() );
 		if ( $res['ok'] && 'test' !== $provider->id() ) {
 			$cost = Stats::cost_of( (string) ( $res['cost_key'] ?? '' ) );
