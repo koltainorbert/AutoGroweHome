@@ -5,8 +5,10 @@
 const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/opt/npm-tools/node_modules/playwright'); } })();
 const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
 
-async function once(browser, slow) {
+async function once(browser, slow, warm) {
+  // „warm”: ugyanabban a böngészőben másodszorra, tele gyorsítótárral – ezt látja a visszatérő látogató
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+  if (warm) { const p0 = await ctx.newPage(); await p0.goto(URL, { waitUntil: 'networkidle' }); await p0.click('[data-agh-open]'); await p0.waitForSelector('.agh-preview-box.has-3d canvas', { timeout: 120000 }); await p0.waitForTimeout(2000); await p0.close(); }
   await ctx.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('agh_tour_done', 'true'); localStorage.setItem('agh_ui', '"designer"'); localStorage.setItem('agh_3d_thumbs', 'false'); } catch (e) {} });
   const page = await ctx.newPage();
   if (slow) {
@@ -47,7 +49,9 @@ async function once(browser, slow) {
   const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] });
   const fast = await once(browser, false);
   const slow = await once(browser, true);
+  const warm = await once(browser, false, true);
   await browser.close();
+  console.log('második megnyitás (böngésző gyorsítótárral): kész kép ' + warm.ready + ' ms, hálózatról ' + warm.kb + ' KB');
   const line = r => `${r.slow ? 'lassú 3 Mbit/s' : 'helyi'}: letöltés vége ${r.net} ms, felület ${r.shell} ms, kész kép ${r.ready} ms, ${r.kb} KB (ebből REST ${r.boot} ms)`;
   console.log('betöltés – ' + line(fast) + ' | ' + line(slow));
   console.log('legnagyobb fájlok: ' + fast.files.map(f => `${f.f} ${f.kb} KB/${f.ms} ms`).join(', '));
