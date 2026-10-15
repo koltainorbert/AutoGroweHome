@@ -8988,3 +8988,11 @@ msgstr "Vzorová fotka interiéru"
 #: includes/Admin/Admin.php
 msgid "A belső nézetek stílusmintája."
 msgstr "Stylový vzor pohledů do interiéru."
+
+#: includes/Frontend/Strings.php
+msgid "Teljes képernyő"
+msgstr "Celá obrazovka"
+
+#: includes/Frontend/Strings.php
+msgid "Kilépés a teljes képernyőből"
+msgstr "Ukončit celou obrazovku"

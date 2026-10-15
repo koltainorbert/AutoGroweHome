@@ -1,5 +1,20 @@
 # Változásnapló
 
+## 1.12.1 – 2026-10-15
+
+Norbi: „Teljes kepernyos gomb kell a popupba neha jobb kitenni nagyba”. Munkaprompt: `docs/FELADAT-1.12.1.md`.
+
+- **Felmérés – a popupok, amelyekben kép, 3D vagy 2D van:** (1) maga a tervező popup (`.agh-root`, benne minden panel, a színválasztó, a párbeszédablakok és az üzenetek – a `body`-ba ezen kívül semmi nem kerül); (2) az élő előnézet (`.agh-preview-box`: 3D vagy 2D vázlat, a tervezőben és a varázslóban is); (3) a nagyított kép (`.agh-lightbox`, koncepciók és galéria). A többi párbeszédablak (minták, projektek, mentés, ajánlatkérés) szöveges, ezekbe nem került gomb.
+- **Teljes képernyő gomb mindháromban:** a fejlécben a bezárás mellett, az előnézet jobb alsó sarkában (az egyetlen szabad sarok), a nagyított kép felső sávjában. Az ikon vált (kinyit/összecsuk), `aria-label`, `title`, `aria-pressed`.
+- **Működés:** Fullscreen API az elemen (szabványos és `webkit`). Kilépés a gombbal, Esc-kel és a böngésző saját kilépésével; az ikon a `fullscreenchange` eseményből frissül, és ha egy böngésző az eseményt elmulasztja, a kilépés ígérete és egy rövid ellenőrzés pótolja.
+- **Tartalék elem-szintű teljes képernyő nélkül (iPhone Safari):** az elem CSS-sel tölti ki az ablakot (`position: fixed; inset: 0; 100dvh`, safe-area kitöltés), a szülők átmenetileg elengedik, ami egy fix elemet csapdába ejtene (transform, filter, backdrop-filter). A telefon Vissza gombja előbb a teljes képernyőből lép ki, csak utána zárja a tervezőt.
+- **Ami kívül nyílna:** teljes képernyős előnézet alatt a párbeszédablakok és az üzenetek (pl. a koppintott tárgy neve) az előnézetbe nyílnak, a fókuszcsapda is az előnézetre szűkül. A tervező egészének teljes képernyőjén minden a popupban marad (színválasztó, lenyílók, megerősítések).
+- **Méretezés újraépítés nélkül:** a 3D a meglévő `ResizeObserver`-rel méretez (`setSize` → kamera-arány, egy rajzolás), a jelenet nem épül újra. **Új: a nézőpont a célponttal együtt megmarad** (eddig átméretezéskor a kamera célpontja a ház közepére ugrott, egy eltolt nézet elveszett). **Új: képpont-keret** – 3 millió képpont felett a pixelarány csökken, így egy 4K monitoron a teljes képernyő sem rajzol 13 millió képpontot képkockánként; a normál előnézet ezt soha nem éri el, ott minden a régi. A 2D vázlat vektoros, magától élesen tölti ki a képernyőt. A nagyított kép `contain` módban tölti ki a képernyőt, és ha van nagyobb tárolt változat (a letöltési fájl), azt tölti be, közben a mostani kép látszik.
+- **Működik teljes képernyőn is:** koppintás a modellre (`pickAt`; az előnézet teljes képernyőjéből a mezőhöz ugráskor kilép, hogy a mező látsszon), kézi elrendezés, Ctrl+Z, színválasztó, kereső.
+- Mérve: új `tests/e2e/fullscreen.js` **76/76** (asztali 1440×900 és telefon 390×844, Fullscreen API-val és letiltva CSS-tartalékkal; előnézet, tervező popup, nagyított kép; be/ki gombbal és Esc-kel, vászon = nézetablak 1 px-en belül, kilépés után az eredeti méret, a kamera helyzete és célpontja 0,01 m-en belül, színválasztó látható `elementFromPoint`-tal, Vissza gomb a tartaléknál), konzolhiba 0. A meglévők zöldek: `search` (0 fókuszvesztés), `color`, `pick` (kívül és belül talál), `layout` (15/15 fogható, kilóg 0), `responsive` (túlcsordulás 0, 24 px alatti cél 0), `wizard` (48 lépés, 0 hiba), `gen` (202), `sketch-test` (1247 rajz, 0 hiba), autoloader 119/119, lint 0.
+- **Belépéstől az új képkockáig:** telefonméretben 49 ms (CSS) és 1,8 s (API), asztaliban 5–6 s – ez SwiftShader (szoftveres GPU): itt egyetlen képkocka is 0,05 és 4,8 s között ingadozik a normál előnézetben is, ezért a ≤ 100 ms cél **ebben a környezetben nem mérhető**; valódi GPU-n kell megnézni.
+- 2 új felirat 15 nyelven (nyelvenként 2151 szöveg, 0 hiba).
+
 ## 1.12.0 – 2026-10-14
 
 Norbi kézi receptje (3D = structure 70–85, mintafotó = style 40–50, negatív prompt a téves alternatívákra) beépítve, és a kapott kép összevetése a kívánt minőséggel. A képek száma, nézetei, formája és adatai változatlanok – csak a minőség a cél.

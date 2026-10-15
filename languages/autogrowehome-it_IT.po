@@ -8986,3 +8986,11 @@ msgstr "Foto campione degli interni"
 #: includes/Admin/Admin.php
 msgid "A belső nézetek stílusmintája."
 msgstr "Il campione di stile delle viste interne."
+
+#: includes/Frontend/Strings.php
+msgid "Teljes képernyő"
+msgstr "Schermo intero"
+
+#: includes/Frontend/Strings.php
+msgid "Kilépés a teljes képernyőből"
+msgstr "Esci da schermo intero"

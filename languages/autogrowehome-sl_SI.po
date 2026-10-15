@@ -8990,3 +8990,11 @@ msgstr "Vzorčna fotografija notranjosti"
 #: includes/Admin/Admin.php
 msgid "A belső nézetek stílusmintája."
 msgstr "Slogovni vzorec notranjih pogledov."
+
+#: includes/Frontend/Strings.php
+msgid "Teljes képernyő"
+msgstr "Celozaslonski način"
+
+#: includes/Frontend/Strings.php
+msgid "Kilépés a teljes képernyőből"
+msgstr "Izhod iz celozaslonskega načina"

@@ -47,6 +47,8 @@ final class Strings {
 			'download'               => __( 'Letöltés', 'autogrowehome' ),
 			'download_hero'          => __( 'Fő látványkép letöltése', 'autogrowehome' ),
 			'enlarge'                => __( 'Nagyítás', 'autogrowehome' ),
+			'fs_enter'               => __( 'Teljes képernyő', 'autogrowehome' ),
+			'fs_exit'                => __( 'Kilépés a teljes képernyőből', 'autogrowehome' ),
 			'err_boot'               => __( 'A háztervező nem tölthető be. Kérjük, próbáld újra később.', 'autogrowehome' ),
 			'err_network'            => __( 'Hálózati hiba. Kérjük, próbáld újra.', 'autogrowehome' ),
 			'failed_toast'           => __( 'A generálás nem sikerült. A keretet nem vontuk le, ha nem keletkezett költség.', 'autogrowehome' ),

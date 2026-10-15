@@ -8988,3 +8988,11 @@ msgstr "Fotografie model pentru interior"
 #: includes/Admin/Admin.php
 msgid "A belső nézetek stílusmintája."
 msgstr "Modelul de stil al vederilor interioare."
+
+#: includes/Frontend/Strings.php
+msgid "Teljes képernyő"
+msgstr "Ecran complet"
+
+#: includes/Frontend/Strings.php
+msgid "Kilépés a teljes képernyőből"
+msgstr "Ieșire din ecran complet"

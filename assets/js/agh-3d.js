@@ -1518,7 +1518,7 @@ function Viewer(opts) {
 		var self = this;
 		this.controls.addEventListener('change', function () { self.requestRender(); });
 		// while the visitor drags: plain resolution, no ambient occlusion – full quality again when it settles
-		this.controls.addEventListener('start', function () { self.interacting = true; if (self.dprHi > 1) { self.setDPR(1); self.lowDPR = true; } self.loop(); });
+		this.controls.addEventListener('start', function () { self.interacting = true; if (self.prHi() > self.prLo()) { self.setDPR(self.prLo()); self.lowDPR = true; } self.loop(); });
 		this.controls.addEventListener('end', function () { self.interacting = false; self.settle = performance.now() + 900; self.loop(); });
 		// a tap on a part of the model: the designer jumps to the setting that part belongs to. Only a tap
 		// counts (under 6 px of movement), so turning the house keeps working, on a touch screen too.
@@ -1586,6 +1586,12 @@ Viewer.prototype.lampsToPool = function (root) {
 	});
 	void wp;
 };
+// Pixel budget of the live view: a full-screen 4K canvas would otherwise draw 13 million pixels per
+// frame at the usual ratio. Above 3 MP the ratio is lowered so the GPU load stays at today's level;
+// an ordinary preview box never reaches the budget, so it looks exactly as before.
+var MAX_PX = 3.0e6;
+Viewer.prototype.prHi = function () { var px = Math.max(1, (this.w || 1) * (this.h || 1)); return Math.min(this.dprHi, Math.sqrt(MAX_PX / px)); };
+Viewer.prototype.prLo = function () { return Math.min(1, this.prHi()); };
 Viewer.prototype.setDPR = function (pr) {
 	if (Math.abs(this.renderer.getPixelRatio() - pr) < 0.01) { return; }
 	this.renderer.setPixelRatio(pr);
@@ -1596,10 +1602,12 @@ Viewer.prototype.setSize = function (w, h) {
 	if (this.w === w && this.h === h) { return; }
 	this.w = w; this.h = h;
 	if (!this.shared) { this.renderer.setSize(w, h, !this.thumb); }
+	if (!this.thumb && !this.shared) { this.setDPR(this.lowDPR ? this.prLo() : this.prHi()); }
 	if (this.composer) { this.composer.setSize(w, h); }
 	this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
-	// A resized box keeps the visitor's view (only the very first fit uses the preset).
-	this.fitCamera(!this.lastDist);
+	// A resized box keeps the visitor's view (only the very first fit uses the preset): direction, zoom
+	// and the point looked at stay, so entering and leaving the full screen gives back the same picture.
+	this.fitCamera(!this.lastDist, true);
 	this.requestRender();
 };
 Viewer.prototype.update = function (cfg, mode) {
@@ -1741,7 +1749,7 @@ Viewer.prototype.fitFrame = function (box, target, dir, fill) {
 	}
 	return { dist: d, target: tgt };
 };
-Viewer.prototype.fitCamera = function (reset) {
+Viewer.prototype.fitCamera = function (reset, keepTarget) {
 	if (!this.house) { return; }
 	var c = this.c || {}, box3 = new THREE.Box3().setFromObject(this.house.fit), sph = box3.getBoundingSphere(new THREE.Sphere());
 	var lens = { '24mm': 24, '35mm': 35, '50mm': 50 }[c.lens || '35mm'] || 35;
@@ -1777,6 +1785,7 @@ Viewer.prototype.fitCamera = function (reset) {
 		// keep the visitor's orbit direction and zoom; follow the new house size and box aspect
 		var off = this.camera.position.clone().sub(this.controls.target), zoom = clamp(off.length() / this.lastDist, 0.3, 4);
 		off.normalize().multiplyScalar(dist * zoom);
+		if (keepTarget) { target.copy(this.controls.target); }
 		this.controls.target.copy(target); this.camera.position.copy(target).add(off);
 		this.controls.minDistance = sph.radius * 0.5; this.controls.maxDistance = sph.radius * 4;
 	} else {
@@ -1804,7 +1813,7 @@ Viewer.prototype.loop = function () {
 		if (self.disposed) { return; }
 		self.controls.update(); self.render();
 		if (self.interacting || performance.now() < (self.settle || 0)) { requestAnimationFrame(tick); }
-		else { self.looping = false; if (self.lowDPR) { self.lowDPR = false; self.setDPR(self.dprHi); self.render(); } }
+		else { self.looping = false; if (self.lowDPR) { self.lowDPR = false; self.setDPR(self.prHi()); self.render(); } }
 	})();
 };
 // The canvas is stretched to its box by CSS; if the box changed since the last frame (a re-rendered

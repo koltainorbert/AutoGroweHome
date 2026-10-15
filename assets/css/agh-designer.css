@@ -863,3 +863,24 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 .agh-plan-note { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--agh-line-2, var(--agh-line)); border-radius: var(--agh-r-m); background: var(--agh-surface-2); font-size: 13px; line-height: 1.45; }
 .agh-plan-note > div { display: flex; flex-direction: column; gap: 4px; }
 .agh-plan-note .agh-ico { flex: 0 0 auto; margin-top: 2px; opacity: .7; }
+
+/* ------------------------------------------------------------------ full screen (1.12.1) */
+/* The button: in the header it is an ordinary icon button; on the live preview a round chip
+   (bottom right, the corner nothing else uses); in the enlarged image an icon button in the top bar. */
+.agh-fsbtn-pv { position: absolute; z-index: 3; right: 12px; bottom: 12px; width: 34px; height: 34px; border-radius: 50%; border: 0; display: grid; place-items: center; background: rgba(255,255,255,.88); color: #1E2226; cursor: pointer; box-shadow: 0 4px 12px rgba(18,24,34,.2); }
+.agh-fsbtn-pv .agh-ico { width: 18px; height: 18px; }
+.agh-fsbtn-pv:focus-visible { outline: 2px solid var(--agh-primary); outline-offset: 2px; }
+@media (max-width: 820px) { .agh-fsbtn-pv { width: 44px; height: 44px; } }
+/* Browser full screen: the element fills the screen, edge to edge. */
+.agh-root.is-fs { padding: 0; }
+.agh-root.is-fs .agh-shell { width: 100%; height: 100%; border-radius: 0; }
+.agh-preview-box.is-fs { border-radius: 0; border: 0; width: 100%; height: 100%; }
+.agh-preview-box.is-fs .agh-3d-hint { display: none; }
+.agh-lightbox.is-fs .agh-lightbox-img { padding: 0 max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right)); }
+.agh-lightbox.is-fs .agh-lightbox-img img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; background: transparent; border-radius: 0; }
+:fullscreen.agh-lightbox { background: #08090A; }
+/* Window-filling fallback (no element full screen, e.g. iPhone Safari). */
+.agh-fs-anc { transform: none !important; filter: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; contain: none !important; will-change: auto !important; z-index: 2147483000 !important; }
+.is-fs-css { position: fixed !important; inset: 0 !important; z-index: 2147483001 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; max-width: none !important; max-height: none !important; margin: 0 !important; border-radius: 0 !important; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); box-sizing: border-box; }
+.agh-root.is-fs-css { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.agh-root.has-fs-css, .agh-root.has-fs-css * { overscroll-behavior: contain; }

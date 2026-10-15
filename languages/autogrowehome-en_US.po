@@ -8986,3 +8986,11 @@ msgstr "Interior sample photo"
 #: includes/Admin/Admin.php
 msgid "A belső nézetek stílusmintája."
 msgstr "The style sample of the interior views."
+
+#: includes/Frontend/Strings.php
+msgid "Teljes képernyő"
+msgstr "Full screen"
+
+#: includes/Frontend/Strings.php
+msgid "Kilépés a teljes képernyőből"
+msgstr "Exit full screen"

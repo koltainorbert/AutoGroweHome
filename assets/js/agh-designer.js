@@ -108,6 +108,7 @@
 		globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
 		ai: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 15l2-6 2 6M9.7 13h2.6M16 9v6"/>',
 		expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+		shrink: '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
 		area: '<path d="M4 4h16v16H4z"/><path d="M4 9h5V4"/>',
 		bed: '<path d="M3 18V7M3 13h18v5M21 18v-3a3 3 0 00-3-3h-7v1"/><circle cx="7" cy="10" r="1.6"/>',
 		stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
@@ -340,6 +341,7 @@
 
 	// Closing never blocks: the settings stay in this browser (Új tervezés starts afresh).
 	function close() {
+		if (FS.el) { fsExit(); fsDone(); }
 		stopPoll();
 		window.removeEventListener('popstate', onPop);
 		if (S.histPushed) { S.histPushed = false; try { history.back(); } catch (e) { /* no history */ } }
@@ -351,7 +353,12 @@
 		if (S.lastFocus && S.lastFocus.focus) { S.lastFocus.focus(); }
 	}
 
-	function onPop() { if (root) { S.histPushed = false; close(); } }
+	// The phone's Back button: first it leaves the window-filling full screen, then it closes the designer.
+	function onPop() {
+		if (FS.ignorePop) { FS.ignorePop = false; return; }
+		if (FS.el && FS.hist) { FS.hist = false; fsDone(); return; }
+		if (root) { S.histPushed = false; close(); }
+	}
 	// Új tervezés: forget the settings kept in this browser and start from the defaults (saved projects stay).
 	function restart() {
 		confirmDialog(t('restart_title'), t('restart_text'), t('restart_go'), function () {
@@ -360,6 +367,7 @@
 			S.config = null; S.explicit = {}; S.projectId = null; S.project = null; S.autoRoof = ''; S.styleApplied = null;
 			S.roomId = null; S.view = 'design'; S.dirty = false; S.lastChange = null; S.cat = 'basics'; S.search = ''; S.tab = 'params'; S.fixKey = null;
 			document.removeEventListener('keydown', onKey);
+			if (FS.el) { fsExit(); fsDone(); }
 			if (root) { root.remove(); }
 			root = null;
 			initConfig();
@@ -371,8 +379,11 @@
 	function onKey(e) {
 		if (e.key === 'Escape') {
 			if (menuOpen()) { closeMenu(true); return; }
+			// Esc leaves the full screen first (the browser may already have done that for its own mode)
+			if (FS.el) { e.preventDefault(); fsExit(); return; }
+			if (Date.now() - FS.exitedAt < 400) { return; }
 			var top = root.querySelector('.agh-lightbox, .agh-dialog-wrap');
-			if (top) { top.remove(); return; }
+			if (top) { if (S.lb && top === S.lb.el) { closeLightbox(); } else { top.remove(); } return; }
 			close();
 		}
 		if (e.key === 'Tab') { trapFocus(e); }
@@ -385,7 +396,7 @@
 			&& !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); undoLayout(); }
 	}
 	function trapFocus(e) {
-		var scope = root.querySelector('.agh-dialog-wrap, .agh-lightbox') || shell;
+		var scope = root.querySelector('.agh-dialog-wrap, .agh-lightbox') || (FS.el && FS.el !== root && FS.el.isConnected ? FS.el : shell);
 		// Only rendered controls count (elements hidden on small screens must not become the trap's ends).
 		var f = Array.prototype.filter.call(scope.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'), function (el) { return el.getClientRects().length > 0; });
 		if (!f.length) { return; }
@@ -485,6 +496,7 @@
 		els.themeBtn = h('button', { type: 'button', class: 'agh-iconbtn', onclick: function () { setTheme(S.theme === 'dark' ? 'light' : 'dark'); } });
 		tools.appendChild(els.themeBtn);
 		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn agh-hide-m', 'aria-label': t('help'), title: t('help'), onclick: showTour }, icon('help')));
+		tools.appendChild(fsButton(function () { return root; }, 'agh-iconbtn agh-fsbtn-shell'));
 		tools.appendChild(h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), title: t('close'), onclick: function () { close(); } }, icon('close')));
 		var header = h('header', { class: 'agh-header' }, brand, h('div', { class: 'agh-header-spacer' }), mode, tools, buildMenu());
 		updateWizardToggles();
@@ -974,6 +986,7 @@
 		}
 		if (!f) { return; }
 		if (S.wiz) { return; }
+		if (FS.el && FS.el !== root && FS.el.classList.contains('agh-preview-box')) { fsExit(); }
 		if (S.search) { S.search = ''; if (els.searchInput) { els.searchInput.value = ''; } }
 		if (f.advanced && S.mode === 'simple') { setMode('detailed'); }
 		if (S.cat !== f.category) { S.cat = f.category; updateRail(); }
@@ -1589,6 +1602,7 @@
 
 	/* ------------------------------------------------------------------ stage */
 	function renderStage() {
+		if (FS.el && FS.el !== root && els.stagePanel.contains(FS.el)) { fsExit(); fsDone(); }
 		var st = clear(els.stagePanel);
 		var tabs = h('div', { class: 'agh-stage-tabs' });
 		var seg = h('div', { class: 'agh-seg', role: 'tablist' });
@@ -1658,6 +1672,7 @@
 			box.innerHTML = svg;
 		}
 		box.appendChild(previewCaption(c));
+		if (!box.querySelector(':scope > .agh-fsbtn-pv')) { box.appendChild(fsButton(function () { return box; }, 'agh-fsbtn-pv')); }
 		if (o) {
 			box.appendChild(keep || h('figure', { class: 'agh-preview-style', 'data-src': o.thumb || o.image, title: t('style_sample_note') },
 				h('img', { src: o.thumb || o.image, alt: '', decoding: 'async' }),
@@ -1948,14 +1963,31 @@
 		drawLightbox();
 		shell.appendChild(lb);
 	}
+	function closeLightbox() {
+		if (!S.lb) { return; }
+		if (FS.el === S.lb.el) { fsExit(); fsDone(); }
+		S.lb.el.remove(); S.lb = null;
+	}
+	// Full screen: the largest stored version is loaded; the current picture stays until it arrives.
+	function lbFull(img, a) {
+		var big = a.download || a.full || '';
+		if (!big || big === a.preview || /\.(zip|pdf)(\?|$)/i.test(big) || img._big === big) { return; }
+		img._big = big;
+		var pre = new Image();
+		pre.onload = function () { if (S.lb && S.lb.items[S.lb.index] === a && img.isConnected) { img.src = big; } };
+		pre.src = big;
+	}
 	function stepLightbox(d) { if (!S.lb) { return; } S.lb.index = (S.lb.index + d + S.lb.items.length) % S.lb.items.length; drawLightbox(); }
 	function drawLightbox() {
 		var lb = clear(S.lb.el), a = S.lb.items[S.lb.index];
 		if (!a) { lb.remove(); return; }
 		lb.appendChild(h('div', { class: 'agh-lightbox-top' }, h('b', { text: (S.lb.concept ? S.lb.concept.variant + ' – ' : '') + a.label }), h('span', { class: 'agh-small', style: { opacity: '.7' }, text: a.resolution || '' }), h('div', { style: { flex: '1' } }),
 			a.download ? h('a', { class: 'agh-btn agh-btn-s agh-btn-accent', href: a.download, download: '' }, icon('download', 'agh-ico-s'), t('download')) : null,
-			h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), onclick: function () { lb.remove(); S.lb = null; } }, icon('close'))));
-		lb.appendChild(h('div', { class: 'agh-lightbox-img' }, h('img', { src: a.preview, alt: a.label })));
+			fsButton(function () { return lb; }, 'agh-iconbtn'),
+			h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), onclick: function () { closeLightbox(); } }, icon('close'))));
+		var img = h('img', { src: a.preview, alt: a.label });
+		lb.appendChild(h('div', { class: 'agh-lightbox-img' }, img));
+		if (FS.el === lb) { lbFull(img, a); }
 		lb.appendChild(h('div', { class: 'agh-lightbox-bottom' }, S.lb.items.length > 1 ? h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('prev'), onclick: function () { stepLightbox(-1); } }, icon('left')) : null, h('div', { style: { flex: '1', 'text-align': 'center' }, class: 'agh-small', text: (S.lb.index + 1) + ' / ' + S.lb.items.length }), S.lb.items.length > 1 ? h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('next'), onclick: function () { stepLightbox(1); } }, icon('chev')) : null));
 	}
 
@@ -2792,6 +2824,99 @@
 		draw();
 	}
 
+	/* ------------------------------------------------------------------ full screen */
+	// One element at a time can fill the screen: the whole designer, the live preview (3D or 2D) or the
+	// enlarged image. The browser's Fullscreen API is used where it works on an element; elsewhere
+	// (iPhone Safari) the element covers the window with CSS. Leaving restores the same size and view.
+	var FS = { el: null, css: false, hist: false, ignorePop: false, exitedAt: 0, t0: 0, toastsHome: null };
+	function fsNativeEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+	function fsNativeOk(el) {
+		return !window.AGH_NO_FULLSCREEN && !!(el.requestFullscreen || el.webkitRequestFullscreen)
+			&& !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+	}
+	function fsButton(getEl, cls) {
+		var b = h('button', { type: 'button', class: 'agh-fsbtn ' + (cls || ''), onclick: function (e) { e.stopPropagation(); fsToggle(getEl()); } });
+		b._fsGet = getEl;
+		fsPaint(b, FS.el && FS.el === getEl());
+		return b;
+	}
+	function fsPaint(b, on) {
+		clear(b);
+		b.appendChild(icon(on ? 'shrink' : 'expand'));
+		b.setAttribute('aria-label', on ? t('fs_exit') : t('fs_enter'));
+		b.setAttribute('title', on ? t('fs_exit') : t('fs_enter'));
+		b.setAttribute('aria-pressed', on ? 'true' : 'false');
+	}
+	function fsSyncButtons() {
+		if (!root) { return; }
+		Array.prototype.forEach.call(root.querySelectorAll('.agh-fsbtn'), function (b) {
+			var on = !!(FS.el && b._fsGet && b._fsGet() === FS.el);
+			if ((b.getAttribute('aria-pressed') === 'true') !== on) { fsPaint(b, on); }
+		});
+	}
+	// Dialogs and messages open inside the element on screen, otherwise they would stay hidden behind it.
+	function fsHost() { return FS.el && FS.el !== root && FS.el.isConnected ? FS.el : shell; }
+	function fsToggle(el) {
+		if (!el) { return; }
+		if (FS.el) { var same = FS.el === el; fsExit(); if (same) { return; } }
+		fsEnter(el);
+	}
+	function fsEnter(el) {
+		FS.el = el; FS.t0 = performance.now();
+		el.classList.add('is-fs');
+		root.classList.add('has-fs');
+		if (el !== root && els.toasts && els.toasts.parentNode !== el) { FS.toastsHome = els.toasts.parentNode; el.appendChild(els.toasts); }
+		if (fsNativeOk(el)) {
+			FS.css = false;
+			var p = null;
+			try { p = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : el.webkitRequestFullscreen(); } catch (e) { fsCss(el); }
+			if (p && p.catch) { p.catch(function () { if (FS.el === el && !fsNativeEl()) { fsCss(el); } }); }
+		} else { fsCss(el); }
+		if (S.lb && el === S.lb.el) { var im = el.querySelector('.agh-lightbox-img img'); if (im) { lbFull(im, S.lb.items[S.lb.index]); } }
+		fsSyncButtons();
+	}
+	// Window-filling fallback: the ancestors drop what would trap a fixed element (transform, filter),
+	// and a history entry makes the phone's Back button leave the full screen first, not the page.
+	function fsCss(el) {
+		FS.css = true;
+		el.classList.add('is-fs-css');
+		root.classList.add('has-fs-css');
+		for (var a = el.parentNode; a && a !== document.body; a = a.parentNode) { if (a.classList) { a.classList.add('agh-fs-anc'); } }
+		try { if (window.history && history.pushState) { history.pushState({ aghFs: 1 }, ''); FS.hist = true; } } catch (e) { FS.hist = false; }
+		fsSyncButtons();
+	}
+	function fsExit() {
+		if (!FS.el) { return; }
+		if (!FS.css && fsNativeEl()) {
+			// the change event is the usual signal; the promise and a short check cover browsers that miss it
+			var chk = function () { if (FS.el && !FS.css && !fsNativeEl()) { fsDone(); } }, pr = null;
+			try { pr = (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) { fsDone(); return; }
+			if (pr && pr.then) { pr.then(chk, chk); }
+			setTimeout(chk, 700);
+		} else { fsDone(); }
+	}
+	// The element really left the full screen (button, Esc, the browser's own exit, or it was removed).
+	function fsDone() {
+		var el = FS.el;
+		if (!el) { return; }
+		el.classList.remove('is-fs', 'is-fs-css');
+		if (root) {
+			root.classList.remove('has-fs', 'has-fs-css');
+			Array.prototype.forEach.call(document.querySelectorAll('.agh-fs-anc'), function (a) { a.classList.remove('agh-fs-anc'); });
+		}
+		if (FS.toastsHome && els.toasts) { if (FS.toastsHome.isConnected) { FS.toastsHome.appendChild(els.toasts); } FS.toastsHome = null; }
+		FS.el = null; FS.css = false; FS.exitedAt = Date.now();
+		if (FS.hist) { FS.hist = false; FS.ignorePop = true; try { history.back(); } catch (e) { FS.ignorePop = false; } }
+		fsSyncButtons();
+	}
+	function onFsChange() {
+		if (FS.el && !FS.css && fsNativeEl() !== FS.el) { fsDone(); return; }
+		fsSyncButtons();
+	}
+	document.addEventListener('fullscreenchange', onFsChange);
+	document.addEventListener('webkitfullscreenchange', onFsChange);
+	window.addEventListener('resize', function () { if (FS.el && !FS.css && !fsNativeEl() && performance.now() - FS.t0 > 500) { fsDone(); } });
+
 	/* ------------------------------------------------------------------ dialogs & toasts */
 	function closeDialogs() { Array.prototype.forEach.call(shell.querySelectorAll('.agh-dialog-wrap'), function (d) { d.remove(); }); }
 	function dialog(title, content, buttons, wide) {
@@ -2808,7 +2933,7 @@
 			h('div', { class: 'agh-dialog-head' }, h('h3', { class: 'agh-h', text: title }), h('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('close'), onclick: function () { wrap.remove(); } }, icon('close'))),
 			body, foot);
 		wrap.appendChild(d);
-		shell.appendChild(wrap);
+		fsHost().appendChild(wrap);
 		setTimeout(function () { var f = d.querySelector('input, textarea, .agh-dialog-foot .agh-btn-primary'); if (f) { f.focus(); } }, 30);
 		return api2;
 	}

@@ -8988,3 +8988,11 @@ msgstr "Зразок фото інтер'єру"
 #: includes/Admin/Admin.php
 msgid "A belső nézetek stílusmintája."
 msgstr "Стильовий зразок видів інтер'єру."
+
+#: includes/Frontend/Strings.php
+msgid "Teljes képernyő"
+msgstr "На весь екран"
+
+#: includes/Frontend/Strings.php
+msgid "Kilépés a teljes képernyőből"
+msgstr "Вийти з повноекранного режиму"

@@ -8988,3 +8988,11 @@ msgstr "Uzorna fotografija enterijera"
 #: includes/Admin/Admin.php
 msgid "A belső nézetek stílusmintája."
 msgstr "Stilski uzorak pogleda u enterijer."
+
+#: includes/Frontend/Strings.php
+msgid "Teljes képernyő"
+msgstr "Ceo ekran"
+
+#: includes/Frontend/Strings.php
+msgid "Kilépés a teljes képernyőből"
+msgstr "Izađi iz celog ekrana"

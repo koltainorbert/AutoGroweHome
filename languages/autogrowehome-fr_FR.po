@@ -8986,3 +8986,11 @@ msgstr "Photo modèle intérieur"
 #: includes/Admin/Admin.php
 msgid "A belső nézetek stílusmintája."
 msgstr "Le modèle de style des vues intérieures."
+
+#: includes/Frontend/Strings.php
+msgid "Teljes képernyő"
+msgstr "Plein écran"
+
+#: includes/Frontend/Strings.php
+msgid "Kilépés a teljes képernyőből"
+msgstr "Quitter le plein écran"
