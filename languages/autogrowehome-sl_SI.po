@@ -8998,3 +8998,11 @@ msgstr "Celozaslonski način"
 #: includes/Frontend/Strings.php
 msgid "Kilépés a teljes képernyőből"
 msgstr "Izhod iz celozaslonskega načina"
+
+#: includes/Admin/Admin.php
+msgid "Valódi 3D modellek"
+msgstr "Pravi 3D modeli"
+
+#: includes/Admin/Admin.php
+msgid "Ahol van hozzá szabad licencű (CC0) modell, az váltja le a beépített bútort a 3D nézetben, a kártyákon és a vezetőképeken. Kikapcsolva pontosan a korábbi megjelenés jön vissza, egy oldalfrissítéssel."
+msgstr "Kjer obstaja model s prosto licenco (CC0), nadomesti vgrajeno pohištvo v 3D pogledu, na karticah in na vodilnih slikah. Ko je izklopljeno, se po osvežitvi strani vrne natanko dosedanji videz."

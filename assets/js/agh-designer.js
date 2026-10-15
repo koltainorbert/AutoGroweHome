@@ -1661,7 +1661,7 @@
 		if (A3) {
 			// keep the live 3D canvas, replace everything else
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
-			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); var vw = A3.viewer(); vw.onPick = jumpToField; vw.onLayout = saveLayout; vw.onGrab = grabNote; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
+			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); var vw = A3.viewer(); vw.onPick = jumpToField; vw.onLayout = saveLayout; vw.onGrab = grabNote; fixNote(); } catch (e) { try { console.warn('AGH 3D:', e && e.message); } catch (e3) { /* no console */ } A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
 			if (A3 && S.view === 'int') { box.appendChild(roomChips()); box.appendChild(layoutTools()); }
 			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
 		} else if (A3wait) {

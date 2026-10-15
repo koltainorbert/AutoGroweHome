@@ -301,6 +301,7 @@ final class Admin {
 					array( 'action_bar', 'select', __( 'Műveleti sáv helye', 'autogrowehome' ), '', array( 'options' => array( 'bottom' => __( 'Lent', 'autogrowehome' ), 'top' => __( 'Fent', 'autogrowehome' ) ) ) ),
 					array( 'start_view', 'select', __( 'Kezdőnézet', 'autogrowehome' ), __( 'Mivel nyíljon meg a tervező. A látogató bármikor átválthat, a választását a böngészője megjegyzi.', 'autogrowehome' ), array( 'options' => array( 'wizard' => __( 'Gyors varázsló', 'autogrowehome' ), 'designer' => __( 'Teljes tervező', 'autogrowehome' ) ) ) ),
 					array( 'show_tour', 'bool', __( 'Gyorsbemutató első megnyitáskor', 'autogrowehome' ) ),
+					array( 'real_models', 'bool', __( 'Valódi 3D modellek', 'autogrowehome' ), __( 'Ahol van hozzá szabad licencű (CC0) modell, az váltja le a beépített bútort a 3D nézetben, a kártyákon és a vezetőképeken. Kikapcsolva pontosan a korábbi megjelenés jön vissza, egy oldalfrissítéssel.', 'autogrowehome' ) ),
 				),
 			),
 			'limits'     => array(

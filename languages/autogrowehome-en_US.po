@@ -8994,3 +8994,11 @@ msgstr "Full screen"
 #: includes/Frontend/Strings.php
 msgid "Kilépés a teljes képernyőből"
 msgstr "Exit full screen"
+
+#: includes/Admin/Admin.php
+msgid "Valódi 3D modellek"
+msgstr "Real 3D models"
+
+#: includes/Admin/Admin.php
+msgid "Ahol van hozzá szabad licencű (CC0) modell, az váltja le a beépített bútort a 3D nézetben, a kártyákon és a vezetőképeken. Kikapcsolva pontosan a korábbi megjelenés jön vissza, egy oldalfrissítéssel."
+msgstr "Where a freely licensed (CC0) model exists, it replaces the built-in furniture in the 3D view, on the cards and in the guide images. Switched off, exactly the previous look returns after a page reload."

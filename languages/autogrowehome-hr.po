@@ -8996,3 +8996,11 @@ msgstr "Cijeli zaslon"
 #: includes/Frontend/Strings.php
 msgid "Kilépés a teljes képernyőből"
 msgstr "Izlaz iz cijelog zaslona"
+
+#: includes/Admin/Admin.php
+msgid "Valódi 3D modellek"
+msgstr "Pravi 3D modeli"
+
+#: includes/Admin/Admin.php
+msgid "Ahol van hozzá szabad licencű (CC0) modell, az váltja le a beépített bútort a 3D nézetben, a kártyákon és a vezetőképeken. Kikapcsolva pontosan a korábbi megjelenés jön vissza, egy oldalfrissítéssel."
+msgstr "Gdje postoji model slobodne licence (CC0), on zamjenjuje ugrađeni namještaj u 3D prikazu, na karticama i na vodećim slikama. Kad je isključeno, nakon osvježavanja stranice vraća se točno dosadašnji izgled."

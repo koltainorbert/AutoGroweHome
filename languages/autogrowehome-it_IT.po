@@ -8994,3 +8994,11 @@ msgstr "Schermo intero"
 #: includes/Frontend/Strings.php
 msgid "Kilépés a teljes képernyőből"
 msgstr "Esci da schermo intero"
+
+#: includes/Admin/Admin.php
+msgid "Valódi 3D modellek"
+msgstr "Modelli 3D reali"
+
+#: includes/Admin/Admin.php
+msgid "Ahol van hozzá szabad licencű (CC0) modell, az váltja le a beépített bútort a 3D nézetben, a kártyákon és a vezetőképeken. Kikapcsolva pontosan a korábbi megjelenés jön vissza, egy oldalfrissítéssel."
+msgstr "Dove esiste un modello a licenza libera (CC0), sostituisce l’arredamento integrato nella vista 3D, sulle schede e nelle immagini guida. Disattivato, dopo un ricaricamento della pagina torna esattamente l’aspetto precedente."

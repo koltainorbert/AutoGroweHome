@@ -22,6 +22,23 @@ import { texture, setAnisotropy, onTexture, texturesReady, TINT, NEUTRAL, imageT
 const INT = await import('./agh-3d-int.js' + new URL(import.meta.url).search);
 // surroundings: terrain, landscape, street, neighbours
 const LAND = await import('./agh-3d-land.js' + new URL(import.meta.url).search);
+// real 3D models (1.13.0): only imported when switched on – switched off, no model file is ever asked for
+var MODELS_ON = (function () {
+	try {
+		var m = window.AGH_LOADER && window.AGH_LOADER.models, p = new URLSearchParams(window.location.search).get('agh_models');
+		if (p === '0') { return false; }
+		if (p === '1') { return !!(m && m.manifest); }
+		return !!(m && m.on);
+	} catch (e) { return false; }
+})();
+var MODELS = null;
+var modelsP = MODELS_ON ? import('./agh-3d-models.js' + new URL(import.meta.url).search).then(function (M) { MODELS = M; return M; }, function () { return null; }) : null;
+function modelGroups(hs) {
+	var out = [];
+	if (hs && hs.items) { hs.items.children.forEach(function (o) { out.push(o); }); }
+	if (hs && hs.modelPieces) { hs.modelPieces.forEach(function (o) { out.push(o); }); }
+	return out;
+}
 
 var D2R = Math.PI / 180;
 var SK = function () { return window.AGH_Sketch; };
@@ -1120,6 +1137,18 @@ House.prototype.extras = function () {
 };
 House.prototype.furniture = function (x, y, z, kitchen) {
 	var wm = pbr('wood', { color: '#8A6A4C' }, { normal: 1 }), cush = solid('#E7E1D6', 0.95);
+	if (MODELS_ON && !kitchen) {
+		// the same pieces, as two groups a real model can replace (table, lounge bench); switched off the
+		// code below builds exactly what it always did
+		var self = this, tbl = new THREE.Group(), bench = new THREE.Group();
+		tbl.userData.item = 'garden_table'; tbl.userData.value = 'table'; bench.userData.item = 'garden_bench'; bench.userData.value = 'bench';
+		tbl.add(box(x, y, z + 0.7, x + 1.6, y + 0.9, z + 0.75, wm));
+		[[x + 0.1, y + 0.1], [x + 1.45, y + 0.1], [x + 0.1, y + 0.75], [x + 1.45, y + 0.75]].forEach(function (q) { tbl.add(box(q[0], q[1], z, q[0] + 0.06, q[1] + 0.06, z + 0.7, wm)); });
+		bench.add(box(x - 0.2, y + 1.2, z, x + 1.8, y + 2.0, z + 0.4, cush));
+		bench.add(box(x - 0.2, y + 1.85, z, x + 1.8, y + 2.0, z + 0.8, cush));
+		[tbl, bench].forEach(function (g2) { self.add(g2); (self.modelPieces = self.modelPieces || []).push(g2); });
+		return;
+	}
 	if (kitchen) { this.add(box(x, y, z, x + 2.2, y + 0.7, z + 0.9, pbr('concrete', { color: '#8E8B86' }, { normal: 1 }))); this.add(box(x - 0.02, y - 0.02, z + 0.9, x + 2.22, y + 0.72, z + 0.95, solid('#2B2E31', 0.3, 0.2))); return; }
 	this.add(box(x, y, z + 0.7, x + 1.6, y + 0.9, z + 0.75, wm));
 	[[x + 0.1, y + 0.1], [x + 1.45, y + 0.1], [x + 0.1, y + 0.75], [x + 1.45, y + 0.75]].forEach(function (q) { this.add(box(q[0], q[1], z, q[0] + 0.06, q[1] + 0.06, z + 0.7, wm)); }, this);
@@ -1653,8 +1682,11 @@ Viewer.prototype.update = function (cfg, mode) {
 	this.picks = this.thumb ? null : collectPicks(this.house.root);   // before the merge, while the pieces are still apart
 	// In a room every piece is merged on its own and the furniture group is left out of the big merge:
 	// that is what keeps each piece grabbable, while the number of draw calls stays low.
-	var itemsG = !this.thumb && this.house.items && this.house.items.children.length ? this.house.items : null;
+	var itemsG = (!this.thumb || MODELS_ON) && this.house.items && this.house.items.children.length ? this.house.items : null;
 	if (itemsG) { itemsG.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
+	// real models (switched on only): the option card's piece and the garden pieces stay apart from the
+	// big merge, each merged on its own, so a model can take its place
+	if (MODELS_ON && this.house.modelPieces) { this.house.modelPieces.forEach(function (o) { o.userData.keepApart = true; try { mergeStatic(o); } catch (e) {} }); }
 	mergeStatic(this.house.fit || this.house.root, itemsG);
 	if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
 	this.scene.add(this.house.root);
@@ -1669,8 +1701,38 @@ Viewer.prototype.update = function (cfg, mode) {
 	var key = [inner ? 'interior' : c.camera, c.lens, mode, inner && c._int ? (c._int.id || c._int.type) : '', c._item ? c._item.field : ''].join('|');
 	this.fitCamera(key !== this.camKey);
 	this.camKey = key;
+	this.modelJob = MODELS_ON ? this.swapModels() : null;
 	this.requestRender();
 };
+// Real models replace the built-in pieces in the background: loaded, placed hidden, their shaders
+// prepared, then shown all at once in one frame. A rebuilt scene meanwhile drops the result.
+Viewer.prototype.swapModels = function () {
+	var self = this, hs = this.house, groups = modelGroups(hs);
+	if (!modelsP || !groups.length) { return null; }
+	return modelsP.then(function (M) {
+		if (!M) { return 0; }
+		return M.init(self.renderer).then(function (ok) {
+			if (!ok || self.house !== hs) { return 0; }
+			return Promise.all(groups.map(function (o) { return M.swap(o, undefined, null, true); })).then(function (r) {
+				var done = groups.filter(function (o, i) { return r[i]; });
+				if (!done.length || self.house !== hs) { return 0; }
+				var show = function () {
+					if (self.house !== hs) { return 0; }
+					done.forEach(function (o) { M.commit(o); });
+					self.renderer.shadowMap.needsUpdate = true; self.shadowDirty = true;
+					if (!self.thumb) { self.requestRender(); }
+					return done.length;
+				};
+				return self.compileFor ? self.compileFor(self.scene, self.thumb ? self.rtA : undefined).then(show, show) : show();
+			});
+		});
+	}).catch(function () { return 0; });
+};
+// Off-screen pictures (option cards, guide pictures) wait for the models on their way, at most `ms`.
+function modelsSettled(v, ms) {
+	if (!v || !v.modelJob) { return Promise.resolve(); }
+	return Promise.race([v.modelJob, new Promise(function (res) { setTimeout(res, ms || 3000); })]);
+}
 // The land around the plot for the chosen (or the style's) landscape: terrain with fields, rock, snow
 // and water, woods of the matching species, the street in front and – when asked for – the neighbours.
 // Terrain and woods are rebuilt only when the landscape, the season or the street line changes.
@@ -1886,7 +1948,7 @@ function mergeStatic(group, skip) {
 	}
 	(function walk(o) {
 		o.children.slice().forEach(function (ch) {
-			if (ch === skip) { return; }
+			if (ch === skip || ch.userData.keepApart) { return; }
 			if (ch.isMesh && !ch.isInstancedMesh && !ch.isSkinnedMesh && ch.geometry && ch.geometry.attributes.position && !hasLight(ch)) {
 				var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
 				if (!mats.some(function (m) { return !m || m.transparent || m.transmission > 0 || m.vertexColors; })) { take(ch, mats); return; }
@@ -1917,7 +1979,7 @@ function mergeStatic(group, skip) {
 	});
 	kill.forEach(function (ch) { if (ch.parent) { ch.parent.remove(ch); } if (!ch.geometry.userData.shared && !isShared(ch.geometry)) { ch.geometry.dispose(); } });
 	// empty helper groups left behind
-	(function prune(o) { o.children.slice().forEach(function (ch) { prune(ch); if (ch.isGroup && !ch.children.length && ch !== skip) { o.remove(ch); } }); })(group);
+	(function prune(o) { o.children.slice().forEach(function (ch) { if (ch.userData.keepApart) { return; } prune(ch); if (ch.isGroup && !ch.children.length && ch !== skip) { o.remove(ch); } }); })(group);
 }
 function disposeTree(root) { root.traverse(function (o) { if (o.geometry && !o.geometry.userData.shared && !isShared(o.geometry)) { o.geometry.dispose(); } }); }
 function isShared(g) { for (var k in FOLIAGE) { if (FOLIAGE[k] === g) { return true; } } return false; }
@@ -2264,7 +2326,7 @@ function warmup(cfg) {
 	}, texturesReady());
 }
 // Kept pictures (IndexedDB; any failure simply means "not kept").
-var VER = (function () { try { return new URL(import.meta.url).search || 'dev'; } catch (e) { return 'dev'; } })();
+var VER = (function () { try { return new URL(import.meta.url).search || 'dev'; } catch (e) { return 'dev'; } })() + (MODELS_ON ? '|m' + (((window.AGH_LOADER || {}).models || {}).manifest || '').replace(/^.*ver=/, '') : '');
 var idb = null;
 function store() {
 	if (idb !== null) { return idb; }
@@ -2317,7 +2379,7 @@ function thumb(cfg, w, h, mode, alive) {
 						v.update(cfg, mode || 'mini');
 						// the pixels of new materials come from the texture workers; new shaders compile in parallel
 						if (!v.rtA || v.rtA.width !== w || v.rtA.height !== h) { thumbPixels.prep(v, w, h); }
-						texturesReady().then(function () { return v.compileFor(v.scene, v.rtA); }).then(function () {
+						Promise.all([texturesReady(), modelsSettled(v, 3000)]).then(function () { return v.compileFor(v.scene, v.rtA); }).then(function () {
 							try { var u = thumbPixels(v, w, h); keep(key, u); res(u); } catch (e) { res(''); }
 						});
 					} catch (e) { res(''); }
@@ -2393,7 +2455,8 @@ function guides(views, w, h, out, opts) {
 	var fixed = views.filter(function (v) { return v.indexOf('interior_') !== 0 && (v !== 'hero' || !exact); });
 	var rooms = views.filter(function (v) { return v.indexOf('interior_') === 0 && opts.rooms && opts.rooms[v.slice(9)]; });
 	var step = function (fn) { return new Promise(function (res) { setTimeout(function () { try { fn(res); } catch (e) { res(); } }, 0); }); };
-	var job = texturesReady();
+	// the live scene's models on their way are waited for (at most 3 s), so no half-swapped room goes out
+	var job = Promise.all([texturesReady(), modelsSettled(live, 3000)]);
 	if (exact) {
 		// exactly the visitor's own view: the live camera, only the picture shape differs
 		job = job.then(function () {
@@ -2420,7 +2483,7 @@ function guides(views, w, h, out, opts) {
 				// configuration must not be touched by that
 				v.update(Object.assign({}, base), 'guide');
 				if (!v.rtA || v.rtA.width !== w || v.rtA.height !== h) { thumbPixels.prep(v, w, h); }
-				v.compileFor(v.scene, v.rtA).then(res);
+				modelsSettled(v, 3000).then(function () { return v.compileFor(v.scene, v.rtA); }).then(res, res);
 			});
 		});
 		fixed.forEach(function (view) {
@@ -2453,7 +2516,7 @@ function guides(views, w, h, out, opts) {
 				v.setSize(w, h);
 				v.update(Object.assign({}, base, { _int: opts.rooms[view.slice(9)] }), 'guide');
 				if (!v.rtA || v.rtA.width !== w || v.rtA.height !== h) { thumbPixels.prep(v, w, h); }
-				v.compileFor(v.scene, v.rtA).then(function () {
+				modelsSettled(v, 3000).then(function () { return v.compileFor(v.scene, v.rtA); }).then(function () {
 					try {
 						// a photographer's position, not the cut-away: standing inside the open corner at eye
 						// height with a wide lens, looking across the room to the far corner – the right and
@@ -2475,6 +2538,9 @@ function guides(views, w, h, out, opts) {
 	});
 	return job.then(function () { return out; });
 }
-var api = { attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-2' };
+// models(): the state of the real 3D models (switch, device tier, loaded/swapped/kept counts) – for the
+// tests and the support page; null when switched off
+var api = { attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-2',
+	models: function () { return MODELS ? MODELS.getStats() : (MODELS_ON ? { enabled: true, loading: true } : null); } };
 window.AGH_3D = api;
 export default api;

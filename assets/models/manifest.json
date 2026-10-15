@@ -1,0 +1,5 @@
+{
+ "version": 1,
+ "note": "Real 3D models (1.13.0). Only CC0-1.0, each with source, author and date; see LICENSES.md. Built by bin/build-models.sh.",
+ "models": []
+}

@@ -181,6 +181,9 @@ final class Settings {
 				'panel_order'  => 'params,stage,summary',
 				'show_tour'    => true,
 				'start_view'   => 'wizard',
+				// 1.13.0: real 3D models (GLB) replace the built-in box furniture where a model exists;
+				// off = exactly the 1.12.1 scene (no model request at all)
+				'real_models'  => true,
 			),
 			'emails'     => array(
 				'contractor_subject' => '',

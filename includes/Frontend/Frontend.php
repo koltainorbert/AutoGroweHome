@@ -124,6 +124,26 @@ final class Frontend {
 		return $out;
 	}
 
+	/**
+	 * Real 3D models (1.13.0): the switch and where the catalogue is. With the switch off, or without
+	 * a catalogue, the 3D module never asks for a model file.
+	 */
+	public static function models_config(): array {
+		$on   = (bool) Settings::get( 'layout.real_models', true );
+		$file = AGH_DIR . 'assets/models/manifest.json';
+		// an empty catalogue loads nothing either (not even the loader module)
+		$list = file_exists( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		if ( ! is_array( $list ) || empty( $list['models'] ) ) {
+			$on = false;
+		}
+		return array(
+			'on'       => $on,
+			'base'     => AGH_URL . 'assets/models/',
+			'manifest' => AGH_URL . 'assets/models/manifest.json?ver=' . rawurlencode( file_exists( $file ) ? (string) filemtime( $file ) : AGH_VERSION ),
+			'vendor'   => AGH_URL . 'assets/js/vendor/three/jsm/',
+		);
+	}
+
 	public static function loader_config( bool $floating ): array {
 		$label = (string) Settings::get( 'general.button_label', '' );
 		return array(
@@ -132,6 +152,7 @@ final class Frontend {
 			'sketch'   => AGH_URL . 'assets/js/agh-sketch.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-sketch.js' ) ),
 			'three'    => AGH_URL . 'assets/js/agh-3d.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) ),
 			'threeDeps' => self::three_deps(),
+			'models'   => self::models_config(),
 			'rest'     => wp_make_link_relative( esc_url_raw( rest_url( AGH_REST_NS . '/' ) ) ),
 			'wpNonce'  => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
 			'floating' => $floating,

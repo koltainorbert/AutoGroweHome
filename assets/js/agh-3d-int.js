@@ -2000,7 +2000,8 @@ export function interiorScene(c, room) {
 	// a plant is scaled to the room: in a small bedroom a tree the size of the bed looks wrong
 	function plantScale(s) { return (s || 1) * L.clamp(Math.sqrt(W * D) / 4.6, 0.62, 1.1); }
 	function cornerPlant(x, y, s) { if (deco && plantK !== 'none' && (c.plant_amount !== 'few' || kind === 'living' || kind === 'living_kitchen')) { P(tag(plant(m, plantK, plantScale(s)), 'plants'), x, y, 0); } }
-	function tag(obj, key) { obj.userData.item = key; return obj; }
+	// the value is what a real model is matched by (1.13.0); it changes nothing in the built scene
+	function tag(obj, key) { obj.userData.item = key; var v; try { v = pick(c, key); } catch (e) { v = undefined; } if (typeof v === 'string') { obj.userData.value = v; } return obj; }
 	function pendantAt(x, y, type2, len) { if (type2 !== 'none' && c.lighting !== 'minimal') { var p = pendant(m, type2, H, len); p.position.set(x, 0, y); R.add(p); } }
 	var backArt = null;
 	if (kind === 'living' || kind === 'living_kitchen' || kind === 'dining') {
@@ -2800,7 +2801,8 @@ export function itemScene(cIn, it) {
 	var bath = BATH_FIELDS[f], kit = KITCHEN_FIELDS[f];
 	if (bath) { opt = { room: 'bathroom', tile: true }; }
 	if (kit) { opt = { room: 'kitchen' }; }
-	function at2(obj, x, z, ry) { obj.position.set(x || 0, 0, z || 0); obj.rotation.y = ry || 0; g.add(obj); return obj; }
+	// the card's own piece is named after its field and value: a real model (1.13.0) can take its place
+	function at2(obj, x, z, ry) { obj.position.set(x || 0, 0, z || 0); obj.rotation.y = ry || 0; g.add(obj); if (!hs.modelPieces) { obj.userData.item = obj.userData.item || f; if (typeof v === 'string') { obj.userData.value = obj.userData.value || v; } hs.modelPieces = [obj]; } return obj; }
 	switch (f) {
 		case 'sofa_type': at2(sofa(m, v, v === 'u_shape' ? 2.8 : 2.3), 0, 0.6); cam = [24, 20]; break;
 		case 'armchair_type': at2(armchair(m, v), 0, 0.7, 0.35); cam = [26, 14]; break;
