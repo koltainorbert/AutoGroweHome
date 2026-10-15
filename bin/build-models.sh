@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Builds the web files of the real 3D model catalogue from incoming/models/<id>/ (bin/fetch-models.sh):
-#   triangle budget (20 000; simplified when over) -> textures 1024 px ("hi") and 512 px ("lo") ->
-#   KTX2 / Basis Universal (colour ETC1S, normal maps UASTC) -> Meshopt geometry -> .glb
+#   triangle budget (20 000; simplified when over) -> colour textures 1024 px ("hi") and 512 px ("lo"),
+#   roughness/metal maps a quarter of that, normal maps UASTC -> KTX2 / Basis Universal -> Meshopt -> .glb
+# A source given only as .blend (Poly Haven "Blend" download) is converted first by bin/blend2gltf.py,
+# with the *_diff_*, *_rough*_* and *_nor_gl_* textures found next to it (JPG/PNG; EXR is not read).
 # Output names carry a content hash (long browser caching), old files of the same model are removed,
 # and size, triangles and bytes go into assets/models/manifest.json. Finally the catalogue is checked
 # (CC0 only, source URL, budgets: 200 KB hi, 100 KB lo, 10 MB in all).
@@ -16,13 +18,23 @@ ids=("$@")
 if [ ${#ids[@]} -eq 0 ]; then mapfile -t ids < <(python3 -c "import json;[print(e['id']) for e in json.load(open('$OUT/manifest.json'))['models']]"); fi
 for id in "${ids[@]}"; do
 	src="$(find "incoming/models/$id" -type f \( -name '*.gltf' -o -name '*.glb' \) 2>/dev/null | sort | head -1)"
+	if [ -z "$src" ]; then
+		blend="$(find "incoming/models/$id" -type f -name '*.blend' 2>/dev/null | head -1)"
+		if [ -n "$blend" ]; then
+			d="$(dirname "$blend")"; tex() { find "incoming/models/$id" -type f \( -iname "*$1*.jpg" -o -iname "*$1*.png" \) | head -1; }
+			args=(); t="$(tex _diff)"; [ -n "$t" ] && args+=(--diff "$t"); t="$(tex _rough)"; [ -n "$t" ] && args+=(--rough "$t"); t="$(tex _nor_gl)"; [ -n "$t" ] && args+=(--normal "$t")
+			python3 bin/blend2gltf.py "$blend" "$d/$id.gltf" --size 1024 "${args[@]}"
+			src="$d/$id.gltf"
+		fi
+	fi
 	if [ -z "$src" ]; then echo "$id: no source in incoming/models/$id (bin/fetch-models.sh)"; continue; fi
 	tris="$(python3 bin/models-tool.py info "$src" | python3 -c 'import json,sys;print(json.load(sys.stdin)["tris"])')"
 	si="$(python3 -c "print(min(1.0, 20000/max(1,$tris)))")"
 	sil="$(python3 -c "print(min(1.0, 12000/max(1,$tris)))")"
-	# hi: 1024 px textures; lo: 512 px and fewer triangles (phones, weak devices)
-	"$GP" -i "$src" -o "$TMP/$id-hi.glb" -c -tc -tu normal -tl 1024 -si "$si" -v > "$TMP/$id-hi.log" 2>&1
-	"$GP" -i "$src" -o "$TMP/$id-lo.glb" -c -tc -tu normal -tl 512 -si "$sil" -v > "$TMP/$id-lo.log" 2>&1
+	# hi: 1024 px colour; lo: 512 px and fewer triangles. Roughness/metal maps a quarter (they barely
+	# show at preview size); quality 4 keeps a typical model under the 200 / 100 KB budget
+	"$GP" -i "$src" -o "$TMP/$id-hi.glb" -c -tc -tu normal -tl color 1024 -tl normal 512 -tl attrib 256 -tq 4 -si "$(python3 -c "print(min($si, 0.85))")" -v > "$TMP/$id-hi.log" 2>&1
+	"$GP" -i "$src" -o "$TMP/$id-lo.glb" -c -tc -tu normal -tl color 512 -tl normal 256 -tl attrib 128 -tq 4 -si "$(python3 -c "print(min($sil, 0.6))")" -v > "$TMP/$id-lo.log" 2>&1
 	out_tris="$(grep -m1 '^output: .*mesh primitives' "$TMP/$id-hi.log" | sed -E 's/.*\(([0-9]+) triangles.*/\1/')"
 	rm -f "$OUT/$id"-hi-*.glb "$OUT/$id"-lo-*.glb
 	hh="$(sha256sum "$TMP/$id-hi.glb" | cut -c1-8)"; lh="$(sha256sum "$TMP/$id-lo.glb" | cut -c1-8)"

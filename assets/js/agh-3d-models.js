@@ -162,23 +162,35 @@ export function swap(o, value, onDone, defer) {
 		model.rotation.y = FRONT[e.front || '+z'] || 0;
 		model.updateMatrixWorld(true);
 		var mb = new THREE.Box3().setFromObject(model), ms = mb.getSize(new THREE.Vector3()), bs = box.getSize(new THREE.Vector3());
-		// uniform scale from the footprint; a model whose proportions differ from the piece by more than
-		// 15 % would look distorted or stick out: the built-in piece stays
-		var sx = bs.x / Math.max(1e-4, ms.x), sz = bs.z / Math.max(1e-4, ms.z), sy = bs.y / Math.max(1e-4, ms.y);
-		var s = Math.min(sx, sz), dev = Math.max(sx, sz, sy) / Math.max(1e-4, Math.min(sx, sz, sy)) - 1;
-		if (!(s > 0) || dev > 0.15) {
-			stats.kept++; stats.reasons[key] = 'aspect ' + Math.round(dev * 100) + '%';
-			if (window.console && console.info) { console.info('AGH models: ' + key + ' (' + e.id + ') kept the built-in piece, proportions differ by ' + Math.round(dev * 100) + '%'); }
+		// Real size first: the catalogue's models are in metres (Poly Haven scans), the built-in piece is
+		// only a stand-in. The model keeps its real size while it fits the piece's footprint (10 % wider,
+		// 25 % deeper allowed); a bigger one is scaled down evenly – never stretched. If it would have to
+		// shrink below 70 %, or the catalogue entry says so ("fit": "box"), the piece's own box decides:
+		// uniform scale into the footprint, and over 15 % difference in proportions the built-in piece stays.
+		var s, why = '';
+		if (e.fit === 'box') {
+			var sx = bs.x / Math.max(1e-4, ms.x), sz = bs.z / Math.max(1e-4, ms.z), sy = bs.y / Math.max(1e-4, ms.y);
+			s = Math.min(sx, sz);
+			var dev = Math.max(sx, sz, sy) / Math.max(1e-4, Math.min(sx, sz, sy)) - 1;
+			if (dev > 0.15) { why = 'proportions differ by ' + Math.round(dev * 100) + '%'; }
+		} else {
+			s = Math.min(1, bs.x * 1.1 / Math.max(1e-4, ms.x), bs.z * 1.25 / Math.max(1e-4, ms.z));
+			if (s < 0.7) { why = 'would shrink to ' + Math.round(s * 100) + '%'; }
+		}
+		if (!(s > 0) || why) {
+			stats.kept++; stats.reasons[key] = why || 'no size';
+			if (window.console && console.info) { console.info('AGH models: ' + key + ' (' + e.id + ') kept the built-in piece: ' + (why || 'no size')); }
 			return false;
 		}
 		model.scale.setScalar(s);
 		model.updateMatrixWorld(true);
 		mb.setFromObject(model);
 		var c = box.getCenter(new THREE.Vector3()), mc = mb.getCenter(new THREE.Vector3());
-		// mount: floor pieces stand on the floor, wall pieces hang on the wall behind them, ceiling pieces hang
-		var mount = e.mount || 'floor';
+		// mount: floor pieces stand on the floor (back against the wall side of the piece, or centred when
+		// "align": "center"), wall pieces hang on the wall behind them, ceiling pieces hang from the ceiling
+		var mount = e.mount || 'floor', back = mount === 'wall' || (e.align || 'back') === 'back';
 		model.position.x += c.x - mc.x;
-		model.position.z += mount === 'wall' ? box.min.z - mb.min.z : c.z - mc.z;
+		model.position.z += back ? box.min.z - mb.min.z : c.z - mc.z;
 		model.position.y += mount === 'ceiling' ? box.max.y - mb.max.y : box.min.y - mb.min.y;
 		var ud = o.userData;
 		model.traverse(function (q) {

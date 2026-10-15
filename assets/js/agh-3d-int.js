@@ -2802,7 +2802,7 @@ export function itemScene(cIn, it) {
 	if (bath) { opt = { room: 'bathroom', tile: true }; }
 	if (kit) { opt = { room: 'kitchen' }; }
 	// the card's own piece is named after its field and value: a real model (1.13.0) can take its place
-	function at2(obj, x, z, ry) { obj.position.set(x || 0, 0, z || 0); obj.rotation.y = ry || 0; g.add(obj); if (!hs.modelPieces) { obj.userData.item = obj.userData.item || f; if (typeof v === 'string') { obj.userData.value = obj.userData.value || v; } hs.modelPieces = [obj]; } return obj; }
+	function at2(obj, x, z, ry) { obj.position.set(x || 0, 0, z || 0); obj.rotation.y = ry || 0; g.add(obj); if (!hs.modelPieces) { obj.userData.item = obj.userData.item || (MULTI_ITEM[f] && typeof v === 'string' ? v : f); if (typeof v === 'string') { obj.userData.value = obj.userData.value || v; } hs.modelPieces = [obj]; } return obj; }
 	switch (f) {
 		case 'sofa_type': at2(sofa(m, v, v === 'u_shape' ? 2.8 : 2.3), 0, 0.6); cam = [24, 20]; break;
 		case 'armchair_type': at2(armchair(m, v), 0, 0.7, 0.35); cam = [26, 14]; break;

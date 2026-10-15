@@ -19,8 +19,10 @@ Kenney, Quaternius, AmbientCG is CC0, de ezek stilizáltak. IKEA és más márk�
 
 ## Lépések
 
-1. **Letöltés:** Poly Havenen a modellnél „glTF”, **1K** felbontás, ZIP. A ZIP neve tartalmazza az
-   azonosítót (pl. `sofa_02_1k.gltf.zip`).
+1. **Letöltés:** Poly Havenen a modellnél a formátum **glTF**, a felbontás **1K** (ZIP, benne .gltf + .bin
+   + JPG textúrák, a normáltérképpel együtt; modellenként néhány MB). A „Blend” 4K letöltés is működik
+   (`bin/blend2gltf.py` alakítja át, Blender nélkül), de az EXR-ben szállított normáltérkép (DWAA
+   tömörítés) itt nem olvasható, ezért kimarad, és a fájlok sokkal nagyobbak.
 2. **Katalógussor** a `manifest.json`-ba:
    ```json
    { "id": "sofa_02", "match": { "key": "sofa_type", "values": ["straight", "modular"] },
@@ -42,7 +44,12 @@ Kenney, Quaternius, AmbientCG is CC0, de ezek stilizáltak. IKEA és más márk�
 
 ## Illesztés
 
-- A modell egyenletes skálával a dobozbútor alapterületébe kerül, padlóra (falra, mennyezetre).
-- Ha az arányai 15 %-nál jobban eltérnek, a dobozbútor marad, és a konzol kiírja (torz bútor nincs).
+- **Valós méret elsőként:** a katalógus modelljei méterben vannak (Poly Haven szkennek), a dobozbútor csak
+  helyettes. A modell a saját méretében marad, amíg elfér a dobozbútor alapterületén (10 %-kal szélesebb,
+  25 %-kal mélyebb lehet); ha nagyobb, egyenletesen kisebbre veszi (nyújtás soha). Ha 70 % alá kellene
+  kicsinyíteni, a dobozbútor marad. A hátoldala a dobozbútor fal felőli oldalához igazodik
+  (`"align": "center"`: középre), és a padlón áll (falra, mennyezetre: `mount`).
+- `"fit": "box"` katalógussornál a régi szabály: egyenletes skála a dobozbútor alapterületébe, és ha az
+  arányok 15 %-nál jobban eltérnek, a dobozbútor marad. A konzol mindkét esetben kiírja az okát.
 - A modell a háttérben töltődik, rejtve kerül a helyére, a shaderei elkészülnek, és egy képkockán belül
   cserélődik. Generáláskor a vezetőkép legfeljebb 3 s-ig vár a modellekre.

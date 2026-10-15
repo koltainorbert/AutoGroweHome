@@ -29,7 +29,8 @@ async function scenario(browser, { mob, param, route }) {
   }
   const page = await ctx.newPage();
   const errors = [];
-  page.on('console', m => { if (m.type() === 'error') { errors.push(m.text().slice(0, 160)); } });
+  page.on('console', m => { if (m.type() === 'error') { errors.push(m.text().slice(0, 160)); } if (process.env.AGH_DEBUG) { console.log('  [' + m.type() + '] ' + m.text().slice(0, 160)); } });
+  if (process.env.AGH_DEBUG) { page.on('requestfailed', r => console.log('  FAIL ' + r.url().split('/').pop() + ' ' + (r.failure() || {}).errorText)); }
   page.on('pageerror', e => errors.push('pageerror: ' + e.message.slice(0, 160)));
   await page.goto(URL0 + (param ? '?agh_models=' + param : ''), { waitUntil: 'networkidle' });
   await page.click('[data-agh-open]');
@@ -38,7 +39,8 @@ async function scenario(browser, { mob, param, route }) {
   await page.waitForTimeout(1500);
   // belső nézet (nappali: kanapé, dohányzóasztal)
   await page.$eval('.agh-3d-view button:nth-child(2)', b => b.click());
-  await page.waitForFunction(() => { const s = window.AGH_3D.models(); return !s || s.loading === undefined && (s.swapped + s.kept + s.failed >= 2 || !s.models); }, null, { timeout: 60000, polling: 250 }).catch(() => {});
+  // switched off: nothing to wait for; switched on: until every catalogue piece in the room is decided
+  if (param !== '0') { await page.waitForFunction(() => { const s = window.AGH_3D.models(); return !!s && !!s.models && s.swapped + s.kept + s.failed >= Math.min(2, s.models); }, null, { timeout: 180000, polling: 500 }).catch(() => {}); }
   await page.waitForTimeout(800);
   const r = await page.evaluate(() => {
     const v = window.AGH_3D.viewer(), st = window.AGH_3D.models();
@@ -86,9 +88,6 @@ async function scenario(browser, { mob, param, route }) {
   // 1. kapcsoló ki (?agh_models=0): sem modul, sem katalógus, sem modellfájl
   const off = await scenario(browser, { mob: false, param: '0', route: true });
   ck('ki_0_keres', off.reqs.length === 0); ck('ki_nincs_modul', off.stats === null); ck('ki_doboz', !off.sofaSwapped);
-  // 2. alapállapot üres éles katalógussal: ugyanaz, mint kikapcsolva (1.12.1)
-  const def = await scenario(browser, { mob: false, param: '', route: false });
-  ck('ures_katalogus_0_keres', def.reqs.length === 0 && def.stats === null);
   // 3. be, asztali gép: hi fájlok, a kanapé modell lesz, az asztal marad
   const on = await scenario(browser, { mob: false, param: '1', route: true });
   ck('be_hi', on.stats && on.stats.tier === 'hi' && on.reqs.some(x => /-hi\.glb$/.test(x)) && !on.reqs.some(x => /-lo\.glb$/.test(x)));
@@ -102,6 +101,11 @@ async function scenario(browser, { mob, param, route }) {
   const ph = await scenario(browser, { mob: true, param: '1', route: true });
   ck('telefon_lo', ph.stats && ph.stats.tier === 'lo' && ph.reqs.some(x => /-lo\.glb$/.test(x)) && !ph.reqs.some(x => /-hi\.glb$/.test(x)));
   ck('telefon_kanape_modell', ph.sofaSwapped);
+  // 2. alapállapot (paraméter nélkül, az éles katalógussal): üres katalógusnál semmi nem töltődik (= 1.12.1),
+  // nem üresnél a modul és a katalógus jön
+  const real = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'assets', 'models', 'manifest.json'), 'utf8'));
+  const def = await scenario(browser, { mob: false, param: '', route: false });
+  ck('alap_kapcsolo', real.models.length ? (def.stats && def.stats.enabled && def.reqs.indexOf('agh-3d-models.js') !== -1) : (def.reqs.length === 0 && def.stats === null));
   // 5. katalógus: minden elem CC0, van forrás, szerző, dátum
   const man = JSON.parse(fs.readFileSync(path.join(FIX, 'manifest.json'), 'utf8'));
   ck('katalogus_cc0', man.models.every(e => e.license === 'CC0-1.0' && /^https:\/\//.test(e.source) && e.author && e.date));

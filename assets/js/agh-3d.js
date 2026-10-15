@@ -1728,7 +1728,8 @@ Viewer.prototype.swapModels = function () {
 		});
 	}).catch(function () { return 0; });
 };
-// Off-screen pictures (option cards, guide pictures) wait for the models on their way, at most `ms`.
+// Off-screen pictures wait for the models on their way, at most `ms` (option cards 10 s: they are made in
+// the background and kept; guide pictures 3 s: the visitor is waiting for the generation).
 function modelsSettled(v, ms) {
 	if (!v || !v.modelJob) { return Promise.resolve(); }
 	return Promise.race([v.modelJob, new Promise(function (res) { setTimeout(res, ms || 3000); })]);
@@ -2379,7 +2380,7 @@ function thumb(cfg, w, h, mode, alive) {
 						v.update(cfg, mode || 'mini');
 						// the pixels of new materials come from the texture workers; new shaders compile in parallel
 						if (!v.rtA || v.rtA.width !== w || v.rtA.height !== h) { thumbPixels.prep(v, w, h); }
-						Promise.all([texturesReady(), modelsSettled(v, 3000)]).then(function () { return v.compileFor(v.scene, v.rtA); }).then(function () {
+						Promise.all([texturesReady(), modelsSettled(v, 10000)]).then(function () { return v.compileFor(v.scene, v.rtA); }).then(function () {
 							try { var u = thumbPixels(v, w, h); keep(key, u); res(u); } catch (e) { res(''); }
 						});
 					} catch (e) { res(''); }

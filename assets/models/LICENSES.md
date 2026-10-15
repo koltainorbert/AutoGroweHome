@@ -9,3 +9,4 @@ Modellenként: azonosító · forrás (oldal) · szerző · licenc · letöltés
 
 | Azonosító | Forrás | Szerző | Licenc | Dátum |
 |---|---|---|---|---|
+| classic_console_01 | https://polyhaven.com/a/ClassicConsole_01 | Poly Haven (a szerző neve a forrásoldalon ellenőrizendő) | CC0-1.0 | 2026-10-15 |

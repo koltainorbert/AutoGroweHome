@@ -13,7 +13,7 @@
   {
    "id": "test_table",
    "files": { "hi": "test_table-hi.glb", "lo": "test_table-lo.glb" },
-   "match": { "key": "coffee_table", "values": "*" },
+   "match": { "key": "coffee_table", "values": "*" }, "fit": "box",
    "front": "+z", "mount": "floor", "tint": [],
    "size": [1.1, 0.6, 0.42], "tris": 72,
    "license": "CC0-1.0", "source": "https://github.com/koltainorbert/AutoGroweHome/tree/main/tests/fixtures", "author": "AutoGroweHome", "date": "2026-10-15"

@@ -1,5 +1,36 @@
 {
  "version": 1,
  "note": "Real 3D models (1.13.0). Only CC0-1.0, each with source, author and date; see LICENSES.md. Built by bin/build-models.sh.",
- "models": []
+ "models": [
+  {
+   "id": "classic_console_01",
+   "files": {
+    "hi": "classic_console_01-hi-6603244e.glb",
+    "lo": "classic_console_01-lo-9954b4ba.glb"
+   },
+   "match": {
+    "key": "sideboard",
+    "values": "*"
+   },
+   "front": "+z",
+   "mount": "floor",
+   "align": "back",
+   "tint": [],
+   "license": "CC0-1.0",
+   "source": "https://polyhaven.com/a/ClassicConsole_01",
+   "author": "Poly Haven (a szerző neve a forrásoldalon ellenőrizendő)",
+   "date": "2026-10-15",
+   "note": "Norbi töltötte le (.blend + diff + roughness JPG); a normáltérkép EXR (DWAA) nem olvasható, kimaradt",
+   "tris": 6431,
+   "size": [
+    1.543,
+    0.589,
+    0.949
+   ],
+   "bytes": {
+    "hi": 197064,
+    "lo": 83280
+   }
+  }
+ ]
 }
