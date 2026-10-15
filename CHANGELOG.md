@@ -1,5 +1,21 @@
 # Változásnapló
 
+## 1.13.0 – 2026-10-15
+
+**Próbaváltozat (pilot, 1 modell)** a `feature/1.13.0-modellek` ágról, Norbi kérésére, hogy élesben is megnézhesse. A `main` 1.12.1 marad a döntési kapuig. Munkaprompt: `docs/FELADAT-1.13.0.md`, leírás: `docs/MODELLEK.md`.
+
+- **Valódi 3D modellek (GLB) a dobozbútorok helyett, ahol van hozzá modell.** Új `assets/js/agh-3d-models.js`: GLTFLoader + Meshopt + KTX2 (Basis), a pluginnal szállítva, külső szerver nélkül. A dobozbútor azonnal látszik, a modell a háttérben töltődik, rejtve kerül a helyére, és a shaderek elkészülte után egy képkockán belül cserélődik. A slotnév, a koppintás, a kézi elrendezés, a mentés és a 2D vázlat változatlan.
+- **Kapcsoló:** Arculat és elrendezés → Popup elrendezés → „Valódi 3D modellek” (alapból be). Kikapcsolva pontosan az 1.12.1-es jelenet jön vissza, modellkérés nélkül. Összehasonlítás: `?agh_models=0` / `?agh_models=1`. Üres katalógusnál a modul sem töltődik.
+- **Eszközszint:** telefonon és gyenge gépen kisebb fájl (`lo`: 512 px textúra, kevesebb háromszög), egyébként `hi` (1024 px). Kézi felülírás: `?agh_tier=lo|hi`.
+- **Illesztés:** valós méret elsőként (a katalógus méterben van, a dobozbútor csak helyettes). Ha a modell nem fér el, egyenletesen kisebb lesz, legfeljebb 70 %-ig, nyújtás nincs; ennél nagyobb eltérésnél a dobozbútor marad, és a konzol kiírja az okát. A hátoldal a falhoz igazodik. `"fit": "box"` katalógussornál a prompt szerinti szabály: a dobozbútor alapterülete, 15 %-os arányhatár.
+- **Ugyanaz mindenhol:** az opciókártyák legfeljebb 10 s-ig, a vezetőképek legfeljebb 3 s-ig várnak a modellekre, így nem megy ki félig betöltött jelenet. A kártyák gyorsítótára külön tartja a modelles és a modell nélküli képeket.
+- **Az első modell:** Poly Haven „ClassicConsole_01” (CC0), Norbi letöltéséből. A „További bútorok → komód” helyét veszi át (konzolasztal opció nincs). Méret: 197 KB (hi) / 83 KB (lo), 6431 / 4538 háromszög. A normáltérkép EXR-ben (DWAA tömörítés) érkezett, ezt itt nem lehet kibontani, ezért kimaradt.
+- **Építőlánc:** `bin/build-tools.sh` (gltfpack + Basis Universal GitHubról fordítva), `bin/fetch-models.sh` (letöltés sha256-tal vagy `--from` kézi letöltésből), `bin/build-models.sh` (keret, KTX2, Meshopt, tartalom-hash a fájlnévben), `bin/models-tool.py check` (csak CC0, forrás, szerző, dátum, 200/100 KB és 10 MB keret), `bin/blend2gltf.py` (.blend → glTF Blender nélkül). A forrásmodellek nem kerülnek a repóba (`incoming/`).
+- **A glTF Validator nem futott:** az npm-registry ebből a környezetből nem érhető el. Helyette a betöltést a böngésző ellenőrzi a tesztben (0 hiba).
+- Mérve: új `tests/e2e/models.js` **14/14** (kikapcsolva 0 kérés és a modul sem töltődik; a kanapé-tesztmodell befoglalója a dobozbútorétól 0,1 %-ra; slotnév és koppintás megmarad; az eltérő arányú asztal dobozbútor marad; asztali gépen `hi`, telefonon `lo`; CC0-ellenőrzés), konzolhiba 0. Kikapcsolt állapotban ugyanaz, mint az 1.12.1: rooms (60 szoba, 347 tárgy, kilóg 0), roomcam (89 %), pick, layout (15/15), cards (55 mező, 0 alapjelenet), guide (6 nézet + belső), perf (1918 KB). Autoloader 119/119, lint 0, vázlat 1247/0.
+- **Nem mérhető itt:** a modell szépsége élesben és a sebesség valódi telefonon; ezt Norbinak kell megnéznie.
+- 2 új admin-felirat 15 nyelven (nyelvenként 2153 szöveg, 0 hiba).
+
 ## 1.12.1 – 2026-10-15
 
 Norbi: „Teljes kepernyos gomb kell a popupba neha jobb kitenni nagyba”. Munkaprompt: `docs/FELADAT-1.12.1.md`.
