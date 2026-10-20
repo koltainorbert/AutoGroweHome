@@ -1667,6 +1667,14 @@ Viewer.prototype.update = function (cfg, mode) {
 		if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
 	}
 	this.scene.add(this.house.root);
+	// build mode: every phase's shaders are compiled now (hidden objects would otherwise compile on their
+	// first appearance and the phase slider would stall for seconds)
+	if (mode === 'build' && this.house.phases && this.house.setPhase && this.renderer.compile) {
+		var ph0 = this.house.phase;
+		this.house.phases.forEach(function (g) { if (g) { g.visible = true; } });
+		try { this.renderer.compile(this.scene, this.camera); } catch (e) { /* compiled on first use instead */ }
+		this.house.setPhase(ph0);
+	}
 	this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
 	// new shaders are compiled in the background (parallel compile where the GPU driver offers it):
 	// the previous picture stays until they are ready instead of the page freezing
