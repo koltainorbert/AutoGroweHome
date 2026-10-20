@@ -24,6 +24,7 @@ async function openBuild(browser, w, h, touch) {
   await ctx.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('agh_tour_done', 'true'); localStorage.setItem('agh_ui', '"designer"'); localStorage.setItem('agh_3d_thumbs', 'false'); } catch (e) {} });
   const page = await ctx.newPage();
   const errors = [];
+  page.on('crash', () => errors.push('page crash ' + w + 'x' + h));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text().slice(0, 160)); });
   page.on('pageerror', e => errors.push('pageerror: ' + e.message.slice(0, 160)));
   await page.goto(URL, { waitUntil: 'networkidle' });
@@ -45,6 +46,7 @@ async function openBuild(browser, w, h, touch) {
   const res = {};
   try {
     /* 1 – 100 houses through the steps */
+    if (!process.env.AGH_ONLY_LAYOUT) {
     const { page, errors } = await openBuild(browser, 1366, 768);
     Object.assign(res, await page.evaluate(async (N) => {
       const B = window.AGH_Build, U = window.AGH_BuildUI, o = { houses: 0, steps: 0, closed: 0, notClosable: [], geo: 0, wallOut: 0, opOut: 0, overlap: 0, float: 0, svgMismatch: 0, opsMismatch: 0, params: 0, rooms: 0, roof: 0, msMax: 0, msSum: 0 };
@@ -150,6 +152,7 @@ async function openBuild(browser, w, h, touch) {
     res.console3 = errors.length - res.console1; res.errors3 = errors.slice(res.console1, res.console1 + 4);
     if (OUT) { await page.screenshot({ path: path.join(OUT, 'build-designer.png') }); }
     await page.context().close();
+    }
 
     /* 4 – layout on five screen sizes */
     const sizes = [['320x568', 320, 568, true], ['390x844', 390, 844, true], ['768x1024', 768, 1024, true], ['1366x768', 1366, 768, false], ['1920x1080', 1920, 1080, false]];
