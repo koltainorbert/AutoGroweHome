@@ -8996,3 +8996,1323 @@ msgstr "Celá obrazovka"
 #: includes/Frontend/Strings.php
 msgid "Kilépés a teljes képernyőből"
 msgstr "Ukončiť celú obrazovku"
+
+#: includes/Frontend/Strings.php
+msgid "Beépített tetőtér (térdfallal)"
+msgstr "Obytné podkrovie (s nadmurovkou)"
+
+#: includes/Frontend/Strings.php
+msgid "A lépés lezárásához teljesüljön az ellenőrzőlista."
+msgstr "Na uzavretie kroku musí byť splnený kontrolný zoznam."
+
+#: includes/Frontend/Strings.php
+msgid "ellenőrizve"
+msgstr "skontrolované"
+
+#: includes/Frontend/Strings.php
+msgid "Ellenőrzőlista"
+msgstr "Kontrolný zoznam"
+
+#: includes/Frontend/Strings.php
+msgid "– válassz –"
+msgstr "– vyberte –"
+
+#: includes/Frontend/Strings.php
+msgid "Az ország kiválasztva"
+msgstr "Krajina vybraná"
+
+#: includes/Frontend/Strings.php
+msgid "A bekötések átnézve"
+msgstr "Prípojky skontrolované"
+
+#: includes/Frontend/Strings.php
+msgid "Van bejárati ajtó"
+msgstr "Sú vstupné dvere"
+
+#: includes/Frontend/Strings.php
+msgid "A külső fal zárt kontúr"
+msgstr "Obvodová stena tvorí uzavretý obrys"
+
+#: includes/Frontend/Strings.php
+msgid "A falak nem fedik egymást, és nincs túl rövid fal"
+msgstr "Steny sa neprekrývajú a žiadna nie je príliš krátka"
+
+#: includes/Frontend/Strings.php
+msgid "Az alapozási mélység legalább 0,30 m"
+msgstr "Hĺbka založenia aspoň 0,30 m"
+
+#: includes/Frontend/Strings.php
+msgid "Az alap típusa kiválasztva"
+msgstr "Typ základu vybraný"
+
+#: includes/Frontend/Strings.php
+msgid "Az alap legalább olyan széles, mint a rajta álló fal"
+msgstr "Základ je aspoň taký široký ako stena na ňom"
+
+#: includes/Frontend/Strings.php
+msgid "Az aljzat rétegei megadva"
+msgstr "Vrstvy podlahy na teréne zadané"
+
+#: includes/Frontend/Strings.php
+msgid "Hamarosan érkezik"
+msgstr "Už čoskoro"
+
+#: includes/Frontend/Strings.php
+msgid "Minden teherhordó falban lévő nyílásnak van áthidalója"
+msgstr "Každý otvor v nosnej stene má preklad"
+
+#: includes/Frontend/Strings.php
+msgid "Minden nyílás a falon belül, a falcsatlakozásoktól és egymástól távol, az áthidaló alatt"
+msgstr "Každý otvor leží v stene, mimo napojení stien a mimo ostatné otvory, pod prekladom"
+
+#: includes/Frontend/Strings.php
+msgid "Minden válaszfal a házon belül, létező szinten áll"
+msgstr "Každá priečka stojí vnútri domu na existujúcom podlaží"
+
+#: includes/Frontend/Strings.php
+msgid "A telek mérete megadva"
+msgstr "Rozmery pozemku zadané"
+
+#: includes/Frontend/Strings.php
+msgid "A tetőhöz zárt, derékszögű külső fal kell"
+msgstr "Strecha vyžaduje uzavretú pravouhlú obvodovú stenu"
+
+#: includes/Frontend/Strings.php
+msgid "A külső fal derékszögű (kell a tetőhöz)"
+msgstr "Obvodová stena je pravouhlá (potrebné pre strechu)"
+
+#: includes/Frontend/Strings.php
+msgid "Az előírások alkalmazása beállítva"
+msgstr "Uplatnenie predpisov nastavené"
+
+#: includes/Frontend/Strings.php
+msgid "A födém típusa kiválasztva"
+msgstr "Typ stropu vybraný"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőnyílás kijelölve"
+msgstr "Schodiskový otvor vyznačený"
+
+#: includes/Frontend/Strings.php
+msgid "A humuszréteg megadva"
+msgstr "Vrstva ornice zadaná"
+
+#: includes/Frontend/Strings.php
+msgid "Falak törlése"
+msgstr "Vymazať steny"
+
+#: includes/Frontend/Strings.php
+msgid "Minden fal és nyílás törlődik. Folytatod?"
+msgstr "Všetky steny a otvory sa vymažú. Pokračovať?"
+
+#: includes/Frontend/Strings.php
+msgid "Lépés lezárása"
+msgstr "Uzavrieť krok"
+
+#: includes/Frontend/Strings.php
+msgid "Kezdőpont: %1$s; %2$s m · végpont: %3$s; %4$s m"
+msgstr "Začiatok: %1$s; %2$s m · koniec: %3$s; %4$s m"
+
+#: includes/Frontend/Strings.php
+msgid "Ország"
+msgstr "Krajina"
+
+#: includes/Frontend/Strings.php
+msgid "Magyarország"
+msgstr "Maďarsko"
+
+#: includes/Frontend/Strings.php
+msgid "Egyéb (szabálycsomag nélkül)"
+msgstr "Iná (bez balíka pravidiel)"
+
+#: includes/Frontend/Strings.php
+msgid "Mélység"
+msgstr "Hĺbka"
+
+#: includes/Frontend/Strings.php
+msgid "A ház elkészült: a tető, a táj és a belső tér a megszokott módon állítható."
+msgstr "Dom je hotový: strechu, okolie a interiér nastavíte ako zvyčajne."
+
+#: includes/Frontend/Strings.php
+msgid "Védőcsövek a lemez alatt"
+msgstr "Chráničky pod doskou"
+
+#: includes/Frontend/Strings.php
+msgid "Alapföldelő"
+msgstr "Základový uzemňovač"
+
+#: includes/Frontend/Strings.php
+msgid "Szennyvízcsatorna bekötése"
+msgstr "Kanalizačná prípojka"
+
+#: includes/Frontend/Strings.php
+msgid "Vízbekötés"
+msgstr "Vodovodná prípojka"
+
+#: includes/Frontend/Strings.php
+msgid "A pontos nyomvonal a gépészeti lépésben (1.14.1) rajzolható."
+msgstr "Presnú trasu nakreslíte v kroku TZB (1.14.1)."
+
+#: includes/Frontend/Strings.php
+msgid "Hogyan kezdjük?"
+msgstr "Ako začneme?"
+
+#: includes/Frontend/Strings.php
+msgid "Építés az alapoktól"
+msgstr "Stavba od základov"
+
+#: includes/Frontend/Strings.php
+msgid "Kőműves sorrendben: kitűzés, alap, falak, nyílások, födém, tető."
+msgstr "V poradí stavby: vytýčenie, základy, steny, otvory, strop, strecha."
+
+#: includes/Frontend/Strings.php
+msgid "Gyors terv"
+msgstr "Rýchly návrh"
+
+#: includes/Frontend/Strings.php
+msgid "Stílus, méret, tető, homlokzat – pár lépésben kész a ház."
+msgstr "Štýl, veľkosť, strecha, fasáda – dom hotový v niekoľkých krokoch."
+
+#: includes/Frontend/Strings.php
+msgid "A külső fal nem zárt: a falvégek nem érnek össze."
+msgstr "Obvodová stena nie je uzavretá: konce stien sa nestretávajú."
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs külső fal."
+msgstr "Zatiaľ nie je žiadna obvodová stena."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás nem létező szinten van."
+msgstr "Otvor leží na neexistujúcom podlaží."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás az áthidaló helyére, a födémbe ér."
+msgstr "Otvor zasahuje do miesta prekladu a do stropu."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás egy falcsatlakozásra esik."
+msgstr "Otvor padá na napojenie stien."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás fala már nincs meg."
+msgstr "Stena otvoru už neexistuje."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás kilóg a falból vagy a sarokba ér."
+msgstr "Otvor presahuje stenu alebo zasahuje do rohu."
+
+#: includes/Frontend/Strings.php
+msgid "Két nyílás fedi egymást."
+msgstr "Dva otvory sa prekrývajú."
+
+#: includes/Frontend/Strings.php
+msgid "A fal nem áll semmin (nem létező szint vagy a házon kívül)."
+msgstr "Stena na ničom nestojí (neexistujúce podlažie alebo mimo domu)."
+
+#: includes/Frontend/Strings.php
+msgid "A fal kilóg a házból."
+msgstr "Stena presahuje mimo dom."
+
+#: includes/Frontend/Strings.php
+msgid "Két fal fedi egymást."
+msgstr "Dve steny sa prekrývajú."
+
+#: includes/Frontend/Strings.php
+msgid "Túl rövid fal."
+msgstr "Príliš krátka stena."
+
+#: includes/Frontend/Strings.php
+msgid "Kavicsfeltöltés"
+msgstr "Štrkový zásyp"
+
+#: includes/Frontend/Strings.php
+msgid "Kész, tovább a tervezőhöz"
+msgstr "Hotovo, pokračovať do návrhára"
+
+#: includes/Frontend/Strings.php
+msgid "Teljes rajz"
+msgstr "Zobraziť všetko"
+
+#: includes/Frontend/Strings.php
+msgid "Alapozási mélység"
+msgstr "Hĺbka založenia"
+
+#: includes/Frontend/Strings.php
+msgid "A terepszinttől az alap aljáig; a fagyhatár alatt legyen."
+msgstr "Od úrovne terénu po spodok základu; pod hĺbkou premŕzania."
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak alá"
+msgstr "Pod priečkami"
+
+#: includes/Frontend/Strings.php
+msgid "Lemezalap"
+msgstr "Základová doska"
+
+#: includes/Frontend/Strings.php
+msgid "Kő sávalap"
+msgstr "Kamenný základový pás"
+
+#: includes/Frontend/Strings.php
+msgid "Beton sávalap"
+msgstr "Betónový základový pás"
+
+#: includes/Frontend/Strings.php
+msgid "Vasbeton sávalap"
+msgstr "Železobetónový základový pás"
+
+#: includes/Frontend/Strings.php
+msgid "Lábazat magassága"
+msgstr "Výška sokla"
+
+#: includes/Frontend/Strings.php
+msgid "A ±0,00 szint (földszinti padló) magassága a terep felett."
+msgstr "Výška úrovne ±0,00 (podlaha prízemia) nad terénom."
+
+#: includes/Frontend/Strings.php
+msgid "Alap típusa"
+msgstr "Typ základu"
+
+#: includes/Frontend/Strings.php
+msgid "Alap szélessége"
+msgstr "Šírka základu"
+
+#: includes/Frontend/Strings.php
+msgid "Nehéz válaszfal alá sáv"
+msgstr "Pás pod ťažkými priečkami"
+
+#: includes/Frontend/Strings.php
+msgid "Nem kell alap"
+msgstr "Základ nie je potrebný"
+
+#: includes/Frontend/Strings.php
+msgid "Minden válaszfal alá sáv"
+msgstr "Pás pod všetkými priečkami"
+
+#: includes/Frontend/Strings.php
+msgid "A mostani házból"
+msgstr "Z aktuálneho domu"
+
+#: includes/Frontend/Strings.php
+msgid "Fagyhatár"
+msgstr "Hĺbka premŕzania"
+
+#: includes/Frontend/Strings.php
+msgid "Üresen a szabálycsomag értéke; talajmechanikai szakvélemény szerint pontosítsd."
+msgstr "Prázdne = hodnota z balíka pravidiel; upresnite podľa geotechnického posudku."
+
+#: includes/Frontend/Strings.php
+msgid "Talaj és fagyhatár"
+msgstr "Zemina a hĺbka premŕzania"
+
+#: includes/Frontend/Strings.php
+msgid "Hol építesz?"
+msgstr "Kde staviate?"
+
+#: includes/Frontend/Strings.php
+msgid "Telek és a ház helye"
+msgstr "Pozemok a umiestnenie domu"
+
+#: includes/Frontend/Strings.php
+msgid "Aljzatbeton"
+msgstr "Podkladový betón"
+
+#: includes/Frontend/Strings.php
+msgid "Geometria: %d hiba"
+msgstr "Geometria – chyby: %d"
+
+#: includes/Frontend/Strings.php
+msgid "Geometria: 0 hiba"
+msgstr "Geometria: 0 chýb"
+
+#: includes/Frontend/Strings.php
+msgid "földmunka"
+msgstr "zemné práce"
+
+#: includes/Frontend/Strings.php
+msgid "alap"
+msgstr "základ"
+
+#: includes/Frontend/Strings.php
+msgid "aljzat"
+msgstr "podlaha na teréne"
+
+#: includes/Frontend/Strings.php
+msgid "falanyag"
+msgstr "materiál stien"
+
+#: includes/Frontend/Strings.php
+msgid "nyílások helye"
+msgstr "umiestnenie otvorov"
+
+#: includes/Frontend/Strings.php
+msgid "válaszfalak"
+msgstr "priečky"
+
+#: includes/Frontend/Strings.php
+msgid "Kitalált értékek, nézd át"
+msgstr "Odhadnuté hodnoty, skontrolujte ich"
+
+#: includes/Frontend/Strings.php
+msgid "Magasság"
+msgstr "Výška"
+
+#: includes/Frontend/Strings.php
+msgid "Települési szabályzat (HÉSZ) értékei"
+msgstr "Hodnoty miestneho stavebného predpisu (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Hátsókert legalább"
+msgstr "Zadný odstup aspoň"
+
+#: includes/Frontend/Strings.php
+msgid "Beépítés legfeljebb"
+msgstr "Zastavanosť najviac"
+
+#: includes/Frontend/Strings.php
+msgid "Előkert legalább"
+msgstr "Predný odstup aspoň"
+
+#: includes/Frontend/Strings.php
+msgid "Párkánymagasság legfeljebb"
+msgstr "Výška rímsy najviac"
+
+#: includes/Frontend/Strings.php
+msgid "Településenként más; a helyi építési szabályzatból írd be. Mindig a te értéked az erősebb."
+msgstr "Líši sa podľa obce; prepíšte z miestneho stavebného predpisu. Vaša hodnota má vždy prednosť."
+
+#: includes/Frontend/Strings.php
+msgid "Tetőhajlás legfeljebb"
+msgstr "Sklon strechy najviac"
+
+#: includes/Frontend/Strings.php
+msgid "Tetőhajlás legalább"
+msgstr "Sklon strechy aspoň"
+
+#: includes/Frontend/Strings.php
+msgid "Oldalkert legalább"
+msgstr "Bočný odstup aspoň"
+
+#: includes/Frontend/Strings.php
+msgid "Forrás"
+msgstr "Zdroj"
+
+#: includes/Frontend/Strings.php
+msgid "pl. a HÉSZ száma és pontja"
+msgstr "napr. číslo a bod HÉSZ"
+
+#: includes/Frontend/Strings.php
+msgid "Kattints a falra, ahová a nyílás kerüljön."
+msgstr "Kliknite na stenu, kam má prísť otvor."
+
+#: includes/Frontend/Strings.php
+msgid "Húzd ki a téglalapot: négy fal készül egyszerre."
+msgstr "Natiahnite obdĺžnik: vzniknú naraz štyri steny."
+
+#: includes/Frontend/Strings.php
+msgid "Kattints egy elemre; a végpontok és a falak húzhatók. Görgetés: nagyítás."
+msgstr "Kliknite na prvok; koncové body aj steny možno presúvať. Koliesko: priblíženie."
+
+#: includes/Frontend/Strings.php
+msgid "Kattints a kezdőpontra, majd a végpontokra. Shift: ferde fal. Esc vagy dupla kattintás: vége."
+msgstr "Kliknite na počiatočný bod, potom na ďalšie body. Shift: šikmá stena. Esc alebo dvojklik: koniec."
+
+#: includes/Frontend/Strings.php
+msgid "EPS (polisztirol)"
+msgstr "EPS (polystyrén)"
+
+#: includes/Frontend/Strings.php
+msgid "Grafitos EPS"
+msgstr "Grafitový EPS"
+
+#: includes/Frontend/Strings.php
+msgid "Kőzetgyapot"
+msgstr "Kamenná vlna"
+
+#: includes/Frontend/Strings.php
+msgid "Fagyapot"
+msgstr "Drevovláknitá doska"
+
+#: includes/Frontend/Strings.php
+msgid "Külső hőszigetelés"
+msgstr "Vonkajšia tepelná izolácia"
+
+#: includes/Frontend/Strings.php
+msgid "Hőszigetelés vastagsága"
+msgstr "Hrúbka tepelnej izolácie"
+
+#: includes/Frontend/Strings.php
+msgid "Fal fajtája"
+msgstr "Druh steny"
+
+#: includes/Frontend/Strings.php
+msgid "Külső főfal"
+msgstr "Obvodová nosná stena"
+
+#: includes/Frontend/Strings.php
+msgid "Belső teherhordó fal"
+msgstr "Vnútorná nosná stena"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfal"
+msgstr "Priečka"
+
+#: includes/Frontend/Strings.php
+msgid "hamarosan (1.14.1–1.14.3)"
+msgstr "čoskoro (1.14.1–1.14.3)"
+
+#: includes/Frontend/Strings.php
+msgid "Ami még az aljzat előtt a földbe kerül: csatorna, víz, földelő, védőcsövek."
+msgstr "Čo sa ešte pred podlahou uloží do zeme: kanalizácia, voda, uzemňovač, chráničky."
+
+#: includes/Frontend/Strings.php
+msgid "A humusz leszedése és az alapárok mélysége – a fagyhatár alá."
+msgstr "Odstránenie ornice a hĺbka základovej ryhy – pod hĺbku premŕzania."
+
+#: includes/Frontend/Strings.php
+msgid "Az alap fajtája és mérete. A külső és a teherhordó falak alá mindig kerül alap."
+msgstr "Druh a rozmery základu. Pod obvodovými a nosnými stenami je vždy základ."
+
+#: includes/Frontend/Strings.php
+msgid "Feltöltés, talajnedvesség elleni szigetelés és aljzatbeton."
+msgstr "Zásyp, hydroizolácia proti zemnej vlhkosti a podkladový betón."
+
+#: includes/Frontend/Strings.php
+msgid "Ablakok és ajtók pontos helye a falakon, az áthidalóval együtt."
+msgstr "Presné umiestnenie okien a dverí v stenách, vrátane prekladu."
+
+#: includes/Frontend/Strings.php
+msgid "A válaszfalak szintenként; a zárt terekből helyiségek lesznek."
+msgstr "Priečky po podlažiach; z uzavretých priestorov vzniknú miestnosti."
+
+#: includes/Frontend/Strings.php
+msgid "A tető a meglévő tetőgenerátorral épül a falakra; utána minden a megszokott tervezőben folytatódik."
+msgstr "Strecha sa postaví na steny existujúcim generátorom striech; potom všetko pokračuje v obvyklom návrhári."
+
+#: includes/Frontend/Strings.php
+msgid "Hol épül a ház, mekkora a telek, és mely előírásokat vegye figyelembe a program."
+msgstr "Kde dom stojí, aký veľký je pozemok a ktoré predpisy má program zohľadniť."
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú a falak tetején és a födém; többszintes háznál a lépcsőnyílás."
+msgstr "Veniec na stenách a strop; pri viacpodlažnom dome aj schodiskový otvor."
+
+#: includes/Frontend/Strings.php
+msgid "Rajzold meg a külső falakat (zárt kontúr) és a belső teherhordó falakat, add meg az anyagot és a vastagságot."
+msgstr "Nakreslite obvodové steny (uzavretý obrys) a vnútorné nosné steny, zadajte materiál a hrúbku."
+
+#: includes/Frontend/Strings.php
+msgid "Hossz"
+msgstr "Dĺžka"
+
+#: includes/Frontend/Strings.php
+msgid "%s szintmagasság"
+msgstr "%s – konštrukčná výška podlažia"
+
+#: includes/Frontend/Strings.php
+msgid "Padlótól padlóig, a födémmel együtt."
+msgstr "Od podlahy po podlahu, vrátane stropu."
+
+#: includes/Frontend/Strings.php
+msgid "Szintek száma"
+msgstr "Počet podlaží"
+
+#: includes/Frontend/Strings.php
+msgid "Előregyártott"
+msgstr "Prefabrikovaný"
+
+#: includes/Frontend/Strings.php
+msgid "Monolit vasbeton"
+msgstr "Monolitický železobetón"
+
+#: includes/Frontend/Strings.php
+msgid "Acél"
+msgstr "Oceľ"
+
+#: includes/Frontend/Strings.php
+msgid "Áthidaló"
+msgstr "Preklad"
+
+#: includes/Frontend/Strings.php
+msgid "Vázas falban a kiváltást a keret adja."
+msgstr "V skeletovej stene prenáša zaťaženie rám."
+
+#: includes/Frontend/Strings.php
+msgid "%1$s db előregyártott áthidaló, %2$s m hosszú."
+msgstr "%1$s ks prefabrikovaných prekladov, dĺžka %2$s m."
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód nem töltődött be. Frissítsd az oldalt, és próbáld újra."
+msgstr "Stavebný režim sa nenačítal. Obnovte stránku a skúste to znova."
+
+#: includes/Frontend/Strings.php
+msgid "%s. emelet"
+msgstr "%s. poschodie"
+
+#: includes/Frontend/Strings.php
+msgid "Munkatér a ház körül"
+msgstr "Pracovný priestor okolo domu"
+
+#: includes/Frontend/Strings.php
+msgid "Ekkora sávban szedjük le a humuszt a ház körül."
+msgstr "V páse tejto šírky okolo domu sa odstráni ornica."
+
+#: includes/Frontend/Strings.php
+msgid "Anyag"
+msgstr "Materiál"
+
+#: includes/Frontend/Strings.php
+msgid "Pórusbeton (gázbeton)"
+msgstr "Pórobetón"
+
+#: includes/Frontend/Strings.php
+msgid "Vályog"
+msgstr "Nepálená hlina"
+
+#: includes/Frontend/Strings.php
+msgid "Teljes anyaglista"
+msgstr "Úplný výkaz materiálu"
+
+#: includes/Frontend/Strings.php
+msgid "Kerámia falazóblokk"
+msgstr "Keramická tvárnica"
+
+#: includes/Frontend/Strings.php
+msgid "Gipszkarton"
+msgstr "Sadrokartón"
+
+#: includes/Frontend/Strings.php
+msgid "Zsaluzóelem betonnal"
+msgstr "Debniaca tvárnica s betónom"
+
+#: includes/Frontend/Strings.php
+msgid "Tétel"
+msgstr "Položka"
+
+#: includes/Frontend/Strings.php
+msgid "Az anyaglista a zárt külső fal után számolható."
+msgstr "Výkaz materiálu sa dá vypočítať až po uzavretí obvodovej steny."
+
+#: includes/Frontend/Strings.php
+msgid "Ebben a lépésben nincs anyag."
+msgstr "V tomto kroku nie je žiadny materiál."
+
+#: includes/Frontend/Strings.php
+msgid "Becslés, nem árajánlat."
+msgstr "Odhad, nie cenová ponuka."
+
+#: includes/Frontend/Strings.php
+msgid "Pórusbeton válaszfal"
+msgstr "Pórobetónová priečka"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfaltégla"
+msgstr "Priečkovka"
+
+#: includes/Frontend/Strings.php
+msgid "Mennyiség"
+msgstr "Množstvo"
+
+#: includes/Frontend/Strings.php
+msgid "Mészhomoktégla"
+msgstr "Vápennopiesková tehla"
+
+#: includes/Frontend/Strings.php
+msgid "Csak ez a lépés"
+msgstr "Iba tento krok"
+
+#: includes/Frontend/Strings.php
+msgid "Könnyűszerkezet (favázas)"
+msgstr "Drevostavba (ľahký skelet)"
+
+#: includes/Frontend/Strings.php
+msgid "Hulladékkal"
+msgstr "Vrátane strát"
+
+#: includes/Frontend/Strings.php
+msgid "Hulladékszázalék: %s"
+msgstr "Straty: %s"
+
+#: includes/Frontend/Strings.php
+msgid "Anyaglista"
+msgstr "Výkaz materiálu"
+
+#: includes/Frontend/Strings.php
+msgid "Bitumenes lemez"
+msgstr "Asfaltový pás"
+
+#: includes/Frontend/Strings.php
+msgid "PVC lemez"
+msgstr "PVC fólia"
+
+#: includes/Frontend/Strings.php
+msgid "Talajnedvesség elleni szigetelés"
+msgstr "Hydroizolácia proti zemnej vlhkosti"
+
+#: includes/Frontend/Strings.php
+msgid "A 3D nézet ezen az eszközön nem érhető el; a kész ház vázlata látszik."
+msgstr "3D zobrazenie nie je na tomto zariadení dostupné; zobrazuje sa náčrt hotového domu."
+
+#: includes/Frontend/Strings.php
+msgid "Ez nem statikai és nem engedélyezési terv. A szerkezet méretezéséhez statikus, az engedélyhez tervező kell; a figyelmeztetések soha nem akadályozzák a mentést."
+msgstr "Toto nie je statický ani povoľovací projekt. Na dimenzovanie konštrukcie je potrebný statik, na povolenie projektant; upozornenia nikdy nebránia uloženiu."
+
+#: includes/Frontend/Strings.php
+msgid "Nem statikai és nem engedélyezési terv."
+msgstr "Nie je to statický ani povoľovací projekt."
+
+#: includes/Frontend/Strings.php
+msgid "Távolság a fal elejétől"
+msgstr "Vzdialenosť od začiatku steny"
+
+#: includes/Frontend/Strings.php
+msgid "A fal kezdőpontjától a nyílás széléig."
+msgstr "Od počiatočného bodu steny po okraj otvoru."
+
+#: includes/Frontend/Strings.php
+msgid "Ajtó"
+msgstr "Dvere"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszd ki a fajtát, majd kattints a falra, ahová kerüljön. A nyílás a rajzon húzással is mozgatható."
+msgstr "Vyberte druh a potom kliknite na stenu, kam má prísť. Otvor možno na výkrese aj presúvať."
+
+#: includes/Frontend/Strings.php
+msgid "Fajta"
+msgstr "Druh"
+
+#: includes/Frontend/Strings.php
+msgid "Ablak"
+msgstr "Okno"
+
+#: includes/Frontend/Strings.php
+msgid "Nyílás fajtája"
+msgstr "Druh otvoru"
+
+#: includes/Frontend/Strings.php
+msgid "Szabálycsomag: %1$s, utolsó ellenőrzés: %2$s – jogilag nem jóváhagyott, tájékoztató jellegű."
+msgstr "Balík pravidiel: %1$s, posledná kontrola: %2$s – právne neschválené, len informatívne."
+
+#: includes/Frontend/Strings.php
+msgid "3D"
+msgstr "3D"
+
+#: includes/Frontend/Strings.php
+msgid "Lépés beállításai"
+msgstr "Nastavenia kroku"
+
+#: includes/Frontend/Strings.php
+msgid "Építési állás"
+msgstr "Stav stavby"
+
+#: includes/Frontend/Strings.php
+msgid "A ház helyét a falak megrajzolása után állíthatod be."
+msgstr "Umiestnenie domu nastavíte po nakreslení stien."
+
+#: includes/Frontend/Strings.php
+msgid "Alaprajz-szerkesztő: falak, nyílások és helyiségek"
+msgstr "Editor pôdorysu: steny, otvory a miestnosti"
+
+#: includes/Frontend/Strings.php
+msgid "Telek szélessége (utcafront)"
+msgstr "Šírka pozemku (uličná čiara)"
+
+#: includes/Frontend/Strings.php
+msgid "Emeleti teherhordó fal alatt nincs fal"
+msgstr "Pod nosnou stenou poschodia nie je stena"
+
+#: includes/Frontend/Strings.php
+msgid "Az alap alig szélesebb a falnál"
+msgstr "Základ je len o málo širší ako stena"
+
+#: includes/Frontend/Strings.php
+msgid "Az áthidaló felfekvése kevés"
+msgstr "Uloženie prekladu je príliš krátke"
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás túl közel van a falsarokhoz vagy falcsatlakozáshoz"
+msgstr "Otvor je príliš blízko rohu alebo napojenia stien"
+
+#: includes/Frontend/Strings.php
+msgid "Két nyílás közötti pillér túl keskeny"
+msgstr "Pilier medzi dvoma otvormi je príliš úzky"
+
+#: includes/Frontend/Strings.php
+msgid "A falban túl nagy a nyílások aránya"
+msgstr "Príliš veľký podiel otvorov v stene"
+
+#: includes/Frontend/Strings.php
+msgid "Nehéz válaszfal alap nélkül"
+msgstr "Ťažká priečka bez základu"
+
+#: includes/Frontend/Strings.php
+msgid "Többszintes háznál nincs lépcsőnyílás"
+msgstr "Viacpodlažný dom nemá schodiskový otvor"
+
+#: includes/Frontend/Strings.php
+msgid "A fal túl karcsú (magasság / vastagság)"
+msgstr "Stena je príliš štíhla (výška / hrúbka)"
+
+#: includes/Frontend/Strings.php
+msgid "Szakmai figyelmeztetések"
+msgstr "Odborné upozornenia"
+
+#: includes/Frontend/Strings.php
+msgid "Falazóelem"
+msgstr "Murovací prvok"
+
+#: includes/Frontend/Strings.php
+msgid "Burkolólap"
+msgstr "Obkladové dosky"
+
+#: includes/Frontend/Strings.php
+msgid "Kitöltő beton (zsaluzóelem)"
+msgstr "Výplňový betón (debniaca tvárnica)"
+
+#: includes/Frontend/Strings.php
+msgid "Alapbeton"
+msgstr "Betón základov"
+
+#: includes/Frontend/Strings.php
+msgid "Lábazati beton"
+msgstr "Betón sokla"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorúbeton"
+msgstr "Betón venca"
+
+#: includes/Frontend/Strings.php
+msgid "Födémbeton"
+msgstr "Betón stropu"
+
+#: includes/Frontend/Strings.php
+msgid "Felbeton"
+msgstr "Nadbetónovanie"
+
+#: includes/Frontend/Strings.php
+msgid "Védőcső"
+msgstr "Chránička"
+
+#: includes/Frontend/Strings.php
+msgid "Alapföldelő szalag"
+msgstr "Uzemňovací pásik základu"
+
+#: includes/Frontend/Strings.php
+msgid "Alapárok / munkagödör kiemelése"
+msgstr "Výkop základových rýh / stavebnej jamy"
+
+#: includes/Frontend/Strings.php
+msgid "Homlokzati hőszigetelés (előzetes)"
+msgstr "Fasádne zateplenie (predbežne)"
+
+#: includes/Frontend/Strings.php
+msgid "Ragasztó"
+msgstr "Lepidlo"
+
+#: includes/Frontend/Strings.php
+msgid "Falazóhabarcs / ragasztó"
+msgstr "Murovacia malta / lepidlo"
+
+#: includes/Frontend/Strings.php
+msgid "Szigetelőlemez"
+msgstr "Izolačný pás"
+
+#: includes/Frontend/Strings.php
+msgid "Habarcs (kő alap)"
+msgstr "Malta (kamenný základ)"
+
+#: includes/Frontend/Strings.php
+msgid "Profilváz"
+msgstr "Profily (CW/UW)"
+
+#: includes/Frontend/Strings.php
+msgid "Alap vasalása"
+msgstr "Výstuž základu"
+
+#: includes/Frontend/Strings.php
+msgid "Hegesztett háló"
+msgstr "Zváraná sieť"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú vasalása"
+msgstr "Výstuž venca"
+
+#: includes/Frontend/Strings.php
+msgid "Födém vasalása"
+msgstr "Výstuž stropu"
+
+#: includes/Frontend/Strings.php
+msgid "Csatornacső (KG 110)"
+msgstr "Kanalizačná rúra (KG 110)"
+
+#: includes/Frontend/Strings.php
+msgid "Födémgerenda"
+msgstr "Stropný nosník"
+
+#: includes/Frontend/Strings.php
+msgid "Terméskő (alap)"
+msgstr "Lomový kameň (základ)"
+
+#: includes/Frontend/Strings.php
+msgid "Faváz (oszlop, talp, koszorú)"
+msgstr "Drevený skelet (stĺpiky, prah, väznica)"
+
+#: includes/Frontend/Strings.php
+msgid "Fagerenda"
+msgstr "Drevený trám"
+
+#: includes/Frontend/Strings.php
+msgid "Humuszleszedés"
+msgstr "Odstránenie ornice"
+
+#: includes/Frontend/Strings.php
+msgid "Vízvezeték (PE)"
+msgstr "Vodovodné potrubie (PE)"
+
+#: includes/Frontend/Strings.php
+msgid "Lábazati XPS"
+msgstr "Soklový XPS"
+
+#: includes/Frontend/Strings.php
+msgid "Bács-Kiskun"
+msgstr "Bács-Kiskun"
+
+#: includes/Frontend/Strings.php
+msgid "Baranya"
+msgstr "Baranya"
+
+#: includes/Frontend/Strings.php
+msgid "Békés"
+msgstr "Békés"
+
+#: includes/Frontend/Strings.php
+msgid "Borsod-Abaúj-Zemplén"
+msgstr "Borsod-Abaúj-Zemplén"
+
+#: includes/Frontend/Strings.php
+msgid "Budapest"
+msgstr "Budapest"
+
+#: includes/Frontend/Strings.php
+msgid "Csongrád-Csanád"
+msgstr "Csongrád-Csanád"
+
+#: includes/Frontend/Strings.php
+msgid "Fejér"
+msgstr "Fejér"
+
+#: includes/Frontend/Strings.php
+msgid "Győr-Moson-Sopron"
+msgstr "Győr-Moson-Sopron"
+
+#: includes/Frontend/Strings.php
+msgid "Hajdú-Bihar"
+msgstr "Hajdú-Bihar"
+
+#: includes/Frontend/Strings.php
+msgid "Heves"
+msgstr "Heves"
+
+#: includes/Frontend/Strings.php
+msgid "Jász-Nagykun-Szolnok"
+msgstr "Jász-Nagykun-Szolnok"
+
+#: includes/Frontend/Strings.php
+msgid "Komárom-Esztergom"
+msgstr "Komárom-Esztergom"
+
+#: includes/Frontend/Strings.php
+msgid "Nógrád"
+msgstr "Nógrád"
+
+#: includes/Frontend/Strings.php
+msgid "Pest"
+msgstr "Pest"
+
+#: includes/Frontend/Strings.php
+msgid "Somogy"
+msgstr "Somogy"
+
+#: includes/Frontend/Strings.php
+msgid "Szabolcs-Szatmár-Bereg"
+msgstr "Szabolcs-Szatmár-Bereg"
+
+#: includes/Frontend/Strings.php
+msgid "Tolna"
+msgstr "Tolna"
+
+#: includes/Frontend/Strings.php
+msgid "Vas"
+msgstr "Vas"
+
+#: includes/Frontend/Strings.php
+msgid "Veszprém"
+msgstr "Veszprém"
+
+#: includes/Frontend/Strings.php
+msgid "Zala"
+msgstr "Zala"
+
+#: includes/Frontend/Strings.php
+msgid "Megye"
+msgstr "Župa"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú magassága"
+msgstr "Výška venca"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú hőszigetelő sávja"
+msgstr "Izolačný pás venca"
+
+#: includes/Frontend/Strings.php
+msgid "A tető minden beállítása (fedés, szín, eresz, kémény, napelem) a tervezőben a megszokott helyen marad."
+msgstr "Všetky nastavenia strechy (krytina, farba, presah, komín, fotovoltika) zostávajú v návrhári na obvyklom mieste."
+
+#: includes/Frontend/Strings.php
+msgid "A tető a meglévő generátorral, a külső fal vonalából épül."
+msgstr "Strecha sa stavia existujúcim generátorom podľa línie obvodovej steny."
+
+#: includes/Frontend/Strings.php
+msgid "Helyiség fajtája"
+msgstr "Druh miestnosti"
+
+#: includes/Frontend/Strings.php
+msgid "A zárt falak közé eső terekből lesznek a helyiségek."
+msgstr "Z priestorov uzavretých stenami vzniknú miestnosti."
+
+#: includes/Frontend/Strings.php
+msgid "Beépítettség legalább (TÉKA)"
+msgstr "Zastavanosť aspoň (TÉKA)"
+
+#: includes/Frontend/Strings.php
+msgid "Alapozás a fagyhatár alatt"
+msgstr "Založenie pod hĺbkou premŕzania"
+
+#: includes/Frontend/Strings.php
+msgid "Legmagasabb pont a párkány felett (TÉKA, HÉSZ hiányában)"
+msgstr "Najvyšší bod nad rímsou (TÉKA, bez HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Hátsókert legalább (HÉSZ)"
+msgstr "Zadný odstup aspoň (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Beépítettség legfeljebb (HÉSZ)"
+msgstr "Zastavanosť najviac (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Előkert legalább (HÉSZ)"
+msgstr "Predný odstup aspoň (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Párkánymagasság legfeljebb (HÉSZ)"
+msgstr "Výška rímsy najviac (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Tetőhajlás legfeljebb (HÉSZ)"
+msgstr "Sklon strechy najviac (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Tetőhajlás legalább (HÉSZ)"
+msgstr "Sklon strechy aspoň (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Oldalkert legalább (HÉSZ)"
+msgstr "Bočný odstup aspoň (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Lakószoba legkisebb belmagassága"
+msgstr "Najmenšia svetlá výška obytnej miestnosti"
+
+#: includes/Frontend/Strings.php
+msgid "Külső fal hőátbocsátása legfeljebb"
+msgstr "Súčiniteľ prechodu tepla obvodovej steny najviac"
+
+#: includes/Frontend/Strings.php
+msgid "Előírások"
+msgstr "Predpisy"
+
+#: includes/Frontend/Strings.php
+msgid "Előírások alkalmazása"
+msgstr "Uplatnenie predpisov"
+
+#: includes/Frontend/Strings.php
+msgid "A szabályok tájékoztató jellegűek, nem jogi tanács. A tartalmukat szakembernek kell jóváhagynia."
+msgstr "Pravidlá sú informatívne, nejde o právnu radu. Ich obsah musí schváliť odborník."
+
+#: includes/Frontend/Strings.php
+msgid "Ehhez a helyhez nincs szabályrendszer, ezért az ellenőrzés előírások nélkül fut."
+msgstr "Pre toto miesto neexistuje súbor pravidiel, preto kontrola prebieha bez predpisov."
+
+#: includes/Frontend/Strings.php
+msgid "Az előírások figyelembevétele ki van kapcsolva."
+msgstr "Zohľadňovanie predpisov je vypnuté."
+
+#: includes/Frontend/Strings.php
+msgid "Ki"
+msgstr "Vypnuté"
+
+#: includes/Frontend/Strings.php
+msgid "Be"
+msgstr "Zapnuté"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s figyelmeztetés · %2$s megfelel · %3$s nincs megadva"
+msgstr "Upozornenia: %1$s · vyhovuje: %2$s · nezadané: %3$s"
+
+#: includes/Frontend/Strings.php
+msgid "Kattints egy falra vagy nyílásra a rajzon."
+msgstr "Kliknite na stenu alebo otvor na výkrese."
+
+#: includes/Frontend/Strings.php
+msgid "Kijelölt elem"
+msgstr "Vybraný prvok"
+
+#: includes/Frontend/Strings.php
+msgid "Hátsó telekhatártól"
+msgstr "Od zadnej hranice pozemku"
+
+#: includes/Frontend/Strings.php
+msgid "Utcától: %1$s m · jobb telekhatártól: %2$s m"
+msgstr "Od ulice: %1$s m · od pravej hranice pozemku: %2$s m"
+
+#: includes/Frontend/Strings.php
+msgid "Bal telekhatártól"
+msgstr "Od ľavej hranice pozemku"
+
+#: includes/Frontend/Strings.php
+msgid "Parapetmagasság"
+msgstr "Výška parapetu"
+
+#: includes/Frontend/Strings.php
+msgid "Gerendás-béléstestes"
+msgstr "Stropné nosníky s vložkami"
+
+#: includes/Frontend/Strings.php
+msgid "Födém vastagsága"
+msgstr "Hrúbka stropu"
+
+#: includes/Frontend/Strings.php
+msgid "Fagerendás"
+msgstr "Drevený trámový"
+
+#: includes/Frontend/Strings.php
+msgid "Födém típusa"
+msgstr "Typ stropu"
+
+#: includes/Frontend/Strings.php
+msgid "falvéghez illesztve"
+msgstr "prichytené ku koncu steny"
+
+#: includes/Frontend/Strings.php
+msgid "rácsra illesztve"
+msgstr "prichytené k mriežke"
+
+#: includes/Frontend/Strings.php
+msgid "falra illesztve"
+msgstr "prichytené k stene"
+
+#: includes/Frontend/Strings.php
+msgid "Talaj"
+msgstr "Zemina"
+
+#: includes/Frontend/Strings.php
+msgid "Agyag"
+msgstr "Íl"
+
+#: includes/Frontend/Strings.php
+msgid "Feltöltés"
+msgstr "Násyp"
+
+#: includes/Frontend/Strings.php
+msgid "Vályogos talaj"
+msgstr "Hlinitá zemina"
+
+#: includes/Frontend/Strings.php
+msgid "Szikla"
+msgstr "Skala"
+
+#: includes/Frontend/Strings.php
+msgid "Rajz és 3D nézet"
+msgstr "Výkres a 3D zobrazenie"
+
+#: includes/Frontend/Strings.php
+msgid "Lépcsőnyílás a födémben"
+msgstr "Schodiskový otvor v strope"
+
+#: includes/Frontend/Strings.php
+msgid "a korábbi lépés módosult, nézd át újra"
+msgstr "predchádzajúci krok sa zmenil, skontrolujte znova"
+
+#: includes/Frontend/Strings.php
+msgid "Ezt a lépést már lezártad, de azóta változott. Nézd át, és zárd le újra."
+msgstr "Tento krok ste už uzavreli, ale odvtedy sa zmenil. Skontrolujte ho a uzavrite znova."
+
+#: includes/Frontend/Strings.php
+msgid "Kezdés"
+msgstr "Začiatok"
+
+#: includes/Frontend/Strings.php
+msgid "Alapvezetékek"
+msgstr "Ležaté rozvody"
+
+#: includes/Frontend/Strings.php
+msgid "Földmunka"
+msgstr "Zemné práce"
+
+#: includes/Frontend/Strings.php
+msgid "Belső szakipar"
+msgstr "Vnútorné dokončovacie práce"
+
+#: includes/Frontend/Strings.php
+msgid "Alap"
+msgstr "Základy"
+
+#: includes/Frontend/Strings.php
+msgid "Szigetelés, aljzat"
+msgstr "Izolácia, podlaha na teréne"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s. lépés / %2$s"
+msgstr "Krok %1$s / %2$s"
+
+#: includes/Frontend/Strings.php
+msgid "Nyílások, áthidalók"
+msgstr "Otvory, preklady"
+
+#: includes/Frontend/Strings.php
+msgid "Külső munkák"
+msgstr "Vonkajšie práce"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak"
+msgstr "Priečky"
+
+#: includes/Frontend/Strings.php
+msgid "Vakolás, hőszigetelés"
+msgstr "Omietky, zateplenie"
+
+#: includes/Frontend/Strings.php
+msgid "Esztrich"
+msgstr "Poter"
+
+#: includes/Frontend/Strings.php
+msgid "Gépészet"
+msgstr "TZB"
+
+#: includes/Frontend/Strings.php
+msgid "Telek, kitűzés"
+msgstr "Pozemok, vytýčenie"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú, födém"
+msgstr "Veniec, strop"
+
+#: includes/Frontend/Strings.php
+msgid "Főfalak"
+msgstr "Hlavné steny"
+
+#: includes/Frontend/Strings.php
+msgid "Építési lépések"
+msgstr "Kroky stavby"
+
+#: includes/Frontend/Strings.php
+msgid "utca"
+msgstr "ulica"
+
+#: includes/Frontend/Strings.php
+msgid "Vastagság"
+msgstr "Hrúbka"
+
+#: includes/Frontend/Strings.php
+msgid "Vissza a tervezőbe"
+msgstr "Späť do návrhára"
+
+#: includes/Frontend/Strings.php
+msgid "Eszköz"
+msgstr "Nástroj"
+
+#: includes/Frontend/Strings.php
+msgid "Nyílás"
+msgstr "Otvor"
+
+#: includes/Frontend/Strings.php
+msgid "Kijelölés"
+msgstr "Výber"
+
+#: includes/Frontend/Strings.php
+msgid "Fal"
+msgstr "Stena"
+
+#: includes/Frontend/Strings.php
+msgid "Humuszréteg"
+msgstr "Vrstva ornice"
+
+#: includes/Frontend/Strings.php
+msgid "A meglévő falak és nyílások helyére új alaprajz kerül. Folytatod?"
+msgstr "Existujúce steny a otvory nahradí nový pôdorys. Pokračovať?"
+
+#: includes/Frontend/Strings.php
+msgid "Csere"
+msgstr "Nahradiť"
+
+#: includes/Frontend/Strings.php
+msgid "Új kezdés"
+msgstr "Začať odznova"
+
+#: includes/Frontend/Strings.php
+msgid "db"
+msgstr "ks"
+
+#: includes/Frontend/Strings.php
+msgid "kg"
+msgstr "kg"
+
+#: includes/Frontend/Strings.php
+msgid "m"
+msgstr "m"
+
+#: includes/Frontend/Strings.php
+msgid "m²"
+msgstr "m²"
+
+#: includes/Frontend/Strings.php
+msgid "m³"
+msgstr "m³"
+
+#: includes/Frontend/Strings.php
+msgid "Becsült hőátbocsátás (U): %s W/m²K"
+msgstr "Odhadovaný súčiniteľ prechodu tepla (U): %s W/m²K"
+
+#: includes/Frontend/Strings.php
+msgid "Visszavonás"
+msgstr "Späť"
+
+#: includes/Frontend/Strings.php
+msgid "nem ellenőrzött"
+msgstr "neskontrolované"
+
+#: includes/Frontend/Strings.php
+msgid "3D építési állás"
+msgstr "3D stav stavby"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség"
+msgstr "Šírka"
+
+#: includes/Frontend/Strings.php
+msgid "A külső falak több zárt hurkot alkotnak; a legnagyobb a ház kontúrja."
+msgstr "Obvodové steny tvoria niekoľko uzavretých slučiek; najväčšia je obrys domu."
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs bejárati ajtó."
+msgstr "Zatiaľ nie sú vstupné dvere."
+
+#: includes/Frontend/Strings.php
+msgid "Ferde külső falhoz a tetőgenerátor nem tud tetőt építeni: csak derékszögű alaprajz kaphat tetőt."
+msgstr "Na šikmej obvodovej stene generátor strechu nepostaví: strechu môže mať iba pravouhlý pôdorys."
+
+#: includes/Frontend/Strings.php
+msgid "Lábazati hőszigetelés (XPS)"
+msgstr "Izolácia sokla (XPS)"

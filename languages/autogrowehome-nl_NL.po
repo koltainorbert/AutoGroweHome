@@ -8994,3 +8994,1323 @@ msgstr "Volledig scherm"
 #: includes/Frontend/Strings.php
 msgid "Kilépés a teljes képernyőből"
 msgstr "Volledig scherm sluiten"
+
+#: includes/Frontend/Strings.php
+msgid "Beépített tetőtér (térdfallal)"
+msgstr "Zolderverdieping (met knieschot)"
+
+#: includes/Frontend/Strings.php
+msgid "A lépés lezárásához teljesüljön az ellenőrzőlista."
+msgstr "Om de stap af te sluiten moet de checklist voltooid zijn."
+
+#: includes/Frontend/Strings.php
+msgid "ellenőrizve"
+msgstr "gecontroleerd"
+
+#: includes/Frontend/Strings.php
+msgid "Ellenőrzőlista"
+msgstr "Checklist"
+
+#: includes/Frontend/Strings.php
+msgid "– válassz –"
+msgstr "– kies –"
+
+#: includes/Frontend/Strings.php
+msgid "Az ország kiválasztva"
+msgstr "Land gekozen"
+
+#: includes/Frontend/Strings.php
+msgid "A bekötések átnézve"
+msgstr "Aansluitingen gecontroleerd"
+
+#: includes/Frontend/Strings.php
+msgid "Van bejárati ajtó"
+msgstr "Er is een voordeur"
+
+#: includes/Frontend/Strings.php
+msgid "A külső fal zárt kontúr"
+msgstr "De buitenmuur is een gesloten contour"
+
+#: includes/Frontend/Strings.php
+msgid "A falak nem fedik egymást, és nincs túl rövid fal"
+msgstr "Muren overlappen niet en er is geen te korte muur"
+
+#: includes/Frontend/Strings.php
+msgid "Az alapozási mélység legalább 0,30 m"
+msgstr "Funderingsdiepte minstens 0,30 m"
+
+#: includes/Frontend/Strings.php
+msgid "Az alap típusa kiválasztva"
+msgstr "Funderingstype gekozen"
+
+#: includes/Frontend/Strings.php
+msgid "Az alap legalább olyan széles, mint a rajta álló fal"
+msgstr "Fundering minstens zo breed als de muur erop"
+
+#: includes/Frontend/Strings.php
+msgid "Az aljzat rétegei megadva"
+msgstr "Vloeropbouw ingevuld"
+
+#: includes/Frontend/Strings.php
+msgid "Hamarosan érkezik"
+msgstr "Binnenkort beschikbaar"
+
+#: includes/Frontend/Strings.php
+msgid "Minden teherhordó falban lévő nyílásnak van áthidalója"
+msgstr "Elke opening in een dragende muur heeft een latei"
+
+#: includes/Frontend/Strings.php
+msgid "Minden nyílás a falon belül, a falcsatlakozásoktól és egymástól távol, az áthidaló alatt"
+msgstr "Elke opening ligt binnen de muur, uit de buurt van muuraansluitingen en van elkaar, onder de latei"
+
+#: includes/Frontend/Strings.php
+msgid "Minden válaszfal a házon belül, létező szinten áll"
+msgstr "Elke binnenwand staat binnen het huis op een bestaande verdieping"
+
+#: includes/Frontend/Strings.php
+msgid "A telek mérete megadva"
+msgstr "Perceelafmetingen ingevuld"
+
+#: includes/Frontend/Strings.php
+msgid "A tetőhöz zárt, derékszögű külső fal kell"
+msgstr "Het dak vereist een gesloten, haakse buitenmuur"
+
+#: includes/Frontend/Strings.php
+msgid "A külső fal derékszögű (kell a tetőhöz)"
+msgstr "De buitenmuur is haaks (nodig voor het dak)"
+
+#: includes/Frontend/Strings.php
+msgid "Az előírások alkalmazása beállítva"
+msgstr "Toepassing van voorschriften ingesteld"
+
+#: includes/Frontend/Strings.php
+msgid "A födém típusa kiválasztva"
+msgstr "Type verdiepingsvloer gekozen"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőnyílás kijelölve"
+msgstr "Trapgat gemarkeerd"
+
+#: includes/Frontend/Strings.php
+msgid "A humuszréteg megadva"
+msgstr "Laag teelaarde ingevuld"
+
+#: includes/Frontend/Strings.php
+msgid "Falak törlése"
+msgstr "Muren wissen"
+
+#: includes/Frontend/Strings.php
+msgid "Minden fal és nyílás törlődik. Folytatod?"
+msgstr "Alle muren en openingen worden verwijderd. Doorgaan?"
+
+#: includes/Frontend/Strings.php
+msgid "Lépés lezárása"
+msgstr "Stap afsluiten"
+
+#: includes/Frontend/Strings.php
+msgid "Kezdőpont: %1$s; %2$s m · végpont: %3$s; %4$s m"
+msgstr "Begin: %1$s; %2$s m · eind: %3$s; %4$s m"
+
+#: includes/Frontend/Strings.php
+msgid "Ország"
+msgstr "Land"
+
+#: includes/Frontend/Strings.php
+msgid "Magyarország"
+msgstr "Hongarije"
+
+#: includes/Frontend/Strings.php
+msgid "Egyéb (szabálycsomag nélkül)"
+msgstr "Overig (zonder regelpakket)"
+
+#: includes/Frontend/Strings.php
+msgid "Mélység"
+msgstr "Diepte"
+
+#: includes/Frontend/Strings.php
+msgid "A ház elkészült: a tető, a táj és a belső tér a megszokott módon állítható."
+msgstr "Het huis is klaar: dak, omgeving en interieur stel je zoals gewoonlijk in."
+
+#: includes/Frontend/Strings.php
+msgid "Védőcsövek a lemez alatt"
+msgstr "Mantelbuizen onder de vloerplaat"
+
+#: includes/Frontend/Strings.php
+msgid "Alapföldelő"
+msgstr "Funderingsaarding"
+
+#: includes/Frontend/Strings.php
+msgid "Szennyvízcsatorna bekötése"
+msgstr "Rioolaansluiting"
+
+#: includes/Frontend/Strings.php
+msgid "Vízbekötés"
+msgstr "Wateraansluiting"
+
+#: includes/Frontend/Strings.php
+msgid "A pontos nyomvonal a gépészeti lépésben (1.14.1) rajzolható."
+msgstr "Het exacte tracé teken je in de installatiestap (1.14.1)."
+
+#: includes/Frontend/Strings.php
+msgid "Hogyan kezdjük?"
+msgstr "Hoe beginnen we?"
+
+#: includes/Frontend/Strings.php
+msgid "Építés az alapoktól"
+msgstr "Bouwen vanaf de fundering"
+
+#: includes/Frontend/Strings.php
+msgid "Kőműves sorrendben: kitűzés, alap, falak, nyílások, födém, tető."
+msgstr "In bouwvolgorde: uitzetten, fundering, muren, openingen, verdiepingsvloer, dak."
+
+#: includes/Frontend/Strings.php
+msgid "Gyors terv"
+msgstr "Snel ontwerp"
+
+#: includes/Frontend/Strings.php
+msgid "Stílus, méret, tető, homlokzat – pár lépésben kész a ház."
+msgstr "Stijl, maat, dak, gevel – in een paar stappen staat het huis."
+
+#: includes/Frontend/Strings.php
+msgid "A külső fal nem zárt: a falvégek nem érnek össze."
+msgstr "De buitenmuur is niet gesloten: de muuruiteinden sluiten niet op elkaar aan."
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs külső fal."
+msgstr "Nog geen buitenmuur."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás nem létező szinten van."
+msgstr "De opening ligt op een niet-bestaande verdieping."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás az áthidaló helyére, a födémbe ér."
+msgstr "De opening reikt tot in de latei en de verdiepingsvloer."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás egy falcsatlakozásra esik."
+msgstr "De opening valt op een muuraansluiting."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás fala már nincs meg."
+msgstr "De muur van de opening bestaat niet meer."
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás kilóg a falból vagy a sarokba ér."
+msgstr "De opening steekt buiten de muur of reikt tot in de hoek."
+
+#: includes/Frontend/Strings.php
+msgid "Két nyílás fedi egymást."
+msgstr "Twee openingen overlappen elkaar."
+
+#: includes/Frontend/Strings.php
+msgid "A fal nem áll semmin (nem létező szint vagy a házon kívül)."
+msgstr "De muur staat nergens op (niet-bestaande verdieping of buiten het huis)."
+
+#: includes/Frontend/Strings.php
+msgid "A fal kilóg a házból."
+msgstr "De muur steekt buiten het huis uit."
+
+#: includes/Frontend/Strings.php
+msgid "Két fal fedi egymást."
+msgstr "Twee muren overlappen elkaar."
+
+#: includes/Frontend/Strings.php
+msgid "Túl rövid fal."
+msgstr "Te korte muur."
+
+#: includes/Frontend/Strings.php
+msgid "Kavicsfeltöltés"
+msgstr "Grindaanvulling"
+
+#: includes/Frontend/Strings.php
+msgid "Kész, tovább a tervezőhöz"
+msgstr "Klaar, verder naar de ontwerper"
+
+#: includes/Frontend/Strings.php
+msgid "Teljes rajz"
+msgstr "Alles tonen"
+
+#: includes/Frontend/Strings.php
+msgid "Alapozási mélység"
+msgstr "Funderingsdiepte"
+
+#: includes/Frontend/Strings.php
+msgid "A terepszinttől az alap aljáig; a fagyhatár alatt legyen."
+msgstr "Van maaiveld tot onderkant fundering; onder de vorstgrens."
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak alá"
+msgstr "Onder binnenwanden"
+
+#: includes/Frontend/Strings.php
+msgid "Lemezalap"
+msgstr "Funderingsplaat"
+
+#: includes/Frontend/Strings.php
+msgid "Kő sávalap"
+msgstr "Stenen strookfundering"
+
+#: includes/Frontend/Strings.php
+msgid "Beton sávalap"
+msgstr "Betonnen strookfundering"
+
+#: includes/Frontend/Strings.php
+msgid "Vasbeton sávalap"
+msgstr "Gewapende strookfundering"
+
+#: includes/Frontend/Strings.php
+msgid "Lábazat magassága"
+msgstr "Sokkelhoogte"
+
+#: includes/Frontend/Strings.php
+msgid "A ±0,00 szint (földszinti padló) magassága a terep felett."
+msgstr "Hoogte van peil ±0,00 (begane-grondvloer) boven het maaiveld."
+
+#: includes/Frontend/Strings.php
+msgid "Alap típusa"
+msgstr "Funderingstype"
+
+#: includes/Frontend/Strings.php
+msgid "Alap szélessége"
+msgstr "Funderingsbreedte"
+
+#: includes/Frontend/Strings.php
+msgid "Nehéz válaszfal alá sáv"
+msgstr "Strook onder zware binnenwanden"
+
+#: includes/Frontend/Strings.php
+msgid "Nem kell alap"
+msgstr "Geen fundering nodig"
+
+#: includes/Frontend/Strings.php
+msgid "Minden válaszfal alá sáv"
+msgstr "Strook onder alle binnenwanden"
+
+#: includes/Frontend/Strings.php
+msgid "A mostani házból"
+msgstr "Uit het huidige huis"
+
+#: includes/Frontend/Strings.php
+msgid "Fagyhatár"
+msgstr "Vorstgrens"
+
+#: includes/Frontend/Strings.php
+msgid "Üresen a szabálycsomag értéke; talajmechanikai szakvélemény szerint pontosítsd."
+msgstr "Leeg = waarde uit het regelpakket; verfijn op basis van grondonderzoek."
+
+#: includes/Frontend/Strings.php
+msgid "Talaj és fagyhatár"
+msgstr "Grond en vorstgrens"
+
+#: includes/Frontend/Strings.php
+msgid "Hol építesz?"
+msgstr "Waar bouw je?"
+
+#: includes/Frontend/Strings.php
+msgid "Telek és a ház helye"
+msgstr "Perceel en plaats van het huis"
+
+#: includes/Frontend/Strings.php
+msgid "Aljzatbeton"
+msgstr "Betonvloer op grond"
+
+#: includes/Frontend/Strings.php
+msgid "Geometria: %d hiba"
+msgstr "Geometrie: %d fouten"
+
+#: includes/Frontend/Strings.php
+msgid "Geometria: 0 hiba"
+msgstr "Geometrie: 0 fouten"
+
+#: includes/Frontend/Strings.php
+msgid "földmunka"
+msgstr "grondwerk"
+
+#: includes/Frontend/Strings.php
+msgid "alap"
+msgstr "fundering"
+
+#: includes/Frontend/Strings.php
+msgid "aljzat"
+msgstr "vloeropbouw"
+
+#: includes/Frontend/Strings.php
+msgid "falanyag"
+msgstr "muurmateriaal"
+
+#: includes/Frontend/Strings.php
+msgid "nyílások helye"
+msgstr "positie openingen"
+
+#: includes/Frontend/Strings.php
+msgid "válaszfalak"
+msgstr "binnenwanden"
+
+#: includes/Frontend/Strings.php
+msgid "Kitalált értékek, nézd át"
+msgstr "Aangenomen waarden, controleer ze"
+
+#: includes/Frontend/Strings.php
+msgid "Magasság"
+msgstr "Hoogte"
+
+#: includes/Frontend/Strings.php
+msgid "Települési szabályzat (HÉSZ) értékei"
+msgstr "Waarden lokaal bouwvoorschrift (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Hátsókert legalább"
+msgstr "Achtererf minstens"
+
+#: includes/Frontend/Strings.php
+msgid "Beépítés legfeljebb"
+msgstr "Bebouwing maximaal"
+
+#: includes/Frontend/Strings.php
+msgid "Előkert legalább"
+msgstr "Voorerf minstens"
+
+#: includes/Frontend/Strings.php
+msgid "Párkánymagasság legfeljebb"
+msgstr "Goothoogte maximaal"
+
+#: includes/Frontend/Strings.php
+msgid "Településenként más; a helyi építési szabályzatból írd be. Mindig a te értéked az erősebb."
+msgstr "Verschilt per gemeente; neem de waarde over uit het lokale bouwvoorschrift. Jouw waarde gaat altijd voor."
+
+#: includes/Frontend/Strings.php
+msgid "Tetőhajlás legfeljebb"
+msgstr "Dakhelling maximaal"
+
+#: includes/Frontend/Strings.php
+msgid "Tetőhajlás legalább"
+msgstr "Dakhelling minstens"
+
+#: includes/Frontend/Strings.php
+msgid "Oldalkert legalább"
+msgstr "Zijerf minstens"
+
+#: includes/Frontend/Strings.php
+msgid "Forrás"
+msgstr "Bron"
+
+#: includes/Frontend/Strings.php
+msgid "pl. a HÉSZ száma és pontja"
+msgstr "bijv. nummer en artikel van de HÉSZ"
+
+#: includes/Frontend/Strings.php
+msgid "Kattints a falra, ahová a nyílás kerüljön."
+msgstr "Klik op de muur waar de opening moet komen."
+
+#: includes/Frontend/Strings.php
+msgid "Húzd ki a téglalapot: négy fal készül egyszerre."
+msgstr "Trek een rechthoek: er ontstaan vier muren tegelijk."
+
+#: includes/Frontend/Strings.php
+msgid "Kattints egy elemre; a végpontok és a falak húzhatók. Görgetés: nagyítás."
+msgstr "Klik op een element; eindpunten en muren zijn versleepbaar. Scrollen: zoomen."
+
+#: includes/Frontend/Strings.php
+msgid "Kattints a kezdőpontra, majd a végpontokra. Shift: ferde fal. Esc vagy dupla kattintás: vége."
+msgstr "Klik op het beginpunt, daarna op de volgende punten. Shift: schuine muur. Esc of dubbelklik: einde."
+
+#: includes/Frontend/Strings.php
+msgid "EPS (polisztirol)"
+msgstr "EPS (polystyreen)"
+
+#: includes/Frontend/Strings.php
+msgid "Grafitos EPS"
+msgstr "Grafiet-EPS"
+
+#: includes/Frontend/Strings.php
+msgid "Kőzetgyapot"
+msgstr "Steenwol"
+
+#: includes/Frontend/Strings.php
+msgid "Fagyapot"
+msgstr "Houtvezel"
+
+#: includes/Frontend/Strings.php
+msgid "Külső hőszigetelés"
+msgstr "Buitenisolatie"
+
+#: includes/Frontend/Strings.php
+msgid "Hőszigetelés vastagsága"
+msgstr "Isolatiedikte"
+
+#: includes/Frontend/Strings.php
+msgid "Fal fajtája"
+msgstr "Muurtype"
+
+#: includes/Frontend/Strings.php
+msgid "Külső főfal"
+msgstr "Dragende buitenmuur"
+
+#: includes/Frontend/Strings.php
+msgid "Belső teherhordó fal"
+msgstr "Dragende binnenmuur"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfal"
+msgstr "Binnenwand"
+
+#: includes/Frontend/Strings.php
+msgid "hamarosan (1.14.1–1.14.3)"
+msgstr "binnenkort (1.14.1–1.14.3)"
+
+#: includes/Frontend/Strings.php
+msgid "Ami még az aljzat előtt a földbe kerül: csatorna, víz, földelő, védőcsövek."
+msgstr "Wat vóór de vloer nog de grond in gaat: riool, water, aarding, mantelbuizen."
+
+#: includes/Frontend/Strings.php
+msgid "A humusz leszedése és az alapárok mélysége – a fagyhatár alá."
+msgstr "Afgraven van de teelaarde en de diepte van de funderingssleuf – tot onder de vorstgrens."
+
+#: includes/Frontend/Strings.php
+msgid "Az alap fajtája és mérete. A külső és a teherhordó falak alá mindig kerül alap."
+msgstr "Type en afmetingen van de fundering. Onder buitenmuren en dragende muren komt altijd een fundering."
+
+#: includes/Frontend/Strings.php
+msgid "Feltöltés, talajnedvesség elleni szigetelés és aljzatbeton."
+msgstr "Aanvulling, vochtwering en betonvloer op grond."
+
+#: includes/Frontend/Strings.php
+msgid "Ablakok és ajtók pontos helye a falakon, az áthidalóval együtt."
+msgstr "Exacte positie van ramen en deuren in de muren, inclusief latei."
+
+#: includes/Frontend/Strings.php
+msgid "A válaszfalak szintenként; a zárt terekből helyiségek lesznek."
+msgstr "Binnenwanden per verdieping; gesloten vlakken worden ruimten."
+
+#: includes/Frontend/Strings.php
+msgid "A tető a meglévő tetőgenerátorral épül a falakra; utána minden a megszokott tervezőben folytatódik."
+msgstr "Het dak wordt met de bestaande dakgenerator op de muren gebouwd; daarna gaat alles verder in de vertrouwde ontwerper."
+
+#: includes/Frontend/Strings.php
+msgid "Hol épül a ház, mekkora a telek, és mely előírásokat vegye figyelembe a program."
+msgstr "Waar het huis komt, hoe groot het perceel is en welke voorschriften het programma toepast."
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú a falak tetején és a födém; többszintes háznál a lépcsőnyílás."
+msgstr "Ringbalk bovenop de muren en de verdiepingsvloer; bij meerdere verdiepingen ook het trapgat."
+
+#: includes/Frontend/Strings.php
+msgid "Rajzold meg a külső falakat (zárt kontúr) és a belső teherhordó falakat, add meg az anyagot és a vastagságot."
+msgstr "Teken de buitenmuren (gesloten contour) en de dragende binnenmuren, en kies materiaal en dikte."
+
+#: includes/Frontend/Strings.php
+msgid "Hossz"
+msgstr "Lengte"
+
+#: includes/Frontend/Strings.php
+msgid "%s szintmagasság"
+msgstr "%s – verdiepingshoogte"
+
+#: includes/Frontend/Strings.php
+msgid "Padlótól padlóig, a födémmel együtt."
+msgstr "Van vloer tot vloer, inclusief verdiepingsvloer."
+
+#: includes/Frontend/Strings.php
+msgid "Szintek száma"
+msgstr "Aantal verdiepingen"
+
+#: includes/Frontend/Strings.php
+msgid "Előregyártott"
+msgstr "Prefab"
+
+#: includes/Frontend/Strings.php
+msgid "Monolit vasbeton"
+msgstr "Gestort gewapend beton"
+
+#: includes/Frontend/Strings.php
+msgid "Acél"
+msgstr "Staal"
+
+#: includes/Frontend/Strings.php
+msgid "Áthidaló"
+msgstr "Latei"
+
+#: includes/Frontend/Strings.php
+msgid "Vázas falban a kiváltást a keret adja."
+msgstr "In een skeletwand draagt het frame over de opening."
+
+#: includes/Frontend/Strings.php
+msgid "%1$s db előregyártott áthidaló, %2$s m hosszú."
+msgstr "%1$s prefab lateien, %2$s m lang."
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód nem töltődött be. Frissítsd az oldalt, és próbáld újra."
+msgstr "De bouwmodus is niet geladen. Vernieuw de pagina en probeer het opnieuw."
+
+#: includes/Frontend/Strings.php
+msgid "%s. emelet"
+msgstr "%se verdieping"
+
+#: includes/Frontend/Strings.php
+msgid "Munkatér a ház körül"
+msgstr "Werkruimte rond het huis"
+
+#: includes/Frontend/Strings.php
+msgid "Ekkora sávban szedjük le a humuszt a ház körül."
+msgstr "Over een strook van deze breedte rond het huis wordt de teelaarde afgegraven."
+
+#: includes/Frontend/Strings.php
+msgid "Anyag"
+msgstr "Materiaal"
+
+#: includes/Frontend/Strings.php
+msgid "Pórusbeton (gázbeton)"
+msgstr "Cellenbeton (gasbeton)"
+
+#: includes/Frontend/Strings.php
+msgid "Vályog"
+msgstr "Leem"
+
+#: includes/Frontend/Strings.php
+msgid "Teljes anyaglista"
+msgstr "Volledige materiaallijst"
+
+#: includes/Frontend/Strings.php
+msgid "Kerámia falazóblokk"
+msgstr "Keramisch metselblok"
+
+#: includes/Frontend/Strings.php
+msgid "Gipszkarton"
+msgstr "Gipsplaat"
+
+#: includes/Frontend/Strings.php
+msgid "Zsaluzóelem betonnal"
+msgstr "Bekistingsblok met beton"
+
+#: includes/Frontend/Strings.php
+msgid "Tétel"
+msgstr "Post"
+
+#: includes/Frontend/Strings.php
+msgid "Az anyaglista a zárt külső fal után számolható."
+msgstr "De materiaallijst kan pas na een gesloten buitenmuur berekend worden."
+
+#: includes/Frontend/Strings.php
+msgid "Ebben a lépésben nincs anyag."
+msgstr "In deze stap geen materiaal."
+
+#: includes/Frontend/Strings.php
+msgid "Becslés, nem árajánlat."
+msgstr "Schatting, geen offerte."
+
+#: includes/Frontend/Strings.php
+msgid "Pórusbeton válaszfal"
+msgstr "Binnenwand van cellenbeton"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfaltégla"
+msgstr "Binnenwandsteen"
+
+#: includes/Frontend/Strings.php
+msgid "Mennyiség"
+msgstr "Hoeveelheid"
+
+#: includes/Frontend/Strings.php
+msgid "Mészhomoktégla"
+msgstr "Kalkzandsteen"
+
+#: includes/Frontend/Strings.php
+msgid "Csak ez a lépés"
+msgstr "Alleen deze stap"
+
+#: includes/Frontend/Strings.php
+msgid "Könnyűszerkezet (favázas)"
+msgstr "Houtskeletbouw"
+
+#: includes/Frontend/Strings.php
+msgid "Hulladékkal"
+msgstr "Incl. verlies"
+
+#: includes/Frontend/Strings.php
+msgid "Hulladékszázalék: %s"
+msgstr "Verliespercentage: %s"
+
+#: includes/Frontend/Strings.php
+msgid "Anyaglista"
+msgstr "Materiaallijst"
+
+#: includes/Frontend/Strings.php
+msgid "Bitumenes lemez"
+msgstr "Bitumineuze dakbaan"
+
+#: includes/Frontend/Strings.php
+msgid "PVC lemez"
+msgstr "PVC-folie"
+
+#: includes/Frontend/Strings.php
+msgid "Talajnedvesség elleni szigetelés"
+msgstr "Vochtwering tegen grondvocht"
+
+#: includes/Frontend/Strings.php
+msgid "A 3D nézet ezen az eszközön nem érhető el; a kész ház vázlata látszik."
+msgstr "3D-weergave is op dit apparaat niet beschikbaar; je ziet een schets van het afgewerkte huis."
+
+#: includes/Frontend/Strings.php
+msgid "Ez nem statikai és nem engedélyezési terv. A szerkezet méretezéséhez statikus, az engedélyhez tervező kell; a figyelmeztetések soha nem akadályozzák a mentést."
+msgstr "Dit is geen constructief ontwerp en geen vergunningsontwerp. Voor de dimensionering van de constructie heb je een constructeur nodig, voor de vergunning een architect; waarschuwingen blokkeren het opslaan nooit."
+
+#: includes/Frontend/Strings.php
+msgid "Nem statikai és nem engedélyezési terv."
+msgstr "Geen constructief ontwerp en geen vergunningsontwerp."
+
+#: includes/Frontend/Strings.php
+msgid "Távolság a fal elejétől"
+msgstr "Afstand vanaf begin muur"
+
+#: includes/Frontend/Strings.php
+msgid "A fal kezdőpontjától a nyílás széléig."
+msgstr "Van het beginpunt van de muur tot de rand van de opening."
+
+#: includes/Frontend/Strings.php
+msgid "Ajtó"
+msgstr "Deur"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszd ki a fajtát, majd kattints a falra, ahová kerüljön. A nyílás a rajzon húzással is mozgatható."
+msgstr "Kies het type en klik dan op de muur waar het moet komen. De opening kun je in de tekening ook verslepen."
+
+#: includes/Frontend/Strings.php
+msgid "Fajta"
+msgstr "Type"
+
+#: includes/Frontend/Strings.php
+msgid "Ablak"
+msgstr "Raam"
+
+#: includes/Frontend/Strings.php
+msgid "Nyílás fajtája"
+msgstr "Type opening"
+
+#: includes/Frontend/Strings.php
+msgid "Szabálycsomag: %1$s, utolsó ellenőrzés: %2$s – jogilag nem jóváhagyott, tájékoztató jellegű."
+msgstr "Regelpakket: %1$s, laatst gecontroleerd: %2$s – juridisch niet goedgekeurd, ter informatie."
+
+#: includes/Frontend/Strings.php
+msgid "3D"
+msgstr "3D"
+
+#: includes/Frontend/Strings.php
+msgid "Lépés beállításai"
+msgstr "Stapinstellingen"
+
+#: includes/Frontend/Strings.php
+msgid "Építési állás"
+msgstr "Bouwfase"
+
+#: includes/Frontend/Strings.php
+msgid "A ház helyét a falak megrajzolása után állíthatod be."
+msgstr "De plaats van het huis stel je in nadat je de muren hebt getekend."
+
+#: includes/Frontend/Strings.php
+msgid "Alaprajz-szerkesztő: falak, nyílások és helyiségek"
+msgstr "Plattegrondeditor: muren, openingen en ruimten"
+
+#: includes/Frontend/Strings.php
+msgid "Telek szélessége (utcafront)"
+msgstr "Perceelbreedte (straatzijde)"
+
+#: includes/Frontend/Strings.php
+msgid "Emeleti teherhordó fal alatt nincs fal"
+msgstr "Geen muur onder dragende muur op verdieping"
+
+#: includes/Frontend/Strings.php
+msgid "Az alap alig szélesebb a falnál"
+msgstr "Fundering nauwelijks breder dan de muur"
+
+#: includes/Frontend/Strings.php
+msgid "Az áthidaló felfekvése kevés"
+msgstr "Oplegging van de latei te klein"
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás túl közel van a falsarokhoz vagy falcsatlakozáshoz"
+msgstr "Opening te dicht bij muurhoek of muuraansluiting"
+
+#: includes/Frontend/Strings.php
+msgid "Két nyílás közötti pillér túl keskeny"
+msgstr "Penant tussen twee openingen te smal"
+
+#: includes/Frontend/Strings.php
+msgid "A falban túl nagy a nyílások aránya"
+msgstr "Te groot aandeel openingen in de muur"
+
+#: includes/Frontend/Strings.php
+msgid "Nehéz válaszfal alap nélkül"
+msgstr "Zware binnenwand zonder fundering"
+
+#: includes/Frontend/Strings.php
+msgid "Többszintes háznál nincs lépcsőnyílás"
+msgstr "Geen trapgat bij huis met meerdere verdiepingen"
+
+#: includes/Frontend/Strings.php
+msgid "A fal túl karcsú (magasság / vastagság)"
+msgstr "Muur te slank (hoogte / dikte)"
+
+#: includes/Frontend/Strings.php
+msgid "Szakmai figyelmeztetések"
+msgstr "Bouwtechnische waarschuwingen"
+
+#: includes/Frontend/Strings.php
+msgid "Falazóelem"
+msgstr "Metselelement"
+
+#: includes/Frontend/Strings.php
+msgid "Burkolólap"
+msgstr "Plaatmateriaal"
+
+#: includes/Frontend/Strings.php
+msgid "Kitöltő beton (zsaluzóelem)"
+msgstr "Vulbeton (bekistingsblok)"
+
+#: includes/Frontend/Strings.php
+msgid "Alapbeton"
+msgstr "Funderingsbeton"
+
+#: includes/Frontend/Strings.php
+msgid "Lábazati beton"
+msgstr "Sokkelbeton"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorúbeton"
+msgstr "Ringbalkbeton"
+
+#: includes/Frontend/Strings.php
+msgid "Födémbeton"
+msgstr "Beton verdiepingsvloer"
+
+#: includes/Frontend/Strings.php
+msgid "Felbeton"
+msgstr "Druklaag"
+
+#: includes/Frontend/Strings.php
+msgid "Védőcső"
+msgstr "Mantelbuis"
+
+#: includes/Frontend/Strings.php
+msgid "Alapföldelő szalag"
+msgstr "Aardingsband fundering"
+
+#: includes/Frontend/Strings.php
+msgid "Alapárok / munkagödör kiemelése"
+msgstr "Ontgraving funderingssleuf / bouwput"
+
+#: includes/Frontend/Strings.php
+msgid "Homlokzati hőszigetelés (előzetes)"
+msgstr "Gevelisolatie (voorlopig)"
+
+#: includes/Frontend/Strings.php
+msgid "Ragasztó"
+msgstr "Lijm"
+
+#: includes/Frontend/Strings.php
+msgid "Falazóhabarcs / ragasztó"
+msgstr "Metselmortel / lijm"
+
+#: includes/Frontend/Strings.php
+msgid "Szigetelőlemez"
+msgstr "Waterkerende baan"
+
+#: includes/Frontend/Strings.php
+msgid "Habarcs (kő alap)"
+msgstr "Mortel (stenen fundering)"
+
+#: includes/Frontend/Strings.php
+msgid "Profilváz"
+msgstr "Metal-stud profielen"
+
+#: includes/Frontend/Strings.php
+msgid "Alap vasalása"
+msgstr "Wapening fundering"
+
+#: includes/Frontend/Strings.php
+msgid "Hegesztett háló"
+msgstr "Wapeningsnet"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú vasalása"
+msgstr "Wapening ringbalk"
+
+#: includes/Frontend/Strings.php
+msgid "Födém vasalása"
+msgstr "Wapening verdiepingsvloer"
+
+#: includes/Frontend/Strings.php
+msgid "Csatornacső (KG 110)"
+msgstr "Rioolbuis (KG 110)"
+
+#: includes/Frontend/Strings.php
+msgid "Födémgerenda"
+msgstr "Vloerligger"
+
+#: includes/Frontend/Strings.php
+msgid "Terméskő (alap)"
+msgstr "Breuksteen (fundering)"
+
+#: includes/Frontend/Strings.php
+msgid "Faváz (oszlop, talp, koszorú)"
+msgstr "Houtskelet (stijlen, onder- en bovenregel)"
+
+#: includes/Frontend/Strings.php
+msgid "Fagerenda"
+msgstr "Houten balk"
+
+#: includes/Frontend/Strings.php
+msgid "Humuszleszedés"
+msgstr "Afgraven teelaarde"
+
+#: includes/Frontend/Strings.php
+msgid "Vízvezeték (PE)"
+msgstr "Waterleiding (PE)"
+
+#: includes/Frontend/Strings.php
+msgid "Lábazati XPS"
+msgstr "Sokkel-XPS"
+
+#: includes/Frontend/Strings.php
+msgid "Bács-Kiskun"
+msgstr "Bács-Kiskun"
+
+#: includes/Frontend/Strings.php
+msgid "Baranya"
+msgstr "Baranya"
+
+#: includes/Frontend/Strings.php
+msgid "Békés"
+msgstr "Békés"
+
+#: includes/Frontend/Strings.php
+msgid "Borsod-Abaúj-Zemplén"
+msgstr "Borsod-Abaúj-Zemplén"
+
+#: includes/Frontend/Strings.php
+msgid "Budapest"
+msgstr "Budapest"
+
+#: includes/Frontend/Strings.php
+msgid "Csongrád-Csanád"
+msgstr "Csongrád-Csanád"
+
+#: includes/Frontend/Strings.php
+msgid "Fejér"
+msgstr "Fejér"
+
+#: includes/Frontend/Strings.php
+msgid "Győr-Moson-Sopron"
+msgstr "Győr-Moson-Sopron"
+
+#: includes/Frontend/Strings.php
+msgid "Hajdú-Bihar"
+msgstr "Hajdú-Bihar"
+
+#: includes/Frontend/Strings.php
+msgid "Heves"
+msgstr "Heves"
+
+#: includes/Frontend/Strings.php
+msgid "Jász-Nagykun-Szolnok"
+msgstr "Jász-Nagykun-Szolnok"
+
+#: includes/Frontend/Strings.php
+msgid "Komárom-Esztergom"
+msgstr "Komárom-Esztergom"
+
+#: includes/Frontend/Strings.php
+msgid "Nógrád"
+msgstr "Nógrád"
+
+#: includes/Frontend/Strings.php
+msgid "Pest"
+msgstr "Pest"
+
+#: includes/Frontend/Strings.php
+msgid "Somogy"
+msgstr "Somogy"
+
+#: includes/Frontend/Strings.php
+msgid "Szabolcs-Szatmár-Bereg"
+msgstr "Szabolcs-Szatmár-Bereg"
+
+#: includes/Frontend/Strings.php
+msgid "Tolna"
+msgstr "Tolna"
+
+#: includes/Frontend/Strings.php
+msgid "Vas"
+msgstr "Vas"
+
+#: includes/Frontend/Strings.php
+msgid "Veszprém"
+msgstr "Veszprém"
+
+#: includes/Frontend/Strings.php
+msgid "Zala"
+msgstr "Zala"
+
+#: includes/Frontend/Strings.php
+msgid "Megye"
+msgstr "Provincie"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú magassága"
+msgstr "Ringbalkhoogte"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú hőszigetelő sávja"
+msgstr "Isolatiestrook ringbalk"
+
+#: includes/Frontend/Strings.php
+msgid "A tető minden beállítása (fedés, szín, eresz, kémény, napelem) a tervezőben a megszokott helyen marad."
+msgstr "Alle dakinstellingen (dakbedekking, kleur, overstek, schoorsteen, zonnepanelen) blijven op de vertrouwde plek in de ontwerper."
+
+#: includes/Frontend/Strings.php
+msgid "A tető a meglévő generátorral, a külső fal vonalából épül."
+msgstr "Het dak wordt met de bestaande generator gebouwd vanaf de lijn van de buitenmuur."
+
+#: includes/Frontend/Strings.php
+msgid "Helyiség fajtája"
+msgstr "Type ruimte"
+
+#: includes/Frontend/Strings.php
+msgid "A zárt falak közé eső terekből lesznek a helyiségek."
+msgstr "Uit de door muren omsloten vlakken ontstaan de ruimten."
+
+#: includes/Frontend/Strings.php
+msgid "Beépítettség legalább (TÉKA)"
+msgstr "Bebouwingsgraad minstens (TÉKA)"
+
+#: includes/Frontend/Strings.php
+msgid "Alapozás a fagyhatár alatt"
+msgstr "Fundering onder de vorstgrens"
+
+#: includes/Frontend/Strings.php
+msgid "Legmagasabb pont a párkány felett (TÉKA, HÉSZ hiányában)"
+msgstr "Hoogste punt boven de goot (TÉKA, zonder HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Hátsókert legalább (HÉSZ)"
+msgstr "Achtererf minstens (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Beépítettség legfeljebb (HÉSZ)"
+msgstr "Bebouwingsgraad maximaal (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Előkert legalább (HÉSZ)"
+msgstr "Voorerf minstens (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Párkánymagasság legfeljebb (HÉSZ)"
+msgstr "Goothoogte maximaal (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Tetőhajlás legfeljebb (HÉSZ)"
+msgstr "Dakhelling maximaal (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Tetőhajlás legalább (HÉSZ)"
+msgstr "Dakhelling minstens (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Oldalkert legalább (HÉSZ)"
+msgstr "Zijerf minstens (HÉSZ)"
+
+#: includes/Frontend/Strings.php
+msgid "Lakószoba legkisebb belmagassága"
+msgstr "Minimale vrije hoogte verblijfsruimte"
+
+#: includes/Frontend/Strings.php
+msgid "Külső fal hőátbocsátása legfeljebb"
+msgstr "U-waarde buitenmuur maximaal"
+
+#: includes/Frontend/Strings.php
+msgid "Előírások"
+msgstr "Voorschriften"
+
+#: includes/Frontend/Strings.php
+msgid "Előírások alkalmazása"
+msgstr "Voorschriften toepassen"
+
+#: includes/Frontend/Strings.php
+msgid "A szabályok tájékoztató jellegűek, nem jogi tanács. A tartalmukat szakembernek kell jóváhagynia."
+msgstr "De regels zijn indicatief, geen juridisch advies. De inhoud moet door een vakman worden goedgekeurd."
+
+#: includes/Frontend/Strings.php
+msgid "Ehhez a helyhez nincs szabályrendszer, ezért az ellenőrzés előírások nélkül fut."
+msgstr "Voor deze locatie is er geen regelset; de controle loopt daarom zonder voorschriften."
+
+#: includes/Frontend/Strings.php
+msgid "Az előírások figyelembevétele ki van kapcsolva."
+msgstr "Het toepassen van voorschriften staat uit."
+
+#: includes/Frontend/Strings.php
+msgid "Ki"
+msgstr "Uit"
+
+#: includes/Frontend/Strings.php
+msgid "Be"
+msgstr "Aan"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s figyelmeztetés · %2$s megfelel · %3$s nincs megadva"
+msgstr "%1$s waarschuwingen · %2$s voldoet · %3$s niet ingevuld"
+
+#: includes/Frontend/Strings.php
+msgid "Kattints egy falra vagy nyílásra a rajzon."
+msgstr "Klik op een muur of opening in de tekening."
+
+#: includes/Frontend/Strings.php
+msgid "Kijelölt elem"
+msgstr "Geselecteerd element"
+
+#: includes/Frontend/Strings.php
+msgid "Hátsó telekhatártól"
+msgstr "Vanaf achterste perceelgrens"
+
+#: includes/Frontend/Strings.php
+msgid "Utcától: %1$s m · jobb telekhatártól: %2$s m"
+msgstr "Vanaf straat: %1$s m · vanaf rechter perceelgrens: %2$s m"
+
+#: includes/Frontend/Strings.php
+msgid "Bal telekhatártól"
+msgstr "Vanaf linker perceelgrens"
+
+#: includes/Frontend/Strings.php
+msgid "Parapetmagasság"
+msgstr "Borstweringshoogte"
+
+#: includes/Frontend/Strings.php
+msgid "Gerendás-béléstestes"
+msgstr "Balk-en-entrevousvloer"
+
+#: includes/Frontend/Strings.php
+msgid "Födém vastagsága"
+msgstr "Dikte verdiepingsvloer"
+
+#: includes/Frontend/Strings.php
+msgid "Fagerendás"
+msgstr "Houten balklaag"
+
+#: includes/Frontend/Strings.php
+msgid "Födém típusa"
+msgstr "Type verdiepingsvloer"
+
+#: includes/Frontend/Strings.php
+msgid "falvéghez illesztve"
+msgstr "op muureinde gesnapt"
+
+#: includes/Frontend/Strings.php
+msgid "rácsra illesztve"
+msgstr "op raster gesnapt"
+
+#: includes/Frontend/Strings.php
+msgid "falra illesztve"
+msgstr "op muur gesnapt"
+
+#: includes/Frontend/Strings.php
+msgid "Talaj"
+msgstr "Grond"
+
+#: includes/Frontend/Strings.php
+msgid "Agyag"
+msgstr "Klei"
+
+#: includes/Frontend/Strings.php
+msgid "Feltöltés"
+msgstr "Aanvulgrond"
+
+#: includes/Frontend/Strings.php
+msgid "Vályogos talaj"
+msgstr "Leemgrond"
+
+#: includes/Frontend/Strings.php
+msgid "Szikla"
+msgstr "Rots"
+
+#: includes/Frontend/Strings.php
+msgid "Rajz és 3D nézet"
+msgstr "Tekening en 3D-weergave"
+
+#: includes/Frontend/Strings.php
+msgid "Lépcsőnyílás a födémben"
+msgstr "Trapgat in de verdiepingsvloer"
+
+#: includes/Frontend/Strings.php
+msgid "a korábbi lépés módosult, nézd át újra"
+msgstr "een eerdere stap is gewijzigd, controleer opnieuw"
+
+#: includes/Frontend/Strings.php
+msgid "Ezt a lépést már lezártad, de azóta változott. Nézd át, és zárd le újra."
+msgstr "Je hebt deze stap al afgesloten, maar er is sindsdien iets veranderd. Controleer hem en sluit opnieuw af."
+
+#: includes/Frontend/Strings.php
+msgid "Kezdés"
+msgstr "Start"
+
+#: includes/Frontend/Strings.php
+msgid "Alapvezetékek"
+msgstr "Grondleidingen"
+
+#: includes/Frontend/Strings.php
+msgid "Földmunka"
+msgstr "Grondwerk"
+
+#: includes/Frontend/Strings.php
+msgid "Belső szakipar"
+msgstr "Binnenafwerking"
+
+#: includes/Frontend/Strings.php
+msgid "Alap"
+msgstr "Fundering"
+
+#: includes/Frontend/Strings.php
+msgid "Szigetelés, aljzat"
+msgstr "Vochtwering, vloer"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s. lépés / %2$s"
+msgstr "Stap %1$s / %2$s"
+
+#: includes/Frontend/Strings.php
+msgid "Nyílások, áthidalók"
+msgstr "Openingen, lateien"
+
+#: includes/Frontend/Strings.php
+msgid "Külső munkák"
+msgstr "Buitenwerk"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak"
+msgstr "Binnenwanden"
+
+#: includes/Frontend/Strings.php
+msgid "Vakolás, hőszigetelés"
+msgstr "Pleisterwerk, isolatie"
+
+#: includes/Frontend/Strings.php
+msgid "Esztrich"
+msgstr "Dekvloer"
+
+#: includes/Frontend/Strings.php
+msgid "Gépészet"
+msgstr "Installaties"
+
+#: includes/Frontend/Strings.php
+msgid "Telek, kitűzés"
+msgstr "Perceel, uitzetten"
+
+#: includes/Frontend/Strings.php
+msgid "Koszorú, födém"
+msgstr "Ringbalk, verdiepingsvloer"
+
+#: includes/Frontend/Strings.php
+msgid "Főfalak"
+msgstr "Hoofdmuren"
+
+#: includes/Frontend/Strings.php
+msgid "Építési lépések"
+msgstr "Bouwstappen"
+
+#: includes/Frontend/Strings.php
+msgid "utca"
+msgstr "straat"
+
+#: includes/Frontend/Strings.php
+msgid "Vastagság"
+msgstr "Dikte"
+
+#: includes/Frontend/Strings.php
+msgid "Vissza a tervezőbe"
+msgstr "Terug naar de ontwerper"
+
+#: includes/Frontend/Strings.php
+msgid "Eszköz"
+msgstr "Gereedschap"
+
+#: includes/Frontend/Strings.php
+msgid "Nyílás"
+msgstr "Opening"
+
+#: includes/Frontend/Strings.php
+msgid "Kijelölés"
+msgstr "Selecteren"
+
+#: includes/Frontend/Strings.php
+msgid "Fal"
+msgstr "Muur"
+
+#: includes/Frontend/Strings.php
+msgid "Humuszréteg"
+msgstr "Laag teelaarde"
+
+#: includes/Frontend/Strings.php
+msgid "A meglévő falak és nyílások helyére új alaprajz kerül. Folytatod?"
+msgstr "De bestaande muren en openingen worden vervangen door een nieuwe plattegrond. Doorgaan?"
+
+#: includes/Frontend/Strings.php
+msgid "Csere"
+msgstr "Vervangen"
+
+#: includes/Frontend/Strings.php
+msgid "Új kezdés"
+msgstr "Opnieuw beginnen"
+
+#: includes/Frontend/Strings.php
+msgid "db"
+msgstr "stuks"
+
+#: includes/Frontend/Strings.php
+msgid "kg"
+msgstr "kg"
+
+#: includes/Frontend/Strings.php
+msgid "m"
+msgstr "m"
+
+#: includes/Frontend/Strings.php
+msgid "m²"
+msgstr "m²"
+
+#: includes/Frontend/Strings.php
+msgid "m³"
+msgstr "m³"
+
+#: includes/Frontend/Strings.php
+msgid "Becsült hőátbocsátás (U): %s W/m²K"
+msgstr "Geschatte warmtedoorgangscoëfficiënt (U): %s W/m²K"
+
+#: includes/Frontend/Strings.php
+msgid "Visszavonás"
+msgstr "Ongedaan maken"
+
+#: includes/Frontend/Strings.php
+msgid "nem ellenőrzött"
+msgstr "niet gecontroleerd"
+
+#: includes/Frontend/Strings.php
+msgid "3D építési állás"
+msgstr "3D-bouwfase"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség"
+msgstr "Breedte"
+
+#: includes/Frontend/Strings.php
+msgid "A külső falak több zárt hurkot alkotnak; a legnagyobb a ház kontúrja."
+msgstr "De buitenmuren vormen meerdere gesloten lussen; de grootste is de contour van het huis."
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs bejárati ajtó."
+msgstr "Nog geen voordeur."
+
+#: includes/Frontend/Strings.php
+msgid "Ferde külső falhoz a tetőgenerátor nem tud tetőt építeni: csak derékszögű alaprajz kaphat tetőt."
+msgstr "Op een schuine buitenmuur kan de dakgenerator geen dak bouwen: alleen een haakse plattegrond krijgt een dak."
+
+#: includes/Frontend/Strings.php
+msgid "Lábazati hőszigetelés (XPS)"
+msgstr "Sokkelisolatie (XPS)"
