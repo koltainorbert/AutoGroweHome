@@ -1,5 +1,11 @@
 # Változásnapló
 
+## 1.14.1 – 2026-10-20
+
+- **Javítás – telefonon lefagyott az építési mód:** ha a rajzterület magassága 0 volt (telefonon a „Lépés” fül alatt rejtve), a rács rajzolása végtelen ciklusba futott. Most a látható terület mérete korlátozott, és rejtett rajznál a rács a nézetdoboz szerint készül.
+- Mérve: `node tests/e2e/build.js 100`: 100 ház, 1000/1000 lépés lezárva, geometriai hiba 0 (kilógó fal 0, nyílás a falon kívül 0, átfedés 0, lebegő 0), rajz = modell 100/100, paraméterek 100/100, helyiségek 100/100, tető 100/100; 3D fázisváltás átlag 0,9 ms / max 5,3 ms; a tervezőben tömeg egyezik, belső terek 6/6, szerver ugyanazt menti, generálás a rajzzal; felület 110 mérés 0 hiba (320–1920 px); konzolhiba 0.
+- Kikapcsolt építési móddal a meglévők zöldek: `search`, `layout` (15/15, 8/8), `pick`, `cards` (55 mező, 0 alapjelenet), `color`, `fullscreen` 76/76, `guide`, `gen`, `street`, `rooms` (30 szoba, kilóg 0), `roomcam` (átlag 89 %), `wizard` és `responsive` (túllógás 0, konzolhiba 0), `guide-test` 62/62, `sketch-test` 1247 rajz 0 hiba.
+
 ## 1.14.0 – 2026-10-20
 
 Norbi: „Házépítés az alapoktól funkció kell … kőműves módra, nulláról felépíteni a házat”, kiegészítve: „alkalmazza vagy ne alkalmazza a magyar törvényeket az adott helyen”. Munkaprompt: `docs/FELADAT-1.14.0.md`, leírás: `docs/EPITESI-MOD.md`.
