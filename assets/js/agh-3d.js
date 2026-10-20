@@ -1673,6 +1673,15 @@ Viewer.prototype.update = function (cfg, mode) {
 		var ph0 = this.house.phase;
 		this.house.phases.forEach(function (g) { if (g) { g.visible = true; } });
 		try { this.renderer.compile(this.scene, this.camera); } catch (e) { /* compiled on first use instead */ }
+		// and their textures go up to the GPU now, not on the first frame of that phase
+		var rr = this.renderer, seen = {};
+		if (rr.initTexture) {
+			this.house.root.traverse(function (o) {
+				(Array.isArray(o.material) ? o.material : (o.material ? [o.material] : [])).forEach(function (m) {
+					['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'alphaMap'].forEach(function (k) { var tx = m[k]; if (tx && !seen[tx.uuid]) { seen[tx.uuid] = 1; try { rr.initTexture(tx); } catch (e2) { /* uploaded on first use */ } } });
+				});
+			});
+		}
 		this.house.setPhase(ph0);
 	}
 	this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;

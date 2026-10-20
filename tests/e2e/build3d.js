@@ -37,6 +37,8 @@ const N = Number(process.argv[2] || 20);
     const v = window.AGH_3D.viewer();
     const cfg0 = window.AGH_Designer.config();
     const out = { houses: 0, times: [], missing: 0, contour: 0, growth: 0, errors: [], counts: [] };
+    // reference: the first frame of today's house in the same viewer (same renderer, no build)
+    if (window.AGH_REF_FRAME !== false) { const c1 = Object.assign({}, cfg0, { house_name: 'ref' + Math.random() }); v.update(c1); await new Promise(r => setTimeout(r, 50)); const r0 = performance.now(); v.shadowDirty = true; v.render(); out.refFrame = performance.now() - r0; }
     const idle = async () => { for (let k = 0; k < 600 && v.compileJob; k++) { await new Promise(r => setTimeout(r, 50)); } };
     const visibleMeshes = (root) => {
       let n = 0;
@@ -55,8 +57,10 @@ const N = Number(process.argv[2] || 20);
         const counts = [];
         for (let p = 0; p <= 9; p++) {
           const t0 = performance.now();
-          v.setPhase(p); v.render();
-          out.times.push(performance.now() - t0);
+          v.setPhase(p);
+          const t1 = performance.now();
+          v.render();
+          out.times.push(t1 - t0); (out.frames = out.frames || []).push(performance.now() - t1);
           counts.push(visibleMeshes(hs.root));
           if (p > 0 && p < 9 && !hs.phases[p].children.length && !(p === 7 && !b.openings.some(op => { const w = b.walls.filter(x => x.id === op.wall)[0]; const li = w && B.lintel(b, w, op); return li && li.pcs; }))) { out.missing++; out.errors.push('#' + i + ' üres fázis ' + p); }
         }
@@ -84,12 +88,14 @@ const N = Number(process.argv[2] || 20);
   }, N);
 
   await browser.close();
-  const avg = res.times.length ? res.times.reduce((a, b) => a + b, 0) / res.times.length : 0;
-  const max = res.times.length ? Math.max.apply(null, res.times) : 0;
+  const stat = a => { const q = (a || []).slice().sort((x, y) => x - y); return q.length ? { avg: q.reduce((x, y) => x + y, 0) / q.length, med: q[Math.floor(q.length / 2)], p95: q[Math.floor(q.length * 0.95)], max: q[q.length - 1] } : { avg: 0, med: 0, p95: 0, max: 0 }; };
+  const sw = stat(res.times), fr = stat(res.frames);
+  const avg = sw.avg, max = sw.max;
   const bad = (res.houses !== N ? 1 : 0) + res.missing + res.contour + res.growth + res.errors.length + errors.length;
   if (res.errors.length) { console.error(res.errors.slice(0, 8)); }
   if (errors.length) { console.error(errors.slice(0, 5)); }
-  if (process.env.VERBOSE) { console.log(res.counts); }
-  console.log(`építési 3D: ${res.houses} ház, fázisváltás átlag ${avg.toFixed(1)} ms / max ${max.toFixed(1)} ms, hiányzó fázis ${res.missing}, falkontúr-eltérés ${res.contour}, konzolhiba ${errors.length}`);
+  if (process.env.VERBOSE) { console.log('mai ház első képkockája', Math.round(res.refFrame || 0), 'ms'); }
+  if (process.env.VERBOSE) { const byP = {}; (res.frames || []).forEach((f, k) => { const ph = k % 10; byP[ph] = Math.max(byP[ph] || 0, Math.round(f)); }); console.log('max képkocka fázisonként', JSON.stringify(byP), 'első ház', (res.frames || []).slice(0, 10).map(Math.round).join(',')); }
+  console.log(`építési 3D: ${res.houses} ház, fázisváltás (láthatóság) átlag ${avg.toFixed(2)} ms / max ${max.toFixed(2)} ms, utána egy képkocka SwiftShaderen medián ${fr.med.toFixed(0)} ms / p95 ${fr.p95.toFixed(0)} ms / max ${fr.max.toFixed(0)} ms, hiányzó fázis ${res.missing}, falkontúr-eltérés ${res.contour}, konzolhiba ${errors.length}`);
   process.exit(bad ? 1 : 0);
 })();
