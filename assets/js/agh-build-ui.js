@@ -614,7 +614,7 @@
 		var m = 1.2;
 		st.vb = { x: x0 - m, y: y0 - m, w: x1 - x0 + 2 * m, h: y1 - y0 + 2 * m + 0.8 };
 	}
-	function pxPerM() { var r = D.svg.getBoundingClientRect(); return r.width ? Math.min(r.width / st.vb.w, r.height / st.vb.h) : 30; }
+	function pxPerM() { var r = D.svg.getBoundingClientRect(); return r.width > 1 && r.height > 1 ? Math.min(r.width / st.vb.w, r.height / st.vb.h) : 30; }
 	function renderPlan() {
 		if (!D.svg || !st) { return; }
 		var s = D.svg, vb = st.vb, k = pxPerM(), b = st.b, p = plot(), lv = st.lv;
@@ -624,7 +624,7 @@
 		var lw = 1 / k; // one screen pixel in metres
 		// grid
 		// the grid covers what is actually on screen (the view box is letterboxed into the panel)
-		var rc = s.getBoundingClientRect(), ex = rc.width ? Math.max(0, (rc.width / k - vb.w) / 2) : 0, ey = rc.height ? Math.max(0, (rc.height / k - vb.h) / 2) : 0;
+		var rc = s.getBoundingClientRect(), ok = rc.width > 1 && rc.height > 1 && k > 0, ex = ok ? Math.min(60, Math.max(0, (rc.width / k - vb.w) / 2)) : 0, ey = ok ? Math.min(60, Math.max(0, (rc.height / k - vb.h) / 2)) : 0;
 		var g = sv('g', { class: 'agh-bld-grid' });
 		var gx0 = Math.floor(vb.x - ex), gx1 = Math.ceil(vb.x + vb.w + ex), gy0 = Math.floor(vb.y - ey), gy1 = Math.ceil(vb.y + vb.h + ey), d1 = '', d2 = '';
 		if (k * 0.1 >= 6) { for (var x = gx0; x <= gx1; x += 0.1) { d1 += 'M' + r3(x) + ' ' + gy0 + 'V' + gy1; } for (var y = gy0; y <= gy1; y += 0.1) { d1 += 'M' + gx0 + ' ' + r3(y) + 'H' + gx1; } }

@@ -163,6 +163,7 @@ async function openBuild(browser, w, h, touch) {
       await o.page.evaluate(() => { window.AGH_BuildUI.load(window.AGH_Build.randomHouse(5)); });
       for (const step of [0, 2, 5, 6, 7, 8, 9]) {
         for (const pane of ['panel', 'plan', '3d']) {
+          if (process.env.AGH_DEBUG) { console.error('felület', label, step, pane, new Date().toISOString().slice(11, 19)); }
           await o.page.evaluate(([s, p]) => { const U = window.AGH_BuildUI; U.goStep(s); const b = document.querySelector('.agh-bld-panes button[data-pane="' + p + '"]'); if (b && b.offsetParent) { b.click(); } else { U.setView(p === '3d' ? '3d' : 'plan'); } }, [step, pane]);
           await o.page.waitForTimeout(pane === '3d' ? 900 : 120);
           const a = await o.page.evaluate(() => {
