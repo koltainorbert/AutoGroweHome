@@ -57,7 +57,7 @@ final class Summary {
 		$cats = Definitions::categories();
 		$out  = array();
 		foreach ( Registry::fields() as $id => $def ) {
-			if ( 'rooms' === $def['type'] || 'roomitems' === $def['type'] || 'layout' === $def['type'] || ! array_key_exists( $id, $c ) || ! Validator::visible( $def, $c ) ) {
+			if ( 'rooms' === $def['type'] || 'roomitems' === $def['type'] || 'layout' === $def['type'] || 'build' === $def['type'] || ! array_key_exists( $id, $c ) || ! Validator::visible( $def, $c ) ) {
 				continue;
 			}
 			$cat           = $cats[ $def['category'] ]['label'] ?? $def['category'];

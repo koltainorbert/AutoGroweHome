@@ -17,6 +17,7 @@
 
 namespace AutoGroweHome\Generation;
 
+use AutoGroweHome\Build\Build;
 use AutoGroweHome\Params\Definitions;
 use AutoGroweHome\Params\RoomProgram;
 
@@ -45,6 +46,14 @@ final class BuildingModel {
 	 * @param array  $adjust  room id => area (validated against ±20 %).
 	 */
 	public static function build( array $c, string $variant = 'A', array $adjust = array() ): array {
+		// Build mode („Építés az alapoktól”): a valid drawing is the geometry. Switched off, without a
+		// drawing or with one the plan cannot use (open or not orthogonal outline) nothing changes below.
+		if ( ! empty( $c['build'] ) && is_array( $c['build'] ) && Build::enabled() ) {
+			$drawn = self::from_build( $c, $variant );
+			if ( null !== $drawn ) {
+				return $drawn;
+			}
+		}
 		$types     = Definitions::room_types();
 		$levels_n  = RoomProgram::level_count( $c );
 		$explicit  = array_flip( (array) ( $c['_explicit'] ?? array() ) );
@@ -944,5 +953,284 @@ final class BuildingModel {
 			'solar'       => ! empty( $c['roof_solar'] ),
 			'roof_windows'=> (int) ( $c['roof_windows'] ?? 0 ),
 		);
+	}
+
+	/* ------------------------------------------------------------------ build mode */
+
+	/** Level name, the same as the generator gives. */
+	private static function level_name( int $l, array $c ): string {
+		return 0 === $l ? __( 'Földszint', 'autogrowehome' ) : ( ( 'attic' === ( $c['levels'] ?? '' ) ) ? __( 'Tetőtér', 'autogrowehome' ) : sprintf( /* translators: %d: floor */ __( '%d. emelet', 'autogrowehome' ), $l ) );
+	}
+
+	/**
+	 * The model (same schema) from the build-mode drawing, or null when the drawing cannot be used.
+	 *
+	 * Coordinates: the drawing has the street at max y; here the front is y = 0, so
+	 * server_x = x - bbox_min_x and server_y = bbox_max_y - y (bbox of the outer outline).
+	 */
+	private static function from_build( array $c, string $variant ): ?array {
+		$g = Build::model( $c['build'] );
+		if ( empty( $g['ok'] ) || empty( $g['boxes'] ) ) {
+			return null;
+		}
+		$types  = Definitions::room_types();
+		$b      = $g['build'];
+		$ox     = (float) $g['origin'][0];
+		$oy     = (float) $g['origin'][1];
+		$big_w  = (float) $g['W'];
+		$big_d  = (float) $g['D'];
+		$sx     = static fn( float $x ): float => $x - $ox;
+		$sy     = static fn( float $y ): float => $oy + $big_d - $y;
+		$levels_n = count( $b['levels'] );
+		$warnings = array();
+
+		// Parts: the footprint boxes (the first is the main block).
+		$parts = array();
+		foreach ( $g['boxes'] as $i => $q ) {
+			$w       = $q['x1'] - $q['x0'];
+			$h       = $q['y1'] - $q['y0'];
+			$parts[] = array(
+				'id'   => 0 === $i ? 'main' : ( 1 === $i ? 'wing' : 'wing' . $i ),
+				'x'    => round( $q['x0'], 3 ),
+				'y'    => round( $big_d - $q['y1'], 3 ),
+				'w'    => round( $w, 3 ),
+				'h'    => round( $h, 3 ),
+				'axis' => $w >= $h ? 'h' : 'v',
+				'role' => 0 === $i ? 'all' : 'wing',
+			);
+		}
+		$part_at = static function ( float $x, float $y ) use ( $parts ): string {
+			foreach ( $parts as $p ) {
+				if ( $x >= $p['x'] - 0.01 && $x <= $p['x'] + $p['w'] + 0.01 && $y >= $p['y'] - 0.01 && $y <= $p['y'] + $p['h'] + 0.01 ) {
+					return $p['id'];
+				}
+			}
+			return 'main';
+		};
+		$shape = array( 1 => 'rectangle', 2 => 'l_shape' )[ count( $parts ) ] ?? 'u_shape';
+		$ext_t = self::T_EXT;
+		foreach ( $b['walls'] as $w ) {
+			if ( 'ext' === $w['kind'] ) {
+				$ext_t = (float) $w['t'];
+				break;
+			}
+		}
+		$model = array(
+			'schema'      => 'agh-building-v1',
+			'units'       => 'm',
+			'variant'     => $variant,
+			'shape'       => $shape,
+			'shape_label' => array( 'rectangle' => 'simple rectangular', 'l_shape' => 'L-shaped', 'u_shape' => 'U-shaped' )[ $shape ],
+			'mirror'      => false,
+			't_ext'       => $ext_t,
+			't_int'       => self::T_INT,
+			'parts'       => $parts,
+			'levels'      => array(),
+			'rooms'       => array(),
+			'openings'    => array(),
+			'walls'       => array(),
+			'source'      => 'drawing',
+		);
+		$model['width']  = round( $big_w, 2 );
+		$model['length'] = round( $big_d, 2 );
+
+		// Levels: elevation from the foundation top and the drawn level heights.
+		$z = (float) $b['found']['top'];
+		foreach ( $b['levels'] as $l => $lv ) {
+			$model['levels'][] = array(
+				'index'     => $l,
+				'name'      => self::level_name( $l, $c ),
+				'elevation' => round( $z, 2 ),
+				'height'    => round( (float) $lv['h'], 2 ),
+				'attic'     => false,
+			);
+			$z += (float) $lv['h'];
+		}
+
+		// Rooms: the closed faces of the wall graph as rectangles (their bounding box). Type: the one chosen
+		// in the drawing, else the room of the programme at the same place of the level, else living
+		// for the largest and bedroom for the others.
+		$by_level = array();
+		foreach ( (array) ( $c['rooms'] ?? array() ) as $r ) {
+			if ( is_array( $r ) && isset( $r['type'] ) ) {
+				$by_level[ (int) ( $r['level'] ?? 0 ) ][] = $r;
+			}
+		}
+		$seq  = 0;
+		$nth  = array();
+		foreach ( $g['rooms'] as $rm ) {
+			$lv    = (int) $rm['lv'];
+			$i     = $nth[ $lv ] ?? 0;
+			$nth[ $lv ] = $i + 1;
+			$prog  = $by_level[ $lv ][ $i ] ?? null;
+			$type  = (string) $rm['type'];
+			if ( '' === $type || ! isset( $types[ $type ] ) ) {
+				$type = $prog && isset( $types[ $prog['type'] ] ) ? (string) $prog['type'] : ( 0 === $i ? 'living' : 'bedroom' );
+			}
+			$name = $prog && $prog['type'] === $type && '' !== (string) ( $prog['name'] ?? '' ) ? (string) $prog['name'] : $types[ $type ][0];
+			$id   = 'b' . ( ++$seq );
+			$x    = $sx( (float) $rm['bbox']['x0'] );
+			$y    = $sy( (float) $rm['bbox']['y1'] );
+			$w    = (float) $rm['bbox']['x1'] - (float) $rm['bbox']['x0'];
+			$h    = (float) $rm['bbox']['y1'] - (float) $rm['bbox']['y0'];
+			$area = round( (float) $rm['area'], 2 );
+			$model['rooms'][ $id ] = array(
+				'id'     => $id,
+				'type'   => $type,
+				'name'   => $name,
+				'level'  => $lv,
+				'x'      => round( $x, 3 ),
+				'y'      => round( $y, 3 ),
+				'w'      => round( $w, 3 ),
+				'h'      => round( $h, 3 ),
+				'area'   => $area,
+				'target' => $area,
+				'zone'   => $types[ $type ][4] ?? 'day',
+				'band'   => 'corridor' === $type ? 'corridor' : ( $y + $h / 2 < $big_d / 2 ? 'front' : 'garden' ),
+				'part'   => $part_at( $x + $w / 2, $y + $h / 2 ),
+				'stack'  => -1,
+				'key'    => (string) $rm['key'],
+			);
+			if ( min( $w, $h ) < 1.2 ) {
+				$warnings[] = sprintf( /* translators: %s: room */ __( '„%s” túl keskeny lett a vázlatban; érdemes a területét növelni.', 'autogrowehome' ), $name );
+			}
+		}
+		$nearest_room = static function ( int $lv, float $x, float $y ) use ( &$model ): string {
+			$best = '';
+			$bd   = INF;
+			foreach ( $model['rooms'] as $r ) {
+				if ( $r['level'] !== $lv ) {
+					continue;
+				}
+				$dx = max( $r['x'] - $x, 0, $x - ( $r['x'] + $r['w'] ) );
+				$dy = max( $r['y'] - $y, 0, $y - ( $r['y'] + $r['h'] ) );
+				$d  = $dx * $dx + $dy * $dy;
+				if ( $d < $bd ) {
+					$bd   = $d;
+					$best = $r['id'];
+				}
+			}
+			return $best;
+		};
+
+		// Openings: external ones on the inner face of their wall (the generator's convention: the plan
+		// shifts them outwards by half the wall), with the edge naming the face; internal doors on the
+		// centre line.
+		$map = array( 'window' => 'window', 'terrace' => 'sliding', 'door' => 'door', 'entrance' => 'entrance' );
+		foreach ( $g['openings'] as $o ) {
+			$x      = $sx( (float) $o['x'] );
+			$y      = $sy( (float) $o['y'] );
+			$orient = 'x' === $o['axis'] ? 'h' : ( 'y' === $o['axis'] ? 'v' : '' );
+			$edge   = '';
+			$ext    = 'ext' === $o['kind'] && isset( $o['ox'] );
+			if ( $ext ) {
+				// inner face = the centre line mirrored away from the outer face
+				$x = $sx( 2 * (float) $o['x'] - (float) $o['ox'] );
+				$y = $sy( 2 * (float) $o['y'] - (float) $o['oy'] );
+				if ( isset( $o['out'] ) ) {
+					$edge = 'h' === $orient ? ( $o['out'] > 0 ? 'v_start' : 'v_end' ) : ( $o['out'] > 0 ? 'u_end' : 'u_start' );
+				}
+			}
+			if ( '' === $orient ) { // a diagonal wall: the nearer axis
+				$w0     = null;
+				foreach ( $b['walls'] as $w ) {
+					if ( $w['id'] === $o['wall'] ) {
+						$w0 = $w;
+					}
+				}
+				$orient = $w0 && abs( $w0['b'][0] - $w0['a'][0] ) >= abs( $w0['b'][1] - $w0['a'][1] ) ? 'h' : 'v';
+			}
+			$model['openings'][] = array(
+				'x'      => round( $x, 3 ),
+				'y'      => round( $y, 3 ),
+				'orient' => $orient,
+				'edge'   => $edge,
+				'type'   => $map[ $o['type'] ] ?? 'window',
+				'width'  => (float) $o['w'],
+				'level'  => (int) $o['lv'],
+				'room'   => $nearest_room( (int) $o['lv'], $x, $y ),
+				'side'   => $ext ? 'ext' : 'int',
+				'height' => (float) $o['h'],
+				'sill'   => (float) $o['sill'],
+				'id'     => (string) $o['id'],
+			);
+		}
+
+		// Walls: one rectangle per wall and level (external walls on every level).
+		for ( $l = 0; $l < $levels_n; $l++ ) {
+			foreach ( $b['walls'] as $w ) {
+				if ( 'ext' !== $w['kind'] && (int) $w['lv'] !== $l ) {
+					continue;
+				}
+				$ht = (float) $w['t'] / 2;
+				$x0 = $sx( min( (float) $w['a'][0], (float) $w['b'][0] ) ) - $ht;
+				$x1 = $sx( max( (float) $w['a'][0], (float) $w['b'][0] ) ) + $ht;
+				$y0 = $sy( max( (float) $w['a'][1], (float) $w['b'][1] ) ) - $ht;
+				$y1 = $sy( min( (float) $w['a'][1], (float) $w['b'][1] ) ) + $ht;
+				$model['walls'][] = array( 'level' => $l, 'x' => round( $x0, 3 ), 'y' => round( $y0, 3 ), 'w' => round( $x1 - $x0, 3 ), 'h' => round( $y1 - $y0, 3 ), 'kind' => $w['kind'], 't' => (float) $w['t'], 'id' => $w['id'] );
+			}
+		}
+
+		$model['terrace'] = self::terrace( $model, (float) ( $c['terrace_area'] ?? 0 ) );
+		$model['garage']  = self::garage( $model, (string) ( $c['garage'] ?? 'none' ), false );
+
+		// Roof: the generator's roof on the main block, raised to the drawn wall heights.
+		$walls_h = 0.0;
+		foreach ( $b['levels'] as $lv ) {
+			$walls_h += (float) $lv['h'];
+		}
+		$storey = $walls_h / max( 1, $levels_n );
+		$roof   = self::roof( $model, $c, $levels_n, $storey );
+		$eave   = (float) $b['found']['top'] + $walls_h + ( ! empty( $b['attic'] ) ? 0.9 : 0 );
+		$rise   = (float) $roof['ridge_height'] - (float) $roof['eaves_height'];
+		$ridge  = (float) ( $c['ridge_height'] ?? 0 );
+		if ( $ridge > 0 && 'flat' !== $roof['type'] ) {
+			$main  = $parts[0];
+			$span  = min( $main['w'], $main['h'] );
+			$rise  = max( 0.5, $ridge - $eave );
+			$roof['pitch'] = round( 'shed' === $roof['type'] ? rad2deg( atan( $rise / max( 1, $span ) ) ) : rad2deg( atan( $rise / max( 1, $span / 2 ) ) ), 1 );
+		}
+		$roof['eaves_height'] = round( $eave, 2 );
+		$roof['ridge_height'] = round( $eave + $rise, 2 );
+		$roof['plinth']       = (float) $b['found']['top'];
+		$model['roof']        = $roof;
+
+		// Checks.
+		$real_sum = 0.0;
+		foreach ( $model['rooms'] as $r ) {
+			$real_sum += $r['area'];
+		}
+		$net  = (float) ( $c['net_area'] ?? $real_sum );
+		$diff = $net > 0 ? ( $real_sum - $net ) / $net * 100 : 0;
+		if ( abs( $diff ) > 10 ) {
+			$warnings[] = sprintf( /* translators: 1: real, 2: requested, 3: pct */ __( 'A tervvázlat helyiségeinek összterülete %1$s m², a kért nettó terület %2$s m² (%3$s%% eltérés).', 'autogrowehome' ), number_format_i18n( $real_sum, 1 ), number_format_i18n( $net, 1 ), number_format_i18n( $diff, 1 ) );
+		}
+		if ( ! $model['rooms'] ) {
+			$warnings[] = __( 'Építési terv: a rajzon még nincs zárt helyiség.', 'autogrowehome' );
+		}
+		if ( $g['loops'] > 1 ) {
+			$warnings[] = __( 'Építési terv: a külső falak több különálló hurkot alkotnak; a terv a legnagyobbat veszi alapul.', 'autogrowehome' );
+		}
+		if ( $g['seams'] > 0 ) {
+			$warnings[] = __( 'Építési terv: egy nyílás két épülettömeg határára esik; a vázlat két részletben mutatja.', 'autogrowehome' );
+		}
+		$gross = 0.0;
+		foreach ( $parts as $p ) {
+			$gross += $p['w'] * $p['h'];
+		}
+		$model['checks'] = array(
+			'net_requested' => round( $net, 1 ),
+			'net_planned'   => round( $real_sum, 1 ),
+			'diff_pct'      => round( $diff, 1 ),
+			'footprint'     => round( $gross, 1 ),
+			'gross'         => round( $gross * max( 1, $levels_n ), 1 ),
+			'warnings'      => array_values( array_unique( $warnings ) ),
+		);
+		$model['meta'] = array(
+			'generator'  => 'AutoGroweHome ' . AGH_VERSION,
+			'source'     => 'build',
+			'disclaimer' => 'Conceptual sketch generated from the build-mode drawing. Not a permit, structural or construction document; must be verified by a licensed designer.',
+		);
+		return $model;
 	}
 }

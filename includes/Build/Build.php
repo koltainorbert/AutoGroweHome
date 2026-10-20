@@ -147,7 +147,7 @@ final class Build {
 		$a = $o;
 		foreach ( explode( '.', $path ) as $k ) {
 			if ( ! self::truthy( $a ) ) {
-				return $a;
+				return null;
 			}
 			$a = self::at( $a, $k );
 		}
@@ -214,10 +214,11 @@ final class Build {
 			return array();
 		}
 		$o = self::normalize( $raw );
-		// done / rules.custom are JSON objects whose keys may be "0", "1" …: keep them objects
-		// (a PHP list would be encoded as a JSON array and the browser would drop it).
-		$o['done']            = $o['done'] ? (object) $o['done'] : array();
-		$o['rules']['custom'] = $o['rules']['custom'] ? (object) $o['rules']['custom'] : array();
+		// done, rules.custom and rooms are JSON objects (keys "0", "1" … included): keep them objects,
+		// so the stored JSON is exactly what the browser's normalize() gives ({} and not []).
+		$o['done']            = (object) $o['done'];
+		$o['rules']['custom'] = (object) $o['rules']['custom'];
+		$o['rooms']           = (object) $o['rooms'];
 		return $o;
 	}
 
@@ -333,7 +334,7 @@ final class Build {
 			$o['levels'][] = array( 'h' => $level_h );
 		}
 		$st = self::at( $sl, 'stair' );
-		if ( self::is_obj( $st ) && array() !== $st ) {
+		if ( self::is_obj( $st ) ) {
 			$o['slab']['stair'] = array(
 				'x' => self::r2( self::num( self::at( $st, 'x' ), 0.0 ) ),
 				'y' => self::r2( self::num( self::at( $st, 'y' ), 0.0 ) ),
@@ -452,9 +453,743 @@ final class Build {
 		foreach ( array( 'services', 'surfaces' ) as $k ) {
 			$list = self::at( $b, $k );
 			if ( self::is_list( $list ) ) {
-				$o[ $k ] = array_slice( array_values( array_filter( $list, array( __CLASS__, 'is_obj' ) ) ), 0, 200 );
+				$o[ $k ] = array_map( static fn( $x ) => array() === $x ? new \stdClass() : $x, array_slice( array_values( array_filter( $list, array( __CLASS__, 'is_obj' ) ) ), 0, 200 ) );
 			}
 		}
 		return $o;
+	}
+
+	/* ------------------------------------------------------------------ geometry (integer millimetres) */
+
+	/** Map key of a point (whole millimetres, "x,y" like the JS string). */
+	private static function pk( float $x, float $y ): string {
+		return (int) $x . ',' . (int) $y;
+	}
+
+	private static function seg( array $w ): array {
+		return array( 'id' => $w['id'], 'ax' => self::c( (float) $w['a'][0] ), 'ay' => self::c( (float) $w['a'][1] ), 'bx' => self::c( (float) $w['b'][0] ), 'by' => self::c( (float) $w['b'][1] ), 't' => self::c( (float) $w['t'] ) );
+	}
+
+	private static function len_c( array $s ): float {
+		return sqrt( ( $s['bx'] - $s['ax'] ) * ( $s['bx'] - $s['ax'] ) + ( $s['by'] - $s['ay'] ) * ( $s['by'] - $s['ay'] ) );
+	}
+
+	/** Parameter u of point p on segment s (0..1), or -1 when p is not on the segment line. */
+	private static function on_seg( array $s, float $px, float $py ): float {
+		$dx = $s['bx'] - $s['ax'];
+		$dy = $s['by'] - $s['ay'];
+		$l2 = $dx * $dx + $dy * $dy;
+		if ( 0.0 == $l2 || 0.0 != ( $px - $s['ax'] ) * $dy - ( $py - $s['ay'] ) * $dx ) {
+			return -1.0;
+		}
+		$u = ( ( $px - $s['ax'] ) * $dx + ( $py - $s['ay'] ) * $dy ) / $l2;
+		return $u >= 0 && $u <= 1 ? $u : -1.0;
+	}
+
+	/** Proper crossing of two non-parallel segments (inside both, not at an end): [u on s, x, y]. */
+	private static function crossing( array $s, array $o ): ?array {
+		$d1x = $s['bx'] - $s['ax'];
+		$d1y = $s['by'] - $s['ay'];
+		$d2x = $o['bx'] - $o['ax'];
+		$d2y = $o['by'] - $o['ay'];
+		$den = $d1x * $d2y - $d1y * $d2x;
+		if ( 0.0 == $den ) {
+			return null;
+		}
+		$u = ( ( $o['ax'] - $s['ax'] ) * $d2y - ( $o['ay'] - $s['ay'] ) * $d2x ) / $den;
+		$v = ( ( $o['ax'] - $s['ax'] ) * $d1y - ( $o['ay'] - $s['ay'] ) * $d1x ) / $den;
+		if ( $u <= 1e-9 || $u >= 1 - 1e-9 || $v <= 1e-9 || $v >= 1 - 1e-9 ) {
+			return null;
+		}
+		return array( $u, self::js_round( $s['ax'] + $d1x * $u ), self::js_round( $s['ay'] + $d1y * $u ) );
+	}
+
+	/** Splits the walls at every junction (T, X) into graph edges; duplicate edges collapse (thicker wins). */
+	private static function edges_of( array $walls ): array {
+		$segs = array();
+		foreach ( $walls as $w ) {
+			$s = self::seg( $w );
+			if ( $s['ax'] != $s['bx'] || $s['ay'] != $s['by'] ) {
+				$segs[] = $s;
+			}
+		}
+		$out  = array();
+		$seen = array();
+		foreach ( $segs as $i => $s ) {
+			$pts = array( array( 0.0, $s['ax'], $s['ay'] ), array( 1.0, $s['bx'], $s['by'] ) );
+			foreach ( $segs as $j => $o ) {
+				if ( $i === $j ) {
+					continue;
+				}
+				foreach ( array( array( $o['ax'], $o['ay'] ), array( $o['bx'], $o['by'] ) ) as $p ) {
+					$u = self::on_seg( $s, $p[0], $p[1] );
+					if ( $u > 0 && $u < 1 ) {
+						$pts[] = array( $u, $p[0], $p[1] );
+					}
+				}
+				$x = self::crossing( $s, $o );
+				if ( $x ) {
+					$pts[] = $x;
+				}
+			}
+			usort( $pts, static fn( $a, $b ) => $a[0] <=> $b[0] );
+			for ( $k = 1, $n = count( $pts ); $k < $n; $k++ ) {
+				$p0 = $pts[ $k - 1 ];
+				$p1 = $pts[ $k ];
+				if ( $p0[1] == $p1[1] && $p0[2] == $p1[2] ) {
+					continue;
+				}
+				$key = $p0[1] < $p1[1] || ( $p0[1] == $p1[1] && $p0[2] < $p1[2] ) ? self::pk( $p0[1], $p0[2] ) . ',' . self::pk( $p1[1], $p1[2] ) : self::pk( $p1[1], $p1[2] ) . ',' . self::pk( $p0[1], $p0[2] );
+				if ( isset( $seen[ $key ] ) ) {
+					$e0 = $seen[ $key ];
+					if ( $s['t'] > $out[ $e0 ]['t'] ) {
+						$out[ $e0 ]['t'] = $s['t'];
+						$out[ $e0 ]['w'] = $s['id'];
+					}
+					continue;
+				}
+				$seen[ $key ] = count( $out );
+				$out[]        = array( 'w' => $s['id'], 't' => $s['t'], 'x0' => $p0[1], 'y0' => $p0[2], 'x1' => $p1[1], 'y1' => $p1[2] );
+			}
+		}
+		return $out;
+	}
+
+	private static function area2( array $p ): float {
+		$a = 0.0;
+		for ( $i = 0, $n = count( $p ); $i < $n; $i++ ) {
+			$q  = $p[ ( $i + 1 ) % $n ];
+			$a += $p[ $i ][0] * $q[1] - $q[0] * $p[ $i ][1];
+		}
+		return $a;
+	}
+
+	/**
+	 * Faces of the planar wall graph: [poly, ts (edge thicknesses), a2]. Interior faces have a positive
+	 * (doubled) area. Same order as the JS: nodes in string order of their "x,y" keys.
+	 */
+	private static function faces( array $edges ): array {
+		$adj = array();
+		$xy  = array();
+		foreach ( $edges as $e ) {
+			$k0 = self::pk( $e['x0'], $e['y0'] );
+			$k1 = self::pk( $e['x1'], $e['y1'] );
+			$adj[ $k0 ][] = array( 'to' => $k1, 'a' => atan2( $e['y1'] - $e['y0'], $e['x1'] - $e['x0'] ), 't' => $e['t'] );
+			$xy[ $k0 ]    = array( $e['x0'], $e['y0'] );
+			$adj[ $k1 ][] = array( 'to' => $k0, 'a' => atan2( $e['y0'] - $e['y1'], $e['x0'] - $e['x1'] ), 't' => $e['t'] );
+			$xy[ $k1 ]    = array( $e['x1'], $e['y1'] );
+		}
+		foreach ( $adj as $k => $lst ) {
+			usort( $lst, static fn( $p, $q ) => $p['a'] <=> $q['a'] );
+			$adj[ $k ] = $lst;
+		}
+		$keys = array_map( 'strval', array_keys( $adj ) );
+		sort( $keys, SORT_STRING );
+		$seen = array();
+		$res  = array();
+		foreach ( $keys as $k0 ) {
+			foreach ( $adj[ $k0 ] as $j0 => $h0 ) {
+				if ( isset( $seen[ $k0 . '>' . $h0['to'] ] ) ) {
+					continue;
+				}
+				$poly  = array();
+				$ts    = array();
+				$u     = $k0;
+				$hi    = $j0;
+				$guard = 0;
+				do {
+					$h = $adj[ $u ][ $hi ];
+					$seen[ $u . '>' . $h['to'] ] = 1;
+					$poly[] = $xy[ $u ];
+					$ts[]   = $h['t'];
+					$v      = $h['to'];
+					$lst    = $adj[ $v ];
+					$idx    = 0;
+					foreach ( $lst as $i => $x ) {
+						if ( $x['to'] === $u ) {
+							$idx = $i;
+							break;
+						}
+					}
+					$u  = $v;
+					$hi = ( $idx - 1 + count( $lst ) ) % count( $lst );
+				} while ( ! ( $u === $k0 && $hi === $j0 ) && ++$guard < 20000 );
+				$res[] = array( 'poly' => $poly, 'ts' => $ts, 'a2' => self::area2( $poly ) );
+			}
+		}
+		return $res;
+	}
+
+	/** Removes spikes (A,B,A) and repeated points; returns [points, thicknesses]. */
+	private static function clean( array $p, array $e ): array {
+		$changed = true;
+		while ( $changed && count( $p ) > 2 ) {
+			$changed = false;
+			for ( $i = 0; $i < count( $p ); $i++ ) {
+				$n = count( $p );
+				$a = $p[ ( $i - 1 + $n ) % $n ];
+				$c = $p[ ( $i + 1 ) % $n ];
+				if ( $a[0] == $c[0] && $a[1] == $c[1] ) { // spike at i: drop i and the next point
+					$j  = ( $i + 1 ) % $n;
+					$rm = array( $i, $j );
+					rsort( $rm );
+					foreach ( $rm as $r ) {
+						array_splice( $p, $r, 1 );
+						array_splice( $e, $r, 1 );
+					}
+					$changed = true;
+					break;
+				}
+			}
+		}
+		return array( $p, $e );
+	}
+
+	/** Merges collinear neighbours; edge thickness = the larger one. */
+	private static function merge( array $pts, array $t ): array {
+		$changed = true;
+		while ( $changed && count( $pts ) > 3 ) {
+			$changed = false;
+			for ( $i = 0; $i < count( $pts ); $i++ ) {
+				$n = count( $pts );
+				$a = $pts[ ( $i - 1 + $n ) % $n ];
+				$b = $pts[ $i ];
+				$c = $pts[ ( $i + 1 ) % $n ];
+				if ( 0.0 == ( $b[0] - $a[0] ) * ( $c[1] - $b[1] ) - ( $b[1] - $a[1] ) * ( $c[0] - $b[0] ) && ( $b[0] - $a[0] ) * ( $c[0] - $b[0] ) + ( $b[1] - $a[1] ) * ( $c[1] - $b[1] ) > 0 ) {
+					$ip       = ( $i - 1 + $n ) % $n;
+					$t[ $ip ] = max( $t[ $ip ], $t[ $i ] );
+					array_splice( $pts, $i, 1 );
+					array_splice( $t, $i, 1 );
+					$changed = true;
+					break;
+				}
+			}
+		}
+		return array( $pts, $t );
+	}
+
+	/** Offsets every edge of a positive polygon by d[i] mm towards the inside (negative = outwards). */
+	private static function offset( array $p, array $d ): array {
+		$n     = count( $p );
+		$lines = array();
+		$out   = array();
+		for ( $i = 0; $i < $n; $i++ ) {
+			$a  = $p[ $i ];
+			$b  = $p[ ( $i + 1 ) % $n ];
+			$dx = $b[0] - $a[0];
+			$dy = $b[1] - $a[1];
+			$l  = sqrt( $dx * $dx + $dy * $dy );
+			$l  = 0.0 == $l ? 1.0 : $l;
+			$nx = -$dy / $l; // left normal = inside for a positive polygon
+			$ny = $dx / $l;
+			$lines[] = array( 'x' => $a[0] + $nx * $d[ $i ], 'y' => $a[1] + $ny * $d[ $i ], 'dx' => $dx, 'dy' => $dy );
+		}
+		for ( $k = 0; $k < $n; $k++ ) {
+			$l0  = $lines[ ( $k - 1 + $n ) % $n ];
+			$l1  = $lines[ $k ];
+			$den = $l0['dx'] * $l1['dy'] - $l0['dy'] * $l1['dx'];
+			if ( abs( $den ) < 1e-9 ) {
+				$out[] = array( self::js_round( $l1['x'] ), self::js_round( $l1['y'] ) );
+				continue;
+			}
+			$s     = ( ( $l1['x'] - $l0['x'] ) * $l1['dy'] - ( $l1['y'] - $l0['y'] ) * $l1['dx'] ) / $den;
+			$out[] = array( self::js_round( $l0['x'] + $l0['dx'] * $s ), self::js_round( $l0['y'] + $l0['dy'] * $s ) );
+		}
+		return $out;
+	}
+
+	private static function in_poly( array $p, float $x, float $y ): bool {
+		$c = false;
+		$n = count( $p );
+		for ( $i = 0, $j = $n - 1; $i < $n; $j = $i++ ) {
+			if ( ( ( $p[ $i ][1] > $y ) !== ( $p[ $j ][1] > $y ) ) && ( $x < ( $p[ $j ][0] - $p[ $i ][0] ) * ( $y - $p[ $i ][1] ) / ( $p[ $j ][1] - $p[ $i ][1] ) + $p[ $i ][0] ) ) {
+				$c = ! $c;
+			}
+		}
+		return $c;
+	}
+
+	private static function on_boundary( array $p, float $x, float $y ): bool {
+		for ( $i = 0, $n = count( $p ); $i < $n; $i++ ) {
+			$q = $p[ ( $i + 1 ) % $n ];
+			if ( self::on_seg( array( 'ax' => $p[ $i ][0], 'ay' => $p[ $i ][1], 'bx' => $q[0], 'by' => $q[1] ), $x, $y ) >= 0 ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static function orthogonal( array $p ): bool {
+		for ( $i = 0, $n = count( $p ); $i < $n; $i++ ) {
+			$q = $p[ ( $i + 1 ) % $n ];
+			if ( $p[ $i ][0] != $q[0] && $p[ $i ][1] != $q[1] ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** Distinct values in first-seen order, then sorted numerically. */
+	private static function grid( array $vals ): array {
+		$out = array();
+		foreach ( $vals as $v ) {
+			if ( ! in_array( $v, $out, false ) ) {
+				$out[] = $v;
+			}
+		}
+		sort( $out, SORT_NUMERIC );
+		return $out;
+	}
+
+	/**
+	 * Splits an orthogonal polygon into rectangles: repeatedly the largest free rectangle of the
+	 * vertex grid (ties: the first in x, then y order).
+	 */
+	private static function decompose( array $p ): array {
+		$xs  = self::grid( array_map( static fn( $q ) => $q[0], $p ) );
+		$ys  = self::grid( array_map( static fn( $q ) => $q[1], $p ) );
+		$nx  = count( $xs ) - 1;
+		$ny  = count( $ys ) - 1;
+		$free = array();
+		$out  = array();
+		for ( $i = 0; $i < $nx; $i++ ) {
+			for ( $j = 0; $j < $ny; $j++ ) {
+				$free[ $i ][ $j ] = self::in_poly( $p, ( $xs[ $i ] + $xs[ $i + 1 ] ) / 2, ( $ys[ $j ] + $ys[ $j + 1 ] ) / 2 ) ? 1 : 0;
+			}
+		}
+		for ( $guard = 0; $guard < 64; $guard++ ) {
+			$sum = array();
+			for ( $i = 0; $i <= $nx; $i++ ) {
+				for ( $j = 0; $j <= $ny; $j++ ) {
+					$sum[ $i ][ $j ] = $i && $j ? $free[ $i - 1 ][ $j - 1 ] + $sum[ $i - 1 ][ $j ] + $sum[ $i ][ $j - 1 ] - $sum[ $i - 1 ][ $j - 1 ] : 0;
+				}
+			}
+			$best   = null;
+			$best_a = 0.0;
+			for ( $i0 = 0; $i0 < $nx; $i0++ ) {
+				for ( $j0 = 0; $j0 < $ny; $j0++ ) {
+					if ( ! $free[ $i0 ][ $j0 ] ) {
+						continue;
+					}
+					for ( $i1 = $i0; $i1 < $nx; $i1++ ) {
+						if ( ! $free[ $i1 ][ $j0 ] ) {
+							break;
+						}
+						for ( $j1 = $j0; $j1 < $ny; $j1++ ) {
+							$cnt = $sum[ $i1 + 1 ][ $j1 + 1 ] - $sum[ $i0 ][ $j1 + 1 ] - $sum[ $i1 + 1 ][ $j0 ] + $sum[ $i0 ][ $j0 ];
+							if ( $cnt !== ( $i1 - $i0 + 1 ) * ( $j1 - $j0 + 1 ) ) {
+								break;
+							}
+							$a = ( $xs[ $i1 + 1 ] - $xs[ $i0 ] ) * ( $ys[ $j1 + 1 ] - $ys[ $j0 ] );
+							if ( $a > $best_a ) {
+								$best_a = $a;
+								$best   = array( $i0, $j0, $i1, $j1 );
+							}
+						}
+					}
+				}
+			}
+			if ( ! $best ) {
+				break;
+			}
+			$out[] = array( 'x0' => $xs[ $best[0] ], 'y0' => $ys[ $best[1] ], 'x1' => $xs[ $best[2] + 1 ], 'y1' => $ys[ $best[3] + 1 ] );
+			for ( $i = $best[0]; $i <= $best[2]; $i++ ) {
+				for ( $j = $best[1]; $j <= $best[3]; $j++ ) {
+					$free[ $i ][ $j ] = 0;
+				}
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Strip split of an orthogonal polygon: columns between the vertex x values (dir 'x') or rows
+	 * between the y values (dir 'y'); neighbouring strips with the same runs merge. Largest first.
+	 */
+	private static function strips( array $p, string $dir ): array {
+		$tr   = 'y' === $dir;
+		$q    = $tr ? array_map( static fn( $v ) => array( $v[1], $v[0] ), $p ) : $p;
+		$xs   = self::grid( array_map( static fn( $v ) => $v[0], $q ) );
+		$ys   = self::grid( array_map( static fn( $v ) => $v[1], $q ) );
+		$cols = array();
+		$out  = array();
+		$ny   = count( $ys );
+		for ( $i = 0, $nx = count( $xs ) - 1; $i < $nx; $i++ ) {
+			$runs = array();
+			$j0   = -1;
+			for ( $j = 0; $j <= $ny - 1; $j++ ) {
+				$inside = $j < $ny - 1 && self::in_poly( $q, ( $xs[ $i ] + $xs[ $i + 1 ] ) / 2, ( $ys[ $j ] + $ys[ $j + 1 ] ) / 2 );
+				if ( $inside && $j0 < 0 ) {
+					$j0 = $j;
+				}
+				if ( ! $inside && $j0 >= 0 ) {
+					$runs[] = array( $ys[ $j0 ], $ys[ $j ] );
+					$j0     = -1;
+				}
+			}
+			$last = count( $cols ) - 1;
+			if ( $last >= 0 && $cols[ $last ]['runs'] == $runs && $cols[ $last ]['x1'] == $xs[ $i ] ) {
+				$cols[ $last ]['x1'] = $xs[ $i + 1 ];
+			} else {
+				$cols[] = array( 'runs' => $runs, 'x0' => $xs[ $i ], 'x1' => $xs[ $i + 1 ] );
+			}
+		}
+		foreach ( $cols as $c ) {
+			foreach ( $c['runs'] as $r ) {
+				$out[] = $tr ? array( 'x0' => $r[0], 'x1' => $r[1], 'y0' => $c['x0'], 'y1' => $c['x1'] ) : array( 'x0' => $c['x0'], 'x1' => $c['x1'], 'y0' => $r[0], 'y1' => $r[1] );
+			}
+		}
+		usort(
+			$out,
+			static function ( $a, $b ) {
+				$d = ( $b['x1'] - $b['x0'] ) * ( $b['y1'] - $b['y0'] ) - ( $a['x1'] - $a['x0'] ) * ( $a['y1'] - $a['y0'] );
+				if ( 0.0 != $d ) {
+					return $d <=> 0;
+				}
+				$d = $a['x0'] - $b['x0'];
+				if ( 0.0 != $d ) {
+					return $d <=> 0;
+				}
+				return ( $a['y0'] - $b['y0'] ) <=> 0;
+			}
+		);
+		return $out;
+	}
+
+	private static function bbox_of( array $p ): array {
+		$x0 = INF;
+		$y0 = INF;
+		$x1 = -INF;
+		$y1 = -INF;
+		foreach ( $p as $q ) {
+			$x0 = min( $x0, $q[0] );
+			$y0 = min( $y0, $q[1] );
+			$x1 = max( $x1, $q[0] );
+			$y1 = max( $y1, $q[1] );
+		}
+		return array( 'x0' => $x0, 'y0' => $y0, 'x1' => $x1, 'y1' => $y1 );
+	}
+
+	/* ------------------------------------------------------------------ analysis */
+
+	private static function walls_of_level( array $b, int $lv ): array {
+		return array_values( array_filter( $b['walls'], static fn( $w ) => 'ext' === $w['kind'] || $w['lv'] === $lv ) );
+	}
+
+	private static function level_base( array $b, int $lv ): float {
+		$z = (float) $b['found']['top'];
+		for ( $i = 0; $i < $lv; $i++ ) {
+			$z += $b['levels'][ $i ]['h'];
+		}
+		return $z;
+	}
+
+	/** Outline of the house (outer face of the external walls) and its centre line (port of outlineOf()). */
+	private static function outline_of( array $b ): array {
+		$ext = array_values( array_filter( $b['walls'], static fn( $w ) => 'ext' === $w['kind'] ) );
+		$fs  = array_values( array_filter( self::faces( self::edges_of( $ext ) ), static fn( $f ) => $f['a2'] > 0 ) );
+		if ( ! $fs ) {
+			return array( 'closed' => false, 'loops' => 0 );
+		}
+		usort( $fs, static fn( $p, $q ) => $q['a2'] <=> $p['a2'] );
+		$f      = $fs[0];
+		$cl     = self::clean( $f['poly'], $f['ts'] );
+		$mg     = self::merge( $cl[0], $cl[1] );
+		$center = $mg[0];
+		$outer  = self::offset( $center, array_map( static fn( $t ) => -$t / 2, $mg[1] ) );
+		$inner  = self::offset( $center, array_map( static fn( $t ) => $t / 2, $mg[1] ) );
+		return array(
+			'closed'    => true,
+			'loops'     => count( $fs ),
+			'center'    => $center,
+			'outer'     => $outer,
+			'inner'     => $inner,
+			'ts'        => $mg[1],
+			'ortho'     => self::orthogonal( $outer ) && self::orthogonal( $center ),
+			'area'      => self::area2( $outer ) / 2,
+			'innerArea' => self::area2( $inner ) / 2,
+		);
+	}
+
+	/** Rooms of one level: interior faces of the wall graph, net area after half the wall thicknesses. */
+	private static function rooms_of( array $b, int $lv, array $ol ): array {
+		$fs  = array_filter( self::faces( self::edges_of( self::walls_of_level( $b, $lv ) ) ), static fn( $f ) => $f['a2'] > 0 );
+		$out = array();
+		foreach ( $fs as $f ) {
+			$cl = self::clean( $f['poly'], $f['ts'] );
+			if ( count( $cl[0] ) < 3 ) {
+				continue;
+			}
+			$mg  = self::merge( $cl[0], $cl[1] );
+			$net = self::offset( $mg[0], array_map( static fn( $t ) => $t / 2, $mg[1] ) );
+			$a   = self::area2( $mg[0] ) / 2;
+			if ( $a < 500000 ) {
+				continue; // < 0.5 m²: a slot between walls, not a room
+			}
+			$cx = 0.0;
+			$cy = 0.0;
+			foreach ( $net as $q ) {
+				$cx += $q[0];
+				$cy += $q[1];
+			}
+			$cx /= count( $net );
+			$cy /= count( $net );
+			if ( $ol['closed'] && ! self::in_poly( $ol['center'], $cx, $cy ) ) {
+				continue; // outside the house (yard enclosed by walls)
+			}
+			$key   = $lv . ':' . (int) self::js_round( $cx / 100 ) . ',' . (int) self::js_round( $cy / 100 );
+			$rooms = (array) $b['rooms'];
+			$out[] = array( 'lv' => $lv, 'key' => $key, 'poly' => $mg[0], 'net' => $net, 'area' => max( 0, self::area2( $net ) / 2 ), 'gross' => $a, 'bbox' => self::bbox_of( $net ), 'cx' => $cx, 'cy' => $cy, 'type' => (string) ( $rooms[ $key ] ?? '' ) );
+		}
+		usort(
+			$out,
+			static function ( $p, $q ) {
+				foreach ( array( $q['area'] - $p['area'], $p['cx'] - $q['cx'], $p['cy'] - $q['cy'] ) as $d ) {
+					if ( 0.0 != $d ) {
+						return $d <=> 0;
+					}
+				}
+				return 0;
+			}
+		);
+		return $out;
+	}
+
+	/** Opening kind of the shared plan. */
+	private static function op_kind( string $type ): string {
+		return 'entrance' === $type || 'door' === $type ? 'door' : ( 'terrace' === $type ? 'tdoor' : 'win' );
+	}
+
+	/** Face of box q that opening o (projected onto the outer face) lies on, with its extent. */
+	private static function face_of( array $q, array $o ): ?array {
+		if ( 'x' === $o['ax'] ) {
+			if ( $o['out'] > 0 && abs( $o['c'] - $q['y1'] ) <= 10 ) {
+				return array( 'f' => 'front', 'lo' => $q['x0'], 'hi' => $q['x1'] );
+			}
+			if ( $o['out'] < 0 && abs( $o['c'] - $q['y0'] ) <= 10 ) {
+				return array( 'f' => 'back', 'lo' => $q['x0'], 'hi' => $q['x1'] );
+			}
+		} else {
+			if ( $o['out'] > 0 && abs( $o['c'] - $q['x1'] ) <= 10 ) {
+				return array( 'f' => 'right', 'lo' => $q['y0'], 'hi' => $q['y1'] );
+			}
+			if ( $o['out'] < 0 && abs( $o['c'] - $q['x0'] ) <= 10 ) {
+				return array( 'f' => 'left', 'lo' => $q['y0'], 'hi' => $q['y1'] );
+			}
+		}
+		return null;
+	}
+
+	private static function whole( array $q, array $o ): ?array {
+		$f = self::face_of( $q, $o );
+		return $f && $o['a0'] >= $f['lo'] - 10 && $o['a1'] <= $f['hi'] + 10 ? $f : null;
+	}
+
+	/**
+	 * The drawing as geometry (port of adapt() plus the rooms of every level).
+	 *
+	 * Returns ok (closed orthogonal outline), outer (outline points, m), boxes (footprint rectangles
+	 * relative to the outline bbox min, m), W, D (m), area (m²), rooms (per level: lv, key, type,
+	 * area m², bbox m, net polygon m), ops (per box: the bOps faces like the JS), openings (every
+	 * opening with its wall position, m), walls, levels, origin (outline bbox min, m), seams and the
+	 * normalized build.
+	 *
+	 * @param mixed $raw The build (sanitized or not).
+	 */
+	public static function model( $raw ): array {
+		$b = self::sanitize( $raw );
+		if ( ! $b ) {
+			return array( 'ok' => false, 'reason' => 'empty' );
+		}
+		$b   = json_decode( (string) json_encode( $b ), true );
+		$key = md5( (string) json_encode( $b ) );
+		if ( isset( self::$cache[ $key ] ) ) {
+			return self::$cache[ $key ];
+		}
+		$r = self::compute( $b );
+		self::$cache[ $key ] = $r;
+		if ( count( self::$cache ) > 6 ) {
+			array_shift( self::$cache );
+		}
+		return $r;
+	}
+
+	/**
+	 * Rooms of every level (any drawing, also a non-orthogonal or open one, like roomsOf() in the JS):
+	 * lv, key, type, area m², bbox m, net polygon m – per level largest first.
+	 *
+	 * @param mixed $raw The build.
+	 */
+	public static function rooms( $raw ): array {
+		$b = self::sanitize( $raw );
+		if ( ! $b ) {
+			return array();
+		}
+		$b = json_decode( (string) json_encode( $b ), true );
+		return self::rooms_list( $b, self::outline_of( $b ) );
+	}
+
+	private static function rooms_list( array $b, array $ol ): array {
+		$out = array();
+		for ( $lv = 0, $n = count( $b['levels'] ); $lv < $n; $lv++ ) {
+			foreach ( self::rooms_of( $b, $lv, $ol ) as $rm ) {
+				$out[] = array(
+					'lv'   => $lv,
+					'key'  => $rm['key'],
+					'type' => $rm['type'],
+					'area' => self::m( self::m( $rm['area'] ) ),
+					'bbox' => array( 'x0' => self::m( $rm['bbox']['x0'] ), 'y0' => self::m( $rm['bbox']['y0'] ), 'x1' => self::m( $rm['bbox']['x1'] ), 'y1' => self::m( $rm['bbox']['y1'] ) ),
+					'net'  => array_map( static fn( $p ) => array( self::m( $p[0] ), self::m( $p[1] ) ), $rm['net'] ),
+				);
+			}
+		}
+		return $out;
+	}
+
+	private static function compute( array $b ): array {
+		$ol = self::outline_of( $b );
+		if ( ! $ol['closed'] ) {
+			return array( 'ok' => false, 'reason' => 'open', 'build' => $b );
+		}
+		if ( ! $ol['ortho'] ) {
+			return array( 'ok' => false, 'reason' => 'ortho', 'build' => $b, 'area' => self::m( self::m( $ol['area'] ) ) );
+		}
+		$bb    = self::bbox_of( $ol['outer'] );
+		$n     = count( $b['levels'] );
+		$by_id = array();
+		foreach ( $b['walls'] as $w ) {
+			$by_id[ $w['id'] ] = $w;
+		}
+		// openings: every one on its wall (centre line), the external ones projected onto the outer face
+		$ops      = array();
+		$openings = array();
+		foreach ( $b['openings'] as $op ) {
+			$w = $by_id[ $op['wall'] ] ?? null;
+			if ( ! $w ) {
+				continue;
+			}
+			$s   = self::seg( $w );
+			$len = self::len_c( $s );
+			$ux  = ( $s['bx'] - $s['ax'] ) / $len;
+			$uy  = ( $s['by'] - $s['ay'] ) / $len;
+			$nx  = -$uy;
+			$ny  = $ux;
+			$mx  = $s['ax'] + $ux * self::c( $op['at'] + $op['w'] / 2 );
+			$my  = $s['ay'] + $uy * self::c( $op['at'] + $op['w'] / 2 );
+			$axis = abs( $uy ) < 1e-9 ? 'x' : ( abs( $ux ) < 1e-9 ? 'y' : '' );
+			$info = array( 'id' => $op['id'], 'type' => $op['type'], 'lv' => $op['lv'], 'w' => $op['w'], 'h' => $op['h'], 'sill' => $op['sill'], 'wall' => $w['id'], 'kind' => $w['kind'], 'axis' => $axis, 'x' => self::m( $mx ), 'y' => self::m( $my ), 't' => (float) $w['t'] );
+			if ( 'ext' === $w['kind'] ) {
+				$side = self::in_poly( $ol['center'], $mx + $nx * ( $s['t'] / 2 + 20 ), $my + $ny * ( $s['t'] / 2 + 20 ) ) ? -1 : 1;
+				$ox   = self::js_round( $mx + $side * $nx * $s['t'] / 2 );
+				$oy   = self::js_round( $my + $side * $ny * $s['t'] / 2 );
+				$half = self::c( $op['w'] ) / 2;
+				$o    = array( 'op' => $op, 'kind' => self::op_kind( $op['type'] ), 'y' => self::level_base( $b, $op['lv'] ) + ( 'window' === $op['type'] ? $op['sill'] : 0.02 ) );
+				$info['ox'] = self::m( $ox );
+				$info['oy'] = self::m( $oy );
+				if ( 'x' === $axis ) {
+					$o += array( 'ax' => 'x', 'c' => $oy, 'a0' => $ox - $half, 'a1' => $ox + $half, 'out' => $side * $ny > 0 ? 1 : -1 );
+				} elseif ( 'y' === $axis ) {
+					$o += array( 'ax' => 'y', 'c' => $ox, 'a0' => $oy - $half, 'a1' => $oy + $half, 'out' => $side * $nx > 0 ? 1 : -1 );
+				} else {
+					$openings[] = $info;
+					continue;
+				}
+				$info['out'] = $o['out'];
+				$ops[]       = $o;
+			}
+			$openings[] = $info;
+		}
+		// footprint boxes: the largest-rectangle split, or a strip split that keeps every opening whole
+		$cands = array( self::decompose( $ol['outer'] ), self::strips( $ol['outer'], 'x' ), self::strips( $ol['outer'], 'y' ) );
+		$boxes = $cands[0];
+		foreach ( $cands as $cand ) {
+			$all = true;
+			foreach ( $ops as $o ) {
+				$fits = false;
+				foreach ( $cand as $q ) {
+					if ( self::whole( $q, $o ) ) {
+						$fits = true;
+						break;
+					}
+				}
+				if ( ! $fits ) {
+					$all = false;
+					break;
+				}
+			}
+			if ( $all ) {
+				$boxes = $cand;
+				break;
+			}
+		}
+		$b_ops = array();
+		foreach ( $boxes as $i => $q ) {
+			$b_ops[ $i ] = array( 'front' => array(), 'right' => array(), 'back' => array(), 'left' => array() );
+		}
+		$piece = static function ( int $vi, array $f, array $o, float $lo, float $hi, bool $part ) use ( &$b_ops, $boxes ) {
+			$q  = $boxes[ $vi ];
+			$u0 = 'front' === $f['f'] ? $lo - $q['x0'] : ( 'back' === $f['f'] ? $q['x1'] - $hi : ( 'right' === $f['f'] ? $q['y1'] - $hi : $lo - $q['y0'] ) );
+			$b_ops[ $vi ][ $f['f'] ][] = array( 'kind' => $o['kind'], 'x' => self::r3( self::m( max( 0, $u0 ) ) ), 'y' => self::r3( $o['y'] ), 'w' => self::r3( self::m( $hi - $lo ) ), 'h' => $o['op']['h'], 'fl' => $o['op']['lv'], 'e' => 'entrance' === $o['op']['type'], 'id' => $o['op']['id'], 'part' => $part );
+		};
+		$seams = 0;
+		foreach ( $ops as $o ) {
+			$done = false;
+			foreach ( $boxes as $vi => $q ) {
+				$f = self::whole( $q, $o );
+				if ( $f ) {
+					$piece( $vi, $f, $o, $o['a0'], $o['a1'], false );
+					$done = true;
+					break;
+				}
+			}
+			if ( $done ) {
+				continue;
+			}
+			$seams++; // last resort: the parts on each box face line up into one opening
+			foreach ( $boxes as $vi => $q ) {
+				$f2 = self::face_of( $q, $o );
+				if ( ! $f2 ) {
+					continue;
+				}
+				$lo = max( $o['a0'], $f2['lo'] );
+				$hi = min( $o['a1'], $f2['hi'] );
+				if ( $hi - $lo > 50 ) {
+					$piece( $vi, $f2, $o, $lo, $hi, true );
+				}
+			}
+		}
+		foreach ( $b_ops as $vi => $faces ) {
+			foreach ( $faces as $f => $list ) {
+				usort( $list, static fn( $p, $s2 ) => ( $p['x'] - $s2['x'] ?: $p['y'] - $s2['y'] ) <=> 0 );
+				$b_ops[ $vi ][ $f ] = $list;
+			}
+		}
+		$rooms = self::rooms_list( $b, $ol );
+		$h_tot = (float) $b['found']['top'];
+		foreach ( $b['levels'] as $l ) {
+			$h_tot += $l['h'];
+		}
+		return array(
+			'ok'       => true,
+			'outer'    => array_map( static fn( $p ) => array( self::m( $p[0] ), self::m( $p[1] ) ), $ol['outer'] ),
+			'center'   => array_map( static fn( $p ) => array( self::m( $p[0] ), self::m( $p[1] ) ), $ol['center'] ),
+			'boxes'    => array_map( static fn( $q ) => array( 'x0' => self::m( $q['x0'] - $bb['x0'] ), 'y0' => self::m( $q['y0'] - $bb['y0'] ), 'x1' => self::m( $q['x1'] - $bb['x0'] ), 'y1' => self::m( $q['y1'] - $bb['y0'] ) ), $boxes ),
+			'ops'      => $b_ops,
+			'W'        => self::m( $bb['x1'] - $bb['x0'] ),
+			'D'        => self::m( $bb['y1'] - $bb['y0'] ),
+			'origin'   => array( self::m( $bb['x0'] ), self::m( $bb['y0'] ) ),
+			'area'     => self::m( self::m( $ol['area'] ) ),
+			'rooms'    => $rooms,
+			'openings' => $openings,
+			'walls'    => $b['walls'],
+			'levels'   => $b['levels'],
+			'floors'   => $n,
+			'attic'    => (bool) $b['attic'],
+			'plinth'   => (float) $b['found']['top'],
+			'h0'       => self::r3( $h_tot + ( $b['attic'] ? 0.9 : 0 ) ),
+			'loops'    => $ol['loops'],
+			'seams'    => $seams,
+			'build'    => $b,
+		);
 	}
 }

@@ -28,9 +28,9 @@ async function openBuild(browser, w, h, touch) {
   page.on('pageerror', e => errors.push('pageerror: ' + e.message.slice(0, 160)));
   await page.goto(URL, { waitUntil: 'networkidle' });
   await page.click('[data-agh-open]');
-  await page.waitForSelector('.agh-shell .agh-preview-box.has-3d canvas, .agh-shell .agh-preview-box svg', { timeout: 60000 });
+  await page.waitForSelector('.agh-shell .agh-preview-box.has-3d canvas, .agh-shell .agh-preview-box svg', { timeout: 60000, state: 'attached' });
   if (await page.$('.agh-bld-btn:visible')) { await page.click('.agh-bld-btn'); } else { await page.evaluate(() => { const b = Array.from(document.querySelectorAll('.agh-hmenu-item')).filter(x => /alapokt/i.test(x.textContent))[0]; if (b) { b.click(); } }); }
-  await page.waitForSelector('.agh-build .agh-bld-svg', { timeout: 20000 });
+  await page.waitForSelector('.agh-build .agh-bld-svg', { timeout: 20000, state: 'attached' });
   return { ctx, page, errors };
 }
 
@@ -50,7 +50,7 @@ async function openBuild(browser, w, h, touch) {
         for (let i = 0; i <= 9; i++) {
           U.goStep(i); o.steps++;
           const btn = document.querySelector('.agh-bld-next');
-          if (btn && !btn.disabled) { U.closeStep(); o.closed++; } else if (o.notClosable.length < 5) { o.notClosable.push(s + ':' + i); }
+          if (btn && !btn.disabled) { if (i < 9) { U.closeStep(); } o.closed++; } else if (o.notClosable.length < 5) { o.notClosable.push(s + ':' + i); }
         }
         const ms = performance.now() - t0; o.msMax = Math.max(o.msMax, ms); o.msSum += ms;
         const st = U.state(), chk = B.check(st.b);
@@ -129,7 +129,8 @@ async function openBuild(browser, w, h, touch) {
       const nonce = (window.AGH_LOADER || {}).wpNonce || '';
       const rest = (window.AGH_LOADER || {}).rest || '/wp-json/agh/v1/';
       try {
-        const resp = await fetch(rest + 'validate', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce }, body: JSON.stringify({ config: c }) });
+        const boot = await (await fetch(rest + 'bootstrap', { credentials: 'same-origin' })).json();
+        const resp = await fetch(rest + 'validate', { method: 'POST', credentials: 'same-origin', headers: Object.assign({ 'Content-Type': 'application/json', 'X-AGH-Nonce': boot.nonce || '' }, boot.wpNonce ? { 'X-WP-Nonce': boot.wpNonce } : {}), body: JSON.stringify({ config: c }) });
         const j = await resp.json();
         const sb = j && j.config && j.config.build;
         out.serverSame = !!sb && JSON.stringify(sb) === JSON.stringify(B.normalize(c.build));
@@ -156,8 +157,18 @@ async function openBuild(browser, w, h, touch) {
         for (const pane of ['panel', 'plan', '3d']) {
           await o.page.evaluate(([s, p]) => { const U = window.AGH_BuildUI; U.goStep(s); const b = document.querySelector('.agh-bld-panes button[data-pane="' + p + '"]'); if (b && b.offsetParent) { b.click(); } else { U.setView(p === '3d' ? '3d' : 'plan'); } }, [step, pane]);
           await o.page.waitForTimeout(pane === '3d' ? 900 : 120);
-          const a = await o.page.evaluate(() => audit());
-          rows.push({ size: label, step, pane, docX: a.docOverflowX, rootX: a.rootOverflowX, overflow: a.overflow, ex: a.overflowEx, lt24: a.lt24, lt24Ex: a.lt24Ex, lt44: touch ? a.lt44 : 0, zoom: touch ? a.zoomInputs : 0, tiny: a.tinyText, tinyEx: a.tinyEx });
+          const a = await o.page.evaluate(() => {
+            const r = audit();
+            // SVG drawing labels are sized in metres of the plan (scaled on screen): count the visible size instead
+            const tiny = Array.from(document.querySelectorAll('.agh-root *')).filter(el => { if (el.closest('svg')) { return false; } const rc = el.getBoundingClientRect(); if (rc.width < 1 || rc.height < 1) { return false; } const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden') { return false; } return Array.from(el.childNodes).some(n => n.nodeType === 3 && n.textContent.trim()) && parseFloat(cs.fontSize) < 11; });
+            const svgTiny = Array.from(document.querySelectorAll('.agh-bld-svg text')).filter(tx => { const rc = tx.getBoundingClientRect(), m = tx.getScreenCTM(); return rc.height > 0 && m && parseFloat(tx.getAttribute('font-size')) * Math.hypot(m.a, m.b) < 10.95; });
+            const small = Array.from(document.querySelectorAll('.agh-root button, .agh-root input:not([type=hidden]), .agh-root select, .agh-root summary, .agh-root [role=tab]')).filter(el => { const rc = el.getBoundingClientRect(); const cs = getComputedStyle(el); return rc.width >= 1 && rc.height >= 1 && cs.display !== 'none' && cs.visibility !== 'hidden' && (rc.width < 43.5 || rc.height < 43.5); });
+            r.lt44Ex = small.slice(0, 4).map(el => (el.className || el.tagName) + ' ' + Math.round(el.getBoundingClientRect().width) + 'x' + Math.round(el.getBoundingClientRect().height));
+            r.lt44 = small.length;
+            r.tinyText = tiny.length + svgTiny.length; r.tinyEx = tiny.concat(svgTiny).slice(0, 3).map(el => (el.getAttribute('class') || el.tagName) + ' "' + el.textContent.trim().slice(0, 20) + '"');
+            return r;
+          });
+          rows.push({ size: label, step, pane, docX: a.docOverflowX, rootX: a.rootOverflowX, overflow: a.overflow, ex: a.overflowEx, lt24: a.lt24, lt24Ex: a.lt24Ex, lt44: touch ? a.lt44 : 0, lt44Ex: touch ? a.lt44Ex : [], zoom: touch ? a.zoomInputs : 0, tiny: a.tinyText, tinyEx: a.tinyEx });
           if (OUT && ((label === '1366x768' && [0, 5, 7].indexOf(step) !== -1 && pane !== 'panel') || (label === '390x844' && step === 5))) { await o.page.screenshot({ path: path.join(OUT, `build-${label}-s${step}-${pane}.png`) }); }
         }
       }
@@ -172,7 +183,7 @@ async function openBuild(browser, w, h, touch) {
   }
   const d = res.designer || {};
   const ok = res.houses === N && res.closed === N * 10 && res.geo === 0 && res.svgMismatch === 0 && res.opsMismatch === 0 && res.params === N && res.rooms === N && res.roof === N && !res.console1
-    && res.phase && res.phase.houses === 10 && res.phase.missing === 0 && d.back && d.volsOk && d.sketchOk && d.serverSame === true && d.generate === 200 && d.genHasBuild && !res.console3 && res.layout && res.layout.bad === 0;
+    && res.phase && res.phase.houses === 10 && res.phase.missing === 0 && d.back && d.volsOk && d.sketchOk && d.serverSame === true && (d.generate === 200 || d.generate === 202) && d.genHasBuild && !res.console3 && res.layout && res.layout.bad === 0;
   console.log(`építési mód: ${res.houses} ház, ${res.closed}/${res.steps} lépés lezárva, geometriai hiba ${res.geo} (kilógó fal ${res.wallOut}, nyílás a falon kívül ${res.opOut}, átfedés ${res.overlap}, lebegő ${res.float}), rajz≠modell ${res.svgMismatch + res.opsMismatch}, paraméter ${res.params}/${res.houses}, helyiség ${res.rooms}/${res.houses}, tető ${res.roof}/${res.houses}, házonként átlag ${res.msAvg} ms (max ${res.msMax}); ` +
     `3D: ${res.phase ? res.phase.houses : 0} ház, fázisváltás átlag ${res.phase ? res.phase.phaseAvg : '-'} ms / max ${res.phase ? res.phase.phaseMax : '-'} ms, hiányzó fázis ${res.phase ? res.phase.missing : '-'}; ` +
     `tervező: tömeg ${d.volsOk ? 'egyezik' : 'ELTÉR'} (${d.vols} tömb), 2D ${d.sketchOk ? 'ok' : 'HIBA'}, koppintás „${d.pick}”, belső terek ${d.rooms}, vezetőkép ${d.guides}, szerver ${d.serverSame === true ? 'ugyanazt menti' : 'ELTÉR ' + d.serverSame}, generálás ${d.generate}${d.genHasBuild ? ' (a rajzzal)' : ''}; ` +

@@ -13,8 +13,10 @@
 namespace AutoGroweHome\Frontend;
 
 use AutoGroweHome\Ai\Providers;
+use AutoGroweHome\Build\Build;
 use AutoGroweHome\License\Features;
 use AutoGroweHome\License\Payments;
+use AutoGroweHome\Params\Definitions;
 use AutoGroweHome\Params\Registry;
 use AutoGroweHome\Quote\QuoteService;
 use AutoGroweHome\RateLimit\RateLimiter;
@@ -126,7 +128,7 @@ final class Frontend {
 
 	public static function loader_config( bool $floating ): array {
 		$label = (string) Settings::get( 'general.button_label', '' );
-		return array(
+		$cfg   = array(
 			'css'      => AGH_URL . 'assets/css/agh-designer.css?ver=' . rawurlencode( self::asset_ver( 'assets/css/agh-designer.css' ) ),
 			'js'       => AGH_URL . 'assets/js/agh-designer.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-designer.js' ) ),
 			'sketch'   => AGH_URL . 'assets/js/agh-sketch.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-sketch.js' ) ),
@@ -139,6 +141,41 @@ final class Frontend {
 			'errBoot'  => __( 'A háztervező nem tölthető be. Kérjük, próbáld újra később.', 'autogrowehome' ),
 			'vars'     => self::css_vars(),
 		);
+		// build mode („Építés az alapoktól”): the core module, only while the admin switch is on
+		if ( Build::enabled() ) {
+			$cfg['build'] = self::asset_url( 'assets/js/agh-build.js' );
+		}
+		return $cfg;
+	}
+
+	/** Versioned URL of a plugin asset (the same query as the other assets). */
+	private static function asset_url( string $rel ): string {
+		return AGH_URL . $rel . '?ver=' . rawurlencode( self::asset_ver( $rel ) );
+	}
+
+	/**
+	 * Bootstrap part of build mode (only called while it is switched on): module URLs, the
+	 * defaults and rule packages (assets/data – a missing or invalid file is left out) and the room types.
+	 */
+	private static function build_boot(): array {
+		$out = array(
+			'enabled' => true,
+			'ui'      => self::asset_url( 'assets/js/agh-build-ui.js' ),
+			'scene'   => self::asset_url( 'assets/js/agh-3d-build.js' ),
+		);
+		$defaults = Build::read_json( 'assets/data/build-defaults.json' );
+		if ( null !== $defaults ) {
+			$out['defaults'] = $defaults;
+		}
+		$hu = Build::read_json( 'assets/data/rules/hu.json' );
+		if ( null !== $hu ) {
+			$out['rules'] = array( 'hu' => $hu );
+		}
+		$out['room_types'] = array();
+		foreach ( Definitions::room_types() as $k => $r ) {
+			$out['room_types'][] = array( 'value' => (string) $k, 'label' => $r[0] );
+		}
+		return $out;
 	}
 
 	/* ------------------------------------------------------------------ shortcodes */
@@ -235,7 +272,7 @@ final class Frontend {
 			}
 		}
 		$white = Features::enabled( 'white_label' );
-		return array(
+		$data  = array(
 			'version'   => AGH_VERSION,
 			'nonce'     => wp_create_nonce( 'agh_front' ),
 			'wpNonce'   => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
@@ -298,5 +335,9 @@ final class Frontend {
 				'terms'   => (string) Settings::get( 'legal.terms_url', '' ),
 			),
 		);
+		if ( Build::enabled() ) {
+			$data['build'] = self::build_boot();
+		}
+		return $data;
 	}
 }

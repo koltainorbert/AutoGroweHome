@@ -25,7 +25,7 @@
 	function fmt(v, d) {
 		if (v === null || v === undefined || !isFinite(v)) { return '–'; }
 		d = d === undefined ? 2 : d;
-		var key = d, lang = (document.documentElement.lang || 'hu').slice(0, 2);
+		var key = d, lang = String((A && A.locale) || document.documentElement.lang || 'hu').replace('_', '-');
 		try { NF[key] = NF[key] || new Intl.NumberFormat(lang, { maximumFractionDigits: d, minimumFractionDigits: 0 }); return NF[key].format(v); } catch (e) { return String(Math.round(v * Math.pow(10, d)) / Math.pow(10, d)); }
 	}
 	function getP(o, p) { return p.split('.').reduce(function (a, k) { return a === null || a === undefined ? undefined : a[k]; }, o); }
@@ -45,7 +45,7 @@
 		fitView();
 		renderAll(true);
 	}
-	function close() { if (D.root && D.root.parentNode) { D.root.parentNode.removeChild(D.root); } window.removeEventListener('resize', onResize); D = {}; st = null; }
+	function close() { if (D.ro) { D.ro.disconnect(); } if (D.root && D.root.parentNode) { D.root.parentNode.removeChild(D.root); } window.removeEventListener('resize', onResize); D = {}; st = null; }
 	function snapshot() { return JSON.stringify(st.b); }
 	function change(fn, opts) {
 		opts = opts || {};
@@ -93,8 +93,8 @@
 	function onResize() { if (st && st.view === '3d') { show3D(); } }
 	function setPane(p) {
 		st.pane = p;
+		D.root.setAttribute('data-pane', p); // first: the plan must be laid out before it is drawn
 		if (p === 'plan' || p === '3d') { setView(p === '3d' ? '3d' : 'plan'); }
-		D.root.setAttribute('data-pane', p);
 		Array.prototype.forEach.call(D.panes.children, function (b) { b.setAttribute('aria-selected', b.getAttribute('data-pane') === p ? 'true' : 'false'); });
 	}
 	function renderAll(first, keepPanel) {
@@ -568,6 +568,8 @@
 		D.phaseBar = el('div', { class: 'agh-bld-phase', hidden: true });
 		D.stage.appendChild(D.tabs); D.stage.appendChild(D.planWrap); D.stage.appendChild(D.view3); D.stage.appendChild(D.phaseBar);
 		bindPlan();
+		// redraw when the plan gets its size (pane switch on phones, window resize): labels stay pixel-sized
+		if (window.ResizeObserver) { D.ro = new ResizeObserver(function () { if (st && st.view === 'plan' && D.svg.getBoundingClientRect().width) { renderPlan(); } }); D.ro.observe(D.planWrap); }
 	}
 	function setView(v) {
 		st.view = v;
@@ -608,7 +610,7 @@
 		var p = plot(), ol = B.outline(st.b), x0 = 0, y0 = 0, x1 = p.w, y1 = p.d;
 		var pts = [];
 		st.b.walls.forEach(function (w) { pts.push(w.a, w.b); });
-		if (pts.length) { var bb = bbox(pts); x0 = Math.min(bb.x0, 0) ; y0 = Math.min(bb.y0, 0); x1 = Math.max(bb.x1, p.w); y1 = Math.max(bb.y1, p.d); if (ol.closed && (p.w * p.d) > 6 * (bb.x1 - bb.x0) * (bb.y1 - bb.y0)) { x0 = bb.x0 - 3; y0 = bb.y0 - 3; x1 = bb.x1 + 3; y1 = bb.y1 + 4; } }
+		if (pts.length) { var bb = bbox(pts); x0 = Math.min(bb.x0, 0) ; y0 = Math.min(bb.y0, 0); x1 = Math.max(bb.x1, p.w); y1 = Math.max(bb.y1, p.d); if (ol.closed && (p.w * p.d) > 6 * (bb.x1 - bb.x0) * (bb.y1 - bb.y0)) { x0 = bb.x0 - 1.6; y0 = bb.y0 - 1.6; x1 = bb.x1 + 1.6; y1 = bb.y1 + 1.6; } }
 		var m = 1.2;
 		st.vb = { x: x0 - m, y: y0 - m, w: x1 - x0 + 2 * m, h: y1 - y0 + 2 * m + 0.8 };
 	}
@@ -621,29 +623,32 @@
 		s.setAttribute('data-tool', st.tool);
 		var lw = 1 / k; // one screen pixel in metres
 		// grid
-		var g = sv('g', { class: 'agh-bld-grid' }), step = vb.w / (k ? 1 : 1) < 14 ? 0.1 : 1;
-		var gx0 = Math.floor(vb.x), gx1 = Math.ceil(vb.x + vb.w), gy0 = Math.floor(vb.y), gy1 = Math.ceil(vb.y + vb.h), d1 = '', d2 = '';
+		// the grid covers what is actually on screen (the view box is letterboxed into the panel)
+		var rc = s.getBoundingClientRect(), ex = rc.width ? Math.max(0, (rc.width / k - vb.w) / 2) : 0, ey = rc.height ? Math.max(0, (rc.height / k - vb.h) / 2) : 0;
+		var g = sv('g', { class: 'agh-bld-grid' });
+		var gx0 = Math.floor(vb.x - ex), gx1 = Math.ceil(vb.x + vb.w + ex), gy0 = Math.floor(vb.y - ey), gy1 = Math.ceil(vb.y + vb.h + ey), d1 = '', d2 = '';
 		if (k * 0.1 >= 6) { for (var x = gx0; x <= gx1; x += 0.1) { d1 += 'M' + r3(x) + ' ' + gy0 + 'V' + gy1; } for (var y = gy0; y <= gy1; y += 0.1) { d1 += 'M' + gx0 + ' ' + r3(y) + 'H' + gx1; } }
 		for (var x2 = gx0; x2 <= gx1; x2++) { d2 += 'M' + x2 + ' ' + gy0 + 'V' + gy1; }
 		for (var y2 = gy0; y2 <= gy1; y2++) { d2 += 'M' + gx0 + ' ' + y2 + 'H' + gx1; }
 		if (d1) { g.appendChild(sv('path', { d: d1, class: 'agh-bld-g1', 'stroke-width': lw })); }
 		g.appendChild(sv('path', { d: d2, class: 'agh-bld-g2', 'stroke-width': lw }));
 		s.appendChild(g);
-		void step;
 		// plot and street
 		s.appendChild(sv('rect', { x: 0, y: 0, width: p.w, height: p.d, class: 'agh-bld-plot', 'stroke-width': 2 * lw, 'stroke-dasharray': (8 * lw) + ' ' + (5 * lw) }));
-		var street = sv('text', { x: p.w / 2, y: p.d + 0.7, class: 'agh-bld-street', 'font-size': 12 * lw, 'text-anchor': 'middle' }); street.textContent = t('b_street'); s.appendChild(street);
+		var street = label(p.w / 2, p.d + 0.7, lw, { class: 'agh-bld-street', 'font-size': 12, 'text-anchor': 'middle' }); street.t.textContent = t('b_street'); s.appendChild(street.g);
 		// rooms of the level
 		var rs = B.rooms(b, lv), defs = A.defaultRoomTypes(rs), names = {};
 		A.roomTypes().forEach(function (o) { names[o[0]] = o[1]; });
 		var gr = sv('g', { class: 'agh-bld-rooms' });
 		rs.forEach(function (r, i) {
 			gr.appendChild(sv('polygon', { points: r.net.map(function (q) { return r3(q[0] / 1000) + ',' + r3(q[1] / 1000); }).join(' '), class: 'agh-bld-room r' + (i % 6) }));
-			var fs = Math.max(9, Math.min(13, Math.sqrt(r.area / 1e6) * 2.6)) * lw;
-			var tx = sv('text', { x: r3(r.cx / 1000), y: r3(r.cy / 1000), class: 'agh-bld-rlabel', 'font-size': fs, 'text-anchor': 'middle' });
-			var t1 = sv('tspan', { x: r3(r.cx / 1000), dy: -0.2 * fs }); t1.textContent = names[r.type || defs[i]] || '';
-			var t2 = sv('tspan', { x: r3(r.cx / 1000), dy: 1.2 * fs, class: 'agh-bld-rarea' }); t2.textContent = fmt(r.area / 1e6, 1) + ' m²';
-			tx.appendChild(t1); tx.appendChild(t2); gr.appendChild(tx);
+			var fs = Math.max(12, Math.min(15, Math.sqrt(r.area / 1e6) * 3));
+			var lb = label(r.cx / 1000, r.cy / 1000, lw, { class: 'agh-bld-rlabel', 'font-size': fs, 'text-anchor': 'middle' });
+			var nm = names[r.type || defs[i]] || '', roomPx = (r.bbox.x1 - r.bbox.x0) / 1000 * k - 8;
+			if (nm.length * fs * 0.58 > roomPx) { nm = nm.length * fs * 0.58 * 0.6 > roomPx ? '' : nm.split(/\s*\+\s*|\s+/)[0]; }
+			var t1 = sv('tspan', { x: 0, dy: -0.2 * fs }); t1.textContent = nm;
+			var t2 = sv('tspan', { x: 0, dy: 1.2 * fs, class: 'agh-bld-rarea' }); t2.textContent = fmt(r.area / 1e6, 1) + ' m²';
+			lb.t.appendChild(t1); lb.t.appendChild(t2); gr.appendChild(lb.g);
 		});
 		s.appendChild(gr);
 		// stair hole
@@ -671,17 +676,21 @@
 		s.appendChild(go);
 		// length labels of the walls on this level
 		if (k > 8) {
-			var gl = sv('g', { class: 'agh-bld-dims' });
+			var gl = sv('g', { class: 'agh-bld-dims' }), cxs = 0, cys = 0, nW = 0;
+			b.walls.forEach(function (w) { if (w.kind === 'ext') { cxs += w.a[0] + w.b[0]; cys += w.a[1] + w.b[1]; nW += 2; } });
+			cxs = nW ? cxs / nW : 0; cys = nW ? cys / nW : 0;
 			b.walls.forEach(function (w) {
 				if (!(w.kind === 'ext' || w.lv === lv)) { return; }
 				var L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]);
 				if (L * k < 46) { return; }
 				var ux = (w.b[0] - w.a[0]) / L, uy = (w.b[1] - w.a[1]) / L, nx = -uy, ny = ux, off = w.t / 2 + 10 * lw;
+				// external walls: the length outside the house; inner walls: on their left side
+				if (w.kind === 'ext' && nW && nx * ((w.a[0] + w.b[0]) / 2 - cxs) + ny * ((w.a[1] + w.b[1]) / 2 - cys) < 0) { nx = -nx; ny = -ny; }
 				var mx = (w.a[0] + w.b[0]) / 2 + nx * off, my = (w.a[1] + w.b[1]) / 2 + ny * off, ang = Math.atan2(uy, ux) * 180 / Math.PI;
 				if (ang > 90 || ang < -90) { ang += 180; }
-				var tt = sv('text', { x: r3(mx), y: r3(my), class: 'agh-bld-dim', 'font-size': 10.5 * lw, 'text-anchor': 'middle', 'dominant-baseline': 'middle', transform: 'rotate(' + r3(ang) + ' ' + r3(mx) + ' ' + r3(my) + ')' });
-				tt.textContent = fmt(L, 2);
-				gl.appendChild(tt);
+				var tt = label(mx, my, lw, { class: 'agh-bld-dim', 'font-size': 11.5, 'text-anchor': 'middle', 'dominant-baseline': 'middle' }, ang);
+				tt.t.textContent = fmt(L, 2);
+				gl.appendChild(tt.g);
 			});
 			s.appendChild(gl);
 		}
@@ -694,12 +703,20 @@
 			if (st.tool === 'rect') { s.appendChild(sv('rect', { x: Math.min(d0[0], dp[0]), y: Math.min(d0[1], dp[1]), width: Math.abs(dp[0] - d0[0]), height: Math.abs(dp[1] - d0[1]), class: 'agh-bld-ghost', 'stroke-width': 2 * lw })); }
 			else { s.appendChild(sv('line', { x1: d0[0], y1: d0[1], x2: dp[0], y2: dp[1], class: 'agh-bld-ghost', 'stroke-width': 2 * lw })); }
 			var gl2 = Math.hypot(dp[0] - d0[0], dp[1] - d0[1]);
-			var lab = sv('text', { x: dp[0] + 10 * lw, y: dp[1] - 10 * lw, class: 'agh-bld-ghostlabel', 'font-size': 12 * lw }); lab.textContent = st.tool === 'rect' ? fmt(Math.abs(dp[0] - d0[0])) + ' × ' + fmt(Math.abs(dp[1] - d0[1])) + ' m' : fmt(gl2) + ' m'; s.appendChild(lab);
+			var lab = label(dp[0] + 10 * lw, dp[1] - 10 * lw, lw, { class: 'agh-bld-ghostlabel', 'font-size': 12 }); lab.t.textContent = st.tool === 'rect' ? fmt(Math.abs(dp[0] - d0[0])) + ' × ' + fmt(Math.abs(dp[1] - d0[1])) + ' m' : fmt(gl2) + ' m'; s.appendChild(lab.g);
 		}
 		if (st.cursor) { s.appendChild(sv('circle', { cx: st.cursor[0], cy: st.cursor[1], r: 4 * lw, class: 'agh-bld-cursor' })); }
 		D.status.textContent = st.cursor ? 'X ' + fmt(st.cursor[0]) + ' m · Y ' + fmt(st.cursor[1]) + ' m' + (st.snapTo ? ' · ' + t('b_snap_' + st.snapTo) : '') : t('b_hint_' + st.tool);
 	}
 	function r3(v) { return Math.round(v * 1000) / 1000; }
+	// Text in screen pixels at a plan point: the label lives in a group scaled by one pixel in metres,
+	// so the browser lays out a normal 12 px font (tiny fractional font sizes in metres get garbled).
+	function label(x, y, lw, attrs, rot) {
+		var g = sv('g', { transform: 'translate(' + r3(x) + ' ' + r3(y) + ') scale(' + lw + ')' + (rot ? ' rotate(' + r3(rot) + ')' : '') });
+		var tx = sv('text', Object.assign({ x: 0, y: 0 }, attrs));
+		g.appendChild(tx);
+		return { g: g, t: tx };
+	}
 	function wallPoly(w, ends) {
 		var L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) || 1, ux = (w.b[0] - w.a[0]) / L, uy = (w.b[1] - w.a[1]) / L, nx = -uy * w.t / 2, ny = ux * w.t / 2;
 		var ea = ends[w.a[0].toFixed(2) + ',' + w.a[1].toFixed(2)] > 1 ? w.t / 2 : 0, eb = ends[w.b[0].toFixed(2) + ',' + w.b[1].toFixed(2)] > 1 ? w.t / 2 : 0;

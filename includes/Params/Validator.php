@@ -158,6 +158,9 @@ final class Validator {
 					}
 				}
 				return $out;
+			case 'build':
+				// the build-mode drawing: the exact port of the browser's normalize(); empty → array()
+				return \AutoGroweHome\Build\Build::sanitize( $value );
 			case 'catalog':
 				$v = is_scalar( $value ) ? sanitize_key( (string) $value ) : '';
 				return ( '' === $v || Catalog::exists( $def['catalog'], $v ) ) ? $v : '';

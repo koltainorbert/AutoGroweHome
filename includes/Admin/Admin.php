@@ -302,6 +302,9 @@ final class Admin {
 					array( 'start_view', 'select', __( 'Kezdőnézet', 'autogrowehome' ), __( 'Mivel nyíljon meg a tervező. A látogató bármikor átválthat, a választását a böngészője megjegyzi.', 'autogrowehome' ), array( 'options' => array( 'wizard' => __( 'Gyors varázsló', 'autogrowehome' ), 'designer' => __( 'Teljes tervező', 'autogrowehome' ) ) ) ),
 					array( 'show_tour', 'bool', __( 'Gyorsbemutató első megnyitáskor', 'autogrowehome' ) ),
 				),
+				'build'    => array(
+					array( 'enabled', 'bool', __( 'Építés az alapoktól', 'autogrowehome' ), __( 'Új belépés a varázslóban: a házat lépésről lépésre, az alaptól lehet felépíteni (kitűzés, földmunka, alap, falak, nyílások, födém). Kikapcsolva a tervező pontosan a korábbi módon működik.', 'autogrowehome' ) ),
+				),
 			),
 			'limits'     => array(
 				'limits' => array(

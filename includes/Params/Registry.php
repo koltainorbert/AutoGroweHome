@@ -48,7 +48,12 @@ final class Registry {
 
 		$fields = array();
 		$order  = 0;
+		$build_on = \AutoGroweHome\Build\Build::enabled();
 		foreach ( Definitions::fields() as $def ) {
+			// the build-mode drawing exists only while the admin switch is on (off = exactly the old schema)
+			if ( 'build' === $def['type'] && ! $build_on ) {
+				continue;
+			}
 			$def['builtin'] = true;
 			$def['sort']    = $order++;
 			$fields[ $def['id'] ] = $def;

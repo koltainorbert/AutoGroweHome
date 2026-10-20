@@ -182,6 +182,9 @@ final class Settings {
 				'show_tour'    => true,
 				'start_view'   => 'wizard',
 			),
+			'build'      => array(
+				'enabled' => false,
+			),
 			'emails'     => array(
 				'contractor_subject' => '',
 				'contractor_body'    => '',

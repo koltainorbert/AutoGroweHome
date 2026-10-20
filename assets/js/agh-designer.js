@@ -2210,7 +2210,7 @@
 	}
 	function buildApi() {
 		return {
-			host: els.build, t: t, tf: tf, icon: icon,
+			host: els.build, t: t, tf: tf, icon: icon, locale: S.locale,
 			config: function () { return S.config; },
 			field: function (id) { return S.fields[id] || null; },
 			apply: applyBuild,
@@ -2258,7 +2258,7 @@
 	}
 	function buildRoomTypes() {
 		var src = (S.boot.build && S.boot.build.room_types) || {}, out = [];
-		if (Array.isArray(src)) { src.forEach(function (o) { if (Array.isArray(o)) { out.push([o[0], o[1]]); } else if (o && o.id) { out.push([o.id, o.label || o.name || o.id]); } }); }
+		if (Array.isArray(src)) { src.forEach(function (o) { if (Array.isArray(o)) { out.push([o[0], o[1]]); } else if (o && (o.id || o.value)) { out.push([o.value || o.id, o.label || o.name || o.value || o.id]); } }); }
 		else { Object.keys(src).forEach(function (k) { var v = src[k]; out.push([k, typeof v === 'string' ? v : (v && (v.label || v[0])) || k]); }); }
 		return out;
 	}

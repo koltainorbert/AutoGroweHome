@@ -332,6 +332,53 @@ final class PromptEngine {
 	}
 
 	/**
+	 * Build mode: the masonry of the drawn house in English ("load-bearing walls of 38 cm ceramic masonry
+	 * blocks with 12 cm EPS insulation"), from the main (longest) external wall. Empty when build mode is
+	 * off, the project has no drawing or the drawing is not a usable house.
+	 */
+	public static function masonry_phrase( array $c ): string {
+		if ( empty( $c['build'] ) || ! is_array( $c['build'] ) || ! \AutoGroweHome\Build\Build::enabled() ) {
+			return '';
+		}
+		$g = \AutoGroweHome\Build\Build::model( $c['build'] );
+		if ( empty( $g['ok'] ) ) {
+			return '';
+		}
+		$main = null;
+		$best = -1.0;
+		foreach ( $g['walls'] as $w ) {
+			$len = hypot( (float) $w['b'][0] - (float) $w['a'][0], (float) $w['b'][1] - (float) $w['a'][1] );
+			if ( 'ext' === $w['kind'] && $len > $best ) {
+				$best = $len;
+				$main = $w;
+			}
+		}
+		if ( ! $main ) {
+			return '';
+		}
+		$mats = array(
+			'ceramic'        => 'ceramic masonry blocks',
+			'aac'            => 'aerated concrete blocks',
+			'sand_lime'      => 'sand-lime blocks',
+			'formwork_block' => 'concrete formwork blocks',
+			'timber_frame'   => 'timber frame',
+			'adobe'          => 'adobe (rammed earth) blocks',
+		);
+		$ins = array(
+			'eps'          => 'EPS',
+			'graphite_eps' => 'graphite EPS',
+			'mineral_wool' => 'mineral wool',
+			'wood_fibre'   => 'wood fibre',
+		);
+		$cm  = static fn( $m ) => (string) round( (float) $m * 100 );
+		$out = 'load-bearing walls of ' . $cm( $main['t'] ) . ' cm ' . ( $mats[ $main['mat'] ] ?? str_replace( '_', ' ', (string) $main['mat'] ) );
+		if ( isset( $ins[ $main['insul'] ?? '' ] ) && (float) ( $main['insul_t'] ?? 0 ) > 0 ) {
+			$out .= ' with ' . $cm( $main['insul_t'] ) . ' cm ' . $ins[ $main['insul'] ] . ' insulation';
+		}
+		return $out;
+	}
+
+	/**
 	 * Two phrase lists joined with a comma (either may be empty).
 	 */
 	private static function join_phrases( string $a, string $b ): string {
@@ -399,6 +446,10 @@ final class PromptEngine {
 		}
 
 		$facade   = self::phrases( array( 'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'facade_texture', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number' ), $c );
+		$masonry  = self::masonry_phrase( $c );
+		if ( '' !== $masonry ) {
+			$facade = self::join_phrases( $facade, $masonry );
+		}
 		$openings = self::phrases( array( 'window_style', 'window_frame_material', 'window_frame_color', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading' ), $c );
 		$garden   = self::phrases( array( 'garden_style', 'garden_features', 'garden_density', 'tree_types', 'terrace_area', 'terrace_floor', 'driveway', 'fence', 'gate', 'garage', 'entrance_canopy', 'outdoor_covered', 'exterior_steps', 'balcony', 'neighbors', 'orientation' ), $c );
 		// the surroundings: the chosen landscape, or the one that suits the style (as in the 3D view)

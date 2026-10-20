@@ -999,6 +999,14 @@
 		if (front) {
 			var fo = b.openings.filter(function (op) { return op.wall === front.id && op.lv === 0; })[0];
 			if (fo) { fo.type = 'entrance'; fo.w = Math.min(fo.w, 1.1); fo.h = 2.2; fo.sill = 0; }
+			else { // no window there (short wall or partitions joined): a door in the first free stretch
+				var fcs = clearSpan(nb, front, 0), pos = null;
+				for (var at2 = M(fcs.s0) + 0.3; at2 + 1.0 <= M(fcs.s1) - 0.3 && pos === null; at2 += 0.1) {
+					var a0 = C(at2), a1 = C(at2 + 1.0);
+					if (!fcs.mid.some(function (mz) { return a0 < mz[1] + 150 && a1 > mz[0] - 150; }) && !b.openings.some(function (op) { return op.wall === front.id && op.lv === 0 && C(op.at) < a1 + 300 && C(op.at + op.w) > a0 - 300; })) { pos = r2(at2); }
+				}
+				if (pos !== null) { b.openings.push({ id: 'o' + (++seq), wall: front.id, lv: 0, type: 'entrance', at: pos, w: 1.0, h: 2.2, sill: 0 }); }
+			}
 		}
 		b.walls.filter(function (w) { return w.kind === 'part'; }).forEach(function (w) {
 			var s = seg(normalize({ walls: [w] }).walls[0] || w), Lc = M(lenC(s));
