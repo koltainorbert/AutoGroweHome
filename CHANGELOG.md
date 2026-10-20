@@ -1,5 +1,21 @@
 # Változásnapló
 
+## 1.14.0 – 2026-10-20
+
+Norbi: „Házépítés az alapoktól funkció kell … kőműves módra, nulláról felépíteni a házat”, kiegészítve: „alkalmazza vagy ne alkalmazza a magyar törvényeket az adott helyen”. Munkaprompt: `docs/FELADAT-1.14.0.md`, leírás: `docs/EPITESI-MOD.md`.
+
+- **Új belépés: „Építés az alapoktól”** (admin kapcsoló `build.enabled`, alap: **ki**). Kikapcsolva a tervező pontosan az 1.12.1 szerint működik: nem töltődik be új fájl, a séma, az alapértékek, a szerveroldali modell és a prompt bájtra ugyanaz. Bekapcsolva a varázsló első lépésén „Gyors terv” / „Építés az alapoktól” kártya, a fejlécben (telefonon a menüben) gomb.
+- **Lépésvezérlő 0–9** (telek és helyszín, földmunka, alap, alapvezetékek, aljzat, főfalak, válaszfalak, nyílások és áthidalók, koszorú és födém, tető), ellenőrzőlistával és lezárási feltételekkel; a lezárt, de később módosult lépés jelölve. A 10–15. lépés (nyílászárók, gépészet, vakolás, esztrich, szakipar, külső) látszik, 1.14.1–1.14.3-ban jön; az adatmodell előkészítve (`services`, `surfaces`).
+- **2D falszerkesztő**: rács 10 cm, 1 cm pontosság, minden méret számmal; falhúzás, téglalap, L, „a mostani házból” (a kitalált értékek jelölve), illesztés falvéghez/falra/rácsra, végpont- és falhúzás, nyílások elhelyezése és csúsztatása, helyiségek területtel és fajtával, visszavonás/újra, nagyítás egérrel és két ujjal.
+- **Közös terv (`BuildAdapter`)**: falgráf → helyiségek (zárt hurkok, nettó terület) és külső kontúr → a sketch tömegei; a 2D vázlat, a 3D ház, a szerveroldali `BuildingModel`, a vezetőkép és a belső terek ugyanabból a rajzból épülnek. A tető a meglévő generátorral: derékszögű kontúrra (téglalap, L, T, U…) épül, ferde külső falnál a program kiírja, miért nem.
+- **3D építési állás**: fázis-csúszka 0–9 (kitűzés → földmunka → alap → vezetékek → aljzat → falak nyílásokkal → válaszfalak → áthidalók → koszorú és födém → kész ház tetővel), csak láthatóságváltás, a fázisok shaderei és textúrái előre betöltve.
+- **Anyaglista** fázisonként, hulladékszázalékkal, tájékoztató jelleggel (`assets/data/build-defaults.json`, minden érték „nem ellenőrzött”).
+- **Helyszín és előírások**: ország → megye → település, fagyhatár, talaj; kapcsoló Be / Ki / Egyedi; HÉSZ-értékek kézzel, forrás mezővel; magyar szabálycsomag-váz `assets/data/rules/hu.json` (12 szabály, mind `verified: false`, forrás, hatálybalépés, csomagverzió, ellenőrzési dátum; `source_checked` csak a TÉKA 6. § (1) és 9. § (3) helyen). Szakmai figyelmeztetések külön (9 szabály). Ez nem statikai és nem engedélyezési terv – a felület kiírja; a figyelmeztetések soha nem akadályozzák a mentést.
+- **Szerver**: új `build` mező (`Build::sanitize`, a JS normalize pontos portja), `BuildingModel` a rajzból (bekapcsolt módnál), a prompt leírja a falazatot (pl. „load-bearing walls of 38 cm ceramic masonry blocks with 12 cm EPS insulation”).
+- Mérve: `node tests/build-test.js` **6975/6975** (300 véletlen ház 0 geometriai hiba, tömeg = kontúr; 3 referenciaház anyagmennyisége 1 %-on belül a kézi számítással; minden szabály megfelel/nem felel meg esete, Ki = 0 üzenet, Egyedi küszöb, kikapcsolt mód = azonos vázlat) · `php tests/build-test.php` **2217/2217** (JS–PHP egyezés 123 házon) · `node tests/e2e/build3d.js`: 20 ház, fázisváltás max 0,1 ms; képkocka az építési fázisokban ≤ 11 ms, a kész ház első képkockája SwiftShaderen ugyanannyi, mint a mai házé (5–16 s, szoftveres rajzolás) · `node tests/e2e/build.js 3`: 30/30 lépés, geometriai hiba 0, rajz = modell, 3D fázisváltás max 5,3 ms, tervezőben tömeg egyezik, belső terek 6/6, szerver ugyanazt menti, generálás a rajzzal, felület 110 mérés 0 hiba (320–1920 px), konzolhiba 0 · `sketch-test` 1247 rajz 0 hiba · `guide-test` 62/62 · autoloader 121/121 · lint 0.
+- 330 új felirat 15 nyelven (nyelvenként 2481 szöveg, 0 hiba).
+- Nem mérhető itt: a kép szépsége, telefon valódi GPU-n, a jogi szabályok helyessége.
+
 ## 1.12.1 – 2026-10-15
 
 Norbi: „Teljes kepernyos gomb kell a popupba neha jobb kitenni nagyba”. Munkaprompt: `docs/FELADAT-1.12.1.md`.
