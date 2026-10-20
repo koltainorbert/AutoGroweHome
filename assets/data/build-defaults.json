@@ -1,0 +1,81 @@
+{
+	"schema": "agh-build-defaults-1",
+	"version": "1.0.0",
+	"checked": "2026-10-20",
+	"verified": false,
+	"note": "Tájékoztató alapértékek az építési módhoz (anyaglista, ajánlott méretek, szakmai figyelmeztetések). Nem jogszabályi értékek, nem statikai méretezés. Minden érték gyártói adatlap és szakember szerint pontosítandó; a felület 'nem ellenőrzött'-nek mutatja őket.",
+	"source": { "type": "practice", "text": "Hazai szakmai gyakorlat, gyártói katalógusok jellemző értékei – nem ellenőrzött." },
+	"grid": 0.1,
+	"snap": 0.01,
+	"model": {
+		"plot": { "w": 20, "d": 40 },
+		"house": { "x": 4, "y": 12 },
+		"earth": { "topsoil": 0.3, "margin": 1.0, "soil": "clay" },
+		"found": { "type": "strip_rc", "w": 0.5, "d": 0.9, "top": 0.3, "partitions": "auto" },
+		"ducts": { "sewer": true, "water": true, "earth": true, "conduits": 4 },
+		"ground": { "fill": 0.2, "concrete": 0.1, "membrane": "bitumen", "xps": 0.1 },
+		"level_h": 3.0,
+		"floor_build": 0.12,
+		"ring": { "h": 0.25, "insul": 0.05 },
+		"slab": { "type": "rc", "t": 0.2 },
+		"wall": {
+			"ext": { "mat": "ceramic", "t": 0.38, "insul": "eps", "insul_t": 0.12 },
+			"int": { "mat": "ceramic", "t": 0.3 },
+			"part": { "mat": "partition_brick", "t": 0.1 }
+		},
+		"opening": {
+			"window": { "w": 1.2, "h": 1.5, "sill": 0.9 },
+			"door": { "w": 0.9, "h": 2.1, "sill": 0 },
+			"entrance": { "w": 1.1, "h": 2.3, "sill": 0 },
+			"terrace": { "w": 2.4, "h": 2.3, "sill": 0 }
+		},
+		"frost": 0.8
+	},
+	"limits": { "wall_min": 0.2, "wall_t_min": 0.05, "wall_t_max": 0.8, "level_h_min": 2.4, "level_h_max": 4.5, "levels_max": 3, "walls_max": 240, "openings_max": 240, "plot_max": 500 },
+	"soils": ["clay", "sand", "gravel", "loam", "rock", "fill"],
+	"walls": {
+		"ceramic":          { "kinds": ["ext", "int"], "t": [0.25, 0.3, 0.38, 0.44], "pcs_m2": 16, "glue_kg_m2_per_m": 85, "lambda": 0.14, "density": 800, "heavy": true },
+		"aac":              { "kinds": ["ext", "int"], "t": [0.25, 0.3, 0.375, 0.5], "pcs_m2": 8.33, "glue_kg_m2_per_m": 15, "lambda": 0.1, "density": 450, "heavy": true },
+		"sand_lime":        { "kinds": ["ext", "int"], "t": [0.175, 0.2, 0.25, 0.3], "pcs_m2": 8.33, "glue_kg_m2_per_m": 25, "lambda": 0.99, "density": 1800, "heavy": true },
+		"formwork_block":   { "kinds": ["ext", "int"], "t": [0.2, 0.25, 0.3], "pcs_m2": 8.33, "fill_m3_m2_per_m": 0.62, "lambda": 1.4, "density": 2200, "heavy": true },
+		"timber_frame":     { "kinds": ["ext", "int", "part"], "t": [0.15, 0.2, 0.25], "stud_m_m2": 2.2, "board_m2_m2": 2.05, "lambda": 0.045, "density": 150, "heavy": false },
+		"adobe":            { "kinds": ["ext", "int"], "t": [0.38, 0.45, 0.6], "pcs_m2": 32, "glue_kg_m2_per_m": 120, "lambda": 0.7, "density": 1600, "heavy": true },
+		"partition_brick":  { "kinds": ["part"], "t": [0.1, 0.12], "pcs_m2": 8, "glue_kg_m2_per_m": 120, "lambda": 0.4, "density": 900, "heavy": true },
+		"partition_aac":    { "kinds": ["part"], "t": [0.1, 0.125, 0.15], "pcs_m2": 8.33, "glue_kg_m2_per_m": 15, "lambda": 0.1, "density": 450, "heavy": true },
+		"drywall":          { "kinds": ["part"], "t": [0.1, 0.125, 0.15], "board_m2_m2": 2.05, "profile_m_m2": 2.8, "lambda": 0.04, "density": 60, "heavy": false }
+	},
+	"insulations": {
+		"none":         { "lambda": 0 },
+		"eps":          { "lambda": 0.039, "t": [0.08, 0.1, 0.12, 0.15, 0.2] },
+		"graphite_eps": { "lambda": 0.031, "t": [0.08, 0.1, 0.12, 0.15, 0.2] },
+		"mineral_wool": { "lambda": 0.036, "t": [0.08, 0.1, 0.12, 0.15, 0.2] },
+		"wood_fibre":   { "lambda": 0.042, "t": [0.06, 0.1, 0.12, 0.16] }
+	},
+	"surface_r": { "rsi": 0.13, "rse": 0.04, "plaster_r": 0.03 },
+	"foundations": {
+		"strip":    { "concrete": "C12/15", "rebar_kg_m3": 0 },
+		"strip_rc": { "concrete": "C20/25", "rebar_kg_m3": 45 },
+		"slab":     { "concrete": "C25/30", "rebar_kg_m3": 85, "t": 0.3 },
+		"stone":    { "stone_m3_per_m3": 0.7, "mortar_m3_per_m3": 0.3 }
+	},
+	"slabs": {
+		"rc":     { "t": [0.16, 0.18, 0.2, 0.22], "rebar_kg_m3": 90 },
+		"beam":   { "t": [0.19, 0.21, 0.23], "beam_spacing": 0.6, "topping_m3_m2": 0.06, "rebar_kg_m2": 3 },
+		"timber": { "t": [0.22, 0.25, 0.28], "beam_spacing": 0.6, "board_m2_m2": 1.05 }
+	},
+	"ring": { "rebar_kg_m3": 95 },
+	"lintel": { "unit_w": 0.12, "bearing": 0.125, "lengths": [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.25, 3.5], "h": 0.25 },
+	"ground": { "gravel_m3_per_m3": 1.0, "membrane_overlap": 1.15, "xps_h": 0.6 },
+	"waste": { "concrete": 5, "rebar": 8, "blocks": 5, "glue": 10, "lintel": 0, "insul": 5, "membrane": 10, "gravel": 10, "timber": 10, "board": 10, "stone": 10, "earth": 0 },
+	"practice": [
+		{ "id": "opening_corner", "metric": "opening_edge_gap", "op": ">=", "value": 0.3, "unit": "m", "severity": "warn", "msg": "b_pr_opening_corner" },
+		{ "id": "opening_gap", "metric": "opening_pier", "op": ">=", "value": 0.4, "unit": "m", "severity": "warn", "msg": "b_pr_opening_gap" },
+		{ "id": "lintel_bearing", "metric": "lintel_bearing", "op": ">=", "value": 0.125, "unit": "m", "severity": "warn", "msg": "b_pr_lintel_bearing" },
+		{ "id": "wall_slender", "metric": "wall_slenderness", "op": "<=", "value": 27, "unit": "", "severity": "warn", "msg": "b_pr_wall_slender", "source": { "type": "standard", "text": "MSZ EN 1996-1-1 (karcsúsági határ) – ellenőrizendő" } },
+		{ "id": "opening_ratio", "metric": "opening_ratio", "op": "<=", "value": 0.6, "unit": "", "severity": "warn", "msg": "b_pr_opening_ratio" },
+		{ "id": "partition_found", "metric": "heavy_partition_unsupported", "op": "<=", "value": 0, "unit": "db", "severity": "warn", "msg": "b_pr_partition_found" },
+		{ "id": "found_wider", "metric": "found_over_wall", "op": ">=", "value": 0.1, "unit": "m", "severity": "warn", "msg": "b_pr_found_wider" },
+		{ "id": "bearing_stack", "metric": "bearing_unsupported", "op": "<=", "value": 0, "unit": "db", "severity": "warn", "msg": "b_pr_bearing_stack" },
+		{ "id": "stair_hole", "metric": "stair_missing", "op": "<=", "value": 0, "unit": "", "severity": "warn", "msg": "b_pr_stair_hole" }
+	]
+}

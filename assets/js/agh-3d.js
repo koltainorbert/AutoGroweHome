@@ -305,6 +305,8 @@ function windowSpec(c) { return SK()._win(c); }
 function faceOpenings(c, v, pl, F, fp, rise, gabled) {
 	var ws = windowSpec(c), st = SK()._style(c), len = F.len, out = [], reserved = [], blocked = [];
 	if (v.glass) { return out; }
+	// build mode (agh-build.js): exactly the drawn openings of this face
+	if (v.bOps) { return (v.bOps[F.name] || []).filter(function (o) { return o.x >= 0.02 && o.x + o.w <= len - 0.02; }).map(function (o) { return { kind: o.kind, x: o.x, y: o.y, w: o.w, h: o.h, fl: o.fl }; }); }
 	if (fp) {
 		if (fp.door) { out.push({ kind: 'door', x: fp.door.x, y: pl.plinth, w: fp.door.w, h: fp.door.h }); reserved.push([fp.door.x - 0.5, fp.door.x + fp.door.w + 0.5]); }
 		if (fp.tdoor) { out.push({ kind: 'tdoor', x: fp.tdoor.x, y: pl.plinth, w: fp.tdoor.w, h: 2.35 }); reserved.push([fp.tdoor.x - 0.4, fp.tdoor.x + fp.tdoor.w + 0.4]); }
@@ -1647,16 +1649,23 @@ Viewer.prototype.update = function (cfg, mode) {
 	else if (mode === 'floor') { this.house = floorScene(c); }
 	else if (c._item) { this.house = INT.itemScene(c, c._item); }
 	else if (inner) { this.house = INT.interiorScene(c, c._int || { type: 'living' }); }
+	else if (mode === 'build' && BUILD_SCENE) { this.house = BUILD_SCENE(c, H3); }
 	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini' }).build(); }
 	if (!inner) { this.landFor(c, mode); }
 	this.lampsToPool(this.house.root);
-	this.picks = this.thumb ? null : collectPicks(this.house.root);   // before the merge, while the pieces are still apart
-	// In a room every piece is merged on its own and the furniture group is left out of the big merge:
-	// that is what keeps each piece grabbable, while the number of draw calls stays low.
-	var itemsG = !this.thumb && this.house.items && this.house.items.children.length ? this.house.items : null;
-	if (itemsG) { itemsG.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
-	mergeStatic(this.house.fit || this.house.root, itemsG);
-	if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
+	if (mode === 'build' && this.house.phases) {
+		// construction phases (agh-3d-build.js): every phase is merged on its own, so it can be shown or hidden
+		this.picks = null;
+		this.house.phases.forEach(function (g) { if (g) { mergeStatic(g); } });
+	} else {
+		this.picks = this.thumb ? null : collectPicks(this.house.root);   // before the merge, while the pieces are still apart
+		// In a room every piece is merged on its own and the furniture group is left out of the big merge:
+		// that is what keeps each piece grabbable, while the number of draw calls stays low.
+		var itemsG = !this.thumb && this.house.items && this.house.items.children.length ? this.house.items : null;
+		if (itemsG) { itemsG.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
+		mergeStatic(this.house.fit || this.house.root, itemsG);
+		if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
+	}
 	this.scene.add(this.house.root);
 	this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
 	// new shaders are compiled in the background (parallel compile where the GPU driver offers it):
@@ -1670,6 +1679,11 @@ Viewer.prototype.update = function (cfg, mode) {
 	this.fitCamera(key !== this.camKey);
 	this.camKey = key;
 	this.requestRender();
+};
+// Build mode: shows the construction up to phase p (only visibility changes, nothing is rebuilt).
+Viewer.prototype.setPhase = function (p) {
+	if (this.house && this.house.setPhase) { this.house.setPhase(p); this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true; this.requestRender(); }
+	return this;
 };
 // The land around the plot for the chosen (or the style's) landscape: terrain with fields, rock, snow
 // and water, woods of the matching species, the street in front and – when asked for – the neighbours.
@@ -2475,6 +2489,14 @@ function guides(views, w, h, out, opts) {
 	});
 	return job.then(function () { return out; });
 }
-var api = { attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-2' };
+/* ------------------------------------------------------------------ build mode hook
+ * „Építés az alapoktól”: agh-3d-build.js registers a scene builder for the 'build' mode and gets the
+ * shared helpers (same three.js instance, same materials cache). Unused, nothing here changes. */
+var BUILD_SCENE = null;
+var H3 = { THREE: THREE, X: X, box: box, boxGeo: boxGeo, pbr: pbr, solid: solid, glassMat: glassMat, frameMat: frameMat, House: House, SK: SK };
+var api = {
+	attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-2',
+	registerBuild: function (fn) { BUILD_SCENE = fn; }, helpers: function () { return H3; }
+};
 window.AGH_3D = api;
 export default api;

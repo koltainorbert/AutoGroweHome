@@ -251,6 +251,7 @@
 				S.locale = b.locale || 'hu_HU';
 				S.fields = {};
 				b.schema.fields.forEach(function (f) { S.fields[f.id] = f; });
+				buildSetup();
 				return b;
 			});
 	}
@@ -377,6 +378,7 @@
 		});
 	}
 	function onKey(e) {
+		if (S.bld && window.AGH_BuildUI && window.AGH_BuildUI.onKey(e)) { return; }
 		if (e.key === 'Escape') {
 			if (menuOpen()) { closeMenu(true); return; }
 			// Esc leaves the full screen first (the browser may already have done that for its own mode)
@@ -423,6 +425,7 @@
 	/* ------------------------------------------------------------------ build shell */
 	function build() {
 		S.lastFocus = document.activeElement;
+		S.bld = false; els.build = null;
 		root = h('div', { class: 'agh-root agh-overlay' + (S.boot.brand.animations ? '' : ' agh-noanim'), role: 'dialog', 'aria-modal': 'true', 'aria-label': S.boot.brand.name, 'data-shadow': S.boot.brand.shadow || 'soft' });
 		S.theme = initialTheme();
 		root.setAttribute('data-theme', S.theme);
@@ -482,6 +485,8 @@
 		// Quick wizard <-> full designer (label set by updateWizardToggles()).
 		els.wizBtn = h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-accent agh-hide-m agh-wiz-toggle', onclick: toggleWizard });
 		tools.appendChild(els.wizBtn);
+		// „Építés az alapoktól”: only when the build mode is switched on (otherwise the header is unchanged)
+		if (buildOn()) { els.bldBtn = h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m agh-bld-btn', onclick: toggleBuild }); tools.appendChild(els.bldBtn); updateBuildToggles(); }
 		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', onclick: showPresets }, icon('layers', 'agh-ico-s'), t('presets')));
 		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', onclick: showProjects }, icon('folder', 'agh-ico-s'), t('my_projects')));
 		tools.appendChild(h('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-hide-m', 'data-agh-restart': '1', onclick: restart }, icon('restart', 'agh-ico-s'), t('restart')));
@@ -519,6 +524,7 @@
 		}
 		els.wizItem = h('button', { type: 'button', class: 'agh-hmenu-item', onclick: function () { closeMenu(false); toggleWizard(); } });
 		m.appendChild(els.wizItem);
+		if (buildOn()) { m.appendChild(item('wall', t('b_open'), toggleBuild)); }
 		m.appendChild(item('layers', t('presets'), showPresets));
 		m.appendChild(item('folder', t('my_projects'), showProjects));
 		m.appendChild(item('restart', t('restart'), restart));
@@ -614,7 +620,7 @@
 	function catFields(cat) {
 		var q = S.search.trim().toLowerCase();
 		return S.boot.schema.fields.filter(function (f) {
-			if (f.type === 'roomitems' || f.type === 'layout') { return false; }
+			if (f.type === 'roomitems' || f.type === 'layout' || f.type === 'build') { return false; }
 			if (q) { return (f.label + ' ' + (f.help || '')).toLowerCase().indexOf(q) !== -1; }
 			if (f.category !== cat) { return false; }
 			if (S.mode === 'simple' && f.advanced) { return false; }
@@ -1636,7 +1642,7 @@
 
 	function renderPreviewOnly() {
 		// In the wizard the designer's (hidden) preview must not take the single live 3D canvas away.
-		if (S.wiz || !els.previewBox || !document.body.contains(els.previewBox)) { return; }
+		if (S.wiz || S.bld || !els.previewBox || !document.body.contains(els.previewBox)) { return; }
 		var c = S.config;
 		fillKpis(els.kpis, c);
 		fillPreview(els.previewBox, c);
@@ -1650,6 +1656,7 @@
 	// chosen style (if any) is a small inset. Every change of a visible parameter redraws the sketch;
 	// a short note names the change and says when it only shows up in the concept images.
 	function fillPreview(box, c) {
+		if (S.bld) { return box; } // the build editor owns the single live 3D canvas
 		var o = S.view === 'int' && A3 ? null : stylePhoto(c), fresh = S.lastChange && Date.now() - S.lastChange.at < 1500;
 		var oldFig = box.querySelector('.agh-preview-style');
 		var keep = o && oldFig && oldFig.getAttribute('data-src') === (o.thumb || o.image) ? oldFig : null;
@@ -2142,6 +2149,144 @@
 			b.appendChild(document.createTextNode(on ? t('wiz_full') : t('wiz_open')));
 		});
 	}
+	/* ------------------------------------------------------------------ build mode („Építés az alapoktól”)
+	 * Switched on in the admin (build.enabled): agh-build.js is loaded with the sketch, the editor
+	 * (agh-build-ui.js) and the 3D construction stages (agh-3d-build.js) on demand. Switched off, none of
+	 * this runs and the designer is exactly as before. */
+	function buildOn() { return !!(S.boot && S.boot.build && S.boot.build.enabled && window.AGH_Build); }
+	function buildSetup() {
+		if (!buildOn() || window.AGH_Build.active) { return; }
+		window.AGH_Build.setData({ defaults: S.boot.build.defaults, rules: S.boot.build.rules || {} });
+		window.AGH_Build.active = true;
+	}
+	var bldUiLoading = null, bldScene = null;
+	function loadBuildUi() {
+		if (window.AGH_BuildUI) { return Promise.resolve(); }
+		if (!bldUiLoading) {
+			bldUiLoading = new Promise(function (res, rej) {
+				var sc = document.createElement('script');
+				sc.src = S.boot.build.ui; sc.async = true;
+				sc.onload = function () { res(); };
+				sc.onerror = function () { bldUiLoading = null; rej(new Error('build ui')); };
+				document.head.appendChild(sc);
+			});
+		}
+		return bldUiLoading;
+	}
+	function loadBuildScene() {
+		if (!bldScene) { bldScene = import(S.boot.build.scene).then(function (m) { if (A3 && m && m.install) { m.install(A3); } return m; }, function () { bldScene = null; return null; }); }
+		return bldScene;
+	}
+	function toggleBuild() { if (S.bld) { exitBuild(false); } else { enterBuild(); } }
+	function updateBuildToggles() {
+		if (els.bldBtn) { clear(els.bldBtn); els.bldBtn.appendChild(icon(S.bld ? 'left' : 'wall', 'agh-ico-s')); els.bldBtn.appendChild(document.createTextNode(t(S.bld ? 'b_to_designer' : 'b_open'))); els.bldBtn.setAttribute('aria-pressed', S.bld ? 'true' : 'false'); }
+	}
+	function enterBuild() {
+		if (!buildOn()) { return; }
+		buildSetup();
+		closeMenu(false);
+		loadBuildUi().then(function () {
+			if (!root) { return; }
+			if (S.wiz) { exitWizard(true); }
+			S.bld = true;
+			shell.classList.add('is-build');
+			if (!els.build) { els.build = h('section', { class: 'agh-build', 'aria-label': t('b_title') }); shell.insertBefore(els.build, els.actionbar); }
+			els.build.hidden = false;
+			updateBuildToggles();
+			window.AGH_BuildUI.open(buildApi());
+			event('build_open');
+		}, function () { toast(t('b_load_error'), 'error'); });
+	}
+	function exitBuild(done) {
+		if (!S.bld) { return; }
+		if (window.AGH_BuildUI) { window.AGH_BuildUI.close(); }
+		S.bld = false;
+		shell.classList.remove('is-build');
+		if (els.build) { els.build.hidden = true; clear(els.build); }
+		updateBuildToggles();
+		S.view = 'design';
+		renderParams(); renderStage(); renderSummary(); renderActionbar(); validate();
+		if (done) { toast(t('b_done_toast'), 'ok'); }
+	}
+	function buildApi() {
+		return {
+			host: els.build, t: t, tf: tf, icon: icon,
+			config: function () { return S.config; },
+			field: function (id) { return S.fields[id] || null; },
+			apply: applyBuild,
+			setParam: function (id, v) { S.config[id] = v; S.explicit[id] = true; S.dirty = true; persist(); validate(); renderSummary(); },
+			preview3D: buildPreview3D,
+			setPhase: function (p) { var v = A3 && A3.viewer(); if (v && v.setPhase) { v.setPhase(p); } },
+			sketch: function (c) { return previewSvg(c); },
+			roomTypes: buildRoomTypes,
+			defaultRoomTypes: defaultRoomTypes,
+			confirm: function (title, text, go, fn) { confirmDialog(title, text, go, fn); },
+			close: exitBuild
+		};
+	}
+	// The drawing and the parameters that follow from it (levels, size, rooms…) go into the config.
+	function applyBuild(b, d) {
+		S.config.build = b; S.explicit.build = true;
+		Object.keys(d || {}).forEach(function (k) { if (k.charAt(0) === '_') { return; } if (S.fields[k] || Object.prototype.hasOwnProperty.call(S.config, k)) { S.config[k] = d[k]; S.explicit[k] = true; } });
+		var rs = (d && d._rooms) || [];
+		if (rs.length >= 2) {
+			var names = {}, defs = defaultRoomTypes(rs.map(function (r) { return { area: r.area * 1e6, lv: r.level, type: r.type }; })), old = {};
+			buildRoomTypes().forEach(function (o) { names[o[0]] = o[1]; });
+			(S.config.rooms || []).forEach(function (r) { old[r.id] = r; });
+			S.config.rooms = rs.map(function (r, i) {
+				var ty = r.type || defs[i], o = old[r.id] && old[r.id].type === ty ? old[r.id] : {};
+				return Object.assign({}, o, { id: r.id, type: ty, name: o.name || names[ty] || ty, area: r.area, level: r.level, render: o.render !== undefined ? o.render : true, width: r.width, length: r.length });
+			});
+			S.explicit.rooms = true;
+		}
+		S.dirty = true;
+		persist(); validate(); renderSummary();
+	}
+	function buildPreview3D(el, c, phase) {
+		if (!A3) { return false; }
+		loadBuildScene().then(function (m) {
+			if (!m || !S.bld || !el.isConnected) { return; }
+			var v = A3.viewer();
+			if (!v) { A3.attach(el, c); v = A3.viewer(); }
+			if (v.wrap.parentNode !== el) { el.insertBefore(v.wrap, el.firstChild); }
+			v.onPick = null; v.onLayout = null; v.onGrab = null;
+			v.syncSize();
+			v.update(c, 'build');
+			if (v.setPhase) { v.setPhase(phase); }
+		});
+		return true;
+	}
+	function buildRoomTypes() {
+		var src = (S.boot.build && S.boot.build.room_types) || {}, out = [];
+		if (Array.isArray(src)) { src.forEach(function (o) { if (Array.isArray(o)) { out.push([o[0], o[1]]); } else if (o && o.id) { out.push([o.id, o.label || o.name || o.id]); } }); }
+		else { Object.keys(src).forEach(function (k) { var v = src[k]; out.push([k, typeof v === 'string' ? v : (v && (v.label || v[0])) || k]); }); }
+		return out;
+	}
+	// A sensible first guess of the room types (largest room per level, small ones as bath/WC); the
+	// visitor changes them in the partitions step.
+	function defaultRoomTypes(list) {
+		var ok = {}, rank = {}, byLv = {};
+		buildRoomTypes().forEach(function (o) { ok[o[0]] = 1; });
+		var fb = Object.keys(ok)[0] || 'living';
+		var pick = function (a) { for (var i = 0; i < a.length; i++) { if (ok[a[i]]) { return a[i]; } } return fb; };
+		list.forEach(function (r, i) { var lv = r.lv || 0; (byLv[lv] = byLv[lv] || []).push(i); });
+		Object.keys(byLv).forEach(function (lv) { byLv[lv].sort(function (a, b) { return list[b].area - list[a].area; }).forEach(function (idx, k) { rank[idx] = k; }); });
+		return list.map(function (r, i) {
+			var a = r.area / 1e6, lv = r.lv || 0;
+			if (rank[i] === 0) { return pick(lv === 0 ? ['living_kitchen', 'living'] : ['master', 'bedroom']); }
+			if (a < 4.5) { return pick(['wc', 'bathroom', 'storage']); }
+			if (a < 8.5) { return pick(['bathroom', 'hall']); }
+			return pick(['bedroom']);
+		});
+	}
+	function entryChoice() {
+		return h('div', { class: 'agh-entry', role: 'group', 'aria-label': t('b_entry') },
+			h('button', { type: 'button', class: 'agh-entry-card', 'aria-pressed': 'true', onclick: function () { var f = els.wizBody && els.wizBody.querySelector('.agh-wiz-fields'); if (f && f.scrollIntoView) { f.scrollIntoView({ block: 'start', behavior: 'smooth' }); } } },
+				icon('sparkle'), h('b', { text: t('b_entry_quick') }), h('span', { text: t('b_entry_quick_text') })),
+			h('button', { type: 'button', class: 'agh-entry-card is-build', 'aria-pressed': 'false', onclick: enterBuild },
+				icon('wall'), h('b', { text: t('b_entry_build') }), h('span', { text: t('b_entry_build_text') })));
+	}
+
 	function enterWizard(step) {
 		S.wiz = { step: Math.max(0, Math.min(WIZ.length - 1, step || 0)) };
 		lsSet(LS_UI, 'wizard');
@@ -2244,6 +2389,7 @@
 		content.appendChild(h('div', { class: 'agh-eyebrow', text: tf('wiz_step_of', i + 1, WIZ.length) }));
 		content.appendChild(title);
 		content.appendChild(h('p', { class: 'agh-wiz-lead', text: t('wiz_' + st.key + '_lead') }));
+		if (i === 0 && buildOn()) { content.appendChild(entryChoice()); }
 		els.wizDone = null;
 		if (last) {
 			els.wizDone = h('div', { class: 'agh-wiz-done' });
@@ -2327,7 +2473,7 @@
 		d = info;
 		var inWizard = {};
 		WIZ.forEach(function (st) { st.fields.forEach(function (id) { inWizard[id] = true; }); });
-		var more = S.boot.schema.fields.filter(function (f) { return !inWizard[f.id] && f.type !== 'roomitems' && f.type !== 'layout' && visible(f); }).length;
+		var more = S.boot.schema.fields.filter(function (f) { return !inWizard[f.id] && f.type !== 'roomitems' && f.type !== 'layout' && f.type !== 'build' && visible(f); }).length;
 		d.appendChild(h('div', { class: 'agh-wiz-more' },
 			h('p', { text: tf('wiz_more', more) }),
 			h('button', { type: 'button', class: 'agh-btn', onclick: function () { exitWizard(false); } }, icon('sliders', 'agh-ico-s'), t('wiz_to_designer'))));

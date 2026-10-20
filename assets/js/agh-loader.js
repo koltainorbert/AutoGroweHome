@@ -31,7 +31,9 @@
 			}
 			// The live sketch renderer first, then the designer that uses it.
 			function designer() { script(cfg.js, function () { window.AGH_Designer ? resolve(window.AGH_Designer) : reject(new Error('AGH')); }); }
-			if (cfg.sketch && !window.AGH_Sketch) { script(cfg.sketch, designer); } else { designer(); }
+			function sketch() { if (cfg.sketch && !window.AGH_Sketch) { script(cfg.sketch, designer); } else { designer(); } }
+			// build mode (only when it is switched on): its model goes first, the sketch uses it
+			if (cfg.build && !window.AGH_Build) { script(cfg.build, sketch); } else { sketch(); }
 		});
 		return loading;
 	}

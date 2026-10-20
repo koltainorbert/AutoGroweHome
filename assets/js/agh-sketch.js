@@ -330,7 +330,20 @@
 		var w = { pivot: 1.4, double: 1.7, sidelight: 1.7, glass_full: 1.2 }[c.entrance_door] || 1.05;
 		return { x: styleOf(c).sym ? len / 2 - w / 2 : clamp(len * 0.26, 0.8, len - w - 0.8), w: w, h: c.entrance_door === 'pivot' ? 2.6 : 2.3 };
 	}
+	// Build mode („Építés az alapoktól”, assets/js/agh-build.js): when it is switched on and the project has
+	// a drawn house, the plan and the volumes come from the drawing. Without it nothing here changes.
+	function bld(c) {
+		var A = root.AGH_Build || (typeof globalThis !== 'undefined' ? globalThis.AGH_Build : null);
+		if (!A || !A.active || !c || !c.build || !c.build.walls || !c.build.walls.length) { return null; }
+		var r = A.adapt(c.build);
+		return r && r.ok ? r : null;
+	}
 	function plan(c) {
+		var p = planBase(c), B = bld(c);
+		if (B) { p.floors = B.floors; p.attic = B.attic; p.W = B.W; p.unitW = B.W; p.units = 1; p.D = B.D; p.FH = B.FH; p.plinth = B.plinth; p.h0 = B.h0; }
+		return p;
+	}
+	function planBase(c) {
 		var levels = c.levels || 'single';
 		var floors = { single: 1, attic: 1, two: 2, three: 3 }[levels] || 1;
 		var eq = { single: 1, attic: 1.55, two: 2, three: 3 }[levels] || 1;
@@ -365,6 +378,8 @@
 	// glass (glazed link), frame, veranda, balc, exo, terraceRoof, porch, accent.
 	var MASSING = ['pavilion', 'cantilever', 'courtyard', 'gable_pair', 'cubes', 'engawa', 'symmetric', 'long_house', 'twin_barns', 'cross_gable', 'chalet', 'loft', 'organic', 'glass_frame', 'compact'];
 	function volumes(c, pl) {
+		var B = bld(c);
+		if (B) { return JSON.parse(JSON.stringify(B.vols)); }
 		var W = pl.W, D = pl.D, P = pl.plinth, FH = pl.FH, fl = pl.floors, h = P + fl * FH + (pl.attic ? 0.9 : 0), A = W * D, v = [];
 		var m = pl.units > 1 ? 'auto' : (c.massing || 'auto');
 		function V(o) { o.ridge = o.ridge || 'x'; v.push(o); return o; }
@@ -496,6 +511,12 @@
 			if (w.y0 <= v.y1 + 0.05 && w.y1 > v.y1 + 0.05 && w.x1 > v.x0 + r + 0.05 && w.x0 < v.x1 - r - 0.05) { block.push([Math.max(0, w.x0 - v.x0 - r), Math.min(len, w.x1 - v.x0 - r)]); }
 		});
 		var free = fenceSegs(0, len, block), out = { off: r, len: len, block: block, free: free, door: null, tdoor: null };
+		if (v.bOps) { // build mode: the drawn entrance and terrace door of this front
+			var bd = (v.bOps.front || []).filter(function (o) { return o.e && o.fl === 0; })[0], bt = (v.bOps.front || []).filter(function (o) { return o.kind === 'tdoor' && o.fl === 0; })[0];
+			if (bd) { out.door = { x: bd.x - r, w: bd.w, h: bd.h }; }
+			if (bt) { out.tdoor = { x: bt.x - r, w: bt.w }; }
+			return out;
+		}
 		if (!free.length) { return out; }
 		var big = free.reduce(function (a, q) { return q[1] - q[0] > a[1] - a[0] ? q : a; }, free[0]);
 		if (v.entrance) {
@@ -1034,6 +1055,17 @@
 	}
 	function openings(sc, v, pl, F, fp, roof) {
 		var c = sc.c, ws = windowSpec(c), s = '', len = F.len, shut = shutterColor(c);
+		if (v.bOps) { // build mode: exactly the drawn openings of this face
+			(v.bOps[F.name] || []).forEach(function (o) {
+				if (o.kind === 'win') { s += windowSvg(sc, o.x, o.y, o.w, o.h, { shutters: shut }); }
+				else if (o.kind === 'tdoor') {
+					var tc = col(c.window_frame_color, '#2F3235');
+					s += '<rect x="' + f(o.x) + '" y="' + f(o.y) + '" width="' + f(o.w) + '" height="' + f(o.h) + '" fill="' + tc + '"/><rect x="' + f(o.x + 0.06) + '" y="' + f(o.y + 0.06) + '" width="' + f(o.w - 0.12) + '" height="' + f(o.h - 0.12) + '" fill="' + glass(sc) + '"/>';
+				} else if (o.fl === 0) { s += doorSvg(sc, o.x, o.w, o.h); }
+				else { s += windowSvg(sc, o.x, o.y, o.w, o.h, {}); }
+			});
+			return s;
+		}
 		var styleBand = !!styleOf(c).band;
 		var reserved = [], blocked = fp ? fp.block.map(function (b) { return [b[0] - 0.3, b[1] + 0.3]; }) : [];
 		var doorW = 0, doorH = 0;

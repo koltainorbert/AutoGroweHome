@@ -1,0 +1,108 @@
+{
+	"schema": "agh-rules-1",
+	"country": "hu",
+	"pkg": "hu-2026.10.0",
+	"checked": "2026-10-20",
+	"verified": false,
+	"approved_by": "",
+	"note": "Magyar szabálycsomag – VÁZ. A jogi tartalmat a Norbi által megbízott szakember hagyja jóvá; addig minden rekord verified=false, és a felület 'nem ellenőrzött'-nek mutatja. A program tájékoztató eszköz, nem jogi tanács, nem statikai és nem engedélyezési terv. source_checked=true: a hivatkozott szöveghelyet 2026-10-20-án a Nemzeti Jogszabálytárban (njt.jog.gov.hu) megnéztük; ez nem jogi jóváhagyás.",
+	"climate": {
+		"frost": { "value": 0.8, "unit": "m", "source": { "type": "practice", "text": "Hazai szakmai gyakorlat (fagyhatár jellemzően 0,8–1,0 m); szabvány és talajmechanikai szakvélemény szerint ellenőrizendő." }, "verified": false }
+	},
+	"regions": [
+		{ "id": "budapest", "towns": ["Budapest"] },
+		{ "id": "baranya", "towns": ["Pécs", "Komló", "Mohács", "Siklós"] },
+		{ "id": "bacs_kiskun", "towns": ["Kecskemét", "Baja", "Kiskunfélegyháza", "Kiskunhalas"] },
+		{ "id": "bekes", "towns": ["Békéscsaba", "Gyula", "Orosháza", "Szarvas"] },
+		{ "id": "borsod", "towns": ["Miskolc", "Ózd", "Kazincbarcika", "Tiszaújváros"] },
+		{ "id": "csongrad", "towns": ["Szeged", "Hódmezővásárhely", "Szentes", "Makó"] },
+		{ "id": "fejer", "towns": ["Székesfehérvár", "Dunaújváros", "Mór", "Gárdony"] },
+		{ "id": "gyor", "towns": ["Győr", "Mosonmagyaróvár", "Csorna", "Sopron"] },
+		{ "id": "hajdu", "towns": ["Debrecen", "Hajdúböszörmény", "Hajdúszoboszló", "Balmazújváros"] },
+		{ "id": "heves", "towns": ["Eger", "Gyöngyös", "Hatvan", "Füzesabony"] },
+		{ "id": "jasz", "towns": ["Szolnok", "Jászberény", "Törökszentmiklós", "Karcag"] },
+		{ "id": "komarom", "towns": ["Tatabánya", "Tata", "Esztergom", "Komárom"] },
+		{ "id": "nograd", "towns": ["Salgótarján", "Balassagyarmat", "Pásztó", "Bátonyterenye"] },
+		{ "id": "pest", "towns": ["Érd", "Cegléd", "Gödöllő", "Szentendre", "Vác", "Budaörs"] },
+		{ "id": "somogy", "towns": ["Kaposvár", "Siófok", "Marcali", "Nagyatád"] },
+		{ "id": "szabolcs", "towns": ["Nyíregyháza", "Kisvárda", "Mátészalka", "Nyírbátor"] },
+		{ "id": "tolna", "towns": ["Szekszárd", "Paks", "Dombóvár", "Bonyhád"] },
+		{ "id": "vas", "towns": ["Szombathely", "Sárvár", "Körmend", "Kőszeg"] },
+		{ "id": "veszprem", "towns": ["Veszprém", "Pápa", "Ajka", "Balatonfüred", "Tapolca", "Várpalota"] },
+		{ "id": "zala", "towns": ["Zalaegerszeg", "Nagykanizsa", "Keszthely", "Lenti"] }
+	],
+	"rules": [
+		{
+			"id": "hu_teka_coverage_min", "topic": "plot", "metric": "coverage_pct", "op": ">=", "value": 10, "unit": "%", "severity": "warn",
+			"applies": "zone_buildable", "msg": "b_rule_coverage_min",
+			"source": { "type": "law", "law": "280/2024. (IX. 30.) Korm. rendelet (TÉKA)", "ref": "6. § (1)", "url": "https://njt.jog.gov.hu/jogszabaly/2024-280-20-22" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": true, "verified": false
+		},
+		{
+			"id": "hu_teka_height_default", "topic": "height", "metric": "ridge_over_eave", "op": "<=", "value": 7.0, "unit": "m", "severity": "warn",
+			"applies": "no_hesz_height", "msg": "b_rule_height_default",
+			"source": { "type": "law", "law": "280/2024. (IX. 30.) Korm. rendelet (TÉKA)", "ref": "9. § (3)", "url": "https://njt.jog.gov.hu/jogszabaly/2024-280-20-22" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": true, "verified": false
+		},
+		{
+			"id": "hu_hesz_coverage_max", "topic": "plot", "metric": "coverage_pct", "op": "<=", "value": null, "from": "hesz.coverage", "unit": "%", "severity": "warn",
+			"msg": "b_rule_hesz_coverage",
+			"source": { "type": "local", "law": "Települési építési szabályzat (HÉSZ)", "ref": "a felhasználó által megadott érték", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_hesz_height_max", "topic": "height", "metric": "eave_height", "op": "<=", "value": null, "from": "hesz.height", "unit": "m", "severity": "warn",
+			"msg": "b_rule_hesz_height",
+			"source": { "type": "local", "law": "Települési építési szabályzat (HÉSZ)", "ref": "a felhasználó által megadott érték (párkánymagasság)", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_hesz_front", "topic": "plot", "metric": "setback_front", "op": ">=", "value": null, "from": "hesz.front", "unit": "m", "severity": "warn",
+			"msg": "b_rule_hesz_front",
+			"source": { "type": "local", "law": "Települési építési szabályzat (HÉSZ)", "ref": "a felhasználó által megadott érték (előkert)", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_hesz_side", "topic": "plot", "metric": "setback_side", "op": ">=", "value": null, "from": "hesz.side", "unit": "m", "severity": "warn",
+			"msg": "b_rule_hesz_side",
+			"source": { "type": "local", "law": "Települési építési szabályzat (HÉSZ)", "ref": "a felhasználó által megadott érték (oldalkert)", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_hesz_back", "topic": "plot", "metric": "setback_back", "op": ">=", "value": null, "from": "hesz.back", "unit": "m", "severity": "warn",
+			"msg": "b_rule_hesz_back",
+			"source": { "type": "local", "law": "Települési építési szabályzat (HÉSZ)", "ref": "a felhasználó által megadott érték (hátsókert)", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_hesz_pitch_min", "topic": "roof", "metric": "roof_pitch", "op": ">=", "value": null, "from": "hesz.pitch_min", "unit": "°", "severity": "warn",
+			"msg": "b_rule_hesz_pitch_min",
+			"source": { "type": "local", "law": "Települési építési szabályzat (HÉSZ)", "ref": "a felhasználó által megadott érték (tetőhajlásszög)", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_hesz_pitch_max", "topic": "roof", "metric": "roof_pitch", "op": "<=", "value": null, "from": "hesz.pitch_max", "unit": "°", "severity": "warn",
+			"msg": "b_rule_hesz_pitch_max",
+			"source": { "type": "local", "law": "Települési építési szabályzat (HÉSZ)", "ref": "a felhasználó által megadott érték (tetőhajlásszög)", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_frost_depth", "topic": "foundation", "metric": "found_depth", "op": ">=", "value": null, "from": "site.frost", "unit": "m", "severity": "warn",
+			"msg": "b_rule_frost",
+			"source": { "type": "practice", "law": "Fagyhatár alatti alapozás – szakmai gyakorlat / szabvány", "ref": "forrás pontosítandó", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_room_height", "topic": "rooms", "metric": "clear_height_min", "op": ">=", "value": 2.6, "unit": "m", "severity": "warn",
+			"msg": "b_rule_room_height",
+			"source": { "type": "unverified", "law": "Lakószoba legkisebb belmagassága", "ref": "forrás pontosítandó – nem ellenőrzött alapérték", "url": "" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		},
+		{
+			"id": "hu_wall_u", "topic": "energy", "metric": "wall_u", "op": "<=", "value": 0.24, "unit": "W/m²K", "severity": "warn",
+			"msg": "b_rule_wall_u",
+			"source": { "type": "unverified", "law": "9/2023. (V. 25.) ÉKM rendelet (épületek energetikai jellemzői)", "ref": "külső fal hőátbocsátási követelményérték – szöveghely pontosítandó", "url": "https://njt.jog.gov.hu/jogszabaly/2023-9-20-8X" },
+			"effective": "", "pkg": "hu-2026.10.0", "checked": "2026-10-20", "source_checked": false, "verified": false
+		}
+	]
+}
