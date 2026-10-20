@@ -29,8 +29,13 @@ async function openBuild(browser, w, h, touch) {
   await page.goto(URL, { waitUntil: 'networkidle' });
   await page.click('[data-agh-open]');
   await page.waitForSelector('.agh-shell .agh-preview-box.has-3d canvas, .agh-shell .agh-preview-box svg', { timeout: 60000, state: 'attached' });
-  if (await page.$('.agh-bld-btn:visible')) { await page.click('.agh-bld-btn'); } else { await page.evaluate(() => { const b = Array.from(document.querySelectorAll('.agh-hmenu-item')).filter(x => /alapokt/i.test(x.textContent))[0]; if (b) { b.click(); } }); }
-  await page.waitForSelector('.agh-build .agh-bld-svg', { timeout: 20000, state: 'attached' });
+  // enter the build mode (header button, on phones the menu item); retried while the designer is still booting
+  for (let k = 0; k < 4 && !(await page.$('.agh-build .agh-bld-svg')); k++) {
+    await page.waitForTimeout(k ? 2500 : 300);
+    if (await page.$('.agh-bld-btn:visible')) { await page.click('.agh-bld-btn'); } else { await page.evaluate(() => { const b = Array.from(document.querySelectorAll('.agh-hmenu-item')).filter(x => /alapokt/i.test(x.textContent))[0]; if (b) { b.click(); } }); }
+    try { await page.waitForSelector('.agh-build .agh-bld-svg', { timeout: 8000, state: 'attached' }); } catch (e) { /* try again */ }
+  }
+  await page.waitForSelector('.agh-build .agh-bld-svg', { timeout: 5000, state: 'attached' });
   return { ctx, page, errors };
 }
 
