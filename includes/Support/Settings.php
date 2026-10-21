@@ -43,6 +43,11 @@ final class Settings {
 				'retries'      => 2,
 				'use_for_plan' => true,
 				'use_for_interpret' => true,
+				'vision_prompt'      => true,
+				'vision_template'    => '',
+				'vision_temperature' => 0.2,
+				'vision_timeout'     => 60,
+				'vision_retries'     => 1,
 			),
 			'images'     => array(
 				'active_provider'   => 'magnific',

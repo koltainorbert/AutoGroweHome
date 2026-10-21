@@ -72,12 +72,13 @@ final class JobQueue {
 	 *  - one Anthropic call (anthropic.timeout × (retries+1) + back-off), and
 	 *  - one Magnific call with the longest timeout used (90 s, upscaler) ×
 	 *    (magnific.retries+1) + back-off, followed by an image download
-	 *    (DOWNLOAD_TIMEOUT),
+	 *    (DOWNLOAD_TIMEOUT), after the picture-prompt call when that is switched on,
 	 * plus a 60 s margin for local work (drawings, previews, DB).
 	 */
 	public static function lock_seconds(): int {
 		$anthropic = Http::worst_case_seconds( max( 1, (int) Settings::get( 'anthropic.timeout', 90 ) ), max( 0, (int) Settings::get( 'anthropic.retries', 2 ) ) );
-		$magnific  = Http::worst_case_seconds( 90, max( 0, (int) Settings::get( 'magnific.retries', 2 ) ) ) + self::DOWNLOAD_TIMEOUT;
+		// a render may first ask Claude for the prompt written from the picture (1.15.0), then Magnific
+		$magnific  = Http::worst_case_seconds( 90, max( 0, (int) Settings::get( 'magnific.retries', 2 ) ) ) + self::DOWNLOAD_TIMEOUT + \AutoGroweHome\Prompt\VisionPrompt::worst_case_seconds();
 		return (int) max( self::LOCK_SECONDS, max( $anthropic, $magnific ) + 60 );
 	}
 

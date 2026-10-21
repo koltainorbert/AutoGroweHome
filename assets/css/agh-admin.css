@@ -37,6 +37,7 @@
 .agh-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .agh-thumb{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#FAF8F5}
 .agh-thumb img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#fff}
+.agh-vision{border-top:1px solid var(--line);padding:6px 8px;font-size:12px}.agh-vision summary{cursor:pointer;font-weight:600}.agh-vision dl{margin:6px 0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}.agh-vision dt{color:#6b6258;text-transform:capitalize}.agh-vision dd{margin:0;overflow-wrap:anywhere}.agh-vision p{margin:4px 0 0;max-height:160px;overflow:auto}
 .agh-thumb figcaption{padding:6px 8px;font-size:12px}
 .agh-thumb.is-failed{border-color:var(--err)}
 .agh-doc{display:grid;place-items:center;aspect-ratio:16/10;font-weight:700;color:var(--mut);text-decoration:none;background:#F1ECE4}

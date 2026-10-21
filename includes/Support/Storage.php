@@ -192,8 +192,8 @@ final class Storage {
 
 	/**
 	 * Guide pictures of the visitor's own 3D model, stored for the image generator.
-	 * Only PNG and JPEG, at most 1.5 MB and 2048 px each; the eight exterior views plus at most eight
-	 * rooms ("interior_<room id>") per call; everything else is dropped silently, because a missing
+	 * Only PNG and JPEG, at most 1.5 MB and 2048 px each; the eight exterior views (and their
+	 * "scene_" pairs) plus at most eight rooms ("interior_<room id>"), 24 pictures per call; everything else is dropped silently, because a missing
 	 * guide only means the server draws its own one (or the room goes without one, as before).
 	 *
 	 * @param array<string,string> $shots view => data URL.
@@ -206,7 +206,10 @@ final class Storage {
 		foreach ( $shots as $view => $data ) {
 			$view = sanitize_key( (string) $view );
 			$room = 1 === preg_match( '/^interior_[a-z0-9_]{1,24}$/', $view );
-			if ( ( ! $room && ! in_array( $view, $views, true ) ) || ( $room && $rooms >= 8 ) || $n >= 16 || ! is_string( $data ) ) {
+			// "scene_<view>": the same view with vehicles, people, pets and trees in it, for the prompt
+			// written from the picture (1.15.0) when the guide itself is the clean one
+			$known = in_array( $view, $views, true ) || ( 0 === strpos( $view, 'scene_' ) && in_array( substr( $view, 6 ), $views, true ) );
+			if ( ( ! $room && ! $known ) || ( $room && $rooms >= 8 ) || $n >= 24 || ! is_string( $data ) ) {
 				continue;
 			}
 			if ( ! preg_match( '#^data:image/(png|jpe?g);base64,#i', $data, $m ) ) {

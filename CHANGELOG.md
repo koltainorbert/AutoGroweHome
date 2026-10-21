@@ -1,5 +1,18 @@
 # Változásnapló
 
+## 1.15.0 – 2026-10-21
+
+Norbi: a „photorealistic rendering prompt engineer” sablon – a Claude a 3D képernyőképből írja a Magnific-promptot, csak a kapcsos helyőrzők cserélődnek, üresen „default”. Munkaprompt: `docs/FELADAT-1.15.0.md`.
+
+- **Prompt a 3D képből** (AI-szolgáltatók → Anthropic, alap: be): a külső képeknél (hero, front, back, left, right, aerial) a Claude megkapja a látogató 3D képernyőképét és Norbi sablonját (`assets/data/prompts/vision-exterior.txt`, szó szerint), és kényszerített tool-hívással adja vissza a leltárt (`detected_elements`, 9 mező), a promptot és a tiltólistát. Helyőrzők: napszak, évszak, időjárás a mezők angol szövegéből; kívánság = a látogató saját instrukciója + a tetőtermék sora (BRAMAC); Magnific-leírás nincs → „default”.
+- **A Claude a teljes jelenetet látja:** tiszta vezetőkép mellett a böngésző ugyanabból a kameraállásból a járművekkel, emberekkel, állatokkal együtti képet is elkészíti (`scene_<nézet>`); a Magnific structure képe továbbra is a tiszta.
+- **A végső prompt:** a hűség nyitóblokkja (mint eddig) + a Claude promptja + „Avoid: ” az alaplistával elöl, a Claude saját tételeivel és a konfiguráció téves alternatíváival, ismétlés nélkül. Mérve: 2100 karakter (határ 3900), a negatív lista teljes.
+- **Csak „Hű”, „Klón” és egyedi hűségnél**, kulccsal és mentett 3D képpel; belső nézetnél, „Szabad”/„Kiegyensúlyozott” fokozaton és kikapcsolva a mai prompt megy, bájtra ugyanaz. Bármilyen hibánál (rossz válasz, túl rövid prompt, időtúllépés) is a mai prompt megy, a kép elkészül.
+- **Gyorsítótár:** az eredmény a védett tárhelyen (`vision-<nézet>.json`); a három koncepcióképhez 1 hívás, újrapróbálásnál 0.
+- **Admin:** a projekt adatlapján képenként „Mit őriz meg a kép” (leltár + kiküldött prompt); saját sablon, temperature (0,2), időkorlát (60 s). A render feladat zárolása bekapcsolva a képleírás idejével hosszabb.
+- Mérve: új `tests/vision-test.php` 48/48 (az Anthropic-hívás elfogva, hálózat nélkül) · `guide-test` 62/62 · `tests/e2e/guide.js` kulcs nélkül változatlan, kulccsal hero + `scene_hero` 1152×700, utána 5 `scene_` nézet, konzolhiba 0 · `storage-test` 10/10 + 11/11 · `stuck-project` 9/9 · `gen`, `cancel`, `wizard` zöld · sketch 1247 rajz 0 hiba · autoloader 123/123 · lint 0 · 15 nyelv × 2493 szöveg, 0 hiba.
+- **Nem mérhető itt:** éles Anthropic- és Magnific-kulcs nincs; a kép minősége és a Claude-hívás tényleges költsége éles kulccsal mérendő.
+
 ## 1.14.5 – 2026-10-21
 
 - **Fejléc telefonon:** szűk helyen a fejléc ikongombjai 1 px-et zsugorodtak (43 px), mert a rugalmas sor engedte; most a gombok soha nem zsugorodnak, a márkanév rövidül. Mérve: `tests/e2e/build.js` felület 110 mérés, hibás 0 (előtte 2); `responsive` és `wizard`: a 44 px alatti érintési célok száma minden méreten és lépésen azonos az 1.12.1-gyel, túllógás 0, konzolhiba 0.

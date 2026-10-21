@@ -10326,3 +10326,39 @@ msgstr "Verkleinern"
 #: includes/Frontend/Frontend.php
 msgid "A háztervező betöltése…"
 msgstr "Der Hausplaner wird geladen…"
+
+#: includes/Admin/Admin.php
+msgid "Képleíró prompt (a 3D képből)"
+msgstr "Prompt aus dem Bild (3D-Screenshot)"
+
+#: includes/Admin/Admin.php
+msgid "A külső képek promptját a Claude a látogató 3D képernyőképéből írja: megszámolja a szinteket, leírja a tetőt, a homlokzatot, a nyílásokat és a ház körüli tárgyakat, és ehhez illő tiltólistát ad. A hűség-kapcsoló nyitóblokkja és a konfiguráció tiltólistája megmarad. Csak „Hű”, „Klón” és egyedi hűségnél fut. Hiba esetén a megszokott prompt megy, a kép így is elkészül. Képenként egy Anthropic-hívás."
+msgstr "Claude schreibt den Prompt der Außenbilder aus dem 3D-Screenshot des Besuchers: Es zählt die Geschosse, beschreibt Dach, Fassade, Öffnungen und die Objekte rund ums Haus und liefert eine passende Ausschlussliste. Der Eröffnungsblock des Treue-Schalters und die Ausschlussliste der Konfiguration bleiben erhalten. Läuft nur bei „Treu“, „Klon“ und eigener Treue. Bei einem Fehler wird der gewohnte Prompt gesendet, das Bild entsteht trotzdem. Ein Anthropic-Aufruf pro Bild."
+
+#: includes/Admin/Admin.php
+msgid "Prompt a 3D képből"
+msgstr "Prompt aus dem 3D-Bild"
+
+#: includes/Admin/Admin.php
+msgid "Saját sablon"
+msgstr "Eigene Vorlage"
+
+#: includes/Admin/Admin.php
+msgid "Üresen a beépített sablon megy. A „---” sor előtti rész a rendszerprompt, utána a feladat. Helyőrzők: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; az üres érték helyére „default” kerül."
+msgstr "Leer: die eingebaute Vorlage wird verwendet. Der Teil vor der Zeile „---“ ist der Systemprompt, danach folgt die Aufgabe. Platzhalter: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; ein leerer Wert wird durch „default“ ersetzt."
+
+#: includes/Admin/Admin.php
+msgid "Temperature (képleírás)"
+msgstr "Temperature (Bildbeschreibung)"
+
+#: includes/Admin/Admin.php
+msgid "Alacsony érték: a leírás jobban ragaszkodik a képhez."
+msgstr "Niedriger Wert: die Beschreibung hält sich enger an das Bild."
+
+#: includes/Admin/Admin.php
+msgid "Időtúllépés (képleírás)"
+msgstr "Zeitüberschreitung (Bildbeschreibung)"
+
+#: includes/Admin/Pages.php
+msgid "Mit őriz meg a kép"
+msgstr "Was das Bild bewahrt"

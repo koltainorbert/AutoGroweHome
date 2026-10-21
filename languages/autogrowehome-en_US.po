@@ -10326,3 +10326,39 @@ msgstr "Zoom out"
 #: includes/Frontend/Frontend.php
 msgid "A háztervező betöltése…"
 msgstr "Loading the house designer…"
+
+#: includes/Admin/Admin.php
+msgid "Képleíró prompt (a 3D képből)"
+msgstr "Prompt from the picture (3D screenshot)"
+
+#: includes/Admin/Admin.php
+msgid "A külső képek promptját a Claude a látogató 3D képernyőképéből írja: megszámolja a szinteket, leírja a tetőt, a homlokzatot, a nyílásokat és a ház körüli tárgyakat, és ehhez illő tiltólistát ad. A hűség-kapcsoló nyitóblokkja és a konfiguráció tiltólistája megmarad. Csak „Hű”, „Klón” és egyedi hűségnél fut. Hiba esetén a megszokott prompt megy, a kép így is elkészül. Képenként egy Anthropic-hívás."
+msgstr "Claude writes the prompt of the exterior pictures from the visitor's 3D screenshot: it counts the floors, describes the roof, the facade, the openings and the objects around the house, and gives a matching avoid list. The opening block of the fidelity switch and the configuration's avoid list stay. Runs only at “Faithful”, “Clone” and custom fidelity. On any error the usual prompt is sent and the picture is still made. One Anthropic call per picture."
+
+#: includes/Admin/Admin.php
+msgid "Prompt a 3D képből"
+msgstr "Prompt from the 3D picture"
+
+#: includes/Admin/Admin.php
+msgid "Saját sablon"
+msgstr "Own template"
+
+#: includes/Admin/Admin.php
+msgid "Üresen a beépített sablon megy. A „---” sor előtti rész a rendszerprompt, utána a feladat. Helyőrzők: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; az üres érték helyére „default” kerül."
+msgstr "Empty: the built-in template is used. The part before the “---” line is the system prompt, the part after it is the task. Placeholders: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; an empty value is replaced by “default”."
+
+#: includes/Admin/Admin.php
+msgid "Temperature (képleírás)"
+msgstr "Temperature (picture prompt)"
+
+#: includes/Admin/Admin.php
+msgid "Alacsony érték: a leírás jobban ragaszkodik a képhez."
+msgstr "Low value: the description sticks more closely to the picture."
+
+#: includes/Admin/Admin.php
+msgid "Időtúllépés (képleírás)"
+msgstr "Timeout (picture prompt)"
+
+#: includes/Admin/Pages.php
+msgid "Mit őriz meg a kép"
+msgstr "What the picture keeps"

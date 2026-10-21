@@ -10328,3 +10328,39 @@ msgstr "Micșorează"
 #: includes/Frontend/Frontend.php
 msgid "A háztervező betöltése…"
 msgstr "Se încarcă designerul de case…"
+
+#: includes/Admin/Admin.php
+msgid "Képleíró prompt (a 3D képből)"
+msgstr "Prompt din imagine (captură 3D)"
+
+#: includes/Admin/Admin.php
+msgid "A külső képek promptját a Claude a látogató 3D képernyőképéből írja: megszámolja a szinteket, leírja a tetőt, a homlokzatot, a nyílásokat és a ház körüli tárgyakat, és ehhez illő tiltólistát ad. A hűség-kapcsoló nyitóblokkja és a konfiguráció tiltólistája megmarad. Csak „Hű”, „Klón” és egyedi hűségnél fut. Hiba esetén a megszokott prompt megy, a kép így is elkészül. Képenként egy Anthropic-hívás."
+msgstr "Claude scrie promptul imaginilor exterioare din captura 3D a vizitatorului: numără nivelurile, descrie acoperișul, fațada, golurile și obiectele din jurul casei și oferă o listă de excluderi potrivită. Blocul de deschidere al comutatorului de fidelitate și lista de excluderi a configurației rămân. Rulează doar la fidelitate „Fidel”, „Clonă” și personalizată. La orice eroare se trimite promptul obișnuit, iar imaginea se realizează oricum. Un apel Anthropic pe imagine."
+
+#: includes/Admin/Admin.php
+msgid "Prompt a 3D képből"
+msgstr "Prompt din imaginea 3D"
+
+#: includes/Admin/Admin.php
+msgid "Saját sablon"
+msgstr "Șablon propriu"
+
+#: includes/Admin/Admin.php
+msgid "Üresen a beépített sablon megy. A „---” sor előtti rész a rendszerprompt, utána a feladat. Helyőrzők: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; az üres érték helyére „default” kerül."
+msgstr "Gol: se folosește șablonul încorporat. Partea dinaintea liniei „---” este promptul de sistem, după ea urmează sarcina. Substituenți: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; o valoare goală este înlocuită cu „default”."
+
+#: includes/Admin/Admin.php
+msgid "Temperature (képleírás)"
+msgstr "Temperature (descrierea imaginii)"
+
+#: includes/Admin/Admin.php
+msgid "Alacsony érték: a leírás jobban ragaszkodik a képhez."
+msgstr "Valoare mică: descrierea se ține mai strâns de imagine."
+
+#: includes/Admin/Admin.php
+msgid "Időtúllépés (képleírás)"
+msgstr "Timp limită (descrierea imaginii)"
+
+#: includes/Admin/Pages.php
+msgid "Mit őriz meg a kép"
+msgstr "Ce păstrează imaginea"

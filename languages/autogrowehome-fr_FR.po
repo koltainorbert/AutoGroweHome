@@ -10326,3 +10326,39 @@ msgstr "Zoom arrière"
 #: includes/Frontend/Frontend.php
 msgid "A háztervező betöltése…"
 msgstr "Chargement du configurateur de maison…"
+
+#: includes/Admin/Admin.php
+msgid "Képleíró prompt (a 3D képből)"
+msgstr "Prompt à partir de l’image (capture 3D)"
+
+#: includes/Admin/Admin.php
+msgid "A külső képek promptját a Claude a látogató 3D képernyőképéből írja: megszámolja a szinteket, leírja a tetőt, a homlokzatot, a nyílásokat és a ház körüli tárgyakat, és ehhez illő tiltólistát ad. A hűség-kapcsoló nyitóblokkja és a konfiguráció tiltólistája megmarad. Csak „Hű”, „Klón” és egyedi hűségnél fut. Hiba esetén a megszokott prompt megy, a kép így is elkészül. Képenként egy Anthropic-hívás."
+msgstr "Claude rédige le prompt des images extérieures à partir de la capture 3D du visiteur : il compte les niveaux, décrit la toiture, la façade, les ouvertures et les objets autour de la maison, et fournit une liste d’exclusions adaptée. Le bloc d’ouverture du sélecteur de fidélité et la liste d’exclusions de la configuration sont conservés. Fonctionne uniquement en fidélité « Fidèle », « Clone » et personnalisée. En cas d’erreur, le prompt habituel est envoyé et l’image est quand même créée. Un appel Anthropic par image."
+
+#: includes/Admin/Admin.php
+msgid "Prompt a 3D képből"
+msgstr "Prompt à partir de l’image 3D"
+
+#: includes/Admin/Admin.php
+msgid "Saját sablon"
+msgstr "Modèle personnalisé"
+
+#: includes/Admin/Admin.php
+msgid "Üresen a beépített sablon megy. A „---” sor előtti rész a rendszerprompt, utána a feladat. Helyőrzők: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; az üres érték helyére „default” kerül."
+msgstr "Vide : le modèle intégré est utilisé. La partie avant la ligne « --- » est le prompt système, la suite est la tâche. Espaces réservés : {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES} ; une valeur vide est remplacée par « default »."
+
+#: includes/Admin/Admin.php
+msgid "Temperature (képleírás)"
+msgstr "Temperature (description d’image)"
+
+#: includes/Admin/Admin.php
+msgid "Alacsony érték: a leírás jobban ragaszkodik a képhez."
+msgstr "Valeur basse : la description colle davantage à l’image."
+
+#: includes/Admin/Admin.php
+msgid "Időtúllépés (képleírás)"
+msgstr "Délai d’attente (description d’image)"
+
+#: includes/Admin/Pages.php
+msgid "Mit őriz meg a kép"
+msgstr "Ce que l’image conserve"

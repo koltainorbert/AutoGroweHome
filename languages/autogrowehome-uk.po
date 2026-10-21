@@ -10328,3 +10328,39 @@ msgstr "Зменшити"
 #: includes/Frontend/Frontend.php
 msgid "A háztervező betöltése…"
 msgstr "Завантаження конструктора будинку…"
+
+#: includes/Admin/Admin.php
+msgid "Képleíró prompt (a 3D képből)"
+msgstr "Промпт за зображенням (3D-знімок)"
+
+#: includes/Admin/Admin.php
+msgid "A külső képek promptját a Claude a látogató 3D képernyőképéből írja: megszámolja a szinteket, leírja a tetőt, a homlokzatot, a nyílásokat és a ház körüli tárgyakat, és ehhez illő tiltólistát ad. A hűség-kapcsoló nyitóblokkja és a konfiguráció tiltólistája megmarad. Csak „Hű”, „Klón” és egyedi hűségnél fut. Hiba esetén a megszokott prompt megy, a kép így is elkészül. Képenként egy Anthropic-hívás."
+msgstr "Claude пише промпт зовнішніх зображень за 3D-знімком відвідувача: рахує поверхи, описує дах, фасад, прорізи та об’єкти навколо будинку й додає відповідний список винятків. Вступний блок перемикача точності та список винятків із конфігурації зберігаються. Працює лише за точності «Точно», «Клон» і власної. У разі помилки надсилається звичайний промпт, і зображення все одно створюється. Один виклик Anthropic на зображення."
+
+#: includes/Admin/Admin.php
+msgid "Prompt a 3D képből"
+msgstr "Промпт за 3D-зображенням"
+
+#: includes/Admin/Admin.php
+msgid "Saját sablon"
+msgstr "Власний шаблон"
+
+#: includes/Admin/Admin.php
+msgid "Üresen a beépített sablon megy. A „---” sor előtti rész a rendszerprompt, utána a feladat. Helyőrzők: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; az üres érték helyére „default” kerül."
+msgstr "Порожньо: використовується вбудований шаблон. Частина до рядка «---» — системний промпт, після нього — завдання. Заповнювачі: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; порожнє значення замінюється на «default»."
+
+#: includes/Admin/Admin.php
+msgid "Temperature (képleírás)"
+msgstr "Temperature (опис зображення)"
+
+#: includes/Admin/Admin.php
+msgid "Alacsony érték: a leírás jobban ragaszkodik a képhez."
+msgstr "Низьке значення: опис точніше тримається зображення."
+
+#: includes/Admin/Admin.php
+msgid "Időtúllépés (képleírás)"
+msgstr "Тайм-аут (опис зображення)"
+
+#: includes/Admin/Pages.php
+msgid "Mit őriz meg a kép"
+msgstr "Що зберігає зображення"

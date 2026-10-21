@@ -10328,3 +10328,39 @@ msgstr "Умањи"
 #: includes/Frontend/Frontend.php
 msgid "A háztervező betöltése…"
 msgstr "Учитавање дизајнера куће…"
+
+#: includes/Admin/Admin.php
+msgid "Képleíró prompt (a 3D képből)"
+msgstr "Промпт из слике (3D снимак)"
+
+#: includes/Admin/Admin.php
+msgid "A külső képek promptját a Claude a látogató 3D képernyőképéből írja: megszámolja a szinteket, leírja a tetőt, a homlokzatot, a nyílásokat és a ház körüli tárgyakat, és ehhez illő tiltólistát ad. A hűség-kapcsoló nyitóblokkja és a konfiguráció tiltólistája megmarad. Csak „Hű”, „Klón” és egyedi hűségnél fut. Hiba esetén a megszokott prompt megy, a kép így is elkészül. Képenként egy Anthropic-hívás."
+msgstr "Claude пише промпт спољних слика из 3D снимка посетиоца: броји етаже, описује кров, фасаду, отворе и предмете око куће и даје одговарајућу листу забрана. Уводни блок прекидача верности и листа забрана из конфигурације остају. Ради само при верности „Верно”, „Клон” и прилагођеној. При грешци шаље се уобичајени промпт и слика се свеједно израђује. Један Anthropic позив по слици."
+
+#: includes/Admin/Admin.php
+msgid "Prompt a 3D képből"
+msgstr "Промпт из 3D слике"
+
+#: includes/Admin/Admin.php
+msgid "Saját sablon"
+msgstr "Сопствени шаблон"
+
+#: includes/Admin/Admin.php
+msgid "Üresen a beépített sablon megy. A „---” sor előtti rész a rendszerprompt, utána a feladat. Helyőrzők: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; az üres érték helyére „default” kerül."
+msgstr "Празно: користи се уграђени шаблон. Део пре реда „---” је системски промпт, после њега задатак. Чувари места: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; празна вредност се замењује са „default”."
+
+#: includes/Admin/Admin.php
+msgid "Temperature (képleírás)"
+msgstr "Temperature (опис слике)"
+
+#: includes/Admin/Admin.php
+msgid "Alacsony érték: a leírás jobban ragaszkodik a képhez."
+msgstr "Ниска вредност: опис се ближе држи слике."
+
+#: includes/Admin/Admin.php
+msgid "Időtúllépés (képleírás)"
+msgstr "Временско ограничење (опис слике)"
+
+#: includes/Admin/Pages.php
+msgid "Mit őriz meg a kép"
+msgstr "Шта слика задржава"

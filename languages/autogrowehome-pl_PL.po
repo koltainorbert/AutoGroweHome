@@ -10328,3 +10328,39 @@ msgstr "Pomniejsz"
 #: includes/Frontend/Frontend.php
 msgid "A háztervező betöltése…"
 msgstr "Wczytywanie projektanta domu…"
+
+#: includes/Admin/Admin.php
+msgid "Képleíró prompt (a 3D képből)"
+msgstr "Prompt z obrazu (zrzut 3D)"
+
+#: includes/Admin/Admin.php
+msgid "A külső képek promptját a Claude a látogató 3D képernyőképéből írja: megszámolja a szinteket, leírja a tetőt, a homlokzatot, a nyílásokat és a ház körüli tárgyakat, és ehhez illő tiltólistát ad. A hűség-kapcsoló nyitóblokkja és a konfiguráció tiltólistája megmarad. Csak „Hű”, „Klón” és egyedi hűségnél fut. Hiba esetén a megszokott prompt megy, a kép így is elkészül. Képenként egy Anthropic-hívás."
+msgstr "Claude pisze prompt zdjęć zewnętrznych na podstawie zrzutu 3D odwiedzającego: liczy kondygnacje, opisuje dach, elewację, otwory i obiekty wokół domu oraz podaje pasującą listę wykluczeń. Blok otwierający przełącznika wierności i lista wykluczeń z konfiguracji pozostają. Działa tylko przy wierności „Wierny”, „Klon” i własnej. W razie błędu wysyłany jest zwykły prompt, a obraz i tak powstaje. Jedno wywołanie Anthropic na obraz."
+
+#: includes/Admin/Admin.php
+msgid "Prompt a 3D képből"
+msgstr "Prompt z obrazu 3D"
+
+#: includes/Admin/Admin.php
+msgid "Saját sablon"
+msgstr "Własny szablon"
+
+#: includes/Admin/Admin.php
+msgid "Üresen a beépített sablon megy. A „---” sor előtti rész a rendszerprompt, utána a feladat. Helyőrzők: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; az üres érték helyére „default” kerül."
+msgstr "Puste: używany jest wbudowany szablon. Część przed wierszem „---” to prompt systemowy, po nim zadanie. Symbole zastępcze: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; pusta wartość zostaje zastąpiona przez „default”."
+
+#: includes/Admin/Admin.php
+msgid "Temperature (képleírás)"
+msgstr "Temperature (opis obrazu)"
+
+#: includes/Admin/Admin.php
+msgid "Alacsony érték: a leírás jobban ragaszkodik a képhez."
+msgstr "Niska wartość: opis trzyma się obrazu ściślej."
+
+#: includes/Admin/Admin.php
+msgid "Időtúllépés (képleírás)"
+msgstr "Limit czasu (opis obrazu)"
+
+#: includes/Admin/Pages.php
+msgid "Mit őriz meg a kép"
+msgstr "Co obraz zachowuje"

@@ -34,22 +34,43 @@ final class AnthropicProvider {
 	/**
 	 * Call the model and force a single tool call.
 	 *
+	 * @param array $images  Pictures sent before the text, each array( 'mime' => 'image/jpeg', 'data' => base64 ).
+	 * @param array $opts    Overrides for this call: temperature (float), timeout (s), retries.
 	 * @return array{ok:bool,input:array,error:string,usage:array,model:string,transient:bool}
 	 */
-	public function call_tool( string $system, string $user, string $tool_name, string $tool_description, array $schema, int $max_tokens = 0 ): array {
+	public function call_tool( string $system, string $user, string $tool_name, string $tool_description, array $schema, int $max_tokens = 0, array $images = array(), array $opts = array() ): array {
 		if ( ! $this->configured() ) {
 			return array( 'ok' => false, 'input' => array(), 'error' => __( 'Az Anthropic API-kulcs nincs beállítva.', 'autogrowehome' ), 'usage' => array(), 'model' => '', 'transient' => false );
 		}
-		$model = (string) Settings::get( 'anthropic.model', 'claude-sonnet-5-5' );
-		$body  = array(
+		$model   = (string) Settings::get( 'anthropic.model', 'claude-sonnet-5-5' );
+		$content = $user;
+		if ( ! empty( $images ) ) {
+			// the picture first, then the question about it
+			$content = array();
+			foreach ( $images as $img ) {
+				$content[] = array(
+					'type'   => 'image',
+					'source' => array(
+						'type'       => 'base64',
+						'media_type' => (string) ( $img['mime'] ?? 'image/jpeg' ),
+						'data'       => (string) ( $img['data'] ?? '' ),
+					),
+				);
+			}
+			$content[] = array(
+				'type' => 'text',
+				'text' => $user,
+			);
+		}
+		$body = array(
 			'model'       => $model,
 			'max_tokens'  => $max_tokens > 0 ? $max_tokens : (int) Settings::get( 'anthropic.max_tokens', 8000 ),
-			'temperature' => (float) Settings::get( 'anthropic.temperature', 0.6 ),
+			'temperature' => isset( $opts['temperature'] ) ? (float) $opts['temperature'] : (float) Settings::get( 'anthropic.temperature', 0.6 ),
 			'system'      => $system,
 			'messages'    => array(
 				array(
 					'role'    => 'user',
-					'content' => $user,
+					'content' => $content,
 				),
 			),
 			'tools'       => array(
@@ -69,8 +90,8 @@ final class AnthropicProvider {
 			(string) Settings::get( 'anthropic.endpoint', 'https://api.anthropic.com/v1/messages' ),
 			$this->headers(),
 			$body,
-			(int) Settings::get( 'anthropic.timeout', 90 ),
-			(int) Settings::get( 'anthropic.retries', 2 )
+			isset( $opts['timeout'] ) ? (int) $opts['timeout'] : (int) Settings::get( 'anthropic.timeout', 90 ),
+			isset( $opts['retries'] ) ? (int) $opts['retries'] : (int) Settings::get( 'anthropic.retries', 2 )
 		);
 		$usage = array(
 			'in'  => (int) ( $resp['json']['usage']['input_tokens'] ?? 0 ),

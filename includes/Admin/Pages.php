@@ -20,6 +20,7 @@ use AutoGroweHome\Params\Registry;
 use AutoGroweHome\Projects\Repository;
 use AutoGroweHome\Prompt\DefaultModules;
 use AutoGroweHome\Prompt\PromptEngine;
+use AutoGroweHome\Prompt\VisionPrompt;
 use AutoGroweHome\Quote\QuoteService;
 use AutoGroweHome\Quote\Summary;
 use AutoGroweHome\RateLimit\RateLimiter;
@@ -202,7 +203,17 @@ final class Pages {
 				} else {
 					echo '<div class="agh-doc">' . esc_html( $a['status'] ) . '</div>';
 				}
-				echo '<figcaption>' . esc_html( $a['label'] ) . '<br><small>' . esc_html( trim( $a['resolution'] . ( $a['is_test'] ? ' · TEST' : '' ) . ( ! empty( $a['provider'] ) ? ' · ' . $a['provider'] : '' ) ) ) . '</small>' . ( ! empty( $a['error'] ) ? '<br><small class="agh-err">' . esc_html( $a['error'] ) . '</small>' : '' ) . '</figcaption></figure>';
+				echo '<figcaption>' . esc_html( $a['label'] ) . '<br><small>' . esc_html( trim( $a['resolution'] . ( $a['is_test'] ? ' · TEST' : '' ) . ( ! empty( $a['provider'] ) ? ' · ' . $a['provider'] : '' ) ) ) . '</small>' . ( ! empty( $a['error'] ) ? '<br><small class="agh-err">' . esc_html( $a['error'] ) . '</small>' : '' ) . '</figcaption>';
+				// 1.15.0: what the prompt written from the 3D screenshot keeps of this view
+				$seen = 'render' === $a['kind'] ? VisionPrompt::stored( (string) $p['uuid'], (string) $a['view'] ) : null;
+				if ( $seen ) {
+					echo '<details class="agh-vision"><summary>' . esc_html__( 'Mit őriz meg a kép', 'autogrowehome' ) . '</summary><dl>';
+					foreach ( (array) ( $seen['detected_elements'] ?? array() ) as $k => $v ) {
+						echo '<dt>' . esc_html( str_replace( '_', ' ', (string) $k ) ) . '</dt><dd>' . esc_html( (string) $v ) . '</dd>';
+					}
+					echo '</dl><p><small>' . esc_html( (string) ( $seen['prompt'] ?? '' ) ) . '</small></p></details>';
+				}
+				echo '</figure>';
 			}
 			echo '</div></div>';
 		}

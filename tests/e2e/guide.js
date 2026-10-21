@@ -1,5 +1,7 @@
 // Vezetőkép E2E: a tervező a 3D modellről készít képeket, és elküldi őket a generálással.
 // 1.12.0: tiszta vezetőkép, szemmagasság magas kameránál, belső nézetek vezetőképe.
+// 1.15.0: ha a képleíró prompt be van kapcsolva (boot guide.scene), a tiszta kép mellé a teljes
+// jelenet is elmegy (scene_hero, scene_front…), ugyanakkora méretben.
 // Méri, hány nézet készült el, mekkorák, és hogy a /generate kérés testében tényleg ott vannak-e.
 // Használat: node tests/e2e/guide.js   (tesztoldal: bin/test-wp.sh)
 const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/opt/npm-tools/node_modules/playwright'); } })();
@@ -46,13 +48,14 @@ function jpegSize(dataUrl) {
   await page.waitForSelector('.agh-shell .agh-preview-box.has-3d canvas', { timeout: 60000 });
   await page.waitForTimeout(3000);
 
-  const wantAspect = await page.evaluate(async () => {
+  const boot = await page.evaluate(async () => {
     try {
       const r = await fetch('/wp-json/agh/v1/bootstrap', { credentials: 'same-origin' });
       const b = await r.json();
-      return (b.guide && b.guide.aspect) || 0;
-    } catch (e) { return 0; }
+      return { aspect: (b.guide && b.guide.aspect) || 0, scene: !!(b.guide && b.guide.scene && b.guide.clean !== false) };
+    } catch (e) { return { aspect: 0, scene: false }; }
   });
+  const wantAspect = boot.aspect;
 
   // 1. a képkészítés önmagában (mind a hat nézet)
   const shots = await page.evaluate(async () => {
@@ -100,13 +103,18 @@ function jpegSize(dataUrl) {
   const ok6 = shots.length >= 6 && shots.every(s => s.kb > 8 && s.w >= 1024 && s.h >= 512);
   // a vezetőkép képarányának a kész képéhez kell illeszkednie (a szerver méri, a boot adja)
   const want = wantAspect || 1.645;
-  const got = sent && sent[0] && sent[0].h ? sent[0].w / sent[0].h : 0;
+  const h0 = Array.isArray(sent) ? sent.filter(s => s.view === 'hero')[0] : null;
+  const got = h0 && h0.h ? h0.w / h0.h : 0;
   const aspectOk = got > 0 && Math.abs(got - want) <= want * 0.02;
-  const sentOk = Array.isArray(sent) && sent.length === 1 && sent[0].view === 'hero' && sent[0].kb > 8 && /image\/(png|jpeg)/.test(sent[0].type);
-  const laterOk = Array.isArray(later) && later.filter(v => v.indexOf('interior_') !== 0).length >= 4;
+  const heroSent = Array.isArray(sent) ? sent.filter(s => s.view === 'hero') : [];
+  const sceneSent = Array.isArray(sent) ? sent.filter(s => s.view === 'scene_hero') : [];
+  const sentOk = Array.isArray(sent) && sent.length === (boot.scene ? 2 : 1) && heroSent.length === 1 && heroSent[0].kb > 8 && /image\/(png|jpeg)/.test(heroSent[0].type)
+    && (!boot.scene || (sceneSent.length === 1 && sceneSent[0].kb > 8 && sceneSent[0].w === heroSent[0].w && sceneSent[0].h === heroSent[0].h));
+  const laterScene = Array.isArray(later) ? later.filter(v => v.indexOf('scene_') === 0).length : 0;
+  const laterOk = Array.isArray(later) && later.filter(v => v.indexOf('interior_') !== 0 && v.indexOf('scene_') !== 0).length >= 4 && (!boot.scene || laterScene >= 4);
   const laterRooms = Array.isArray(later) ? later.filter(v => v.indexOf('interior_') === 0).length : 0;
   const innerOk = extra.rooms > 0 && extra.inner.length === extra.rooms && extra.inner.every(s => s.kb > 8) && laterRooms > 0;
   const ok = ok6 && sentOk && laterOk && aspectOk && innerOk && extra.cleanDiffers && extra.autoDiffers && !errors.length;
-  console.log(`vezetőkép: ${shots.length} nézet, a generálással a hero ment ${sent ? sent.map(s => s.w + 'x' + s.h + '/' + s.kb + 'KB').join(',') : '–'} (képarány ${got.toFixed(3)}, kell ${want.toFixed(3)}, ${aspectOk ? 'ok' : 'eltér'}), utána a galéria nézetei ${later ? later.join(',') : '–'}; tiszta hero ${extra.cleanDiffers ? 'eltér' : 'AZONOS'}, szemmagasság ${extra.autoDiffers ? 'eltér' : 'AZONOS'}, belső vezetőkép ${extra.inner.length}/${extra.rooms} (${extra.inner.map(s => s.kb + 'KB').join(',')}); konzolhiba ${errors.length}`);
+  console.log(`vezetőkép: ${shots.length} nézet, a generálással a hero ment ${sent ? sent.map(s => s.w + 'x' + s.h + '/' + s.kb + 'KB').join(',') : '–'} (képarány ${got.toFixed(3)}, kell ${want.toFixed(3)}, ${aspectOk ? 'ok' : 'eltér'}), utána a galéria nézetei ${later ? later.join(',') : '–'}; tiszta hero ${extra.cleanDiffers ? 'eltér' : 'AZONOS'}, szemmagasság ${extra.autoDiffers ? 'eltér' : 'AZONOS'}, belső vezetőkép ${extra.inner.length}/${extra.rooms} (${extra.inner.map(s => s.kb + 'KB').join(',')}); teljes jelenet ${boot.scene ? 'kell, ment ' + sceneSent.length + '+' + laterScene : 'nem kell'}; konzolhiba ${errors.length}`);
   process.exit(ok ? 0 : 1);
 })();

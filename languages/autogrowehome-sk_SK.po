@@ -10328,3 +10328,39 @@ msgstr "Oddialiť"
 #: includes/Frontend/Frontend.php
 msgid "A háztervező betöltése…"
 msgstr "Načítava sa návrhár domu…"
+
+#: includes/Admin/Admin.php
+msgid "Képleíró prompt (a 3D képből)"
+msgstr "Prompt z obrázka (3D snímka)"
+
+#: includes/Admin/Admin.php
+msgid "A külső képek promptját a Claude a látogató 3D képernyőképéből írja: megszámolja a szinteket, leírja a tetőt, a homlokzatot, a nyílásokat és a ház körüli tárgyakat, és ehhez illő tiltólistát ad. A hűség-kapcsoló nyitóblokkja és a konfiguráció tiltólistája megmarad. Csak „Hű”, „Klón” és egyedi hűségnél fut. Hiba esetén a megszokott prompt megy, a kép így is elkészül. Képenként egy Anthropic-hívás."
+msgstr "Claude napíše prompt exteriérových obrázkov z 3D snímky návštevníka: spočíta podlažia, opíše strechu, fasádu, otvory a predmety okolo domu a pridá zodpovedajúci zoznam zákazov. Úvodný blok prepínača vernosti a zoznam zákazov z konfigurácie zostávajú. Beží len pri vernosti „Verný“, „Klon“ a vlastnej. Pri chybe sa odošle zvyčajný prompt a obrázok sa aj tak vytvorí. Jedno volanie Anthropic na obrázok."
+
+#: includes/Admin/Admin.php
+msgid "Prompt a 3D képből"
+msgstr "Prompt z 3D obrázka"
+
+#: includes/Admin/Admin.php
+msgid "Saját sablon"
+msgstr "Vlastná šablóna"
+
+#: includes/Admin/Admin.php
+msgid "Üresen a beépített sablon megy. A „---” sor előtti rész a rendszerprompt, utána a feladat. Helyőrzők: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; az üres érték helyére „default” kerül."
+msgstr "Prázdne: použije sa vstavaná šablóna. Časť pred riadkom „---“ je systémový prompt, za ním úloha. Zástupné symboly: {MAGNIFIC_DESCRIPTION}, {TIME_OF_DAY}, {SEASON}, {WEATHER}, {EXTRA_WISHES}; prázdna hodnota sa nahradí slovom „default“."
+
+#: includes/Admin/Admin.php
+msgid "Temperature (képleírás)"
+msgstr "Temperature (opis obrázka)"
+
+#: includes/Admin/Admin.php
+msgid "Alacsony érték: a leírás jobban ragaszkodik a képhez."
+msgstr "Nízka hodnota: opis sa drží obrázka presnejšie."
+
+#: includes/Admin/Admin.php
+msgid "Időtúllépés (képleírás)"
+msgstr "Časový limit (opis obrázka)"
+
+#: includes/Admin/Pages.php
+msgid "Mit őriz meg a kép"
+msgstr "Čo obrázok zachová"

@@ -199,6 +199,11 @@ Jelmagyarázat: a „Tartomány” oszlop az admin űrlap min./max. értéke (me
 | `retries` | Újrapróbálkozások | 2 | 0–5 | Átmeneti hibánál |
 | `use_for_plan` | Koncepciótervezés AI-val | be | be/ki | Kikapcsolva a szabályalapú tervező készíti a koncepciókat |
 | `use_for_interpret` | „AI értelmezés” gomb a látogatóknak | be | be/ki | A szabad szöveges leírás értelmezése paraméterjavaslatokká (IP-nként napi 15, kódban rögzítve) |
+| `vision_prompt` | Prompt a 3D képből | be | be/ki | 1.15.0: a külső képek promptját a Claude a látogató 3D képernyőképéből írja (`includes/Prompt/VisionPrompt.php`); csak „Hű”, „Klón” és egyedi hűségnél, kulccsal és mentett 3D képpel. Hiba esetén a konfigurációs prompt megy |
+| `vision_template` | Saját sablon | üres | szöveg | Üresen a beépített `assets/data/prompts/vision-exterior.txt`. A `---` sor előtt rendszerprompt, utána feladat; helyőrzők `{MAGNIFIC_DESCRIPTION}`, `{TIME_OF_DAY}`, `{SEASON}`, `{WEATHER}`, `{EXTRA_WISHES}`, üresen „default” |
+| `vision_temperature` | Temperature (képleírás) | 0.2 | 0–1 | |
+| `vision_timeout` | Időtúllépés (képleírás) | 60 s | 10–180 | Bekapcsolva a render feladat zárolása ennyivel (× újrapróbálás) hosszabb |
+| `vision_retries` | – | 1 | 0–5 | Csak a beállítástárban |
 
 ### 5.3 `images` – Képszolgáltató kiválasztása
 

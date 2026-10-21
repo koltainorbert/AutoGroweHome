@@ -34,7 +34,7 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 - `node tests/sketch-test.js` (élő vázlat, WordPress nélkül fut)
 - Sor/generálás változott: `php tests/stuck-project-test.php` (tesztoldalon; beragadt projekt őrző) és `node tests/e2e/cancel.js` (leállítás beragadt szervernél).
 - Licencközpont változott: `php tests/license-hub-test.php` (a tesztoldalon, a valódi ügyfél-LicenseManagerrel; 40/40).
-- Képgenerálás vagy a 3D vezetőkép változott: `php tests/guide-test.php` (62/62) és `node tests/e2e/guide.js` (6 nézet + belső vezetőképek, tiszta és szemmagasságú hero, a kérés tartalma).
+- Képgenerálás vagy a 3D vezetőkép változott: `php tests/guide-test.php` (62/62), `php tests/vision-test.php` (48/48, képleíró prompt) és `node tests/e2e/guide.js` (6 nézet + belső vezetőképek, tiszta és szemmagasságú hero, a kérés tartalma).
 - Tárhely vagy az admin figyelmeztetései változtak: `php tests/storage-test.php` (a tesztoldalon; 10/10 + 11/11, a próbafájl HTTP-n, az AGH_PRIVATE_DIR és a fájlok áthozása).
 - `find . -name "*.php" -not -path "./.git/*" -print0 | xargs -0 -n1 php -l`
 - Fordítás változott: `python3 bin/po-tools.py check` (0 hiba), majd `python3 bin/po-tools.py compile` (.mo újragenerálása).

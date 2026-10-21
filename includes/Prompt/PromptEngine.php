@@ -435,15 +435,7 @@ final class PromptEngine {
 			$roof_details = self::join_phrases( $roof_details, self::phrase( 'solar_place', $c ) );
 		}
 		$roof         = self::phrases( array( 'roof_type', 'roof_pitch', 'gable_finish', 'roof_overhang' ), $c );
-		$roof_product = 'flat' === ( $c['roof_type'] ?? '' ) ? '' : Catalog::roof_prompt( (string) ( $c['roof_brand'] ?? '' ), (string) ( $c['roof_product'] ?? '' ) );
-		// The colour the visitor sees on the model wins. The product's own colour word is dropped when
-		// it says something else, otherwise the picture gets a roof of a different colour than the 3D.
-		$roof_colour = trim( (string) preg_replace( '/^roof colou?r\s+/i', '', self::phrase( 'roof_color', $c ) ) );
-		if ( '' === $roof_product || empty( $c['roof_product'] ) ) {
-			$roof_product = implode( ', ', array_filter( array( $roof_product, $roof_colour ) ) );
-		} elseif ( '' !== $roof_colour && false === stripos( $roof_product, $roof_colour ) ) {
-			$roof_product = trim( (string) preg_replace( '/\s*\bin\s+[^,]+$/i', '', $roof_product ) ) . ', in ' . $roof_colour;
-		}
+		$roof_product = self::roof_product_phrase( $c );
 
 		$facade   = self::phrases( array( 'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'facade_texture', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number' ), $c );
 		$masonry  = self::masonry_phrase( $c );
@@ -794,6 +786,23 @@ final class PromptEngine {
 	 * the beginning of the prompt most, and whatever is not forbidden they may add: that is how a
 	 * barn, a second wing or another house appears next to a single-family home.
 	 */
+	/**
+	 * The roof covering in words: the catalogue product (brand, line – the BRAMAC requirement) in the
+	 * colour the visitor sees on the model. The product's own colour word is dropped when it says
+	 * something else, otherwise the picture gets a roof of a different colour than the 3D.
+	 * '' for a flat roof without a colour.
+	 */
+	public static function roof_product_phrase( array $c ): string {
+		$roof_product = 'flat' === ( $c['roof_type'] ?? '' ) ? '' : Catalog::roof_prompt( (string) ( $c['roof_brand'] ?? '' ), (string) ( $c['roof_product'] ?? '' ) );
+		$roof_colour  = trim( (string) preg_replace( '/^roof colou?r\s+/i', '', self::phrase( 'roof_color', $c ) ) );
+		if ( '' === $roof_product || empty( $c['roof_product'] ) ) {
+			$roof_product = implode( ', ', array_filter( array( $roof_product, $roof_colour ) ) );
+		} elseif ( '' !== $roof_colour && false === stripos( $roof_product, $roof_colour ) ) {
+			$roof_product = trim( (string) preg_replace( '/\s*\bin\s+[^,]+$/i', '', $roof_product ) ) . ', in ' . $roof_colour;
+		}
+		return $roof_product;
+	}
+
 	public static function reference_lead(): string {
 		$f = (string) Settings::get( 'magnific.fidelity', 'faithful' );
 		if ( ! in_array( $f, array( 'faithful', 'clone', 'custom' ), true ) ) {

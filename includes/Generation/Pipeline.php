@@ -15,6 +15,7 @@ use AutoGroweHome\Params\Definitions;
 use AutoGroweHome\Params\Validator;
 use AutoGroweHome\Projects\Repository;
 use AutoGroweHome\Prompt\PromptEngine;
+use AutoGroweHome\Prompt\VisionPrompt;
 use AutoGroweHome\Quote\QuoteService;
 use AutoGroweHome\Stats\Stats;
 use AutoGroweHome\Support\Http;
@@ -447,6 +448,17 @@ final class Pipeline {
 			$lead = 'interior' === $op ? PromptEngine::interior_lead() : PromptEngine::reference_lead();
 			$note = '' !== $lead ? '' : ( 'interior' === $op ? PromptEngine::interior_note() : PromptEngine::reference_note() );
 		}
+		// 1.15.0: the prompt written from the picture. Claude looks at the visitor's own 3D screenshot of
+		// this view (the full scene, vehicles and people included) and writes prompt and negative list
+		// with the prompt-engineer template; the binding block and the configuration's wrong
+		// alternatives stay. Any failure keeps the configuration prompt above.
+		$vision = null;
+		if ( VisionPrompt::applies( $op, (string) $asset['view'] ) ) {
+			$vision = VisionPrompt::run( $p, (string) $asset['view'] );
+			if ( null !== $vision ) {
+				$built = VisionPrompt::built( $vision, (array) $p['config'], (string) $asset['view'] );
+			}
+		}
 		$inline = ! ( $provider->capabilities()['negative'] ?? false ) && Settings::get( 'magnific.negative_inline', true );
 		$prompt = PromptEngine::compose( $built, $lead, $note, $inline );
 		if ( $prompt !== (string) $asset['prompt'] ) {
@@ -462,7 +474,7 @@ final class Pipeline {
 			'reference_image' => $reference,
 			'structure_image' => $structure,
 			'style_image'     => $style_image,
-			'negative_prompt' => (string) $built['negative'],
+			'negative_prompt' => (string) ( $built['negative_list'] ?? $built['negative'] ),
 			'building'        => $concept['building'],
 			'config'          => $p['config'],
 			'label'           => $concept['variant'] . ' – ' . $asset['label'],

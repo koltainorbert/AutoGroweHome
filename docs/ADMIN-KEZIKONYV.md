@@ -394,6 +394,26 @@ A felbontás: a koncepcióképek 2k-ban készülnek (gyors, olcsó), a kiválasz
 4k-ban. Nyomtatáshoz vagy nagy bemutatóhoz a „Felskálázás a kiválasztott galériánál” kapcsoló tesz
 rá még egy lépést (külön költség).
 
+### 5.3 Prompt a 3D képből (1.15.0)
+
+AI-szolgáltatók → Anthropic → „Képleíró prompt”. Bekapcsolva (alap) a külső képek promptját nem a
+konfigurációból, hanem a látogató 3D képernyőképéből írja a Claude, Norbi sablonjával: megszámolja a
+szinteket, leírja a tömeget, a tetőt, a homlokzatot és a nyílásokat, a ház körüli tárgyakat (autó, ember,
+kutya, bútor) a helyükön tartja, a 3D-s fákat valódi növényre cseréli, és a házhoz illő tiltólistát ad.
+
+- A Claude a **teljes jelenetet** látja (`scene_<nézet>`, járművel, emberrel), a Magnific továbbra is a
+  tiszta vezetőképet kapja structure referenciaként; tiszta vezetőkép kikapcsolva a kettő ugyanaz a kép.
+- A hűség nyitóblokkja („pontosan egy épület”), a konfiguráció tiltólistája és a tetőtermék neve megmarad.
+- Csak „Hű”, „Klón” és egyedi hűségnél fut (Szabad/Kiegyensúlyozott fokozaton a három koncepció eltérhet,
+  az a konfigurációs promptból jön). Belső nézetre nem vonatkozik.
+- Hiba, időtúllépés vagy hibás válasz esetén a megszokott prompt megy, a kép így is elkészül (Naplók →
+  `vision`). Ugyanarra a képre nem kérdez újra (`vision-<nézet>.json` a védett tárhelyen).
+- A projekt adatlapján képenként „Mit őriz meg a kép”: a Claude leltára (szintek, tető, homlokzat,
+  nyílások, tárgyak, növényzet, kameraállás) és a kiküldött prompt – ebből látszik, ha valamit félreolvasott.
+- Költség: képenként egy Anthropic-hívás a Magnific mellé (becslés: kép + ~2,5 ezer token sablon +
+  ~1 ezer token válasz; éles kulccsal mérendő).
+- Saját sablon a „Saját sablon” mezőben adható meg; üresen a beépített megy.
+
 ## 6. Gyakori feladatok röviden
 
 | Feladat | Lépések |

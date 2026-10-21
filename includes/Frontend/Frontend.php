@@ -18,6 +18,7 @@ use AutoGroweHome\License\Features;
 use AutoGroweHome\License\Payments;
 use AutoGroweHome\Params\Definitions;
 use AutoGroweHome\Params\Registry;
+use AutoGroweHome\Prompt\VisionPrompt;
 use AutoGroweHome\Quote\QuoteService;
 use AutoGroweHome\RateLimit\RateLimiter;
 use AutoGroweHome\Support\Settings;
@@ -385,6 +386,8 @@ final class Frontend {
 				'clean'  => (bool) Settings::get( 'magnific.guide_clean', true ),
 				'camera' => (string) Settings::get( 'magnific.hero_camera', 'auto' ),
 				'rooms'  => min( 8, (int) Settings::get( 'limits.interiors_max', 4 ) ),
+				// 1.15.0: beside a clean guide the full scene is taken too – Claude writes the prompt from it
+				'scene'  => (bool) Settings::get( 'magnific.guide_clean', true ) && VisionPrompt::applies( 'view', 'hero' ) && VisionPrompt::enabled(),
 			),
 			'consents'  => QuoteService::consents(),
 			'tour'      => Help::tour(),

@@ -2525,13 +2525,27 @@
 	}
 	function guideOpts() {
 		var g = (S.boot && S.boot.guide) || {};
-		return { clean: g.clean !== false, camera: g.camera || 'auto', rooms: guideRooms() };
+		return { clean: g.clean !== false, camera: g.camera || 'auto', rooms: guideRooms(), scene: !!g.scene };
+	}
+	// Beside a clean guide the same views are taken with everything in them ("scene_<view>"): the
+	// prompt is written from that picture (1.15.0), so the cars, people and pets the visitor put there
+	// are described and painted for real. Taken after the clean ones, never at the same time – both
+	// use the same off-screen viewer.
+	function sceneShots(views, sz, opts, out) {
+		out = out || {};
+		if (!opts.scene || !opts.clean || !A3 || !A3.guides) { return Promise.resolve(out); }
+		var s = {};
+		return A3.guides(views, sz[0], sz[1], s, { clean: false, camera: opts.camera, rooms: {} }).then(function () {
+			Object.keys(s).forEach(function (k) { if (k.indexOf('interior_') !== 0) { out['scene_' + k] = s[k]; } });
+			return out;
+		}).catch(function () { return out; });
 	}
 	function startGuides() {
 		if (!A3 || !A3.guides) { guideJob = null; return; }
-		var out = {}, sz = guideSize();
-		try { guideJob = { out: out, p: A3.guides(['hero'], sz[0], sz[1], out, guideOpts()).catch(function () { return out; }) }; }
-		catch (e) { guideJob = null; }
+		var out = {}, sz = guideSize(), opts = guideOpts();
+		try {
+			guideJob = { out: out, p: A3.guides(['hero'], sz[0], sz[1], out, opts).catch(function () { return out; }).then(function () { return sceneShots(['hero'], sz, opts, out); }) };
+		} catch (e) { guideJob = null; }
 	}
 	function guideShots() {
 		if (!guideJob) { startGuides(); }
@@ -2553,6 +2567,8 @@
 				var sz = guideSize(), opts = guideOpts();
 				var views = ['front', 'back', 'left', 'right', 'aerial'].concat(Object.keys(opts.rooms).map(function (id) { return 'interior_' + id; }));
 				A3.guides(views, sz[0], sz[1], null, opts).then(function (g) {
+					return sceneShots(['front', 'back', 'left', 'right', 'aerial'], sz, opts, g || {});
+				}).then(function (g) {
 					if (g && Object.keys(g).length) { api('POST', 'projects/' + uuid + '/guides', { guides: g }, 60000).catch(function () { /* the server draws its own guide */ }); }
 				}).catch(function () { /* no guide for the gallery this time */ });
 			} catch (e) { /* no WebGL */ }
