@@ -10362,3 +10362,11 @@ msgstr "Délai d’attente (description d’image)"
 #: includes/Admin/Pages.php
 msgid "Mit őriz meg a kép"
 msgstr "Ce que l’image conserve"
+
+#: includes/License/Features.php
+msgid "Prompt a 3D képből (Claude képleírás)"
+msgstr "Prompt à partir de l’image 3D (description d’image par Claude)"
+
+#: includes/Admin/Admin.php
+msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
+msgstr "Disponible à partir de la formule Professional ; dans la formule actuelle, il ne s’exécute pas et le prompt habituel est envoyé."

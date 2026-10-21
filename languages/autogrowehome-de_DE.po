@@ -10362,3 +10362,11 @@ msgstr "Zeitüberschreitung (Bildbeschreibung)"
 #: includes/Admin/Pages.php
 msgid "Mit őriz meg a kép"
 msgstr "Was das Bild bewahrt"
+
+#: includes/License/Features.php
+msgid "Prompt a 3D képből (Claude képleírás)"
+msgstr "Prompt aus dem 3D-Bild (Claude-Bildbeschreibung)"
+
+#: includes/Admin/Admin.php
+msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
+msgstr "Ab dem Professional-Paket verfügbar; im aktuellen Paket läuft es nicht, der gewohnte Prompt wird gesendet."

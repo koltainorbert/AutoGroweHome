@@ -41,6 +41,7 @@ A csomagok adatvezéreltek: a beépített mátrix a `Features::default_plans()`-
 | `multilang` | Többnyelvű működés | – | ✓ | ✓ | látogatói nyelvválasztó; a `?agh_lang=` nyelvváltás is csak ezzel működik |
 | `package_full` | Részletes kivitelezői csomag (ZIP) | – | ✓ | ✓ | nélküle a ZIP-ben csak fő kép, elöl- és hátulnézet + tervek, dokumentumok |
 | `custom_params` | Dinamikus paraméterszerkesztő | – | ✓ | ✓ | Admin → Paraméterek, új paraméter mentése (`Registry::save_custom()`); a funkció nélkül a felvett paraméterek az adatbázisban maradnak, de sehol nem aktívak (tervező, ellenőrzés, tervezés, prompt; `Registry::fields()`) |
+| `vision_prompt` | Prompt a 3D képből (Claude képleírás) | – | ✓ | ✓ | `VisionPrompt::enabled()`: a külső képek promptját a Claude a 3D képernyőképből írja (1.15.0); nélküle a konfigurációs prompt megy, és a böngésző nem készít `scene_` képet |
 | `white_label` | White-label | – | – | ✓ | a készítő neve rejtve a tervezőben |
 | `multi_contractor` | Több kivitelező kezelése | – | – | ✓ | további kivitelezői e-mail-címek |
 | `export_advanced` | Bővített exportálás (CSV, CAD-JSON, DXF) | – | – | ✓ | DXF és a bővítményként regisztrált CAD-exportálók (alapból), a DXF kiszolgálása és ZIP-be kerülése, a statisztika CSV-exportja; a helyiséglista-CSV és az épület-JSON minden csomagban készül |

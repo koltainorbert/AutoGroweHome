@@ -1,5 +1,13 @@
 # Változásnapló
 
+## 1.15.1 – 2026-10-21
+
+Norbi: „ebbe is kérem a pro verziót” → a képleíró prompt csak a Pro csomagban. Munkaprompt: `docs/FELADAT-1.15.1.md`.
+
+- **Új licencfunkció `vision_prompt`** („Prompt a 3D képből (Claude képleírás)”): Professional és Agency csomagban, Starterben nincs. Starter csomagban 0 Claude-hívás, a megszokott prompt megy, és a böngésző nem készít `scene_` képet; az Anthropic-beállításoknál a felület kiírja, hogy a Professional csomagtól érhető el. Saját oldalon (`AGH_OWNER_MODE`) mindig él.
+- Saját oldalon a csomagmátrix szerkeszthető: ha a mátrixot korábban elmentetted, a Professional és az Agency soránál az új funkciót egyszer be kell pipálni, hogy az árazóoldalon is látsszon (az ügyféloldalakon a beépített mátrix él, ott nem kell semmi).
+- Mérve: `vision-test` 55/55 (új: mátrix, saját oldal, Starter = nem fut és 0 hívás, Professional és Agency = fut) · `guide-test` 62/62 · `license-hub-test` 40/40 · autoloader 123/123 · lint 0 · 15 nyelv × 2495 szöveg, 0 hiba.
+
 ## 1.15.0 – 2026-10-21
 
 Norbi: a „photorealistic rendering prompt engineer” sablon – a Claude a 3D képernyőképből írja a Magnific-promptot, csak a kapcsos helyőrzők cserélődnek, üresen „default”. Munkaprompt: `docs/FELADAT-1.15.0.md`.

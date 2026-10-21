@@ -10362,3 +10362,11 @@ msgstr "Timeout (picture prompt)"
 #: includes/Admin/Pages.php
 msgid "Mit őriz meg a kép"
 msgstr "What the picture keeps"
+
+#: includes/License/Features.php
+msgid "Prompt a 3D képből (Claude képleírás)"
+msgstr "Prompt from the 3D picture (Claude image description)"
+
+#: includes/Admin/Admin.php
+msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
+msgstr "Available from the Professional plan; it does not run in the current plan, the usual prompt is sent."

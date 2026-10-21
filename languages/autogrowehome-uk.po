@@ -10364,3 +10364,11 @@ msgstr "Тайм-аут (опис зображення)"
 #: includes/Admin/Pages.php
 msgid "Mit őriz meg a kép"
 msgstr "Що зберігає зображення"
+
+#: includes/License/Features.php
+msgid "Prompt a 3D képből (Claude képleírás)"
+msgstr "Промпт за 3D-зображенням (опис зображення Claude)"
+
+#: includes/Admin/Admin.php
+msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
+msgstr "Доступно з пакета Professional; у поточному пакеті не працює, надсилається звичайний промпт."

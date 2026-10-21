@@ -10364,3 +10364,11 @@ msgstr "Временско ограничење (опис слике)"
 #: includes/Admin/Pages.php
 msgid "Mit őriz meg a kép"
 msgstr "Шта слика задржава"
+
+#: includes/License/Features.php
+msgid "Prompt a 3D képből (Claude képleírás)"
+msgstr "Промпт из 3D слике (Claude опис слике)"
+
+#: includes/Admin/Admin.php
+msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
+msgstr "Доступно од пакета Professional; у тренутном пакету не ради, шаље се уобичајени промпт."

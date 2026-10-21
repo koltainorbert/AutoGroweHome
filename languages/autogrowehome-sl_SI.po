@@ -10366,3 +10366,11 @@ msgstr "Časovna omejitev (opis slike)"
 #: includes/Admin/Pages.php
 msgid "Mit őriz meg a kép"
 msgstr "Kaj slika ohrani"
+
+#: includes/License/Features.php
+msgid "Prompt a 3D képből (Claude képleírás)"
+msgstr "Prompt iz 3D slike (opis slike Claude)"
+
+#: includes/Admin/Admin.php
+msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
+msgstr "Na voljo od paketa Professional; v trenutnem paketu ne deluje, pošlje se običajni prompt."

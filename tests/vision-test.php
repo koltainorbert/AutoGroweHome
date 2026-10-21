@@ -241,6 +241,32 @@ $pr5   = $run( 'visiontest-off' );
 $t( 'kikapcsolva 0 Claude-hívás', 0 === count( $calls ) );
 $t( 'kikapcsolva a mai prompt', false === strpos( (string) ( $sent['hero'][0]['prompt'] ?? '' ), 'red hatchback' ) );
 
+/* ---------------------------------------------------------------- 6. licenc (1.15.1): Professional-funkció */
+Settings::update_group( 'anthropic', array( 'vision_prompt' => true ) );
+Settings::flush();
+$plans = \AutoGroweHome\License\Features::default_plans();
+$t( 'a mátrixban: Starter –, Professional ✓, Agency ✓', ! in_array( 'vision_prompt', $plans['starter']['features'], true ) && in_array( 'vision_prompt', $plans['professional']['features'], true ) && in_array( 'vision_prompt', $plans['agency']['features'], true ) );
+$t( 'a funkció a katalógusban', isset( \AutoGroweHome\License\Features::catalog()['vision_prompt'] ) );
+$t( 'saját oldalon fut', VisionPrompt::enabled() );
+$lic_keep = get_option( \AutoGroweHome\License\LicenseManager::OPTION, null );
+$no_owner = fn() => false;
+add_filter( 'agh_owner_mode', $no_owner );
+delete_option( \AutoGroweHome\License\LicenseManager::OPTION );
+$t( 'Starter csomagban nem fut', ! VisionPrompt::enabled() );
+$calls = array();
+$run( 'visiontest-starter' );
+$t( 'Starter csomagban 0 Claude-hívás és a mai prompt', 0 === count( $calls ) && false === strpos( (string) ( $sent['hero'][0]['prompt'] ?? '' ), 'red hatchback' ) );
+update_option( \AutoGroweHome\License\LicenseManager::OPTION, array( 'status' => 'active', 'plan' => 'professional', 'expires_at' => '' ) );
+$t( 'Professional csomagban fut', VisionPrompt::enabled() );
+update_option( \AutoGroweHome\License\LicenseManager::OPTION, array( 'status' => 'active', 'plan' => 'agency', 'expires_at' => '' ) );
+$t( 'Agency csomagban fut', VisionPrompt::enabled() );
+remove_filter( 'agh_owner_mode', $no_owner );
+if ( null === $lic_keep ) {
+	delete_option( \AutoGroweHome\License\LicenseManager::OPTION );
+} else {
+	update_option( \AutoGroweHome\License\LicenseManager::OPTION, $lic_keep );
+}
+
 // takarítás: a többi teszt kulcs nélküli állapotot vár
 remove_filter( 'pre_http_request', $fake, 10 );
 Secrets::set( 'anthropic_api_key', '' );

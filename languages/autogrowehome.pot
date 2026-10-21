@@ -10334,3 +10334,11 @@ msgstr ""
 #: includes/Admin/Pages.php
 msgid "Mit őriz meg a kép"
 msgstr ""
+
+#: includes/License/Features.php
+msgid "Prompt a 3D képből (Claude képleírás)"
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
+msgstr ""

@@ -16,6 +16,7 @@
 namespace AutoGroweHome\Prompt;
 
 use AutoGroweHome\Ai\Providers;
+use AutoGroweHome\License\Features;
 use AutoGroweHome\Support\Http;
 use AutoGroweHome\Support\Logger;
 use AutoGroweHome\Support\Settings;
@@ -45,10 +46,11 @@ final class VisionPrompt {
 	private const VIEWS = array( 'hero', 'front', 'back', 'left', 'right', 'aerial', 'garden', 'evening' );
 
 	/**
-	 * Switched on and able to run (Anthropic configured).
+	 * In the licence plan (Professional and up), switched on and able to run (Anthropic configured).
 	 */
 	public static function enabled(): bool {
-		return (bool) Settings::get( 'anthropic.vision_prompt', true ) && Providers::text()->configured();
+		// a Professional csomag funkciója (1.15.1); saját oldalon (AGH_OWNER_MODE) mindig él
+		return Features::enabled( 'vision_prompt' ) && (bool) Settings::get( 'anthropic.vision_prompt', true ) && Providers::text()->configured();
 	}
 
 	/**

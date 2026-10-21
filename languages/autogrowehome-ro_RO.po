@@ -10364,3 +10364,11 @@ msgstr "Timp limită (descrierea imaginii)"
 #: includes/Admin/Pages.php
 msgid "Mit őriz meg a kép"
 msgstr "Ce păstrează imaginea"
+
+#: includes/License/Features.php
+msgid "Prompt a 3D képből (Claude képleírás)"
+msgstr "Prompt din imaginea 3D (descriere de imagine Claude)"
+
+#: includes/Admin/Admin.php
+msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
+msgstr "Disponibil de la pachetul Professional; în pachetul actual nu rulează, se trimite promptul obișnuit."

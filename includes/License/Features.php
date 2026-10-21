@@ -44,6 +44,7 @@ final class Features {
 			'multilang'          => __( 'Többnyelvű működés', 'autogrowehome' ),
 			'package_full'       => __( 'Részletes kivitelezői csomag (ZIP)', 'autogrowehome' ),
 			'custom_params'      => __( 'Dinamikus paraméterszerkesztő', 'autogrowehome' ),
+			'vision_prompt'      => __( 'Prompt a 3D képből (Claude képleírás)', 'autogrowehome' ),
 			'white_label'        => __( 'White-label (saját márka, készítő elrejtése)', 'autogrowehome' ),
 			'multi_contractor'   => __( 'Több kivitelező kezelése', 'autogrowehome' ),
 			'export_advanced'    => __( 'Bővített exportálás (CSV, CAD-JSON, DXF)', 'autogrowehome' ),
@@ -52,7 +53,7 @@ final class Features {
 
 	public static function default_plans(): array {
 		$starter = array( 'designer', 'basic_params', 'three_concepts', 'basic_gallery', 'hero_download', 'project_save', 'contractor_email' );
-		$pro     = array_merge( $starter, array( 'full_params', 'prompt_editor', 'detailed_gallery', 'floorplans', 'stats_advanced', 'branding_advanced', 'multilang', 'package_full', 'custom_params' ) );
+		$pro     = array_merge( $starter, array( 'full_params', 'prompt_editor', 'detailed_gallery', 'floorplans', 'stats_advanced', 'branding_advanced', 'multilang', 'package_full', 'custom_params', 'vision_prompt' ) );
 		$agency  = array_merge( $pro, array( 'white_label', 'multi_contractor', 'export_advanced' ) );
 		return array(
 			'starter'      => array(

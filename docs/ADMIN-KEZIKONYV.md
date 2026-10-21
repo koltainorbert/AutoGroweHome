@@ -413,6 +413,7 @@ kutya, bútor) a helyükön tartja, a 3D-s fákat valódi növényre cseréli, �
 - Költség: képenként egy Anthropic-hívás a Magnific mellé (becslés: kép + ~2,5 ezer token sablon +
   ~1 ezer token válasz; éles kulccsal mérendő).
 - Saját sablon a „Saját sablon” mezőben adható meg; üresen a beépített megy.
+- **Licenc:** a Professional és az Agency csomag funkciója (`vision_prompt`, 1.15.1); Starter csomagban nem fut, a megszokott prompt megy, és ezt a beállításoknál ki is írja. Saját oldalon (`AGH_OWNER_MODE`) mindig él.
 
 ## 6. Gyakori feladatok röviden
 
