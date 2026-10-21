@@ -67,6 +67,7 @@
 
 	var ICONS = {
 		home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+		fit: '<circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="1.6"/><path d="M12 2.5v3.5M12 18v3.5M2.5 12H6M18 12h3.5"/>',
 		sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
 		cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
 		roof: '<path d="M2 12l10-8 10 8"/><path d="M6 10v10h12V10"/><path d="M16 6V3h2v4.5"/>',
@@ -387,6 +388,7 @@
 			if (Date.now() - FS.exitedAt < 400) { return; }
 			var top = root.querySelector('.agh-lightbox, .agh-dialog-wrap');
 			if (top) { if (S.lb && top === S.lb.el) { closeLightbox(); } else { top.remove(); } return; }
+			if (S.bld) { return; } // in build mode Esc never throws the drawing away
 			close();
 		}
 		if (e.key === 'Tab') { trapFocus(e); }
@@ -2205,6 +2207,7 @@
 	}
 	function exitBuild(done) {
 		if (!S.bld) { return; }
+		if (FS.el && els.build && els.build.contains(FS.el)) { fsExit(); fsDone(); }
 		if (window.AGH_BuildUI) { window.AGH_BuildUI.close(); }
 		S.bld = false;
 		shell.classList.remove('is-build');
@@ -2224,6 +2227,7 @@
 			preview3D: buildPreview3D,
 			setPhase: function (p) { var v = A3 && A3.viewer(); if (v && v.setPhase) { v.setPhase(p); } },
 			sketch: function (c) { return previewSvg(c); },
+			fsButton: function (getEl, cls) { return fsButton(getEl, cls); },
 			roomTypes: buildRoomTypes,
 			defaultRoomTypes: defaultRoomTypes,
 			confirm: function (title, text, go, fn) { confirmDialog(title, text, go, fn); },

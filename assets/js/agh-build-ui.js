@@ -560,9 +560,11 @@
 			el('button', { type: 'button', class: 'agh-iconbtn agh-bld-redo', title: t('b_redo'), 'aria-label': t('b_redo'), onclick: redo }, A.icon('restart')),
 			el('button', { type: 'button', class: 'agh-iconbtn agh-bld-zoomout', title: t('b_zoom_out'), 'aria-label': t('b_zoom_out'), onclick: function () { zoomBy(1.25); } }, el('span', { class: 'agh-bld-zoomtxt', 'aria-hidden': 'true', text: '−' })),
 			el('button', { type: 'button', class: 'agh-iconbtn agh-bld-zoomin', title: t('b_zoom_in'), 'aria-label': t('b_zoom_in'), onclick: function () { zoomBy(1 / 1.25); } }, el('span', { class: 'agh-bld-zoomtxt', 'aria-hidden': 'true', text: '+' })),
-			el('button', { type: 'button', class: 'agh-iconbtn', title: t('b_fit'), 'aria-label': t('b_fit'), onclick: function () { st.userView = false; fitView(); renderPlan(); } }, A.icon('expand'))
+			el('button', { type: 'button', class: 'agh-iconbtn', title: t('b_fit'), 'aria-label': t('b_fit'), onclick: function () { st.userView = false; fitView(); renderPlan(); } }, A.icon('fit'))
 		]);
-		D.tabs.appendChild(D.viewSeg); D.tabs.appendChild(D.tools);
+		// full screen of the drawing side (plan, 3D and the stage slider), the designer's own mechanism
+		D.fsBtn = A.fsButton ? A.fsButton(function () { return D.stage; }, 'agh-iconbtn agh-bld-fs') : null;
+		D.tabs.appendChild(D.viewSeg); D.tabs.appendChild(el('div', { class: 'agh-bld-right' }, [D.tools, D.fsBtn]));
 		D.planWrap = el('div', { class: 'agh-bld-planwrap' });
 		D.svg = sv('svg', { class: 'agh-bld-svg', role: 'application', 'aria-label': t('b_plan_aria'), tabindex: '0', preserveAspectRatio: 'xMidYMid meet' });
 		D.planWrap.appendChild(D.svg);
@@ -937,7 +939,7 @@
 			if (document.querySelector('.agh-dialog-wrap')) { return false; }
 			if (st.draw) { st.draw = null; renderPlan(); e.preventDefault(); return true; }
 			if (st.sel) { st.sel = null; renderPanel(); renderPlan(); e.preventDefault(); return true; }
-			return true; // never close the designer from here
+			return false; // the designer leaves the full screen (and never closes itself in build mode)
 		}
 		if (typing) { return false; }
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); if (e.shiftKey) { redo(); } else { undo(); } return true; }
