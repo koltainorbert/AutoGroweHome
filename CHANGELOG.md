@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.14.4 – 2026-10-21
+
+Norbi: „Az itteni teljes képernyő nem megy az alapok tervezésénél.” Munkaprompt: `docs/FELADAT-1.14.4.md`.
+
+- **Gyökérok:** a rajz eszközsorának utolsó gombja a „Teljes rajz” (nézet visszaállítása) volt, a teljes képernyő ikonjával; valódi teljes képernyő a rajzon nem volt. Az Esc-et építési módban a szerkesztő elnyelte, ezért a tartalék (CSS) teljes képernyőből sem lépett ki.
+- **Új teljes képernyő gomb** a rajzon (a tervező saját megoldásával: natív, ahol nincs, ablakkitöltő tartalék): alaprajz, 3D építési állás és fázis-csúszka együtt; teljes képernyőn telefonon is váltható az alaprajz / 3D. Kilépés: Esc, a gomb, telefonon a Vissza; a tervezőbe visszalépéskor magától bezárul.
+- **„Teljes rajz” saját ikont kapott** (célkereszt). Esc építési módban: előbb a rajzolást / kijelölést szakítja meg, aztán a teljes képernyőből lép ki; a tervezőt nem zárja be (a rajz nem vész el).
+- Mérve, új `tests/e2e/buildfs.js` (natív + tartalék, 1366×768 és 390×844): a rajz 467 → 690 px, illetve 572 → 704 px, a képernyő 100 %-a; 3D vászon 581 / 633 px; Esc és a gomb után az eredeti méret; az ikonok eltérnek; konzolhiba 0.
+
 ## 1.14.3 – 2026-10-21
 
 Norbi (4 kérés): a sima 3D tervező „mindig középen kicsiben”; az építési állás csúszkája „nem a sorral nő … az 1. pontnál már a 8-ast mutatja”; a „Vissza a tervezőbe” után újra belépve „szürke képernyő”; „a logó nagyon kicsi a háztervező gombon”. Munkaprompt: `docs/FELADAT-1.14.3.md`.
