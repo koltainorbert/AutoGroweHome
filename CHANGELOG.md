@@ -1,5 +1,16 @@
 # Változásnapló
 
+## 1.14.2 – 2026-10-21
+
+Norbi: „nagyon vékony sávban tudom a ház alapját csinálni, és nem nagyítódik ki; amikor töltöm be az appot, kellene töltésindikátor, mert alul-fölül is hatalmas hely”. Munkaprompt: `docs/FELADAT-1.14.2.md`.
+
+- **Gyökérok:** a WordPress-téma minden `section`/`aside` elemre saját belső és külső margót tesz (Norbi képein ≈ 100 px fent és lent); az építési mód két saját `section`-je ezt átvette, ezért a rajzterület a maradékra zsugorodott.
+- **Javítás:** az építési mód és a varázsló saját elemei téma-függetlenek (saját margó, belső margó, box-sizing; a szelektor erősebb a téma `section`-szabályainál); a rajzterület legalább 280 px, telefonon legalább a képernyő fele.
+- **A ház kitölti a rajzot:** a nézet a ház köré igazodik (a telek csak a 0. lépésben), a rajzterület arányához; új **− / +** nagyítógomb (1,25×), a „Teljes rajz” visszaállít.
+- **Töltésjelző:** a tervező megnyitásakor („A háztervező betöltése…”, téma-független, beágyazott stílussal), az építési mód betöltésekor és a 3D építési állás első felépítésekor.
+- Mérve (`tests/e2e/theme.js`, téma-szimuláció `section, aside { padding: 100px 0; margin: 40px 0 }`, sötét téma): rajzterület 1366×768: 2 → **467 px** (rajzoldal = panel 521 px), 1920×1080: 117 → **677 px**, 390×844: 12 → **572 px**; üres sáv fent/lent 100/100 → **0/0 px**; a ház a rajz 71 % (telefon 78 %); nagyítás 1,25×; töltésjelző a kattintás után **1 ms**-mal látható, a tervező megjelenésével egy képkockában eltűnik (maradt 0); konzolhiba 0. `build-test` 6975/6975, `sketch-test` 1247 rajz 0 hiba, autoloader 121/121.
+- 3 új felirat 15 nyelven, 0 hiba.
+
 ## 1.14.1 – 2026-10-20
 
 - **Javítás – telefonon lefagyott az építési mód:** ha a rajzterület magassága 0 volt (telefonon a „Lépés” fül alatt rejtve), a rács rajzolása végtelen ciklusba futott. Most a látható terület mérete korlátozott, és rejtett rajznál a rács a nézetdoboz szerint készül.
