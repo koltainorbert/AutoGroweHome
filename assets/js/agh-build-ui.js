@@ -131,6 +131,8 @@
 		st.kind = i === 6 ? 'part' : 'ext';
 		if (st.lv >= st.b.levels.length) { st.lv = 0; }
 		if (i <= 8) { st.phase = Math.max(0, i); }
+		if (!st.userView || (i === 0) !== (st.lastStep === 0)) { st.userView = false; fitView(); }
+		st.lastStep = i;
 		if (i === 9) { st.phase = PHASE3D; }
 		A.apply(st.b, B.params(st.b, cfg()));
 		renderAll();
@@ -556,7 +558,9 @@
 		D.tools = el('div', { class: 'agh-bld-quick' }, [
 			el('button', { type: 'button', class: 'agh-iconbtn', title: t('b_undo'), 'aria-label': t('b_undo'), onclick: undo }, A.icon('restart')),
 			el('button', { type: 'button', class: 'agh-iconbtn agh-bld-redo', title: t('b_redo'), 'aria-label': t('b_redo'), onclick: redo }, A.icon('restart')),
-			el('button', { type: 'button', class: 'agh-iconbtn', title: t('b_fit'), 'aria-label': t('b_fit'), onclick: function () { fitView(); renderPlan(); } }, A.icon('expand'))
+			el('button', { type: 'button', class: 'agh-iconbtn agh-bld-zoomout', title: t('b_zoom_out'), 'aria-label': t('b_zoom_out'), onclick: function () { zoomBy(1.25); } }, el('span', { class: 'agh-bld-zoomtxt', 'aria-hidden': 'true', text: '−' })),
+			el('button', { type: 'button', class: 'agh-iconbtn agh-bld-zoomin', title: t('b_zoom_in'), 'aria-label': t('b_zoom_in'), onclick: function () { zoomBy(1 / 1.25); } }, el('span', { class: 'agh-bld-zoomtxt', 'aria-hidden': 'true', text: '+' })),
+			el('button', { type: 'button', class: 'agh-iconbtn', title: t('b_fit'), 'aria-label': t('b_fit'), onclick: function () { st.userView = false; fitView(); renderPlan(); } }, A.icon('expand'))
 		]);
 		D.tabs.appendChild(D.viewSeg); D.tabs.appendChild(D.tools);
 		D.planWrap = el('div', { class: 'agh-bld-planwrap' });
@@ -569,7 +573,7 @@
 		D.stage.appendChild(D.tabs); D.stage.appendChild(D.planWrap); D.stage.appendChild(D.view3); D.stage.appendChild(D.phaseBar);
 		bindPlan();
 		// redraw when the plan gets its size (pane switch on phones, window resize): labels stay pixel-sized
-		if (window.ResizeObserver) { D.ro = new ResizeObserver(function () { if (st && st.view === 'plan' && D.svg.getBoundingClientRect().width) { renderPlan(); } }); D.ro.observe(D.planWrap); }
+		if (window.ResizeObserver) { D.ro = new ResizeObserver(function () { var r = D.svg.getBoundingClientRect(); if (st && st.view === 'plan' && r.width > 1 && r.height > 1) { if (!st.userView) { fitView(); } renderPlan(); } }); D.ro.observe(D.planWrap); }
 	}
 	function setView(v) {
 		st.view = v;
@@ -606,13 +610,22 @@
 	}
 
 	// view box in metres (x right, y down = towards the street)
+	// What the drawing shows first: the house with a margin (the plot on the site step or while there is
+	// nothing drawn yet). The box takes the shape of the drawing area, so the house fills it.
 	function fitView() {
-		var p = plot(), ol = B.outline(st.b), x0 = 0, y0 = 0, x1 = p.w, y1 = p.d;
-		var pts = [];
+		var p = plot(), x0 = 0, y0 = 0, x1 = p.w, y1 = p.d, pts = [], m = 1.2;
 		st.b.walls.forEach(function (w) { pts.push(w.a, w.b); });
-		if (pts.length) { var bb = bbox(pts); x0 = Math.min(bb.x0, 0) ; y0 = Math.min(bb.y0, 0); x1 = Math.max(bb.x1, p.w); y1 = Math.max(bb.y1, p.d); if (ol.closed && (p.w * p.d) > 6 * (bb.x1 - bb.x0) * (bb.y1 - bb.y0)) { x0 = bb.x0 - 1.6; y0 = bb.y0 - 1.6; x1 = bb.x1 + 1.6; y1 = bb.y1 + 1.6; } }
-		var m = 1.2;
-		st.vb = { x: x0 - m, y: y0 - m, w: x1 - x0 + 2 * m, h: y1 - y0 + 2 * m + 0.8 };
+		if (pts.length && st.step !== 0) { var bb = bbox(pts); x0 = bb.x0; y0 = bb.y0; x1 = bb.x1; y1 = bb.y1; m = Math.max(1.2, Math.max(x1 - x0, y1 - y0) * 0.12); }
+		else if (pts.length) { var b2 = bbox(pts); x0 = Math.min(b2.x0, 0); y0 = Math.min(b2.y0, 0); x1 = Math.max(b2.x1, p.w); y1 = Math.max(b2.y1, p.d); }
+		var w = x1 - x0 + 2 * m, h = y1 - y0 + 2 * m + 0.8, r = D.svg ? D.svg.getBoundingClientRect() : null;
+		if (r && r.width > 40 && r.height > 40) { var ar = r.width / r.height; if (w / h < ar) { var nw = h * ar; x0 -= (nw - w) / 2; w = nw; } else { var nh = w / ar; y0 -= (nh - h) / 2; h = nh; } }
+		st.vb = { x: x0 - m, y: y0 - m, w: w, h: h };
+	}
+	// zoom around the middle of what is on screen (f < 1: closer)
+	function zoomBy(f) {
+		var vb = st.vb, w = Math.max(3, Math.min(400, vb.w * f)), h2 = vb.h * w / vb.w, cx = vb.x + vb.w / 2, cy = vb.y + vb.h / 2;
+		st.vb = { x: cx - w / 2, y: cy - h2 / 2, w: w, h: h2 }; st.userView = true;
+		renderPlan();
 	}
 	function pxPerM() { var r = D.svg.getBoundingClientRect(); return r.width > 1 && r.height > 1 ? Math.min(r.width / st.vb.w, r.height / st.vb.h) : 30; }
 	function renderPlan() {
@@ -840,13 +853,13 @@
 			if (pinch && Object.keys(pts).length === 2) {
 				var ks = Object.keys(pts), a = pts[ks[0]], c = pts[ks[1]], d = Math.hypot(a[0] - c[0], a[1] - c[1]) || 1, f = pinch.d / d;
 				var w = Math.max(3, Math.min(400, pinch.vb.w * f)), hh = pinch.vb.h * w / pinch.vb.w;
-				st.vb = { x: pinch.mid[0] - (pinch.mid[0] - pinch.vb.x) * w / pinch.vb.w, y: pinch.mid[1] - (pinch.mid[1] - pinch.vb.y) * hh / pinch.vb.h, w: w, h: hh };
+				st.userView = true; st.vb = { x: pinch.mid[0] - (pinch.mid[0] - pinch.vb.x) * w / pinch.vb.w, y: pinch.mid[1] - (pinch.mid[1] - pinch.vb.y) * hh / pinch.vb.h, w: w, h: hh };
 				renderPlan(); return;
 			}
 			var p = toWorld(e);
 			if (st.drag && st.drag.pan) {
 				var k = pxPerM();
-				st.vb = Object.assign({}, st.drag.vb, { x: st.drag.vb.x - (e.clientX - st.drag.x) / k, y: st.drag.vb.y - (e.clientY - st.drag.y) / k });
+				st.userView = true; st.vb = Object.assign({}, st.drag.vb, { x: st.drag.vb.x - (e.clientX - st.drag.x) / k, y: st.drag.vb.y - (e.clientY - st.drag.y) / k });
 				renderPlan(); return;
 			}
 			if (st.drag && st.drag.end) {
@@ -897,7 +910,7 @@
 		s.addEventListener('wheel', function (e) {
 			e.preventDefault();
 			var p = toWorld(e), f = Math.exp((e.deltaY || 0) * 0.0015), w = Math.max(3, Math.min(400, st.vb.w * f)), hh = st.vb.h * w / st.vb.w;
-			st.vb = { x: p[0] - (p[0] - st.vb.x) * w / st.vb.w, y: p[1] - (p[1] - st.vb.y) * hh / st.vb.h, w: w, h: hh };
+			st.userView = true; st.vb = { x: p[0] - (p[0] - st.vb.x) * w / st.vb.w, y: p[1] - (p[1] - st.vb.y) * hh / st.vb.h, w: w, h: hh };
 			renderPlan();
 		}, { passive: false });
 		s.addEventListener('keydown', function (e) { if (e.key === ' ') { st.space = true; } });

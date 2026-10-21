@@ -10316,3 +10316,15 @@ msgstr "Генератор крыш не может построить крыш�
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Утепление цоколя (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Загрузка режима строительства…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Уменьшить"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Загрузка конструктора дома…"

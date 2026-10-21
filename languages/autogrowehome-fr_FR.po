@@ -10314,3 +10314,15 @@ msgstr "Le générateur de toiture ne peut pas couvrir des murs extérieurs en b
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Isolation du soubassement (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Chargement du mode construction…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Zoom arrière"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Chargement du configurateur de maison…"

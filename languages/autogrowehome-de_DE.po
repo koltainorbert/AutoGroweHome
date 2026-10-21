@@ -10314,3 +10314,15 @@ msgstr "Für schräge Außenwände kann der Dachgenerator kein Dach erstellen: N
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Sockeldämmung (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Baumodus wird geladen…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Verkleinern"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Der Hausplaner wird geladen…"

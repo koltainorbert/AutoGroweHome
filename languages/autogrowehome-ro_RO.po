@@ -10316,3 +10316,15 @@ msgstr "Pe un perete exterior oblic generatorul nu poate construi acoperișul: d
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Termoizolație soclu (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Se încarcă modul de construcție…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Micșorează"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Se încarcă designerul de case…"

@@ -886,6 +886,11 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 .agh-root.has-fs-css, .agh-root.has-fs-css * { overscroll-behavior: contain; }
 
 /* ------------------------------------------------------------------ build mode („Építés az alapoktól”) */
+/* Theme-proof: many themes pad and space every section/aside of the page. These elements of the build
+   editor and the wizard set their own box (specificity 0,2,0 beats theme rules like `.entry-content section`). */
+.agh-root :is(.agh-build, .agh-bld-stage, .agh-wizard, .agh-wiz-side, .agh-bld-group, .agh-bld-panel, .agh-panel) { margin: 0; box-sizing: border-box; }
+.agh-root :is(.agh-build, .agh-bld-stage, .agh-wizard, .agh-wiz-side) { padding: 0; }
+.agh-root :is(.agh-bld-panel, .agh-bld-stage, .agh-bld-planwrap, .agh-bld-3d) { max-height: none; }
 .agh-build { display: none; }
 .agh-shell.is-build { grid-template-rows: auto minmax(0, 1fr) !important; }
 .agh-shell.is-build > .agh-body,
@@ -1024,8 +1029,10 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 .agh-bld-quick { display: flex; gap: 6px; }
 .agh-bld-quick[hidden] { display: none; }
 .agh-bld-redo .agh-ico { transform: scaleX(-1); }
+.agh-bld-zoomtxt { font-size: 22px; line-height: 1; font-weight: 500; margin-top: -2px; }
 .agh-bld-planwrap, .agh-bld-3d { position: relative; flex: 1 1 auto; min-height: 0; border-radius: var(--agh-r-l); border: 1px solid var(--agh-glass-border); box-shadow: var(--agh-shadow-s); overflow: hidden; }
 .agh-bld-planwrap { background: var(--agh-surface-solid); }
+.agh-bld-planwrap, .agh-bld-3d { min-height: 280px; }
 .agh-bld-planwrap[hidden], .agh-bld-3d[hidden], .agh-bld-phase[hidden] { display: none; }
 .agh-bld-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; outline: none; cursor: default; }
 .agh-bld-svg[data-tool="wall"], .agh-bld-svg[data-tool="rect"], .agh-bld-svg[data-tool="opening"] { cursor: crosshair; }
@@ -1098,6 +1105,7 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 	.agh-bld-input, .agh-bld-num, .agh-bld-sel { min-height: 44px; }
 	.agh-bld-cu input { width: 22px; height: 22px; }
 	.agh-bld-stagebar { justify-content: flex-end; }
+	.agh-bld-planwrap, .agh-bld-3d { min-height: max(240px, 50vh); }
 	.agh-bld-quick .agh-iconbtn { width: 44px; height: 44px; }
 	.agh-bld-nav { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
 	.agh-bld-nav .agh-bld-exit, .agh-bld-nav .agh-bld-back { flex: none; width: 44px; padding: 0; }
@@ -1111,3 +1119,10 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 	.agh-bld-grid2, .agh-bld-tpl { grid-template-columns: minmax(0, 1fr); }
 	.agh-bld-custom li { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ------------------------------------------------------------------ loading indicator */
+.agh-boot-in { animation: agh-boot-in .25s ease both; }
+@keyframes agh-boot-in { from { opacity: 0; } to { opacity: 1; } }
+.agh-bld-loading { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 240px; font-size: 14px; color: var(--agh-ink-2); }
+.agh-bld-3dwait { position: absolute; inset: auto 12px 12px auto; z-index: 3; }
+@media (prefers-reduced-motion: reduce) { .agh-boot-in { animation: none; } }

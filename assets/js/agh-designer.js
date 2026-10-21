@@ -298,6 +298,7 @@
 			if (S.projectId) { loadProject(S.projectId, true); }
 			if (!S.wiz && S.boot.layout.tour && !lsGet('agh_tour_done', false)) { setTimeout(showTour, 400); }
 		}).catch(function () {
+			Array.prototype.forEach.call(document.querySelectorAll('.agh-boot'), function (n) { n.remove(); });
 			window.alert(S.boot ? t('err_boot') : (LOADER.errBoot || t('err_boot')));
 		});
 	}
@@ -453,6 +454,8 @@
 		shell.appendChild(els.toasts = h('div', { class: 'agh-toasts', 'aria-live': 'polite' }));
 		root.appendChild(shell);
 		document.body.appendChild(root);
+		// the loader's indicator goes in the same frame the designer appears
+		Array.prototype.forEach.call(document.querySelectorAll('.agh-boot'), function (n) { n.remove(); });
 		document.documentElement.style.overflow = 'hidden';
 		document.addEventListener('keydown', onKey);
 
@@ -2185,17 +2188,19 @@
 		if (!buildOn()) { return; }
 		buildSetup();
 		closeMenu(false);
+		// the editor shows at once with a loading indicator; its script follows
+		if (S.wiz) { exitWizard(true); }
+		S.bld = true;
+		shell.classList.add('is-build');
+		if (!els.build) { els.build = h('section', { class: 'agh-build', 'aria-label': t('b_title') }); shell.insertBefore(els.build, els.actionbar); }
+		els.build.hidden = false;
+		if (!window.AGH_BuildUI) { clear(els.build); els.build.appendChild(h('div', { class: 'agh-bld-loading', role: 'status' }, h('i', { class: 'agh-spinner' }), h('span', { text: t('b_loading') }))); }
+		updateBuildToggles();
 		loadBuildUi().then(function () {
-			if (!root) { return; }
-			if (S.wiz) { exitWizard(true); }
-			S.bld = true;
-			shell.classList.add('is-build');
-			if (!els.build) { els.build = h('section', { class: 'agh-build', 'aria-label': t('b_title') }); shell.insertBefore(els.build, els.actionbar); }
-			els.build.hidden = false;
-			updateBuildToggles();
+			if (!root || !S.bld) { return; }
 			window.AGH_BuildUI.open(buildApi());
 			event('build_open');
-		}, function () { toast(t('b_load_error'), 'error'); });
+		}, function () { exitBuild(false); toast(t('b_load_error'), 'error'); });
 	}
 	function exitBuild(done) {
 		if (!S.bld) { return; }
@@ -2244,8 +2249,10 @@
 	}
 	function buildPreview3D(el, c, phase) {
 		if (!A3) { return false; }
+		if (!el.querySelector('.agh-bld-3dwait')) { var wt = waitBox(); wt.classList.add('agh-bld-3dwait'); el.appendChild(wt); }
 		loadBuildScene().then(function (m) {
-			if (!m || !S.bld || !el.isConnected) { return; }
+			var wn = el.querySelector('.agh-bld-3dwait');
+			if (!m || !S.bld || !el.isConnected) { if (wn) { wn.remove(); } return; }
 			var v = A3.viewer();
 			if (!v) { A3.attach(el, c); v = A3.viewer(); }
 			if (v.wrap.parentNode !== el) { el.insertBefore(v.wrap, el.firstChild); }
@@ -2253,6 +2260,8 @@
 			v.syncSize();
 			v.update(c, 'build');
 			if (v.setPhase) { v.setPhase(phase); }
+			// the first frame of a new scene takes a moment on slow devices: the indicator stays until then
+			requestAnimationFrame(function () { requestAnimationFrame(function () { var w2 = el.querySelector('.agh-bld-3dwait'); if (w2) { w2.remove(); } }); });
 		});
 		return true;
 	}

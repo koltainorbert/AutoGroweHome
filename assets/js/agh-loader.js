@@ -62,12 +62,44 @@
 		setTimeout(function () { idle(warm, { timeout: 4000 }); }, 2500);
 	}
 
+	// Loading indicator from the click until the designer is on screen. Inline styles: the stylesheet
+	// itself is still loading, and the page's theme must not be able to hide or shift it.
+	var boot = null, bootTimer = 0;
+	function bootShow() {
+		if (boot || document.querySelector('.agh-root')) { return; }
+		boot = document.createElement('div');
+		boot.className = 'agh-boot agh-boot-in';
+		boot.setAttribute('role', 'status');
+		boot.setAttribute('aria-live', 'polite');
+		boot.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;margin:0;padding:0;background:rgba(28,25,22,.58);font:500 15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#1E2226;';
+		var card = document.createElement('div');
+		card.style.cssText = 'display:flex;align-items:center;gap:12px;margin:0;padding:16px 22px;border-radius:999px;background:#F6F3EE;box-shadow:0 12px 40px rgba(0,0,0,.25);max-width:calc(100vw - 32px);box-sizing:border-box;';
+		var sp = document.createElement('span');
+		sp.setAttribute('aria-hidden', 'true');
+		sp.style.cssText = 'flex:none;width:20px;height:20px;margin:0;padding:0;border-radius:50%;border:3px solid #B9824F;border-right-color:transparent;box-sizing:border-box;';
+		if (sp.animate && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) { sp.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 800, iterations: Infinity }); }
+		var tx = document.createElement('span');
+		tx.textContent = cfg.loading || 'Betöltés…';
+		tx.style.cssText = 'margin:0;padding:0;';
+		card.appendChild(sp); card.appendChild(tx); boot.appendChild(card);
+		document.body.appendChild(boot);
+		// gone as soon as the designer is there (it builds after its own bootstrap request)
+		bootTimer = setInterval(function () { if (document.querySelector('.agh-root')) { bootHide(); } }, 60);
+	}
+	function bootHide() {
+		if (bootTimer) { clearInterval(bootTimer); bootTimer = 0; }
+		if (boot && boot.parentNode) { boot.parentNode.removeChild(boot); }
+		boot = null;
+	}
 	function open(e) {
 		if (e) { e.preventDefault(); }
 		var btn = e && e.currentTarget;
 		if (btn) { btn.setAttribute('aria-busy', 'true'); }
+		bootShow();
+		setTimeout(function () { if (boot) { bootHide(); } }, 45000); // never stays forever
 		load().then(function (d) { d.open(); }).catch(function () {
-			window.alert('AutoGroweHome: betöltési hiba / loading error');
+			bootHide();
+			window.alert(cfg.errBoot || 'AutoGroweHome: betöltési hiba / loading error');
 		}).then(function () { if (btn) { btn.removeAttribute('aria-busy'); } });
 	}
 

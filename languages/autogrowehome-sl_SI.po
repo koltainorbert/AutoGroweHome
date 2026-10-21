@@ -10318,3 +10318,15 @@ msgstr "Generator streh ne more zgraditi strehe na poševni zunanji steni: streh
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Toplotna izolacija podstavka (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Nalaganje načina gradnje…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Pomanjšaj"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Nalaganje oblikovalnika hiše…"

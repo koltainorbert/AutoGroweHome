@@ -10314,3 +10314,15 @@ msgstr "The roof generator cannot build a roof on angled exterior walls: only ri
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Plinth insulation (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Loading the build mode…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Zoom out"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Loading the house designer…"

@@ -21,6 +21,9 @@ final class Strings {
 			'apply'                  => __( 'Alkalmaz', 'autogrowehome' ),
 			'apply_selected'         => __( 'Kijelöltek alkalmazása', 'autogrowehome' ),
 			// build mode („Építés az alapoktól”)
+			'b_loading' => __( 'Az építési mód betöltése…', 'autogrowehome' ),
+			'b_zoom_in' => __( 'Nagyítás', 'autogrowehome' ),
+			'b_zoom_out' => __( 'Kicsinyítés', 'autogrowehome' ),
 			'b_attic' => __( 'Beépített tetőtér (térdfallal)', 'autogrowehome' ),
 			'b_cannot_close' => __( 'A lépés lezárásához teljesüljön az ellenőrzőlista.', 'autogrowehome' ),
 			'b_checked' => __( 'ellenőrizve', 'autogrowehome' ),

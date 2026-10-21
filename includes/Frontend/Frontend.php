@@ -139,6 +139,7 @@ final class Frontend {
 			'floating' => $floating,
 			'label'    => '' !== $label ? $label : __( 'Tervezd meg álmaid otthonát', 'autogrowehome' ),
 			'errBoot'  => __( 'A háztervező nem tölthető be. Kérjük, próbáld újra később.', 'autogrowehome' ),
+			'loading'  => __( 'A háztervező betöltése…', 'autogrowehome' ),
 			'vars'     => self::css_vars(),
 		);
 		// build mode („Építés az alapoktól”): the core module, only while the admin switch is on

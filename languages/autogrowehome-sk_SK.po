@@ -10316,3 +10316,15 @@ msgstr "Na šikmej obvodovej stene generátor strechu nepostaví: strechu môže
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Izolácia sokla (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Načítava sa režim stavby…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Oddialiť"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Načítava sa návrhár domu…"

@@ -10314,3 +10314,15 @@ msgstr "El generador de cubiertas no puede cubrir muros exteriores oblicuos: sol
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Aislamiento del zócalo (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Cargando el modo construcción…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Alejar"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Cargando el diseñador de casas…"

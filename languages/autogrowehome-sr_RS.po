@@ -10316,3 +10316,15 @@ msgstr "Генератор крова не може да изгради кров
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Термоизолација сокле (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Учитавање режима градње…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Умањи"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Учитавање дизајнера куће…"

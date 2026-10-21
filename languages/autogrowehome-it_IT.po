@@ -10314,3 +10314,15 @@ msgstr "Il generatore di tetti non può coprire muri esterni obliqui: solo le pi
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr "Isolamento dello zoccolo (XPS)"
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr "Caricamento della modalità costruzione…"
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr "Riduci"
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr "Caricamento del configuratore di case…"

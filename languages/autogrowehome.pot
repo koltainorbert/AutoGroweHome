@@ -10286,3 +10286,15 @@ msgstr ""
 #: includes/Frontend/Strings.php
 msgid "Lábazati hőszigetelés (XPS)"
 msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Az építési mód betöltése…"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Kicsinyítés"
+msgstr ""
+
+#: includes/Frontend/Frontend.php
+msgid "A háztervező betöltése…"
+msgstr ""
