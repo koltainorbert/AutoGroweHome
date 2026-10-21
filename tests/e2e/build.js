@@ -79,6 +79,27 @@ async function openBuild(browser, w, h, touch) {
     }, N));
     res.console1 = errors.length; res.errors1 = errors.slice(0, 4);
 
+    /* 1b – the 3D stage follows the step, and leaving / re-entering keeps the editor and the drawing */
+    const re = await page.evaluate(async () => {
+      const B = window.AGH_Build, U = window.AGH_BuildUI, out = { phaseOk: 0, phaseN: 0, reenter: 0, same: 0 };
+      U.load(B.randomHouse(4242));
+      for (let i = 0; i <= 9; i++) { U.goStep(i); out.phaseN++; if (U.state().phase === i) { out.phaseOk++; } }
+      const sig = () => { const b = U.state().b; return b.walls.length + '/' + b.openings.length; }, s0 = sig();
+      const wait = (f, ms) => new Promise(r => { const t0 = Date.now(); (function q() { if (f() || Date.now() - t0 > ms) { r(f()); } else { setTimeout(q, 50); } })(); });
+      for (let k = 0; k < 5; k++) {
+        document.querySelector('.agh-bld-exit').click();
+        await wait(() => !document.querySelector('.agh-shell.is-build'), 3000);
+        const btn = document.querySelector('.agh-bld-btn');
+        btn.click();
+        const shown = await wait(() => { const sv = document.querySelector('.agh-shell.is-build .agh-build .agh-bld-svg'); return sv && sv.isConnected && document.querySelector('.agh-build').getBoundingClientRect().height > 200; }, 8000);
+        if (shown) { out.reenter++; }
+        if (U.state() && sig() === s0) { out.same++; }
+        if (U.state() && U.state().phase === U.state().step) { out.phaseOk++; } out.phaseN++;
+      }
+      return out;
+    });
+    res.reenter = re;
+
     /* 2 – 3D construction stages */
     const p3 = await page.evaluate(async () => {
       const B = window.AGH_Build, U = window.AGH_BuildUI, out = { houses: 0, phaseMs: [], visible: [], missing: 0, wallBox: 0, no3d: 0 };
@@ -191,9 +212,10 @@ async function openBuild(browser, w, h, touch) {
     if (!process.env.AGH_KEEP_BUILD) { console.error(toggle(false)); }
   }
   const d = res.designer || {};
-  const ok = res.houses === N && res.closed === N * 10 && res.geo === 0 && res.svgMismatch === 0 && res.opsMismatch === 0 && res.params === N && res.rooms === N && res.roof === N && !res.console1
+  const ok = res.reenter && res.reenter.reenter === 5 && res.reenter.same === 5 && res.reenter.phaseOk === res.reenter.phaseN && res.houses === N && res.closed === N * 10 && res.geo === 0 && res.svgMismatch === 0 && res.opsMismatch === 0 && res.params === N && res.rooms === N && res.roof === N && !res.console1
     && res.phase && res.phase.houses === 10 && res.phase.missing === 0 && d.back && d.volsOk && d.sketchOk && d.serverSame === true && (d.generate === 200 || d.generate === 202) && d.genHasBuild && !res.console3 && res.layout && res.layout.bad === 0;
   console.log(`építési mód: ${res.houses} ház, ${res.closed}/${res.steps} lépés lezárva, geometriai hiba ${res.geo} (kilógó fal ${res.wallOut}, nyílás a falon kívül ${res.opOut}, átfedés ${res.overlap}, lebegő ${res.float}), rajz≠modell ${res.svgMismatch + res.opsMismatch}, paraméter ${res.params}/${res.houses}, helyiség ${res.rooms}/${res.houses}, tető ${res.roof}/${res.houses}, házonként átlag ${res.msAvg} ms (max ${res.msMax}); ` +
+    `csúszka a lépéssel ${res.reenter ? res.reenter.phaseOk + '/' + res.reenter.phaseN : '-'}, újbóli belépés ${res.reenter ? res.reenter.reenter + '/5 (rajz megmaradt ' + res.reenter.same + '/5)' : '-'}; ` +
     `3D: ${res.phase ? res.phase.houses : 0} ház, fázisváltás átlag ${res.phase ? res.phase.phaseAvg : '-'} ms / max ${res.phase ? res.phase.phaseMax : '-'} ms, hiányzó fázis ${res.phase ? res.phase.missing : '-'}; ` +
     `tervező: tömeg ${d.volsOk ? 'egyezik' : 'ELTÉR'} (${d.vols} tömb), 2D ${d.sketchOk ? 'ok' : 'HIBA'}, koppintás „${d.pick}”, belső terek ${d.rooms}, vezetőkép ${d.guides}, szerver ${d.serverSame === true ? 'ugyanazt menti' : 'ELTÉR ' + d.serverSame}, generálás ${d.generate}${d.genHasBuild ? ' (a rajzzal)' : ''}; ` +
     `felület: ${res.layout ? res.layout.checks : 0} mérés, hibás ${res.layout ? res.layout.bad : '-'}; konzolhiba ${(res.console1 || 0) + (res.console3 || 0)}` + (ok ? '' : ' – HIBA ' + JSON.stringify({ nc: res.notClosable, e1: res.errors1, e3: res.errors3, lay: res.layout && res.layout.ex })));

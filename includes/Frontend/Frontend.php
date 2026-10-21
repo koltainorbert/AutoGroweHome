@@ -140,6 +140,8 @@ final class Frontend {
 			'label'    => '' !== $label ? $label : __( 'Tervezd meg álmaid otthonát', 'autogrowehome' ),
 			'errBoot'  => __( 'A háztervező nem tölthető be. Kérjük, próbáld újra később.', 'autogrowehome' ),
 			'loading'  => __( 'A háztervező betöltése…', 'autogrowehome' ),
+			'ctaIcon'  => self::cta_icon(),
+			'ctaCss'   => self::cta_css(),
 			'vars'     => self::css_vars(),
 		);
 		// build mode („Építés az alapoktól”): the core module, only while the admin switch is on
@@ -188,7 +190,62 @@ final class Frontend {
 		self::enqueue_loader();
 		$atts  = shortcode_atts( array( 'label' => '' ), (array) $atts );
 		$label = '' !== $atts['label'] ? $atts['label'] : ( (string) Settings::get( 'general.button_label', '' ) ?: __( 'Tervezd meg álmaid otthonát', 'autogrowehome' ) );
-		return '<div class="agh-cta-wrap"><button type="button" class="agh-cta" data-agh-open="1"><span class="agh-cta-ico" aria-hidden="true">⌂</span>' . esc_html( $label ) . '</button></div>';
+		$css = '';
+		if ( ! self::$cta_css_done ) { // the button's own look, before (and without) the designer's stylesheet
+			self::$cta_css_done = true;
+			$css = '<style id="agh-cta-css">' . self::cta_css() . '</style>';
+		}
+		return $css . '<div class="agh-cta-wrap"><button type="button" class="agh-cta" data-agh-open="1">' . self::cta_icon() . '<span class="agh-cta-label">' . esc_html( $label ) . '</span></button></div>';
+	}
+
+	/** @var bool The launcher CSS is printed once per page. */
+	private static $cta_css_done = false;
+
+	/**
+	 * Image on the launcher button: the uploaded brand icon (advanced branding), else the logo, else a
+	 * house symbol – as markup for inside the button.
+	 */
+	public static function cta_icon(): string {
+		$url = self::cta_image();
+		if ( '' !== $url ) {
+			return '<span class="agh-cta-ico is-img" aria-hidden="true"><img src="' . esc_url( $url ) . '" alt="" width="40" height="40" decoding="async"></span>';
+		}
+		return '<span class="agh-cta-ico" aria-hidden="true">' . self::cta_svg() . '</span>';
+	}
+
+	private static function cta_image(): string {
+		$brand = (array) Settings::get( 'branding' );
+		$icon  = Features::enabled( 'branding_advanced' ) && ! empty( $brand['icon_id'] ) ? wp_get_attachment_image_url( (int) $brand['icon_id'], 'thumbnail' ) : '';
+		if ( ! $icon && ! empty( $brand['logo_id'] ) ) {
+			$icon = wp_get_attachment_image_url( (int) $brand['logo_id'], 'thumbnail' );
+		}
+		return $icon ? (string) $icon : '';
+	}
+
+	private static function cta_svg(): string {
+		return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>';
+	}
+
+	/**
+	 * Theme-proof style of the launcher buttons (shortcode and floating): the same rules the designer
+	 * stylesheet had, plus a reset of the properties themes like to put on every button.
+	 */
+	public static function cta_css(): string {
+		$b       = (array) Settings::get( 'branding' );
+		$primary = preg_match( '/^#[0-9a-fA-F]{6}$/', (string) ( $b['color_primary'] ?? '' ) ) ? $b['color_primary'] : '#B9824F';
+		return '.agh-cta-wrap{margin:1em 0}'
+			. '.agh-cta-wrap .agh-cta,.agh-fab{display:inline-flex;align-items:center;gap:12px;margin:0;min-height:60px;padding:6px 24px 6px 6px;border-radius:999px;border:1px solid rgba(255,255,255,.7);'
+			. 'background:linear-gradient(135deg,rgba(255,255,255,.8),rgba(255,255,255,.5));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 12px 34px rgba(30,34,38,.18);'
+			. 'color:#1E2226;cursor:pointer;font:600 15px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.02em;text-transform:none;text-decoration:none;text-align:left;box-sizing:border-box;'
+			. 'transition:transform .25s ease,box-shadow .25s}'
+			. '.agh-cta-wrap .agh-cta:hover,.agh-fab:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(30,34,38,.24);background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,255,255,.6));color:#1E2226}'
+			. '.agh-cta-wrap .agh-cta:focus-visible,.agh-fab:focus-visible{outline:3px solid ' . $primary . ';outline-offset:3px}'
+			. '.agh-cta .agh-cta-ico,.agh-fab .agh-cta-ico{flex:none;display:inline-grid;place-items:center;width:48px;height:48px;margin:0;padding:0;border-radius:50%;background:' . $primary . ';color:#fff;line-height:0;overflow:hidden;box-sizing:border-box}'
+			. '.agh-cta .agh-cta-ico svg,.agh-fab .agh-cta-ico svg{width:26px;height:26px;display:block}'
+			. '.agh-cta .agh-cta-ico.is-img,.agh-fab .agh-cta-ico.is-img{background:#fff;border:1px solid rgba(30,34,38,.12);border-radius:12px;padding:3px}'
+			. '.agh-cta .agh-cta-ico.is-img img,.agh-fab .agh-cta-ico.is-img img{width:40px;height:40px;max-width:none;object-fit:contain;display:block;margin:0;border:0;border-radius:6px;box-shadow:none}'
+			. '.agh-fab{position:fixed;right:22px;bottom:22px;z-index:99990}'
+			. '@media (max-width:820px){.agh-fab{right:14px;bottom:14px}}';
 	}
 
 	public static function sc_button( $atts ): string {

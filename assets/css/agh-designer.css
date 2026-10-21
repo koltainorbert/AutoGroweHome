@@ -94,20 +94,8 @@
 .agh-muted { color: var(--agh-ink-3); }
 .agh-small { font-size: 12px; }
 
-/* ------------------------------------------------------------------ launcher */
-.agh-cta-wrap { margin: 1em 0; }
-.agh-cta, .agh-fab {
-	display: inline-flex; align-items: center; gap: 10px;
-	padding: 14px 24px; border-radius: 999px; border: 1px solid rgba(255,255,255,.7);
-	background: linear-gradient(135deg, rgba(255,255,255,.75), rgba(255,255,255,.45));
-	backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-	box-shadow: 0 12px 34px rgba(30,34,38,.18); color: #1E2226; cursor: pointer;
-	font: 600 15px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .02em;
-	transition: transform .25s var(--agh-ease, ease), box-shadow .25s;
-}
-.agh-cta:hover, .agh-fab:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(30,34,38,.24); }
-.agh-cta-ico { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #B9824F; color: #fff; font-size: 16px; }
-.agh-fab { position: fixed; right: 22px; bottom: 22px; z-index: 99990; }
+/* ------------------------------------------------------------------ launcher
+   The launcher buttons (.agh-cta, .agh-fab) are styled by Frontend::cta_css(), printed with the button. */
 
 /* ------------------------------------------------------------------ overlay & shell */
 .agh-overlay {
@@ -685,7 +673,6 @@
 	.agh-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	.agh-form-grid { grid-template-columns: 1fr; }
 	.agh-compare { grid-template-columns: 110px repeat(3, minmax(90px, 1fr)); overflow-x: auto; }
-	.agh-fab { right: 14px; bottom: 14px; padding: 12px 18px; }
 	/* Touch: 16px text in fields (iOS zooms in on smaller), 44px targets. */
 	.agh-input, .agh-select, .agh-textarea, .agh-search input { font-size: 16px; }
 	.agh-input, .agh-select { min-height: 44px; }
@@ -889,7 +876,8 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 /* Theme-proof: many themes pad and space every section/aside of the page. These elements of the build
    editor and the wizard set their own box (specificity 0,2,0 beats theme rules like `.entry-content section`). */
 .agh-root :is(.agh-build, .agh-bld-stage, .agh-wizard, .agh-wiz-side, .agh-bld-group, .agh-bld-panel, .agh-panel) { margin: 0; box-sizing: border-box; }
-.agh-root :is(.agh-build, .agh-bld-stage, .agh-wizard, .agh-wiz-side) { padding: 0; }
+.agh-root :is(.agh-build, .agh-bld-stage, .agh-wizard, .agh-wiz-side, .agh-panel) { padding: 0; }
+.agh-root :is(.agh-header, .agh-actionbar, .agh-rail, .agh-mobile-tabs, .agh-concept, .agh-body, .agh-shell) { margin: 0; box-sizing: border-box; }
 .agh-root :is(.agh-bld-panel, .agh-bld-stage, .agh-bld-planwrap, .agh-bld-3d) { max-height: none; }
 .agh-build { display: none; }
 .agh-shell.is-build { grid-template-rows: auto minmax(0, 1fr) !important; }

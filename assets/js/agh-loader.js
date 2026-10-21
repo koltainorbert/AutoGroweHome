@@ -113,11 +113,14 @@
 			b.type = 'button';
 			b.className = 'agh-fab';
 			b.setAttribute('data-agh-open', '1');
-			b.innerHTML = '<span class="agh-cta-ico" aria-hidden="true">&#8962;</span><span></span>';
+			b.innerHTML = (cfg.ctaIcon || '<span class="agh-cta-ico" aria-hidden="true">&#8962;</span>') + '<span class="agh-cta-label"></span>';
 			b.lastChild.textContent = cfg.label;
-			var st2 = document.createElement('style');
-			st2.textContent = '.agh-fab{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.7);background:linear-gradient(135deg,rgba(255,255,255,.8),rgba(255,255,255,.5));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 12px 34px rgba(30,34,38,.2);color:#1E2226;cursor:pointer;font:600 15px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;position:fixed;right:22px;bottom:22px;z-index:99990}.agh-fab .agh-cta-ico{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#B9824F;color:#fff}@media(max-width:600px){.agh-fab{right:12px;bottom:12px;padding:11px 16px;font-size:14px}}';
-			document.head.appendChild(st2);
+			if (!document.getElementById('agh-cta-css')) {
+				var st2 = document.createElement('style');
+				st2.id = 'agh-cta-css';
+				st2.textContent = cfg.ctaCss || '';
+				document.head.appendChild(st2);
+			}
 			b.addEventListener('click', open);
 			b.__agh = 1;
 			document.body.appendChild(b);

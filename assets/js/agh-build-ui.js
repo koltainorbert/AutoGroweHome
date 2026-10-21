@@ -38,14 +38,15 @@
 		A = api; B = root.AGH_Build;
 		var saved = api.config().build;
 		var b = saved && saved.walls ? B.normalize(saved) : B.create();
-		st = { b: b, step: b.step || 0, tool: 'select', kind: 'ext', otype: 'window', sel: null, lv: 0, view: 'plan', pane: 'panel', phase: 8, undo: [], redo: [], vb: null, draw: null, drag: null, msPhase: null, showAll: false };
+		st = { b: b, step: b.step || 0, tool: 'select', kind: 'ext', otype: 'window', sel: null, lv: 0, view: 'plan', pane: 'panel', phase: Math.min(9, b.step || 0), undo: [], redo: [], vb: null, draw: null, drag: null, msPhase: null, showAll: false };
 		if (st.step === 6) { st.kind = 'part'; }
 		if (st.step === 7) { st.tool = 'opening'; }
 		build();
 		fitView();
 		renderAll(true);
 	}
-	function close() { if (D.ro) { D.ro.disconnect(); } if (D.root && D.root.parentNode) { D.root.parentNode.removeChild(D.root); } window.removeEventListener('resize', onResize); D = {}; st = null; }
+	// closing empties the host (it belongs to the designer and is reused on the next visit)
+	function close() { if (D.ro) { D.ro.disconnect(); } if (D.root) { D.root.innerHTML = ''; D.root.removeAttribute('data-pane'); } window.removeEventListener('resize', onResize); D = {}; st = null; }
 	function snapshot() { return JSON.stringify(st.b); }
 	function change(fn, opts) {
 		opts = opts || {};
@@ -130,10 +131,9 @@
 		st.tool = i === 7 ? 'opening' : (i === 5 || i === 6 ? 'wall' : 'select');
 		st.kind = i === 6 ? 'part' : 'ext';
 		if (st.lv >= st.b.levels.length) { st.lv = 0; }
-		if (i <= 8) { st.phase = Math.max(0, i); }
+		st.phase = Math.max(0, Math.min(PHASE3D, i)); // the 3D construction stage follows the step
 		if (!st.userView || (i === 0) !== (st.lastStep === 0)) { st.userView = false; fitView(); }
 		st.lastStep = i;
-		if (i === 9) { st.phase = PHASE3D; }
 		A.apply(st.b, B.params(st.b, cfg()));
 		renderAll();
 		if (st.view === '3d') { setPhase(st.phase); }

@@ -2192,7 +2192,8 @@
 		if (S.wiz) { exitWizard(true); }
 		S.bld = true;
 		shell.classList.add('is-build');
-		if (!els.build) { els.build = h('section', { class: 'agh-build', 'aria-label': t('b_title') }); shell.insertBefore(els.build, els.actionbar); }
+		if (!els.build) { els.build = h('section', { class: 'agh-build', 'aria-label': t('b_title') }); }
+		if (els.build.parentNode !== shell) { shell.insertBefore(els.build, els.actionbar); }
 		els.build.hidden = false;
 		if (!window.AGH_BuildUI) { clear(els.build); els.build.appendChild(h('div', { class: 'agh-bld-loading', role: 'status' }, h('i', { class: 'agh-spinner' }), h('span', { text: t('b_loading') }))); }
 		updateBuildToggles();
