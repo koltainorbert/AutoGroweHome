@@ -109,7 +109,11 @@ final class MagnificProvider implements ImageProviderInterface {
 		$use_reference = in_array( $op, array( 'view', 'interior' ), true ) && ! empty( $r['reference_image'] );
 		$strategy      = (string) Settings::get( 'magnific.view_strategy', 'reference' );
 
-		if ( $use_reference && 'reference' === $strategy ) {
+		// Bound to the 3D model (Faithful/Clone with its picture): Flux has no structure strength and
+		// follows the text, so the view goes the Mystic way – the 3D picture as structure, the chosen
+		// hero as style reference (1.15.3).
+		$bound = ! empty( $r['bound'] ) && ! empty( $r['structure_image'] ) && Settings::get( 'magnific.structure_guidance', true );
+		if ( $use_reference && 'reference' === $strategy && ! $bound ) {
 			$endpoint = $this->endpoint( 'reference_endpoint', '/v1/ai/text-to-image/flux-2-pro' );
 			$body     = array(
 				'prompt'      => PromptEngine::clip( (string) $r['prompt'] ),

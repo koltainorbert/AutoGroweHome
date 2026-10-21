@@ -476,6 +476,7 @@ final class Pipeline {
 			'resolution'      => 'hero' === $asset['view'] && 'all' === Settings::get( 'limits.gallery_mode' ) ? self::max_res( (string) Settings::get( 'magnific.final_resolution', '4k' ) ) : self::max_res( (string) Settings::get( 'magnific.preview_resolution', '2k' ) ),
 			'reference_image' => $reference,
 			'structure_image' => $structure,
+			'bound'           => $bound,   // Faithful/Clone with the 3D picture: the provider keeps to the structure (1.15.3)
 			'style_image'     => $style_image,
 			'negative_prompt' => (string) ( $built['negative_list'] ?? $built['negative'] ),
 			'building'        => $concept['building'],

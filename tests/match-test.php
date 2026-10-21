@@ -99,5 +99,32 @@ $t( 'mindhárom a terrakotta tetőt és a bézs követ mondja', count( $heroes )
 $t( 'a nyitóblokk a stílusminta anyagát kizárja', count( $heroes ) > 0 && false !== strpos( $heroes[0], 'a style sample gives only light' ) );
 $t( 'a prompt 3900 alatt', count( $heroes ) > 0 && max( array_map( 'mb_strlen', $heroes ) ) <= PromptEngine::MAX_PROMPT );
 
+/* ---------------------------------------------------------------- 5. nézetek (1.15.3) */
+$t( 'kötve nincs torony, U-alak, ív', 0 === preg_match( '/\b(tower|U-shaped|arched)\b/i', $bnd ) );
+$t( 'kötve a stílus neve marad', false !== strpos( $bnd, 'Architectural style: Mediterranean' ) );
+$t( 'szabadon a stílus leírása marad', false !== strpos( $free, 'small tower' ) );
+$urls  = array();
+$fake  = function ( $pre, $args, $url ) use ( &$urls ) {
+	if ( false === strpos( (string) $url, 'magnific.com' ) ) {
+		return $pre;
+	}
+	$urls[] = array( (string) $url, json_decode( (string) ( $args['body'] ?? '' ), true ) );
+	return array( 'headers' => array(), 'body' => wp_json_encode( array( 'data' => array( 'task_id' => wp_generate_uuid4(), 'status' => 'CREATED', 'generated' => array() ) ) ), 'response' => array( 'code' => 200, 'message' => 'OK' ), 'cookies' => array(), 'filename' => null );
+};
+add_filter( 'pre_http_request', $fake, 10, 3 );
+\AutoGroweHome\Support\Secrets::set( 'magnific_api_key', 'test-only-key' );
+Settings::update_group( 'magnific', array( 'view_strategy' => 'reference', 'enabled' => true ) );
+Settings::flush();
+$mag = new \AutoGroweHome\Ai\MagnificProvider();
+$b64 = substr( $jpg, strlen( 'data:image/jpeg;base64,' ) );
+$mag->submit( array( 'op' => 'view', 'view' => 'front', 'prompt' => 'p', 'structure_image' => $b64, 'reference_image' => $b64, 'bound' => true ) );
+$mag->submit( array( 'op' => 'view', 'view' => 'front', 'prompt' => 'p', 'structure_image' => $b64, 'reference_image' => $b64 ) );
+remove_filter( 'pre_http_request', $fake, 10 );
+\AutoGroweHome\Support\Secrets::set( 'magnific_api_key', '' );
+$k0 = $urls[0] ?? array( '', array() );
+$k1 = $urls[1] ?? array( '', array() );
+$t( 'kötött nézet: Mystic, structure + a hero stílusmintának', false !== strpos( $k0[0], '/v1/ai/mystic' ) && ! empty( $k0[1]['structure_reference'] ) && ! empty( $k0[1]['style_reference'] ) && 75 === ( $k0[1]['structure_strength'] ?? 0 ) );
+$t( 'nem kötött nézet: a mai Flux-út', false !== strpos( $k1[0], 'flux-2-pro' ) );
+
 echo "3D-egyezés: {$ok}/" . ( $ok + $fail ) . ( $fail ? " – {$fail} HIBA" : '' ) . "\n";
 exit( $fail ? 1 : 0 );

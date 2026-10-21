@@ -665,6 +665,11 @@ final class PromptEngine {
 		}
 		$v       = self::get( $version );
 		$vars    = self::variables( $c, $concept, $view, $room );
+		if ( $bound ) {
+			// the style's own description orders a building ("U-shaped house with a small tower,
+			// arched openings"); bound to the 3D only the style's name stays (1.15.3)
+			$vars['style_direction'] = '';
+		}
 		$views   = $v['views'];
 		$vdef    = $views[ $view ] ?? $views['hero'];
 		$modules = $v['modules'];

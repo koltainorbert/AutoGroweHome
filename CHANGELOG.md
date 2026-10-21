@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.15.3 – 2026-10-21
+
+Norbi: „az első képet kiválasztotta, akkor megcsinál több nézetet, azok meg rosszabbak” – a madártávlaton és az elölnézeten torony, íves ablakok, más tömeg. Munkaprompt: `docs/FELADAT-1.15.3.md`.
+
+- **Gyökérok 1:** a nézetek a Flux 2 Pro úton mentek (1440×816): a kiválasztott hero + a nézet 3D képe, de a Fluxnak nincs structure-erőssége, a szöveg dönt. Most **Hű/Klón/egyedi hűségnél, 3D vezetőképpel** a nézet a Mystic structure útján megy (a 3D a forma a hűség erősségével, a kiválasztott hero a stílusminta), a „Nézetek egysége” beállítástól függetlenül. Vezetőkép nélkül és Szabad/Kiegyensúlyozott fokozaton a mai út.
+- **Gyökérok 2:** a mediterrán stílus leírása tömeget rendelt („U-shaped house around a courtyard with a small tower, … arched openings”). Kötött hűségnél csak a stílus neve megy, a leírás kimarad; Szabad fokozaton marad.
+- Mérve: `tests/match-test.php` 26/26 (új: nincs „tower/U-shaped/arched”, kötött nézet → `/v1/ai/mystic` structure 75 + hero style reference, nem kötött → Flux) · `guide-test` 62/62 · `vision-test` 55/55 · stuck 9/9 · sketch 0 hiba · autoloader 123/123 · lint 0.
+- **Nem mérhető itt:** a Mystic nézet díja a Flux nézethez képest (éles kulccsal mérendő); a régi, rossz színű hero mint stílusminta a nézetbe is átviszi a hibát – új generálás kell.
+
 ## 1.15.2 – 2026-10-21
 
 Norbi (mediterrán ház, 3 generált kép + a 3D): „hogy nem jó!!! … mi a hiba???” A forma jó volt (tömeg, oromzatok, ablakok, terasz, kerítés, kapu), a színek és anyagok nem: fekete tető narancs helyett, szürke palakő bézs terméskő helyett, világos fa kerítés sötét lamella helyett. Munkaprompt: `docs/FELADAT-1.15.2.md`.

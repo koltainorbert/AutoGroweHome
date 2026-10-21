@@ -394,6 +394,12 @@ A felbontás: a koncepcióképek 2k-ban készülnek (gyors, olcsó), a kiválasz
 4k-ban. Nyomtatáshoz vagy nagy bemutatóhoz a „Felskálázás a kiválasztott galériánál” kapcsoló tesz
 rá még egy lépést (külön költség).
 
+**Kötött hűség (1.15.2–1.15.3):** „Hű”, „Klón” és egyedi hűségnél, ha van 3D vezetőkép, a prompt a 3D
+színeit mondja (tető, kő, kerítés), a koncepciók és a stílus tömegleírása (pl. „torony”, „U alak”,
+„íves nyílások”) kimarad, és a galéria nézetei a „Nézetek egysége” beállítástól függetlenül a Mystic
+structure útján mennek (a 3D a forma, a kiválasztott hero a stílusminta) – a Flux-út ilyenkor nem fut,
+mert annak nincs structure-erőssége.
+
 ### 5.3 Prompt a 3D képből (1.15.0)
 
 AI-szolgáltatók → Anthropic → „Képleíró prompt”. Bekapcsolva (alap) a külső képek promptját nem a
