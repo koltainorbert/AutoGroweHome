@@ -1,5 +1,15 @@
 # Változásnapló
 
+## 1.14.3 – 2026-10-21
+
+Norbi (4 kérés): a sima 3D tervező „mindig középen kicsiben”; az építési állás csúszkája „nem a sorral nő … az 1. pontnál már a 8-ast mutatja”; a „Vissza a tervezőbe” után újra belépve „szürke képernyő”; „a logó nagyon kicsi a háztervező gombon”. Munkaprompt: `docs/FELADAT-1.14.3.md`.
+
+- **A tervező panelei téma-függetlenek:** a téma a `section`/`aside` elemekre ≈ 100 px belső margót tett, ezért a „Tervezés” fül és az előnézet lecsúszott és összement. Most a panelek, a fejléc, a műveleti sáv, az oldalsáv és a fülek saját margóval dolgoznak. Téma-szimulációval a fül a panel tetejétől 1 px (előtte ≈ 160 px), az előnézet a panel 72 % (1366×768) / 80 % (1920×1080); téma nélkül hajszálra azonos az 1.14.2-vel.
+- **A fázis-csúszka a lépéssel halad:** megnyitáskor és minden lépésváltáskor az aktuális lépést mutatja (0–9); kézzel húzható.
+- **Újbóli belépés:** a bezárás eddig kivette a DOM-ból az építési mód keretét, másodszorra a szerkesztő egy láthatatlan elembe épült (szürke képernyő). Most csak kiürül, belépéskor mindig visszakerül; a rajz megmarad.
+- **Megnyitógomb:** a „⌂” betűjel helyett az Arculat ikonja / logója (48 px-es elem, 40 px-es kép), ennek hiányában éles SVG házikon; a gomb stílusa a gombbal együtt kerül az oldalra (eddig csak a tervező megnyitása után töltődött be), téma-független.
+- Mérve: `tests/e2e/build.js 10`: 100/100 lépés, geometriai hiba 0, **csúszka a lépéssel 15/15, újbóli belépés 5/5, rajz megmaradt 5/5**, 3D fázisváltás max 6,2 ms, felület 110 mérés 0 hiba, konzolhiba 0 · `tests/e2e/theme.js` (új mérőpontok) zöld · új `tests/e2e/cta.js`: ikon 48×48, logóval 40 px, SVG 26 px, gombokat átformázó témával és bezárás után ugyanaz, konzolhiba 0 · `wizard` és `responsive` (túllógás 0, konzolhiba 0) · `build-test` 6975/6975 · autoloader 121/121 · lint 0.
+
 ## 1.14.2 – 2026-10-21
 
 Norbi: „nagyon vékony sávban tudom a ház alapját csinálni, és nem nagyítódik ki; amikor töltöm be az appot, kellene töltésindikátor, mert alul-fölül is hatalmas hely”. Munkaprompt: `docs/FELADAT-1.14.2.md`.
