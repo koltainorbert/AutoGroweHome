@@ -159,7 +159,8 @@
 .agh-brand-name { font-family: var(--agh-font-head); font-size: 15px; letter-spacing: .24em; text-transform: uppercase; white-space: nowrap; }
 .agh-brand-sub { font-size: 11px; color: var(--agh-ink-3); letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .agh-header-spacer { flex: 1; }
-.agh-header-tools { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+.agh-header-tools { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex: none; }
+.agh-header-tools > .agh-iconbtn, .agh-header-tools > .agh-btn { flex: none; } /* the brand gives way, the tap targets never shrink */
 
 /* header overflow menu – only on small screens (see the 820px breakpoint) */
 .agh-show-m { display: none !important; }

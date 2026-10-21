@@ -1,5 +1,10 @@
 # Változásnapló
 
+## 1.14.5 – 2026-10-21
+
+- **Fejléc telefonon:** szűk helyen a fejléc ikongombjai 1 px-et zsugorodtak (43 px), mert a rugalmas sor engedte; most a gombok soha nem zsugorodnak, a márkanév rövidül. Mérve: `tests/e2e/build.js` felület 110 mérés, hibás 0 (előtte 2); `responsive` és `wizard`: a 44 px alatti érintési célok száma minden méreten és lépésen azonos az 1.12.1-gyel, túllógás 0, konzolhiba 0.
+- Az 1.14.4 mérései a teljes csomagon: `fullscreen` 76/76, `build.js 5` (50/50 lépés, geometriai hiba 0, csúszka 15/15, újbóli belépés 5/5, 3D fázisváltás max 10,5 ms), `theme.js`, `cta.js`, `build-test` 6975/6975, autoloader 121/121 – zöld.
+
 ## 1.14.4 – 2026-10-21
 
 Norbi: „Az itteni teljes képernyő nem megy az alapok tervezésénél.” Munkaprompt: `docs/FELADAT-1.14.4.md`.
