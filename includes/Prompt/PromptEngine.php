@@ -30,6 +30,25 @@ final class PromptEngine {
 	 */
 	public const MAX_PROMPT = 3900;
 
+	/** Colour fields of surfaces that are (or may be) timber: only these get wood-tone colour names. */
+	public const WOOD_COLOURS = array( 'facade_accent_color', 'shutter_color', 'entrance_door_color', 'furniture_color', 'floor_color', 'fronts_color', 'worktop_color' );
+
+	/**
+	 * Main facade materials the 3D draws in their own colour (agh-sketch.js facadeBase()), whatever
+	 * the facade colour says – the prompt names that colour, the facade colour goes to the render.
+	 */
+	public const FIXED_FACADE = array(
+		'stone'        => 'warm beige-yellow natural stone in irregular random-rubble masonry',
+		'brick'        => 'red-brown brick',
+		'clinker'      => 'dark brown clinker brick',
+		'limestone'    => 'pale cream limestone',
+		'brick_white'  => 'white limewashed brick',
+		'concrete'     => 'light grey fair-faced concrete',
+		'metal'        => 'dark grey standing-seam metal',
+		'render_dark'  => 'dark anthracite render',
+		'charred_wood' => 'black charred timber',
+	);
+
 	/**
 	 * Modules shortened when a prompt is too long, least important first.
 	 * The client's own description ("user": client wishes / free text) comes
@@ -311,7 +330,7 @@ final class PromptEngine {
 			return str_replace( array( '{value}', '{label}' ), array( $p, $def['options'][ (string) $v ] ?? '' ), $def['prompt'] );
 		}
 		if ( 'color' === $def['type'] ) {
-			return str_replace( '{color}', Color::describe( (string) $v ), $def['prompt'] );
+			return str_replace( '{color}', Color::describe( (string) $v, in_array( $id, self::WOOD_COLOURS, true ) ), $def['prompt'] );
 		}
 		if ( in_array( $def['type'], array( 'integer', 'number', 'range' ), true ) && 0.0 === (float) $v ) {
 			return '';
@@ -437,13 +456,18 @@ final class PromptEngine {
 		$roof         = self::phrases( array( 'roof_type', 'roof_pitch', 'gable_finish', 'roof_overhang' ), $c );
 		$roof_product = self::roof_product_phrase( $c );
 
-		$facade   = self::phrases( array( 'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'facade_texture', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number' ), $c );
+		$facade   = self::facade_phrase( $c );
 		$masonry  = self::masonry_phrase( $c );
 		if ( '' !== $masonry ) {
 			$facade = self::join_phrases( $facade, $masonry );
 		}
 		$openings = self::phrases( array( 'window_style', 'window_frame_material', 'window_frame_color', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading' ), $c );
 		$garden   = self::phrases( array( 'garden_style', 'garden_features', 'garden_density', 'tree_types', 'terrace_area', 'terrace_floor', 'driveway', 'fence', 'gate', 'garage', 'entrance_canopy', 'outdoor_covered', 'exterior_steps', 'balcony', 'neighbors', 'orientation' ), $c );
+		$fence_p  = self::phrase( 'fence', $c );
+		if ( '' !== $fence_p && '' !== self::fence_colour( $c ) ) {
+			// the colour the 3D draws the fence in (1.15.2)
+			$garden = str_replace( $fence_p, $fence_p . ' in ' . self::fence_colour( $c ), $garden );
+		}
 		// the surroundings: the chosen landscape, or the one that suits the style (as in the 3D view)
 		$cl = $c;
 		if ( 'auto' === ( $c['landscape'] ?? 'auto' ) ) {
@@ -631,7 +655,14 @@ final class PromptEngine {
 	 *
 	 * @return array{prompt:string,negative:string,version:int,view:string}
 	 */
-	public static function build( array $c, array $concept, string $view, ?array $room = null, int $version = 0 ): array {
+	public static function build( array $c, array $concept, string $view, ?array $room = null, int $version = 0, bool $bound = false ): array {
+		if ( $bound ) {
+			// Bound to the visitor's 3D model (Faithful/Clone with a guide picture): the concept texts
+			// describe another house ("articulated massing with a projecting wing", "dark metal
+			// accents", "clearly distinct in massing and materials") and pull the picture away from
+			// the reference – only the concept's name and the client's own wishes stay (1.15.2).
+			$concept['brief'] = array_intersect_key( (array) ( $concept['brief'] ?? array() ), array_flip( array( 'name', 'name_en', 'client_wishes_en' ) ) );
+		}
 		$v       = self::get( $version );
 		$vars    = self::variables( $c, $concept, $view, $room );
 		$views   = $v['views'];
@@ -803,6 +834,70 @@ final class PromptEngine {
 		return $roof_product;
 	}
 
+	/**
+	 * The facade in words, in the colours the 3D model shows: a main material the 3D draws in its
+	 * own colour (stone, brick…) is named with that colour, and the facade colour then belongs to
+	 * the rendered parts only (1.15.2: "natural stone, facade colour warm white" made a grey or
+	 * whitewashed stone house of a warm beige rubble-stone one).
+	 */
+	public static function facade_phrase( array $c ): string {
+		$main = (string) ( $c['facade_main'] ?? '' );
+		$rest = array( 'facade_accent', 'facade_accent_color', 'plinth', 'facade_texture', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number' );
+		if ( ! isset( self::FIXED_FACADE[ $main ] ) ) {
+			return self::phrases( array_merge( array( 'facade_main', 'facade_color' ), $rest ), $c );
+		}
+		$colour = trim( (string) preg_replace( '/^facade colou?r\s+/i', '', self::phrase( 'facade_color', $c ) ) );
+		$out    = 'main facade in ' . self::FIXED_FACADE[ $main ];
+		if ( '' !== $colour ) {
+			$out .= ', rendered parts in ' . $colour;
+		}
+		return self::join_phrases( $out, self::phrases( $rest, $c ) );
+	}
+
+	/**
+	 * The colour the 3D draws a slatted fence in (agh-3d.js): weathered grey timber for the
+	 * Scandinavian style, dark anthracite metal otherwise. '' for other fences (their material says it).
+	 */
+	public static function fence_colour( array $c ): string {
+		if ( 'slats' !== (string) ( $c['fence'] ?? '' ) ) {
+			return '';
+		}
+		return 'scandinavian' === (string) ( $c['arch_style'] ?? '' ) ? 'weathered grey timber' : 'dark anthracite metal';
+	}
+
+	/**
+	 * The design's own colours and materials in one sentence, for the prompt written from the
+	 * picture: a picture in golden light shows a white wall cream and a red roof brown, the
+	 * configuration knows the real values (1.15.2).
+	 */
+	public static function design_facts( array $c ): string {
+		$facts = array();
+		$roof  = self::roof_product_phrase( $c );
+		if ( '' !== $roof && 'flat' !== (string) ( $c['roof_type'] ?? '' ) ) {
+			$facts[] = 'roof ' . $roof;
+		}
+		$main = (string) ( $c['facade_main'] ?? '' );
+		if ( isset( self::FIXED_FACADE[ $main ] ) ) {
+			$facts[] = 'main facade ' . self::FIXED_FACADE[ $main ];
+			$render  = trim( (string) preg_replace( '/^facade colou?r\s+/i', '', self::phrase( 'facade_color', $c ) ) );
+			if ( '' !== $render ) {
+				$facts[] = 'rendered parts ' . $render;
+			}
+		} else {
+			$facts[] = trim( self::phrases( array( 'facade_main', 'facade_color' ), $c ) );
+		}
+		$frame = self::phrase( 'window_frame_color', $c );
+		if ( '' !== $frame ) {
+			$facts[] = $frame;
+		}
+		$fence = self::phrase( 'fence', $c );
+		if ( '' !== $fence && 'no fence' !== $fence ) {
+			$facts[] = $fence . ( '' !== self::fence_colour( $c ) ? ' in ' . self::fence_colour( $c ) : '' );
+		}
+		$facts = array_values( array_filter( array_map( 'trim', $facts ) ) );
+		return empty( $facts ) ? '' : 'Exact colours and materials of the design (binding, the screenshot light may tint them): ' . implode( '; ', $facts ) . '.';
+	}
+
 	public static function reference_lead(): string {
 		$f = (string) Settings::get( 'magnific.fidelity', 'faithful' );
 		if ( ! in_array( $f, array( 'faithful', 'clone', 'custom' ), true ) ) {
@@ -816,6 +911,7 @@ final class PromptEngine {
 			. ' The garage, carport, terrace, pergola, canopy, balcony, shutters and fence appear only where the reference shows them,'
 			. ' and nothing that the reference shows may be left out.'
 			. ' Keep the camera position and the horizon of the reference.'
+			. ' Materials and colours come only from this text and the reference image; a style sample gives only light, atmosphere and photographic quality.'
 			. ' Everything below describes the materials, colours, light and surroundings of that same single building. ';
 	}
 
@@ -988,7 +1084,7 @@ final class PromptEngine {
 	 * @return string[]
 	 */
 	private static function wrong_colours( string $hex, string $what ): array {
-		$name = Color::describe( $hex );
+		$name = Color::describe( $hex, false );
 		if ( '' === $name ) {
 			return array();
 		}

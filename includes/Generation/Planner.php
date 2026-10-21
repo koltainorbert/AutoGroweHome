@@ -244,12 +244,12 @@ final class Planner {
 			: (string) ( $style_def['prompt_map'][ $style_key ] ?? '' );
 		$style     = '' !== trim( $style ) ? trim( $style ) : 'contemporary';
 		$facade   = PromptEngine::phrase( 'facade_main', $c );
-		$color    = Color::describe( (string) ( $c['facade_color'] ?? '#F2EFE9' ) );
+		$color    = Color::describe( (string) ( $c['facade_color'] ?? '#F2EFE9' ), false );
 		$roof     = PromptEngine::phrase( 'roof_type', $c );
 		$accents  = (array) ( $c['facade_accent'] ?? array() );
 		$acc_def  = Registry::get( 'facade_accent' );
 		$acc_txt  = array_map( static fn( $a ) => $acc_def['prompt_map'][ $a ] ?? $a, $accents );
-		$frame    = Color::describe( (string) ( $c['window_frame_color'] ?? '#2F3235' ) );
+		$frame    = Color::describe( (string) ( $c['window_frame_color'] ?? '#2F3235' ), false );
 		$explicit = array_flip( (array) ( $c['_explicit'] ?? array() ) );
 
 		$base_materials = array_values( array_filter( array_merge( array( $color . ' ' . str_replace( 'main facade in ', '', $facade ) ), $acc_txt, array( $frame . ' window frames' ) ) ) );

@@ -96,6 +96,11 @@ final class VisionPrompt {
 			// the catalogue product keeps its name in the picture prompt (BRAMAC)
 			$wish[] = 'Roof covering product: ' . $roof . '.';
 		}
+		// the real colours: the screenshot's light tints them (1.15.2)
+		$facts = PromptEngine::design_facts( $c );
+		if ( '' !== $facts ) {
+			$wish[] = $facts;
+		}
 		$vars = array(
 			'MAGNIFIC_DESCRIPTION' => '',
 			'TIME_OF_DAY'          => PromptEngine::phrase( 'time_of_day', $c ),

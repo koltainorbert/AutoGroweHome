@@ -12,7 +12,12 @@ defined( 'ABSPATH' ) || exit;
 
 final class Color {
 
-	public static function describe( string $hex ): string {
+	/**
+	 * @param bool $wood Wood-tone names ("honey oak", "natural oak") for warm hues. Only for surfaces
+	 *                   that are timber or may be (accents, shutters, furniture, floors, fronts); a
+	 *                   roof, a render, a frame or a car would get a wood word otherwise (1.15.2).
+	 */
+	public static function describe( string $hex, bool $wood = true ): string {
 		if ( ! preg_match( '/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i', $hex, $m ) ) {
 			return '';
 		}
@@ -83,11 +88,17 @@ final class Color {
 			if ( $l < 0.45 ) {
 				return 'red' === $hue ? 'brick red' : ( 'yellow' === $hue ? 'olive brown' : 'warm brown' );
 			}
-			if ( $l < 0.65 && $s < 0.6 ) {
-				return 'red' === $hue ? 'terracotta' : ( 'orange' === $hue ? 'natural oak' : 'ochre' );
-			}
 			if ( $l > 0.8 ) {
 				return 'yellow' === $hue ? 'cream' : 'warm sand beige';
+			}
+			if ( ! $wood ) {
+				if ( $s < 0.4 ) {
+					return $l >= 0.55 ? ( 'red' === $hue ? 'dusty rose beige' : 'warm beige' ) : ( 'red' === $hue ? 'terracotta' : 'warm tan' );
+				}
+				return 'red' === $hue ? 'terracotta red' : ( 'orange' === $hue ? 'terracotta orange' : 'mustard yellow' );
+			}
+			if ( $l < 0.65 && $s < 0.6 ) {
+				return 'red' === $hue ? 'terracotta' : ( 'orange' === $hue ? 'natural oak' : 'ochre' );
 			}
 			return 'orange' === $hue ? 'honey oak' : ( 'red' === $hue ? 'coral red' : 'mustard yellow' );
 		}

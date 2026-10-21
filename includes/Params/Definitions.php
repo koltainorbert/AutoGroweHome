@@ -1567,7 +1567,7 @@ final class Definitions {
 			self::opts(
 				array(
 					'none'   => array( __( 'Nincs', 'autogrowehome' ), 'no' ),
-					'slats'  => array( __( 'Lamellás fém/fa', 'autogrowehome' ), 'horizontal slatted' ),
+					'slats'  => array( __( 'Lamellás fém/fa', 'autogrowehome' ), 'vertical slatted' ),   // as the 3D draws it (1.15.2)
 					'mesh'   => array( __( 'Drótháló + sövény', 'autogrowehome' ), 'discreet mesh with hedge' ),
 					'masonry'=> array( __( 'Falazott', 'autogrowehome' ), 'rendered masonry' ),
 					'gabion' => array( __( 'Gabion', 'autogrowehome' ), 'gabion stone' ),

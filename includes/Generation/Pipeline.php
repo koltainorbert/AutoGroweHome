@@ -439,7 +439,10 @@ final class Pipeline {
 		// The prompt is put together again here, so the binding block in front, the closing reference
 		// sentence and the negative list (with the wrong alternatives of this configuration) all fit the
 		// length limit together and the negative list is never cut off.
-		$built  = PromptEngine::build( $p['config'], $concept, 'interior' === $op ? 'interior' : (string) $asset['view'], $room, (int) $p['prompt_version'] );
+		// Faithful/Clone with the visitor's 3D picture: the picture is the design, the concept texts
+		// of the three variants would describe other houses (1.15.2).
+		$bound  = '' !== $structure && 'interior' !== $op && '' !== PromptEngine::reference_lead();
+		$built  = PromptEngine::build( $p['config'], $concept, 'interior' === $op ? 'interior' : (string) $asset['view'], $room, (int) $p['prompt_version'], $bound );
 		$lead   = '';
 		$note   = '';
 		if ( '' !== $structure ) {

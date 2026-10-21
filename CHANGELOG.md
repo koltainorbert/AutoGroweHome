@@ -1,5 +1,18 @@
 # Változásnapló
 
+## 1.15.2 – 2026-10-21
+
+Norbi (mediterrán ház, 3 generált kép + a 3D): „hogy nem jó!!! … mi a hiba???” A forma jó volt (tömeg, oromzatok, ablakok, terasz, kerítés, kapu), a színek és anyagok nem: fekete tető narancs helyett, szürke palakő bézs terméskő helyett, világos fa kerítés sötét lamella helyett. Munkaprompt: `docs/FELADAT-1.15.2.md`.
+
+- **Gyökérok 1 – színnév:** a narancs cseréptető (`#C8582E`) a promptban „honey oak” (mézszínű tölgy) volt, mert a színnév-tábla minden narancs árnyalatra fanevet adott. Most fanév csak fa felületen (díszítőelem, zsalugáter, ajtó, bútor, padló, front, munkalap); tetőre, homlokzatra, keretre „terracotta orange”.
+- **Gyökérok 2 – kő színe:** a 3D a terméskövet meleg bézsben rajzolja, a prompt viszont „natural stone, facade colour warm white”-ot mondott. Most a rögzített színű anyagok (kő, tégla, klinker, mészkő, fehér tégla, beton, fém, sötét vakolat, égetett fa) a 3D színét kapják („warm beige-yellow natural stone in irregular random-rubble masonry”), a vakolat színe a vakolt részekre megy.
+- **Gyökérok 3 – kerítés:** a 3D függőleges, sötét antracit lamellát rajzol, a prompt „horizontal slatted fence”-et írt szín nélkül. Most „vertical slatted fence in dark anthracite metal” (skandinávnál szürke fa).
+- **Gyökérok 4 – koncepciószövegek:** a három változat szövege más házat írt le („articulated massing with a projecting wing”, „dark metal accents”, „clearly distinct in massing and materials”). Hű/Klón fokozaton 3D vezetőképpel ezek kimaradnak; a koncepció neve és a látogató kívánsága marad. Szabad/Kiegyensúlyozott fokozaton változatlan.
+- **Stílusminta:** a nyitóblokk kimondja, hogy anyag és szín csak a szövegből és a referenciából jöhet, a stílusmintából csak fény és fotóhatás.
+- **Képleíró prompt:** az `{EXTRA_WISHES}` a modell pontos színeit is kapja (tető, homlokzat, keret, kerítés), mert a képernyőkép fénye elszínezi őket.
+- Mérve: új `tests/match-test.php` 21/21 (Norbi házához hasonló beállítással; a kiküldött három koncepciókép mind „terracotta orange” és „warm beige-yellow natural stone”, egyikben sincs koncepciós tömeg/anyag) · `guide-test` 62/62 · `vision-test` 55/55 · stuck 9/9 · `gen` zöld · sketch 0 hiba · autoloader 123/123 · lint 0.
+- **Nem mérhető itt:** hogy a Mystic a stílusmintából mennyit vesz át; ha a tető ezután is sötét, a mediterrán stílusmintát kell megnézni, vagy a stílusminta erősségét 45-ről 35-re venni.
+
 ## 1.15.1 – 2026-10-21
 
 Norbi: „ebbe is kérem a pro verziót” → a képleíró prompt csak a Pro csomagban. Munkaprompt: `docs/FELADAT-1.15.1.md`.
