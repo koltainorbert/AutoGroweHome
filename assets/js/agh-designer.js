@@ -2568,9 +2568,10 @@
 		setTimeout(function () {
 			try {
 				var sz = guideSize(), opts = guideOpts();
-				var views = ['front', 'back', 'left', 'right', 'aerial'].concat(Object.keys(opts.rooms).map(function (id) { return 'interior_' + id; }));
+				// every gallery direction gets its own 3D picture (1.17.0: the garden view had none and was invented)
+				var views = ['front', 'back', 'left', 'right', 'aerial', 'garden'].concat(Object.keys(opts.rooms).map(function (id) { return 'interior_' + id; }));
 				A3.guides(views, sz[0], sz[1], null, opts).then(function (g) {
-					return sceneShots(['front', 'back', 'left', 'right', 'aerial'], sz, opts, g || {});
+					return sceneShots(['front', 'back', 'left', 'right', 'aerial', 'garden'], sz, opts, g || {});
 				}).then(function (g) {
 					if (g && Object.keys(g).length) { api('POST', 'projects/' + uuid + '/guides', { guides: g }, 60000).catch(function () { /* the server draws its own guide */ }); }
 				}).catch(function () { /* no guide for the gallery this time */ });

@@ -10446,3 +10446,11 @@ msgstr "4–40 m"
 #: includes/Frontend/Strings.php
 msgid "4–30 m"
 msgstr "4–30 m"
+
+#: includes/Admin/Admin.php
+msgid "A nézetek a fő képet is megkapják"
+msgstr "Види отримують і головне зображення"
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből módban a galéria nézetei alapból csak a saját 3D képükből készülnek. Bekapcsolva a kiválasztott fő kép is második képként megy (egységesebb anyagok), de a fő kép nézőpontja átszivároghat a hátsó és oldalsó nézetbe."
+msgstr "У режимі фото за 3D-зображенням види галереї створюються лише з власного 3D-зображення. Якщо ввімкнено, вибране головне зображення йде другим (однорідніші матеріали), але його ракурс може просочитися в задній і бічні види."

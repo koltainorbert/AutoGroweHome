@@ -424,6 +424,11 @@ final class Pipeline {
 		$guide_view = 'interior' === $op ? ( null !== $room ? 'interior_' . preg_replace( '/[^a-z0-9_]/', '', strtolower( (string) $room['id'] ) ) : '' ) : (string) $asset['view'];
 		if ( '' !== $guide_view && $provider->capabilities()['structure'] && Settings::get( 'magnific.structure_guidance', true ) ) {
 			$shot = Storage::guide_path( (string) $p['uuid'], $guide_view );
+			if ( '' === $shot && 'evening' === $guide_view ) {
+				// the evening view is the hero's angle at blue hour: the hero's 3D picture (1.17.0)
+				$guide_view = 'hero';
+				$shot       = Storage::guide_path( (string) $p['uuid'], 'hero' );
+			}
 			if ( '' !== $shot ) {
 				$structure = base64_encode( (string) file_get_contents( $shot ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 			} elseif ( in_array( $guide_view, array( 'front', 'back', 'left', 'right' ), true ) ) {
@@ -478,6 +483,11 @@ final class Pipeline {
 			$photo = true;
 			$structure = base64_encode( (string) file_get_contents( $pic ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
 			list( $width, $height ) = PromptEngine::photo_size( (int) ( $size[0] ?? 0 ), (int) ( $size[1] ?? 0 ) );
+			// the chosen hero as second image only when switched on: each view is made from its own 3D picture,
+			// the hero's composition must not leak into the back or side view (1.17.0)
+			if ( ! Settings::get( 'magnific.photo_hero_ref', false ) ) {
+				$reference = '';
+			}
 			$prompt = PromptEngine::photo_prompt( (array) $p['config'], 'interior' === $op ? 'interior' : (string) $asset['view'], $room, '' !== $reference, null !== $vision ? (string) $vision['prompt'] : '' );
 		}
 		if ( $prompt !== (string) $asset['prompt'] ) {

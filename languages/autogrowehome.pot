@@ -10416,3 +10416,11 @@ msgstr ""
 #: includes/Frontend/Strings.php
 msgid "4–30 m"
 msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A nézetek a fő képet is megkapják"
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből módban a galéria nézetei alapból csak a saját 3D képükből készülnek. Bekapcsolva a kiválasztott fő kép is második képként megy (egységesebb anyagok), de a fő kép nézőpontja átszivároghat a hátsó és oldalsó nézetbe."
+msgstr ""

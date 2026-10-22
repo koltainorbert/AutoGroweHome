@@ -78,6 +78,7 @@ final class Settings {
 				'negative_inline'    => true,
 				'guide_clean'        => true,
 				'render_mode'        => 'photo',
+				'photo_hero_ref'     => false,
 				'hero_camera'        => 'auto',
 				'style_ref_default'  => 0,
 				'style_ref_interior' => 0,

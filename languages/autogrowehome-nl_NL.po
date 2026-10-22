@@ -10444,3 +10444,11 @@ msgstr "4–40 m"
 #: includes/Frontend/Strings.php
 msgid "4–30 m"
 msgstr "4–30 m"
+
+#: includes/Admin/Admin.php
+msgid "A nézetek a fő képet is megkapják"
+msgstr "De aanzichten krijgen ook het hoofdbeeld"
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből módban a galéria nézetei alapból csak a saját 3D képükből készülnek. Bekapcsolva a kiválasztott fő kép is második képként megy (egységesebb anyagok), de a fő kép nézőpontja átszivároghat a hátsó és oldalsó nézetbe."
+msgstr "In de modus foto uit de 3D-afbeelding worden de galerijaanzichten alleen uit hun eigen 3D-afbeelding gemaakt. Ingeschakeld gaat het gekozen hoofdbeeld als tweede afbeelding mee (gelijkmatigere materialen), maar het standpunt ervan kan doorsijpelen in de achter- en zijaanzichten."

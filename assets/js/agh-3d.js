@@ -2407,7 +2407,8 @@ onTexture(function () {
  *   "visitor" keeps the exact camera.
  * opts.rooms: { room id: { id, type, area, … } } for the interior views.
  * Returns { view: dataURL } – an empty object when there is no WebGL or no house yet. */
-var GUIDE_CAM = { front: [0, 8], back: [180, 8], left: [270, 8], right: [90, 8], aerial: [36, 42] };
+// garden: the terrace side from the other front corner, lower; evening uses the hero picture (1.17.0)
+var GUIDE_CAM = { front: [0, 8], back: [180, 8], left: [270, 8], right: [90, 8], aerial: [36, 42], garden: [-38, 10] };
 var GUIDE_CLEAN = { vehicles: [], people: 'none', pets: [], _clean: true };
 var EYE_MAX = 18, EYE_EL = 9;
 // direction of a camera as [azimuth, elevation] in degrees, the same convention as the presets

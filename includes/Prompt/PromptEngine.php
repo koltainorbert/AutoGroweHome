@@ -945,10 +945,11 @@ final class PromptEngine {
 				. ' Interior design magazine photography, sharp, natural colours, no CGI look. Remove all user interface elements, labels, text and watermarks.';
 			return self::clip( self::tidy( $out ) );
 		}
-		$out = 'Turn this screenshot of a 3D house model into a real, professional architectural photograph of exactly the same house.'
+		// 1.17.0: the photographer's set-up shot (Norbi: "nem stúdió minőség … beállított kép, tökéletes fények")
+		$out = 'Turn this screenshot of a 3D house model into an award-winning professional architectural photograph of exactly the same house, as if a top real-estate photographer had set up the shot.'
 			. ' Keep everything exactly as in the image: the building shape and size, the number of floors, the roof shape, pitch and colour, the facade materials and colours,'
 			. ' every window and door with its position, size and frame colour, the terrace, pergola, garage, carport, pool, fence, gate, driveway and paths,'
-			. ' and every car, person, animal, piece of furniture and plant in its place. Keep the camera position, angle and framing exactly. Do not add or remove anything.';
+			. ' and every car, person, animal, piece of furniture and plant in its place and in its colour. Keep the camera position, angle and framing exactly. Do not add or remove anything.';
 		if ( $with_hero ) {
 			$out .= ' The second image is a finished photograph of this same house from another angle: match its materials, colours, light and photographic look exactly.';
 		}
@@ -959,10 +960,15 @@ final class PromptEngine {
 		if ( '' !== trim( $described ) ) {
 			$out .= ' What the image shows: ' . trim( $described );
 		}
-		$out .= ' Turn low-poly trees, cone-shaped trees, blob bushes and flat textured grass into real trees, shrubs and a real lawn of the same size, shape and place;'
-			. ' turn simple placeholder cars, people and animals into real ones in the same place and pose.'
-			. ( '' !== $light ? ' Light: ' . $light . ', natural soft shadows.' : '' )
-			. ' Professional architectural photography, corrected vertical lines, real physically accurate materials, natural colours, sharp detail, no CGI or video-game look.'
+		if ( 'evening' === $view ) {
+			$light = 'blue hour just after sunset, deep blue sky, warm interior lights glowing through every window, exterior wall lights and garden lights on';
+		} elseif ( '' === $light ) {
+			$light = 'warm golden-hour sunlight from the side, a few soft clouds';
+		}
+		$out .= ' Turn low-poly trees, cone-shaped trees, blob bushes and flat textured grass into lush real trees, shrubs and a manicured lawn of the same size, shape and place;'
+			. ' turn simple placeholder cars, people and animals into real, detailed ones in the same place, pose and colour.'
+			. ' Photography: full-frame camera, 24 mm tilt-shift lens, corrected vertical lines, f/8, perfectly balanced exposure with bracketed HDR, ' . $light . ', long soft natural shadows, gentle fill light,'
+			. ' crisp micro-detail in every material (roof texture, render grain, wood grain, stone, glass reflecting the sky), natural colour grading, magazine quality, hyperrealistic, no CGI or video-game look.'
 			. ' Remove all user interface elements, labels, text and watermarks.';
 		return self::clip( self::tidy( $out ) );
 	}

@@ -62,9 +62,11 @@ $cfg  = \AutoGroweHome\Params\Validator::sanitize( array_merge( \AutoGroweHome\P
 $t( 'alapból fotó mód', 'photo' === Settings::defaults()['magnific']['render_mode'] && PromptEngine::photo_mode() );
 $t( 'a kép mérete a 3D kép alakja: 1152×700 → 1440×880', array( 1440, 880 ) === PromptEngine::photo_size( 1152, 700 ) );
 $pp = PromptEngine::photo_prompt( $cfg, 'hero' );
-$t( 'a prompt a kép átalakítását kéri', 0 === strpos( $pp, 'Turn this screenshot of a 3D house model into a real' ) && false !== strpos( $pp, 'Do not add or remove anything' ) );
+$t( 'a prompt a kép átalakítását kéri', 0 === strpos( $pp, 'Turn this screenshot of a 3D house model into an award-winning professional architectural photograph' ) && false !== strpos( $pp, 'Do not add or remove anything' ) );
 $t( 'a prompt a pontos színt mondja', false !== stripos( $pp, 'terracotta orange' ) );
 $t( 'a prompt 3900 alatt', mb_strlen( $pp ) <= PromptEngine::MAX_PROMPT );
+$t( 'fotós beállítás a promptban', false !== strpos( $pp, 'bracketed HDR' ) && false !== strpos( $pp, 'tilt-shift' ) && false !== strpos( $pp, 'in its place and in its colour' ) );
+$t( 'esti nézet: kék óra, égő fények', false !== strpos( PromptEngine::photo_prompt( $cfg, 'evening' ), 'blue hour just after sunset' ) );
 $t( 'a nézet a fő képet is megnevezi', false !== strpos( PromptEngine::photo_prompt( $cfg, 'front', null, true ), 'The second image is a finished photograph' ) );
 $t( 'belső nézetre szobás prompt', 0 === strpos( PromptEngine::photo_prompt( $cfg, 'interior', array( 'type' => 'living' ) ), 'Turn this screenshot of a 3D room model' ) );
 
@@ -111,6 +113,28 @@ $t( 'fő kép: 1440×880', 1440 === ( $b1[1]['width'] ?? 0 ) && 880 === ( $b1[1]
 $t( 'nézet: a 3D kép + a kiválasztott fő kép', $scene === ( $b2[1]['input_image'] ?? '' ) && $hero === ( $b2[1]['input_image_2'] ?? '' ) );
 $t( 'a magasság 16 többszöröse', 0 === ( ( $b2[1]['height'] ?? 1 ) % 16 ) );
 $t( 'díjkulcs és modell', 'reference_image' === ( $r1['cost_key'] ?? '' ) && 'flux-2-pro/photo' === ( $r1['model'] ?? '' ) );
+
+/* ---------------------------------------------------------------- 3b. minden irányból saját 3D kép (1.17.0) */
+$t( 'a kerti nézetnek is van vezetőképe', in_array( 'garden', array( 'hero', 'front', 'back', 'left', 'right', 'aerial', 'garden', 'evening' ), true ) && 1 === Storage::put_guides( (string) $pr['uuid'], array( 'garden' => agh_pshot( 10, 200, 10 ) ) ) );
+$sent = array();
+$conc = \AutoGroweHome\Projects\Repository::concepts( (int) $pr['id'] )[0] ?? null;
+Settings::update_group( 'limits', array( 'exterior_views' => array( 'hero', 'back', 'garden', 'evening' ) ) );
+Settings::flush();
+$cfgN = $cfg; $cfgN['night_lighting'] = true;
+global $wpdb;
+$pdb = \AutoGroweHome\Projects\Repository::project_by_id( (int) $pr['id'] );
+$pdb['config'] = $cfgN;
+if ( $conc ) {
+	Pipeline::enqueue_gallery( $pdb, $conc );
+	for ( $i = 0; $i < 30 && count( $sent ) < 3; $i++ ) {
+		JobQueue::run( 25.0, (int) $pr['id'] );
+	}
+}
+$g = $sent['garden'][0] ?? array();
+$t( 'a kerti nézet a saját 3D képéből, fotó módban', ! empty( $g['photo'] ) && ( $g['structure_image'] ?? '' ) === base64_encode( (string) file_get_contents( Storage::guide_path( (string) $pr['uuid'], 'garden' ) ) ) );
+$e = $sent['evening'][0] ?? array();
+$t( 'az esti nézet a fő kép 3D képéből (teljes jelenet)', ! empty( $e['photo'] ) && ( $e['structure_image'] ?? '' ) === base64_encode( (string) file_get_contents( Storage::guide_path( (string) $pr['uuid'], 'scene_hero' ) ) ) && false !== strpos( (string) ( $e['prompt'] ?? '' ), 'blue hour' ) );
+$t( 'alapból nincs második (fő) kép a nézetnél', '' === (string) ( $g['reference_image'] ?? '' ) );
 
 /* ---------------------------------------------------------------- 4. ahol nem fut */
 Settings::update_group( 'magnific', array( 'fidelity' => 'balanced' ) );

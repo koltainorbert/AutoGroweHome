@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.17.0 – 2026-10-22
+
+Norbi: „a kép generálás kezd jó lenni, ez a jó út!” – de nem stúdió minőség, és a kerti, hátsó, oldalsó nézet selejt; minden irányból a 3D képből kell. Munkaprompt: `docs/FELADAT-1.17.0.md`.
+
+- **Fotós prompt:** a 3D kép marad a bemenet, mellé a beállított fotó leírása: díjnyertes építészfotó, full-frame, 24 mm tilt-shift, korrigált függőlegesek, bracketelt HDR, a napszak fénye (alap: oldalról jövő aranyóra), lágy hosszú árnyékok, anyagok mikrorészletei, magazinminőség; a tárgyak színe is marad. Esti nézet: kék óra, égő fények. Próba a Magnific-appban Norbi 3D képén: kidolgozott aranyórás fotó, minden tárgy a helyén.
+- **Minden irányból saját 3D kép:** a kerti nézetnek nem volt 3D képe (a böngésző nem készítette), ezért kitalált házzal készült; most a terasz felőli sarokból saját képet kap, az esti nézet a fő kép 3D képét. A nézetek alapból csak a saját 3D képükből készülnek (a fő kép nézőpontja nem szivárog át); admin: „A nézetek a fő képet is megkapják”.
+- Mérve: `photo-test` 28/28 · `guide-test` 62/62 · `match-test` 26/26 · `vision-test` 55/55 · `e2e/guide.js`: 6 galériairány + teljes jelenetek, konzolhiba 0 · autoloader 125/125 · 15 nyelv × 2515 szöveg, 0 hiba.
+- Következik: mozgatás a 3D tervezőben (kerti tárgyak, ablak, ajtó, kémény), utána élethű járművek, emberek a 3D-ben.
+
 ## 1.16.3 – 2026-10-22
 
 Norbi (2 jelzés, képekkel): a válaszfalak után a maradék helyiség (nappali-konyha-étkező) mindig a teljes m²-t mutatta; alaprajzról 3D-re váltva a ház „tükrözve” látszott. Munkaprompt: `docs/FELADAT-1.16.3.md`.
