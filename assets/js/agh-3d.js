@@ -3696,7 +3696,8 @@ var api = {
 	quality: QL.api,
 	sky: { pick: SKY.pick, status: SKY.status, load: SKY.load, manifest: SKY.manifest, current: function () { return live ? { photo: live.env.photo, want: live.env.want } : null; } },
 	paintedSky: function (on) { NO_PHOTO = !!on; if (live && live.c) { live.envApply(); live.requestRender(); } },
-	bench: bench
+	bench: bench,
+	_shq: SHQ
 };
 window.AGH_3D = api;
 export default api;
