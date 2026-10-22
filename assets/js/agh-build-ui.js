@@ -1277,7 +1277,10 @@
 	// 1.25.0: several orders are placed (the layout rules steer each room, see progRun) next to the plain
 	// first-fit run below; the fewest rooms left out wins, then the best rule score. deep: more orders and
 	// proportions („Elrendezés javítása”).
+	// deep: true = „Elrendezés javítása”, 'quick' = the dialog's trial on every change (fewer variants)
 	function progPlace(b, lv, ids, deep) {
+		var quick = deep === 'quick';
+		if (quick) { deep = false; }
 		var ol = olOf(b);
 		if (!ol.closed) { return (b.prog || []).length; }
 		if (b.levels.length > 1 && b.slab.stair && b.slab.stair.type && stairState(b) !== 'ok') { stairPlace(b); }
@@ -1288,7 +1291,7 @@
 		var area = list.slice().sort(function (p, q) { return q.w * q.d - p.w * p.d; });
 		runs.push([area, false]);
 		if (ctx && list.length > 1) {
-			var lay = layOrder(list), night = layOrder(list, true), nb = deep ? 6 : 3;
+			var lay = layOrder(list), night = layOrder(list, true), nb = deep ? 6 : (quick ? 1 : 3);
 			runs.push([lay, true], [area, true], [night, true]);
 			for (var k2 = 1; k2 < nb; k2++) { runs.push([lay, true, k2], [night, true, k2]); }
 			if (deep) { for (var k = 1; k <= 6; k++) { runs.push([layShuffle(lay, k), true]); } }
@@ -1296,7 +1299,6 @@
 		function one(order, guided, i, branch) {
 			list.forEach(function (r, j) { r.w = dims[j][0]; r.d = dims[j][1]; });
 			var miss = progRun(b, lv, order, guided ? ctx : null, deep, branch), ev = ctx ? B.layoutEval(b.prog, ctx) : { score: 0 };
-			if (window.__laydbg) { window.__laydbg.push([i, miss, ev.score, ev.pass, ev.n, (ev.rules || []).filter(function (x) { return x.ok === false; }).map(function (x) { return x.id; }).join(',')]); }
 			var res = { i: i, miss: miss, key: layKeyFails(ev), score: ev.score, pos: list.map(function (r) { return [r.x, r.y, r.w, r.d, r.placed]; }) };
 			if (!best || layBetter(res, best)) { best = res; }
 			if (ctx) { seeds.push(res); }
@@ -1304,7 +1306,7 @@
 		}
 		var seeds = [];
 		// a time budget (ms): the first runs always go; later ones only while there is time left
-		var t0 = Date.now(), budget = deep ? 3000 : 800;
+		var t0 = Date.now(), budget = deep ? 3000 : (quick ? 250 : 800);
 		runs.forEach(function (rn, i) {
 			if (i > 2 && Date.now() - t0 > budget * 0.5) { return; }
 			var order = rn[0];
@@ -1755,6 +1757,8 @@
 			function union(iv) { iv.sort(function (p, q) { return p[0] - q[0]; }); var out = []; iv.forEach(function (q) { var l = out[out.length - 1]; if (l && q[0] <= l[1] + 0.02) { l[1] = Math.max(l[1], q[1]); } else { out.push(q.slice()); } }); return out; }
 			function minus(iv, cut) { var out = []; iv.forEach(function (q) { var parts = [q.slice()]; cut.forEach(function (c) { parts = parts.reduce(function (acc, p) { if (c[1] <= p[0] || c[0] >= p[1]) { acc.push(p); return acc; } if (c[0] > p[0]) { acc.push([p[0], c[0]]); } if (c[1] < p[1]) { acc.push([c[1], p[1]]); } return acc; }, []); }); out = out.concat(parts); }); return out; }
 			var newW = [];
+			// 1.25.0: the partitions still to be drawn are snapping targets too (their unions, before the cuts)
+			var plan = Object.keys(lines).map(function (k) { return { dir: lines[k].dir, c: lines[k].c, iv: union(lines[k].iv.map(function (q) { return q.slice(); })) }; });
 			Object.keys(lines).forEach(function (k) {
 				var L = lines[k], cut = [];
 				walls.forEach(function (w) {
@@ -1765,12 +1769,26 @@
 				minus(union(L.iv), cut).forEach(function (q) {
 					if (q[1] - q[0] < 0.3) { return; }
 					[0, 1].forEach(function (e) {
-						var v = q[e];
+						// the end reaches the centre line of the wall it meets: the nearest one that lengthens the
+						// partition (or shortens it only by rounding) – never cut short onto a wall a few cm before the
+						// room's corner (1.25.0: the room would not close)
+						var v = q[e], best = null;
+						function take(c) { var grow = e ? c - v : v - c; if (grow >= -0.012 && (best === null || Math.abs(c - v) < Math.abs(best - v))) { best = c; } }
 						walls.concat(newW).forEach(function (w) {
 							var hz = w.a[1] === w.b[1], reach = w.t / 2 + pt + 0.03;
-							if (L.dir === 'h' && !hz && w.a[0] === w.b[0] && Math.abs(w.a[0] - v) <= reach && L.c >= Math.min(w.a[1], w.b[1]) - 0.01 && L.c <= Math.max(w.a[1], w.b[1]) + 0.01) { q[e] = w.a[0]; }
-							if (L.dir === 'v' && hz && Math.abs(w.a[1] - v) <= reach && L.c >= Math.min(w.a[0], w.b[0]) - 0.01 && L.c <= Math.max(w.a[0], w.b[0]) + 0.01) { q[e] = w.a[1]; }
+							if (L.dir === 'h' && !hz && w.a[0] === w.b[0] && Math.abs(w.a[0] - v) <= reach && L.c >= Math.min(w.a[1], w.b[1]) - 0.01 && L.c <= Math.max(w.a[1], w.b[1]) + 0.01) { take(w.a[0]); }
+							if (L.dir === 'v' && hz && Math.abs(w.a[1] - v) <= reach && L.c >= Math.min(w.a[0], w.b[0]) - 0.01 && L.c <= Math.max(w.a[0], w.b[0]) + 0.01) { take(w.a[1]); }
 						});
+						// a partition still to be drawn only when no standing wall is there (a room line inside an outer
+						// wall's body is cut away, the end goes to that wall's centre line as before)
+						if (best === null) {
+							plan.forEach(function (P) {
+								if (P.dir === L.dir || Math.abs(P.c - v) > pt / 2 + pt + 0.03) { return; }
+								if (walls.some(function (w) { var vt = w.a[0] === w.b[0], hz = w.a[1] === w.b[1]; return (P.dir === 'v' && vt && Math.abs(w.a[0] - P.c) <= w.t / 2 + pt + 0.02) || (P.dir === 'h' && hz && Math.abs(w.a[1] - P.c) <= w.t / 2 + pt + 0.02); })) { return; }
+								if (P.iv.some(function (iv) { return L.c >= iv[0] - 0.01 && L.c <= iv[1] + 0.01; })) { take(P.c); }
+							});
+						}
+						if (best !== null) { q[e] = best; }
 					});
 					var a = L.dir === 'h' ? [q[0], L.c] : [L.c, q[0]], c2 = L.dir === 'h' ? [q[1], L.c] : [L.c, q[1]];
 					var nw = { id: B.nextId(b.walls.concat(newW), 'w'), kind: 'part', lv: lv, a: [r2(a[0]), r2(a[1])], b: [r2(c2[0]), r2(c2[1])], t: pt };
@@ -1869,7 +1887,7 @@
 		var rows = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }).map(function (r) { return { id: r.id, type: r.type, name: r.name, area: r.area, w: r.w, d: r.d, x: r.x, y: r.y, keepWD: true, placed: r.placed }; });
 		var list = el('div', { class: 'agh-bld-proglist' }), budget = el('div', { class: 'agh-bld-progbudget' }), layBox = el('div', { class: 'agh-bld-proglay' }), fitAt = {}, fixed = false;
 		// a trial run on a copy: the rows as rectangles, placed like the automatic placement does
-		function trial() {
+		function trial(final) {
 			var b = JSON.parse(JSON.stringify(st.b)), lv = st.lv, ids = [];
 			b.prog = (b.prog || []).filter(function (r) { return r.lv !== lv; });
 			rows.forEach(function (r, i) {
@@ -1879,7 +1897,7 @@
 			});
 			// rows already placed keep their place when still good; the others are placed now
 			var keep = b.prog.filter(function (r) { return r.lv === lv && rows.some(function (q) { return q.id === r.id && q.placed && q.keepWD; }) && progState(b, r) === 'ok'; }).map(function (r) { return r.id; });
-			progPlace(b, lv, ids.filter(function (id) { return keep.indexOf(id) === -1; }));
+			progPlace(b, lv, ids.filter(function (id) { return keep.indexOf(id) === -1; }), final ? false : 'quick');
 			keep.forEach(function (id) { b.prog.forEach(function (r) { if (r.id === id) { r.placed = true; } }); });
 			fitAt = {};
 			b.prog.forEach(function (r, i) { if (r.lv === lv) { fitAt[r.id] = r; } });
@@ -1938,7 +1956,7 @@
 		function reload() { rows = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }).map(function (r) { return { id: r.id, type: r.type, name: r.name, area: r.area, w: r.w, d: r.d, x: r.x, y: r.y, keepWD: true, placed: r.placed }; }); }
 		function fixRows() { commitRows(); progFix(); fixed = true; reload(); draw(); }
 		function commitRows() {
-			var T = trial(), miss = 0;
+			var T = trial(true), miss = 0;
 			change(function (b) {
 				var lv = st.lv;
 				b.prog = (b.prog || []).filter(function (r) { return r.lv !== lv; });
