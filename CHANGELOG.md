@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.25.0 – 2026-10-22
+
+Norbi: „az elmaradt felső 2 ponttal együtt mindent csinálj meg” – a helyiségek logikus elrendezése és a lépcső a kész ház 3D-jében. (`docs/FELADAT-1.25.0.md`, 1.1 és 1.2)
+
+- **Helyiségek logikus elrendezése (6. lépés, helyiségprogram):** az automatikus elhelyezés a „fér-e” mellett 13 elrendezési szabályt követ súlyozott pontszámmal: nappali és hálók a kert / a nap felé, konyha a nappali vagy az étkező mellett, étkező a kettő között, fürdő a hálók mellett vagy a hálókat összekötő közlekedőről, WC az előtér közelében, kamra a konyha mellett, háztartási helyiség a fürdő vagy a garázs felé, gépészet az utca felé, dolgozó csendes helyen, előtér a bejáratnál, közlekedő köti össze a hálókat, vizes helyiségek egy vezetékfal körül. Adatként: `build-defaults.json` → `programme.layout` (`verified: false`, figyelmeztet, nem tilt). A kert iránya a meglévő `orientation`-ből jön, új mező nincs. A dobozban és az ablakban szabályonként: teljesül / nem teljesül; új „Elrendezés javítása” gomb (Ctrl+Z vissza). JS = PHP (`Build::layout()`).
+- **Javítva:** a programfal vége néha a szoba sarka előtt rövidült, és a szoba nem zárult.
+- **Lépcső a kész ház 3D-jében (9. lépés) és a szobanézetben:** a tervezett lépcső (egyenes, L, U, csiga) fokai a padló anyagából, korlát a ház erkélykorlátjának típusa szerint (üveg, fa, fém pálcás; csigánál középoszlop), a födémáttörés ugyanaz, mint az építési állásban. Egy közös számítás (`AGH_Build.stairRects` + új `stairRails`) rajzol mindenhol. A szobanézetben az első fok szobájában a kar, az emeletin a lyuk, a lépcső teteje és a korlát; a bútorok kikerülik.
+- Mérve: `e2e/prog.js` 30 ház – elrendezési szabályok átlag 97,2 % (116/120), fürdő a háló/közlekedő mellett 23/23, nappali a kerti oldalon 30/30, javítás nem ront 30/30, Ctrl+Z 30/30, lépcső 15/15, nettó m² ±0,5 134/134, átfedés 0, szerver = JS 10/10 · új `e2e/stair3d.js` 8 ház (4 típus): fokszám kész ház = építési állás 8/8, födémlyuk ±1 cm 8/8, szobanézet földszint 8/8 és emelet 8/8 · `build3d.js` 20 ház 0 hiba · `build-test` 6975/6975 · `build-test.php` 2415/2415 (új: 124 eset, szabályonként JS = PHP) · autoloader 125/125 · sketch 0 hiba · 15 nyelv × 2708 szöveg, 0 hiba · konzolhiba 0.
+
 ## 1.24.0 – 2026-10-22
 
 Norbi: „élethű autó, ember és járműveket akarok a 3D képre”. (`docs/FELADAT-1.18.0.md`)
