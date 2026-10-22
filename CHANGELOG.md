@@ -1,5 +1,13 @@
 # Változásnapló
 
+## 1.16.3 – 2026-10-22
+
+Norbi (2 jelzés, képekkel): a válaszfalak után a maradék helyiség (nappali-konyha-étkező) mindig a teljes m²-t mutatta; alaprajzról 3D-re váltva a ház „tükrözve” látszott. Munkaprompt: `docs/FELADAT-1.16.3.md`.
+
+- **Maradék helyiség területe:** a Téglalap eszközzel rajzolt helyiség saját zárt hurok, a külső falhoz csak rásimul, ezért a körülötte lévő tér az egész alapterületet kapta. Most a benne lévő helyiségek levonódnak (egymásba ágyazva sem kétszer), a felirat a megmaradt részbe kerül; JS (`agh-build.js`) = PHP (`Build.php`). Mérve a képpel azonos rajzon: 924,2 → 289,6 m², az összeg 1548 → 913,7 m².
+- **3D irány:** a 3D nézet a tervezővel közös, a korábbi forgatás megmaradt – Norbi képén keletről nézett, ezért a ház 90°-kal elforgatva, a rajzhoz képest tükrözöttnek tűnt (a geometria egyezik, felülnézetben mérve). Most alaprajz → 3D váltáskor a kamera mindig az utca felől néz, mint a rajz; a 3D-n belüli forgatás a lépések között megmarad. Mérve: keletre forgatva 90°, alaprajz → 3D után 36° (utca felől).
+- Mérve: új paritás-eset („nested rooms”) · `build-test.php` 2235/2235 · `build-test.js` 6975/6975 · autoloader 125/125 · lint 0.
+
 ## 1.16.2 – 2026-10-22
 
 Norbi: a kitűzés, a földmunka, az alap és az alapvezetékek csak akkor látszottak a 3D-ben, ha a lépések végére ment és visszalépett; a „földdarab” nem változott; a téglalap csak L ↔ téglalap váltás után ugrott méretre; más alak is kell. Munkaprompt: `docs/FELADAT-1.16.2.md`.

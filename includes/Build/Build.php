@@ -941,6 +941,35 @@ final class Build {
 			$rooms = (array) $b['rooms'];
 			$out[] = array( 'lv' => $lv, 'key' => $key, 'poly' => $mg[0], 'net' => $net, 'area' => max( 0, self::area2( $net ) / 2 ), 'gross' => $a, 'bbox' => self::bbox_of( $net ), 'cx' => $cx, 'cy' => $cy, 'type' => (string) ( $rooms[ $key ] ?? '' ) );
 		}
+		// 1.16.3, same as agh-build.js roomsOf(): a face loses the rooms that lie inside it (direct children)
+		$inside = static fn( array $o, array $r ): bool => $o['key'] !== $r['key'] && $o['gross'] < $r['gross'] && self::in_poly( $r['poly'], (float) $o['cx'], (float) $o['cy'] );
+		$minus  = array();
+		foreach ( $out as $i => $r ) {
+			$m = 0.0;
+			foreach ( $out as $o ) {
+				if ( ! $inside( $o, $r ) ) {
+					continue;
+				}
+				$nested = false;
+				foreach ( $out as $mid ) {
+					if ( $mid['key'] !== $o['key'] && $inside( $o, $mid ) && $inside( $mid, $r ) ) {
+						$nested = true;
+						break;
+					}
+				}
+				if ( ! $nested ) {
+					$m += $o['gross'];
+				}
+			}
+			$minus[ $i ] = $m;
+		}
+		foreach ( $minus as $i => $m ) {
+			if ( $m > 0 ) {
+				$out[ $i ]['area']  = max( 0, $out[ $i ]['area'] - $m );
+				$out[ $i ]['gross'] = max( 0, $out[ $i ]['gross'] - $m );
+			}
+		}
+		$out = array_values( array_filter( $out, static fn( $r ) => $r['area'] >= 500000 ) );
 		usort(
 			$out,
 			static function ( $p, $q ) {

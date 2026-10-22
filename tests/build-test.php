@@ -2,8 +2,9 @@
 /**
  * Build mode („Építés az alapoktól”) – the PHP port against the JS reference, WITHOUT WordPress.
  *
- *  a) Build::sanitize() is idempotent and equals JS normalize() for 123 cases (120 random houses
- *     + a rectangle, an L with openings across the box seams, a house with a diagonal wall);
+ *  a) Build::sanitize() is idempotent and equals JS normalize() for 124 cases (120 random houses
+ *     + a rectangle, an L with openings across the box seams, a house with a diagonal wall, rooms
+ *     drawn as rectangles inside the floor – 1.16.3);
  *  b) outline area, footprint boxes, room areas/keys and the opening → box-face mapping (bOps)
  *     equal the JS (tolerance 1e-6 m²);
  *  c) BuildingModel with build mode on: the parts cover exactly the outline area and the room count
@@ -90,7 +91,7 @@ if ( '' === $agh_node ) {
 	exit( 0 );
 }
 $agh_cases = json_decode( (string) shell_exec( escapeshellarg( $agh_node ) . ' ' . escapeshellarg( AGH_DIR . 'tests/build-parity.js' ) ), true );
-agh_ok( is_array( $agh_cases ) && 123 === count( $agh_cases ), 'tests/build-parity.js gives 123 cases' );
+agh_ok( is_array( $agh_cases ) && 124 === count( $agh_cases ), 'tests/build-parity.js gives 124 cases' );
 $agh_cases = is_array( $agh_cases ) ? $agh_cases : array();
 
 /* ---------------------------------------------------------------- a) sanitize = normalize */

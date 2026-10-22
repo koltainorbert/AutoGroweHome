@@ -2252,7 +2252,7 @@
 		S.dirty = true;
 		persist(); validate(); renderSummary();
 	}
-	function buildPreview3D(el, c, phase) {
+	function buildPreview3D(el, c, phase, reset) {
 		if (!A3) { return false; }
 		if (!el.querySelector('.agh-bld-3dwait')) { var wt = waitBox(); wt.classList.add('agh-bld-3dwait'); el.appendChild(wt); }
 		loadBuildScene().then(function (m) {
@@ -2264,6 +2264,9 @@
 			v.onPick = null; v.onLayout = null; v.onGrab = null;
 			v.syncSize();
 			v.update(c, 'build');
+			// 1.16.3: coming from the plan the 3D looks from the street side, as the plan is drawn (street
+			// at the bottom) – an orbit left over from earlier showed the house turned, as if mirrored
+			if (reset && v.fitCamera) { v.fitCamera(true); v.requestRender(); }
 			if (v.setPhase) { v.setPhase(phase); }
 			// the first frame of a new scene takes a moment on slow devices: the indicator stays until then
 			requestAnimationFrame(function () { requestAnimationFrame(function () { var w2 = el.querySelector('.agh-bld-3dwait'); if (w2) { w2.remove(); } }); });

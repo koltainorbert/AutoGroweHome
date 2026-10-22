@@ -376,6 +376,32 @@
 			var key = lv + ':' + Math.round(cx / 100) + ',' + Math.round(cy / 100), bb = bboxOf(net);
 			out.push({ lv: lv, key: key, poly: mg[0], net: net, area: Math.max(0, area2(net) / 2), gross: a, bbox: bb, cx: cx, cy: cy, type: b.rooms[key] || '' });
 		});
+		// A room drawn as a closed rectangle against other walls is its own loop, not joined to them: the
+		// face around it still spans the whole floor. That face loses the rooms that lie inside it (direct
+		// children only), so the rest of the floor shrinks as rooms are added (1.16.3: the kitchen-living
+		// room kept the full floor area, 487 m² instead of the ~286 left over).
+		var inside = function (o, r) { return o.key !== r.key && o.gross < r.gross && inPoly(r.poly, o.cx, o.cy); };
+		var kidsOf = out.map(function (r) { return out.filter(function (o) { return inside(o, r) && !out.some(function (m) { return m !== o && inside(o, m) && inside(m, r); }); }); });
+		out.forEach(function (r, ri) {
+			var kids = kidsOf[ri];
+			if (!kids.length) { return; }
+			var minus = kids.reduce(function (sum, o) { return sum + o.gross; }, 0);
+			r.area = Math.max(0, r.area - minus);
+			r.gross = Math.max(0, r.gross - minus);
+			r.holes = kids.map(function (o) { return o.key; });
+			// the label goes into the part that is left, nearest to the middle
+			var bb = r.bbox, best = null;
+			for (var gx = 1; gx < 20; gx++) {
+				for (var gy = 1; gy < 20; gy++) {
+					var x = bb.x0 + (bb.x1 - bb.x0) * gx / 20, y = bb.y0 + (bb.y1 - bb.y0) * gy / 20;
+					if (!inPoly(r.net, x, y) || kids.some(function (o) { return inPoly(o.poly, x, y); })) { continue; }
+					var d = (x - r.cx) * (x - r.cx) + (y - r.cy) * (y - r.cy);
+					if (!best || d < best[2]) { best = [x, y, d]; }
+				}
+			}
+			if (best) { r.lx = best[0]; r.ly = best[1]; }
+		});
+		out = out.filter(function (r) { return r.area >= 500000; });
 		out.sort(function (p, q) { return q.area - p.area || p.cx - q.cx || p.cy - q.cy; });
 		return out;
 	}

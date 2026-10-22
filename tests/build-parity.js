@@ -53,4 +53,10 @@ const dpts = [[1, 1], [9, 1], [12, 4], [12, 9], [1, 9]];
 const diag = { levels: [{ h: 3 }], walls: B.polyWalls(dpts, 0.38).concat([{ id: 'p1', kind: 'part', lv: 0, a: [6, 1], b: [6, 9], t: 0.12, mat: 'partition_aac' }]), openings: [{ wall: 'w2', type: 'window', at: 1, w: 1.2 }] };
 list.push(entry('diagonal', diag));
 
+// 4. (1.16.3) rooms drawn with the rectangle tool against the outer walls (Norbi's plan): separate loops,
+//    the floor around them must lose their area (rest ≈ 289.6 m², not the whole 924.2 m²)
+const rr = (id, x, y, w, d) => B.rectWalls(x, y, w, d, 0.12, 'partition_brick').map((q, i) => Object.assign(q, { id: id + i, kind: 'part' }));
+const nested = { levels: [{ h: 3 }], walls: B.rectWalls(0.19, 0.19, 31.54, 30.04, 0.38, 'ceramic').concat(rr('h', 0.38, 0.38, 14.91, 17.23), rr('k', 15.29, 0.38, 16.25, 12.0), rr('f', 0.38, 17.61, 14.7, 12.43)), openings: [] };
+list.push(entry('nested rooms', nested));
+
 process.stdout.write(JSON.stringify(list));

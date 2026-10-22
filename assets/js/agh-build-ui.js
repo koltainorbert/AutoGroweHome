@@ -599,16 +599,16 @@
 		D.planWrap.hidden = v !== 'plan'; D.view3.hidden = v !== '3d'; D.phaseBar.hidden = v !== '3d';
 		D.tools.hidden = v !== 'plan';
 		if (st.pane === 'plan' || st.pane === '3d') { st.pane = v; D.root.setAttribute('data-pane', v); Array.prototype.forEach.call(D.panes.children, function (b) { b.setAttribute('aria-selected', b.getAttribute('data-pane') === v ? 'true' : 'false'); }); }
-		if (v === '3d') { renderPhaseBar(); show3D(); } else { renderPlan(); }
+		if (v === '3d') { renderPhaseBar(); show3D(true); } else { renderPlan(); }
 	}
 	var t3 = 0;
 	function schedule3D() { clearTimeout(t3); t3 = setTimeout(function () { if (st && st.view === '3d') { show3D(); } }, 250); }
-	function show3D() {
+	function show3D(reset) {
 		// 1.16.2: no walls yet → the ground patch shows the size typed under "Kezdés" (it was a fixed 4 × 4 m
 		// piece of soil that nothing could change)
 		var c3 = cfg();
 		if (!st.b.walls.length) { st.tpl = st.tpl || { w: 10, d: 8 }; c3 = Object.assign({}, c3, { _bld_preview: { w: st.tpl.w, d: st.tpl.d, m: num((st.b.earth || {}).margin, 1) } }); }
-		var ok = A.preview3D(D.view3, c3, st.phase);
+		var ok = A.preview3D(D.view3, c3, st.phase, !!reset);
 		D.view3.classList.toggle('is-2d', !ok);
 		if (!ok) { D.view3.innerHTML = A.sketch(cfg()); D.view3.appendChild(el('p', { class: 'agh-bld-note agh-bld-no3d', text: t('b_no3d') })); }
 	}
@@ -678,7 +678,7 @@
 		rs.forEach(function (r, i) {
 			gr.appendChild(sv('polygon', { points: r.net.map(function (q) { return r3(q[0] / 1000) + ',' + r3(q[1] / 1000); }).join(' '), class: 'agh-bld-room r' + (i % 6) }));
 			var fs = Math.max(12, Math.min(15, Math.sqrt(r.area / 1e6) * 3));
-			var lb = label(r.cx / 1000, r.cy / 1000, lw, { class: 'agh-bld-rlabel', 'font-size': fs, 'text-anchor': 'middle' });
+			var lb = label((r.lx !== undefined ? r.lx : r.cx) / 1000, (r.ly !== undefined ? r.ly : r.cy) / 1000, lw, { class: 'agh-bld-rlabel', 'font-size': fs, 'text-anchor': 'middle' });
 			var nm = names[r.type || defs[i]] || '', roomPx = (r.bbox.x1 - r.bbox.x0) / 1000 * k - 8;
 			if (nm.length * fs * 0.58 > roomPx) { nm = nm.length * fs * 0.58 * 0.6 > roomPx ? '' : nm.split(/\s*\+\s*|\s+/)[0]; }
 			var t1 = sv('tspan', { x: 0, dy: -0.2 * fs }); t1.textContent = nm;
