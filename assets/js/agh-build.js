@@ -1160,6 +1160,122 @@
 		return normalize(b);
 	}
 
+	/* ------------------------------------------------------------------ room layout rules (1.25.0)
+	 * Good practice for where the rooms of the programme lie: towards the garden / the sun, next to each
+	 * other, at the entrance, towards the street. The rules are data (defaults.programme.layout.rules,
+	 * verified: false): they warn, never block. Pure geometry on the programme rectangles of one level;
+	 * the PHP port (Build::layout) gives the same result. The garden is the back (min y), turned towards
+	 * the sun by the plot's orientation (layout.garden_dir); the street is the front (max y). */
+	function layoutCfg() {
+		var P = DF().programme || {}, L = P.layout || {};
+		return { rules: Array.isArray(L.rules) ? L.rules : [], gap: num(L.adj_gap, 0.6), lap: num(L.adj_overlap, 0.8), near: num(L.entry_near, 3), dirs: isObj(L.garden_dir) ? L.garden_dir : {}, p: num(P.plaster, 0.015) };
+	}
+	function layoutCtx(b, lv, orientation) {
+		var ol = outlineOf(b);
+		if (!ol.closed) { return null; }
+		// the middle of the house: the centroid of its inner area (a wing does not pull it like a bounding box would)
+		var L = layoutCfg(), g = L.dirs[orientation] || L.dirs.south || [0, -1], ws = {}, ent = [], P = ol.inner, A2 = 0, cx = 0, cy = 0;
+		for (var i = 0; i < P.length; i++) { var q = P[(i + 1) % P.length], cr = P[i][0] * q[1] - q[0] * P[i][1]; A2 += cr; cx += (P[i][0] + q[0]) * cr; cy += (P[i][1] + q[1]) * cr; }
+		if (!A2) { return null; }
+		// the inner faces of the outer walls (axis-parallel ones), with their outward direction
+		var faces = [], gl = Math.sqrt(num(g[0], 0) * num(g[0], 0) + num(g[1], -1) * num(g[1], -1)) || 1;
+		for (var k = 0; k < P.length; k++) {
+			var a = P[k], c = P[(k + 1) % P.length], vert = a[0] === c[0];
+			if (!vert && a[1] !== c[1]) { continue; }
+			var mx = (a[0] + c[0]) / 2, my = (a[1] + c[1]) / 2, nx = vert ? 1 : 0, ny = vert ? 0 : 1;
+			if (inPoly(P, mx + nx * 10, my + ny * 10)) { nx = -nx; ny = -ny; }
+			var gd = (nx * num(g[0], 0) + ny * num(g[1], -1)) / gl;
+			faces.push({ v: vert, c: (vert ? a[0] : a[1]) / 1000, lo: Math.min(vert ? a[1] : a[0], vert ? c[1] : c[0]) / 1000, hi: Math.max(vert ? a[1] : a[0], vert ? c[1] : c[0]) / 1000, garden: gd > 0.3, street: ny > 0.5, ext: true });
+		}
+		b.walls.forEach(function (w) { ws[w.id] = w; });
+		b.openings.forEach(function (o) {
+			var w = ws[o.wall];
+			if (o.type !== 'entrance' || o.lv !== lv || !w) { return; }
+			var dx = w.b[0] - w.a[0], dy = w.b[1] - w.a[1], len = Math.sqrt(dx * dx + dy * dy), u = o.at + o.w / 2;
+			if (!len) { return; }
+			ent.push({ x: w.a[0] + dx / len * u, y: w.a[1] + dy / len * u, m: w.t / 2 + L.p + 0.06 });
+		});
+		return { lv: lv, mx: Math.round(cx / (3 * A2)) / 1000, my: Math.round(cy / (3 * A2)) / 1000, gx: num(g[0], 0), gy: num(g[1], -1), ent: ent, faces: faces };
+	}
+	// rules: the list to check (all by default); rects: the programme (only rooms of ctx.lv count, a room
+	// with placed !== true is not in the house and fails the rules it belongs to)
+	function layoutEval(rects, ctx, rules) {
+		var L = layoutCfg(), all = rects.filter(function (r) { return r.lv === ctx.lv; }), on = all.filter(function (r) { return r.placed === true; });
+		var out = { rules: [], n: 0, pass: 0, w: 0, pw: 0, pct: 100, score: 100 };
+		function of(types, list) { return Array.isArray(types) ? list.filter(function (r) { return types.indexOf(r.type) !== -1; }) : []; }
+		function adj(a, c) {
+			var dx = Math.max(c.x - (a.x + a.w), a.x - (c.x + c.w)), dy = Math.max(c.y - (a.y + a.d), a.y - (c.y + c.d));
+			var ox = Math.min(a.x + a.w, c.x + c.w) - Math.max(a.x, c.x), oy = Math.min(a.y + a.d, c.y + c.d) - Math.max(a.y, c.y);
+			return (dx <= L.gap && oy >= Math.min(L.lap, a.d, c.d) - 0.001) || (dy <= L.gap && ox >= Math.min(L.lap, a.w, c.w) - 0.001);
+		}
+		function dist2(a, c) { var ex = Math.max(0, c.x - (a.x + a.w), a.x - (c.x + c.w)), ey = Math.max(0, c.y - (a.y + a.d), a.y - (c.y + c.d)); return ex * ex + ey * ey; }
+		function entD2(r, e) { var ex = Math.max(r.x - e.x, 0, e.x - (r.x + r.w)), ey = Math.max(r.y - e.y, 0, e.y - (r.y + r.d)); return ex * ex + ey * ey; }
+		// on the garden / street side: one of its sides lies on an outer wall facing that way (a window there)
+		function face(r, key) {
+			return ctx.faces.some(function (f) {
+				if (!f[key]) { return false; }
+				var e = f.v ? [r.x, r.x + r.w] : [r.y, r.y + r.d], lo = f.v ? r.y : r.x, hi = f.v ? r.y + r.d : r.x + r.w;
+				return (Math.abs(e[0] - f.c) <= L.p + 0.03 || Math.abs(e[1] - f.c) <= L.p + 0.03) && Math.min(hi, f.hi) - Math.max(lo, f.lo) >= Math.min(L.lap, hi - lo) - 0.001;
+			});
+		}
+		// … or it lies in that half of the house (from the middle of its area) with a window on any outer wall
+		function garden(r) { return face(r, 'garden') || ((r.x + r.w / 2 - ctx.mx) * ctx.gx + (r.y + r.d / 2 - ctx.my) * ctx.gy > 0 && face(r, 'ext')); }
+		function street(r) { return face(r, 'street') || (r.y + r.d / 2 - ctx.my > 0 && face(r, 'ext')); }
+		function isOn(r) { return r.placed === true; }
+		function anyAdj(r, list) { return list.some(function (q) { return q !== r && adj(r, q); }); }
+		(rules || L.rules).forEach(function (R) {
+			if (!isObj(R) || typeof R.id !== 'string') { out.rules.push({ id: '', w: 0, ok: null }); return; }
+			var A = of(R.types, all), w = Math.max(0, num(R.w, 1)), ok = null, Tall = of(R.to, all), T = of(R.to, on), V, k;
+			if (R.kind === 'side') {
+				if (A.length) {
+					k = A.filter(function (r) { return isOn(r) && (R.side === 'street' ? street(r) : garden(r)); }).length;
+					ok = k >= (R.need === 'half' ? Math.ceil(A.length / 2) : A.length);
+				}
+			} else if (R.kind === 'adj') {
+				V = of(R.via, on);
+				if (A.length && (Tall.length || (R.entry && ctx.ent.length) || R.orside)) {
+					ok = A.every(function (r) {
+						if (!isOn(r)) { return false; }
+						if (anyAdj(r, T)) { return true; }
+						if (V.some(function (v) { return adj(r, v) && T.filter(function (q) { return adj(v, q); }).length >= Math.min(2, Tall.length); })) { return true; }
+						if (R.entry && ctx.ent.some(function (e) { return entD2(r, e) <= L.near * L.near; })) { return true; }
+						return R.orside === 'street' ? street(r) : false;
+					});
+				}
+			} else if (R.kind === 'between') {
+				var gs = Array.isArray(R.to) ? R.to.filter(Array.isArray) : [];
+				if (A.length && gs.length && gs.every(function (g2) { return of(g2, all).length > 0; })) {
+					ok = A.every(function (r) { return isOn(r) && gs.every(function (g2) { return anyAdj(r, of(g2, on)); }); });
+				}
+			} else if (R.kind === 'apart') {
+				var F = of(R.from, all);
+				if (A.length && F.length) { ok = A.every(function (r) { return isOn(r) && !anyAdj(r, of(R.from, on)); }); }
+			} else if (R.kind === 'entry') {
+				if (A.length && ctx.ent.length) { ok = A.some(function (r) { return isOn(r) && ctx.ent.some(function (e) { return entD2(r, e) <= e.m * e.m; }); }); }
+			} else if (R.kind === 'links') {
+				// a corridor touching at least `need` of them (all when need is not given)
+				var nd = Math.min(Tall.length, Math.max(2, num(R.need, Tall.length)));
+				if (A.length && Tall.length >= 2) { ok = A.some(function (r) { return isOn(r) && T.filter(function (q) { return adj(r, q); }).length >= nd; }); }
+			} else if (R.kind === 'cluster') {
+				if (A.length >= 2) {
+					var nr = num(R.near, L.gap), seen = [A[0]], i2 = 0;
+					if (A.every(isOn)) {
+						while (i2 < seen.length) { var cur = seen[i2++]; A.forEach(function (q) { if (seen.indexOf(q) === -1 && (adj(cur, q) || dist2(cur, q) <= nr * nr)) { seen.push(q); } }); }
+					}
+					ok = A.every(isOn) && seen.length === A.length;
+				}
+			}
+			out.rules.push({ id: R.id, w: w, ok: ok });
+			if (ok === null) { return; }
+			out.n++; out.w += w;
+			if (ok) { out.pass++; out.pw += w; }
+		});
+		out.pct = out.n ? Math.round(1000 * out.pass / out.n) / 10 : 100;
+		out.score = out.w ? Math.round(100 * out.pw / out.w) : 100;
+		return out;
+	}
+	function layoutRules(b, lv, orientation) { var ctx = layoutCtx(b, lv || 0, orientation || 'south'); return ctx ? layoutEval(b.prog || [], ctx) : null; }
+
 	/* ------------------------------------------------------------------ random houses (tests, demo) */
 	function rng(seed) { var s = seed >>> 0 || 1; return function () { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
 	function randomHouse(seed) {
@@ -1232,7 +1348,7 @@
 		outline: outlineOf, rooms: roomsOf, materials: materials, metrics: metrics, practice: practice, rules: rules,
 		stepState: stepState, stepSig: stepSig, wallLen: wallLenM, clearSpan: clearSpan, lintel: lintelOf, wallU: wallU,
 		masonryH: masonryH, clearH: clearH, levelBase: levelBase, snap: snap, nextId: nextId, rectWalls: rectWalls, polyWalls: polyWalls,
-		fromHouse: fromHouse, randomHouse: randomHouse,
+		fromHouse: fromHouse, randomHouse: randomHouse, layout: layoutRules, layoutCtx: layoutCtx, layoutEval: layoutEval,
 		// geometry internals (tests and the PHP parity check)
 		_edges: edgesOf, _faces: faces, _decompose: decompose, _strips: strips, _offset: offset, _union: unionLoop, _area2: area2, _inPoly: inPoly, stairCalc: stairCalc, stairRects: stairRects, stairRails: stairRails, stairTypes: STAIR_TYPES
 	};

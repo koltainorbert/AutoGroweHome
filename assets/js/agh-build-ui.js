@@ -1274,15 +1274,77 @@
 	// Places the rectangles of a level: the stair first (when it has no good place yet), then the rooms,
 	// biggest first, each in the first free place (rows from the back), trying its other proportions.
 	// Returns the number that did not fit (they wait beside the house).
-	function progPlace(b, lv, ids) {
-		var C = progCfg(), ol = olOf(b);
+	// 1.25.0: several orders are placed (the layout rules steer each room, see progRun) next to the plain
+	// first-fit run below; the fewest rooms left out wins, then the best rule score. deep: more orders and
+	// proportions („Elrendezés javítása”).
+	// deep: true = „Elrendezés javítása”, 'quick' = the dialog's trial on every change (fewer variants)
+	function progPlace(b, lv, ids, deep) {
+		var quick = deep === 'quick';
+		if (quick) { deep = false; }
+		var ol = olOf(b);
 		if (!ol.closed) { return (b.prog || []).length; }
 		if (b.levels.length > 1 && b.slab.stair && b.slab.stair.type && stairState(b) !== 'ok') { stairPlace(b); }
-		var list = (b.prog || []).filter(function (r) { return r.lv === lv && (!ids || ids.indexOf(r.id) !== -1); }).sort(function (p, q) { return q.w * q.d - p.w * p.d; }), miss = 0;
-		list.forEach(function (r) { r.x = -999; r.y = -999; });
+		var list = (b.prog || []).filter(function (r) { return r.lv === lv && (!ids || ids.indexOf(r.id) !== -1); });
+		// the rooms kept in place count as placed for the rules
+		(b.prog || []).forEach(function (q) { if (q.lv === lv && list.indexOf(q) === -1) { q.placed = q.x > -900 && progState(b, q) === 'ok'; } });
+		var dims = list.map(function (r) { return [r.w, r.d]; }), ctx = layCtx(b, lv), runs = [], best = null;
+		var area = list.slice().sort(function (p, q) { return q.w * q.d - p.w * p.d; });
+		runs.push([area, false]);
+		if (ctx && list.length > 1) {
+			var lay = layOrder(list), night = layOrder(list, true), nb = deep ? 6 : (quick ? 1 : 3);
+			runs.push([lay, true], [area, true], [night, true]);
+			for (var k2 = 1; k2 < nb; k2++) { runs.push([lay, true, k2], [night, true, k2]); }
+			if (deep) { for (var k = 1; k <= 6; k++) { runs.push([layShuffle(lay, k), true]); } }
+		}
+		function one(order, guided, i, branch) {
+			list.forEach(function (r, j) { r.w = dims[j][0]; r.d = dims[j][1]; });
+			var miss = progRun(b, lv, order, guided ? ctx : null, deep, branch), ev = ctx ? B.layoutEval(b.prog, ctx) : { score: 0 };
+			var res = { i: i, miss: miss, key: layKeyFails(ev), score: ev.score, pos: list.map(function (r) { return [r.x, r.y, r.w, r.d, r.placed]; }) };
+			if (!best || layBetter(res, best)) { best = res; }
+			if (ctx) { seeds.push(res); }
+			return miss;
+		}
+		var seeds = [];
+		// a time budget (ms): the first runs always go; later ones only while there is time left
+		var t0 = Date.now(), budget = deep ? 3000 : (quick ? 250 : 800);
+		runs.forEach(function (rn, i) {
+			if (i > 2 && Date.now() - t0 > budget * 0.5) { return; }
+			var order = rn[0];
+			// a guided run that leaves rooms out is repeated with those rooms first (a few times)
+			for (var rep = 0; rep < (rn[1] ? (deep ? 6 : 3) : 1); rep++) {
+				if (!one(order, rn[1], i + '.' + rep, rep ? 0 : rn[2])) { break; }
+				var out = order.filter(function (r) { return !r.placed; });
+				order = out.concat(order.filter(function (r) { return r.placed; }));
+			}
+		});
+		function load(res) { list.forEach(function (r, j) { var p = res.pos[j]; r.x = p[0]; r.y = p[1]; r.w = p[2]; r.d = p[3]; r.placed = p[4]; }); }
+		// then the rooms are moved / swapped one by one while the rules' score grows (none is left out), from
+		// the few best distinct starts with the fewest rooms left out; the best end wins
+		if (ctx && list.length > 1) {
+			var keys = {}, starts = seeds.filter(function (q) { return q.miss === best.miss; }).sort(function (p, q) { return layBetter(p, q) ? -1 : (layBetter(q, p) ? 1 : 0); }).filter(function (q) { var k = JSON.stringify(q.pos); if (keys[k]) { return false; } keys[k] = 1; return true; }).slice(0, deep ? 6 : 3), fin = null;
+			starts.forEach(function (q, si) {
+				if (si && Date.now() - t0 > budget) { return; }
+				load(q); layImprove(b, lv, list, ctx, deep); layRecreate(b, lv, list, ctx, deep, t0 + budget * (si + 1) / starts.length);
+				var rs = (b.prog || []).filter(function (x) { return x.lv === lv; }), ev2 = B.layoutEval(rs, ctx), nf = { miss: q.miss, key: layKeyFails(ev2), score: layScore(rs, ctx), pos: list.map(function (r) { return [r.x, r.y, r.w, r.d, r.placed]; }) };
+				if (!fin || layBetter(nf, fin)) { fin = nf; }
+			});
+			load(fin || best);
+		} else { load(best); }
+		// the ones that did not fit wait beside the house
+		list.forEach(function (r, j) { if (!r.placed) { r.w = dims[j][0]; r.d = dims[j][1]; r.x = -999; r.y = -999; } });
+		list.forEach(function (r) { if (!r.placed) { var pk = progPark(b); r.x = pk[0]; r.y = pk[1]; } });
+		return best.miss;
+	}
+	// One placement in the given order. ctx (the layout rules) given: each room first takes, among the places
+	// where its sides lie on wall faces / neighbour gaps, the one with the best rule score; when none fits,
+	// and without ctx, the 1.21.0 first fit (rows from the back) on the 10 cm grid as before.
+	function progRun(b, lv, list, ctx, deep, branch) {
+		var C = progCfg(), miss = 0;
+		list.forEach(function (r) { r.x = -999; r.y = -999; r.placed = false; });
 		var G = progGrid(b, lv, null);
-		list.forEach(function (r) {
+		list.forEach(function (r, ri) {
 			var shapes = progShapes(r), done = false, w0 = r.w, d0 = r.d;
+			if (ctx) { done = laySmart(b, lv, r, shapes, G, ctx, deep, ri ? 0 : branch || 0); }
 			for (var si = 0; si < shapes.length && !done; si++) {
 				r.w = shapes[si][0]; r.d = shapes[si][1];
 				var L = linesOf(b, lv, r.id), cx = cands(L.xs, r.w, L.x0, L.x1), cy = cands(L.ys, r.d, L.y0, L.y1);
@@ -1297,9 +1359,265 @@
 			if (!done) { r.w = w0; r.d = d0; r.x = -999; r.y = -999; miss++; } else { gridBlock(G, r, C.gap); }
 			r.placed = done;
 		});
-		// the ones that did not fit wait beside the house
-		list.forEach(function (r) { if (!r.placed) { var pk = progPark(b); r.x = pk[0]; r.y = pk[1]; } });
 		return miss;
+	}
+	/* ------------------------------------------------------------------ logical room layout (1.25.0)
+	 * The layout rules (data: defaults.programme.layout, verified: false; evaluated by B.layoutEval, the
+	 * PHP port gives the same) warn, never block: a room may still be dragged anywhere. The garden is the
+	 * back of the house, turned to the sun by the plot's orientation; the street is the front. */
+	var LAY_ORDER = ['hall', 'living_kitchen', 'living', 'kitchen', 'dining', 'master', 'bedroom', 'kids', 'guest', 'corridor', 'bathroom', 'wc', 'pantry', 'laundry', 'utility', 'office', 'technical'];
+	function layCtx(b, lv) { var c = cfg() || {}; return B.layoutCtx(b, lv, c.orientation || 'south'); }
+	// night: the bedrooms first (they take the garden side before the day rooms)
+	function layOrder(list, night) {
+		var NIGHT = ['master', 'bedroom', 'kids', 'guest'];
+		var rk = function (r) { var i = LAY_ORDER.indexOf(r.type); return (night && NIGHT.indexOf(r.type) !== -1 ? -20 : 0) + (i === -1 ? LAY_ORDER.length : i); };
+		return list.slice().sort(function (p, q) { return rk(p) - rk(q) || q.w * q.d - p.w * p.d; });
+	}
+	// a fixed reshuffle of the order (deterministic): k swaps of neighbours
+	function layShuffle(list, k) {
+		var out = list.slice(), s = k * 2654435761 >>> 0;
+		for (var i = 0; i < k + 1; i++) { s = (s * 1103515245 + 12345) >>> 0; var j = s % Math.max(1, out.length - 1), t2 = out[j]; out[j] = out[j + 1]; out[j + 1] = t2; }
+		return out;
+	}
+	function layRules() { return ((B.defaults().programme || {}).layout || {}).rules || []; }
+	function layTypes(R) { var out = []; ['types', 'to', 'via', 'from'].forEach(function (k) { (R[k] || []).forEach(function (x) { out = out.concat(Array.isArray(x) ? x : [x]); }); }); return out; }
+	function layRel(type) { return layRules().filter(function (R) { return layTypes(R).indexOf(type) !== -1; }); }
+	function rectDist(a, c) { var ex = Math.max(0, c.x - (a.x + a.w), a.x - (c.x + c.w)), ey = Math.max(0, c.y - (a.y + a.d), a.y - (c.y + c.d)); return Math.sqrt(ex * ex + ey * ey); }
+	// how far a room is from what its rules want (m): its partners, the garden / street, the entrance
+	function laySoft(r, rects, ctx, rel, ev) {
+		var soft = 0, on = rects.filter(function (q) { return q !== r && q.placed === true && q.lv === r.lv; });
+		function near(types) { var d = null; on.forEach(function (q) { if (types.indexOf(q.type) !== -1) { var dd = rectDist(r, q); d = d === null ? dd : Math.min(d, dd); } }); return d === null ? 0 : d; }
+		function entD() { var d = null; ctx.ent.forEach(function (e) { var ex = Math.max(r.x - e.x, 0, e.x - (r.x + r.w)), ey = Math.max(r.y - e.y, 0, e.y - (r.y + r.d)), dd = Math.sqrt(ex * ex + ey * ey); d = d === null ? dd : Math.min(d, dd); }); return d === null ? 0 : d; }
+		rel.forEach(function (R, i) {
+			if (ev.rules[i].ok !== false) { return; }
+			var mine = (R.types || []).indexOf(r.type) !== -1;
+			if (R.kind === 'side' && mine) {
+				// the distance to the nearest outer face on that side
+				var key = R.side === 'street' ? 'street' : 'garden', dm = 30;
+				ctx.faces.forEach(function (f) { if (f[key]) { var e = f.v ? Math.min(Math.abs(r.x - f.c), Math.abs(r.x + r.w - f.c)) : Math.min(Math.abs(r.y - f.c), Math.abs(r.y + r.d - f.c)); dm = Math.min(dm, e); } });
+				soft += dm + 0.5;
+			} else if (R.kind === 'apart') { soft += mine ? 3 : 0; }
+			else if (R.kind === 'entry') { soft += mine ? entD() : 0; }
+			else if (R.kind === 'between') { soft += mine ? R.to.reduce(function (s, g) { return s + near(g); }, 0) : near(R.types); }
+			else if (R.kind === 'cluster') { soft += near(R.types); }
+			else { soft += mine ? Math.min(near((R.to || []).concat(R.via || [])), R.entry && ctx.ent.length ? entD() : 1e9) : near(R.types); }
+		});
+		return soft;
+	}
+	// the best-scored place of a room whose sides lie on wall faces / neighbour gaps (null: none fits)
+	// branch k > 0: the best place of the k-th best proportion instead (the start of another variant)
+	function laySmart(b, lv, r, shapes, G, ctx, deep, branch) {
+		var rel = layRel(r.type), rects = (b.prog || []).filter(function (q) { return q.lv === lv; }), list = [];
+		// a corridor / hall may take any proportion of its area (long and narrow links more rooms)
+		shapes = layShapes(r, shapes, deep, linesOf(b, lv, r.id));
+		for (var si = 0; si < shapes.length; si++) {
+			r.w = shapes[si][0]; r.d = shapes[si][1];
+			var L = linesOf(b, lv, r.id), xs = lineCands(L.xs, r.w, L.x0, L.x1, ctx.ent.map(function (e) { return e.x; })), ys = lineCands(L.ys, r.d, L.y0, L.y1, ctx.ent.map(function (e) { return e.y; })), hx = {}, hy = {};
+			L.xs.forEach(function (v) { hx[Math.round(v * 100)] = 1; }); L.ys.forEach(function (v) { hy[Math.round(v * 100)] = 1; });
+			for (var iy = 0; iy < ys.length; iy++) {
+				for (var ix = 0; ix < xs.length; ix++) {
+					var x = xs[ix], y = ys[iy];
+					if (!gridMay(G, x, y, r.w, r.d)) { continue; }
+					r.x = x; r.y = y; r.placed = true;
+					var ev = B.layoutEval(rects, ctx, rel), soft = rel.length ? laySoft(r, rects, ctx, rel, ev) : 0;
+					var contact = (hx[Math.round(x * 100)] ? 1 : 0) + (hx[Math.round((x + r.w) * 100)] ? 1 : 0) + (hy[Math.round(y * 100)] ? 1 : 0) + (hy[Math.round((y + r.d) * 100)] ? 1 : 0);
+					list.push([1000 * ev.pw - 100000 * layKeyFails2(rel, ev) - 10 * soft + contact - 0.01 * si - 0.001 * y - 0.0001 * x, x, y, r.w, r.d]);
+					r.placed = false;
+				}
+			}
+		}
+		list.sort(function (p, q) { return q[0] - p[0]; });
+		var seen = {}, k = 0;
+		for (var i = 0; i < list.length && i < 400 + 200 * (branch || 0); i++) {
+			var key = list[i][3] + 'x' + list[i][4];
+			if (branch && seen[key]) { continue; }
+			r.x = list[i][1]; r.y = list[i][2]; r.w = list[i][3]; r.d = list[i][4];
+			if (progState(b, r) === 'ok') { if (k++ >= (branch || 0)) { return true; } seen[key] = 1; }
+		}
+		r.w = shapes[0][0]; r.d = shapes[0][1]; r.x = -999; r.y = -999;
+		return false;
+	}
+	// the proportions tried: the closest few to the asked one, then a spread of the others (a corridor / hall
+	// may take any proportion of its area: long and narrow, it links more rooms)
+	function layShapes(r, shapes, deep, L) {
+		var circ = r.type === 'corridor' || r.type === 'hall', head = deep ? 8 : 4, want = circ ? 24 : (deep ? 16 : 10), out = shapes;
+		if (shapes.length > want) {
+			var rest = shapes.slice(head), k = (want - head) / rest.length;
+			out = shapes.slice(0, head);
+			rest.forEach(function (s2, i) { if (Math.floor((i + 1) * k) > Math.floor(i * k)) { out.push(s2); } });
+		}
+		// and the proportions that fill a strip exactly: a side as long as the span between two snapping lines
+		if (L && !r.keepWD) {
+			var C = progCfg(), mn = C.mins[r.type] || [0, 0], side = Math.max(num(mn[1], 0), 0.9), A0 = r.w * r.d, seen = {};
+			out.forEach(function (s2) { seen[s2[0] + 'x' + s2[1]] = 1; });
+			[[L.xs, 0], [L.ys, 1]].forEach(function (ax) {
+				var ls = ax[0].map(r2).filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (p, q) { return p - q; }), fit = [];
+				for (var i = 0; i < ls.length; i++) { for (var j = i + 1; j < ls.length; j++) { var D = r2(ls[j] - ls[i]), E = r2(A0 / D); if (D >= side && E >= side && D * D <= A0 * 3 + 1e-6 && E * E <= A0 * 3 + 1e-6) { fit.push(D); } } }
+				fit.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (p, q) { return Math.abs(Math.log(p * p / A0)) - Math.abs(Math.log(q * q / A0)); }).slice(0, deep ? 8 : 4).forEach(function (D) {
+					var sh = ax[1] ? [r2(A0 / D), D] : [D, r2(A0 / D)];
+					if (!seen[sh[0] + 'x' + sh[1]]) { seen[sh[0] + 'x' + sh[1]] = 1; out.push(sh); }
+				});
+			});
+		}
+		return out;
+	}
+	// Ruin and recreate: for each rule that fails, its rooms (and their neighbours) are taken out and placed
+	// again by the guided placement, in two orders; kept when every room is back in and the score grows.
+	function layRecreate(b, lv, list, ctx, deep, until) {
+		var R = layRules(), rects = (b.prog || []).filter(function (q) { return q.lv === lv; }), cur = layScore(rects, ctx);
+		function keep() { return list.map(function (r) { return [r.x, r.y, r.w, r.d, r.placed]; }); }
+		function put(ps) { list.forEach(function (r, j) { var p = ps[j]; r.x = p[0]; r.y = p[1]; r.w = p[2]; r.d = p[3]; r.placed = p[4]; }); }
+		function near(a, c) { return rectDist(a, c) <= 0.6; }
+		for (var round = 0; round < (deep ? 3 : 2); round++) {
+			var ev = B.layoutEval(rects, ctx, R), better = false;
+			R.forEach(function (rule, ri) {
+				if (ev.rules[ri].ok !== false || Date.now() > until) { return; }
+				var ts = layTypes(rule), core = list.filter(function (r) { return r.placed === true && ts.indexOf(r.type) !== -1; });
+				if (!core.length) { return; }
+				[0, 1].forEach(function (wide) {
+					if (Date.now() > until) { return; }
+					var out = core.slice();
+					if (wide) { list.forEach(function (r) { if (r.placed === true && out.indexOf(r) === -1 && core.some(function (c) { return near(r, c); })) { out.push(r); } }); }
+					if (out.length > Math.max(6, list.length * 0.6)) { return; }
+					[layOrder(out), layOrder(out).reverse()].forEach(function (order) {
+						if (Date.now() > until) { return; }
+						var was = keep(), dims = order.map(function (r) { return [r.w, r.d]; });
+						order.forEach(function (r) { r.placed = false; r.x = -999; r.y = -999; });
+						var G = progGrid(b, lv, null), C = progCfg(), all = true;
+						order.forEach(function (r) {
+							var sh = progShapes(r);
+							if (laySmart(b, lv, r, sh, G, ctx, deep, 0)) { r.placed = true; gridBlock(G, r, C.gap); } else { all = false; }
+						});
+						var sc = all ? layScore(rects, ctx) : -Infinity;
+						if (sc > cur + 1e-6) { cur = sc; better = true; } else { put(was); order.forEach(function (r, j) { if (!r.placed) { r.w = dims[j][0]; r.d = dims[j][1]; } }); }
+					});
+				});
+			});
+			if (!better) { break; }
+		}
+	}
+	// key rules (data: "key": true) failing; a result is better with fewer rooms left out, then fewer key
+	// rules failing, then a higher score
+	function layKeyFails(ev) { var R = layRules(), n = 0; ev.rules.forEach(function (x, i) { if (x.ok === false && R[i] && R[i].key) { n++; } }); return n; }
+	function layKeyFails2(rel, ev) { var n = 0; ev.rules.forEach(function (x, i) { if (x.ok === false && rel[i] && rel[i].key) { n++; } }); return n; }
+	function layBetter(p, q) { return p.miss !== q.miss ? p.miss < q.miss : (p.key !== q.key ? p.key < q.key : p.score > q.score + 1e-9); }
+	// The whole level's score: the weighted rules that pass (×1000) minus how far the others are (m)
+	function layScore(rects, ctx) {
+		var R = layRules(), ev = B.layoutEval(rects, ctx, R), soft = 0;
+		rects.forEach(function (r) { if (r.placed === true) { soft += laySoft(r, rects, ctx, R, ev); } });
+		return 1000 * ev.pw - 100000 * layKeyFails(ev) - soft;
+	}
+	// Local search after the placement: each room in turn is tried at every place where its sides lie on a
+	// wall face / neighbour gap (its other proportions too), and pairs of rooms swap places; a move is kept
+	// when the score grows and every room stays in a good place (progState). Deterministic.
+	function layImprove(b, lv, list, ctx, deep) {
+		var rects = (b.prog || []).filter(function (q) { return q.lv === lv; }), cur = layScore(rects, ctx), passes = deep ? 6 : 3;
+		function keep(r) { return [r.x, r.y, r.w, r.d]; }
+		function put(r, p) { r.x = p[0]; r.y = p[1]; r.w = p[2]; r.d = p[3]; }
+		for (var pass = 0; pass < passes; pass++) {
+			var moved = false;
+			list.forEach(function (r) {
+				if (r.placed !== true) { return; }
+				var was = keep(r);
+				r.placed = false; r.x = -999; r.y = -999;
+				var G = progGrid(b, lv, null), shapes = progShapes(r), rel = layRel(r.type), cs = [];
+				shapes = layShapes(r, shapes, deep, linesOf(b, lv, r.id));
+				for (var si = 0; si < shapes.length; si++) {
+					r.w = shapes[si][0]; r.d = shapes[si][1];
+					var L = linesOf(b, lv, r.id), xs = lineCands(L.xs, r.w, L.x0, L.x1, ctx.ent.map(function (e) { return e.x; })), ys = lineCands(L.ys, r.d, L.y0, L.y1, ctx.ent.map(function (e) { return e.y; }));
+					for (var iy = 0; iy < ys.length; iy++) {
+						for (var ix = 0; ix < xs.length; ix++) {
+							if (!gridMay(G, xs[ix], ys[iy], r.w, r.d)) { continue; }
+							r.x = xs[ix]; r.y = ys[iy]; r.placed = true;
+							var ev = B.layoutEval(rects, ctx, rel);
+							cs.push([1000 * ev.pw - 100000 * layKeyFails2(rel, ev) - laySoft(r, rects, ctx, rel, ev), r.x, r.y, r.w, r.d]);
+							r.placed = false;
+						}
+					}
+				}
+				cs.sort(function (p, q) { return q[0] - p[0]; });
+				var best = null;
+				for (var i = 0, ok = 0; i < cs.length && ok < (deep ? 40 : 16); i++) {
+					put(r, cs[i].slice(1)); r.placed = true;
+					if (progState(b, r) !== 'ok') { r.placed = false; continue; }
+					ok++;
+					var sc = layScore(rects, ctx);
+					if (sc > cur + 1e-6 && (!best || sc > best[0])) { best = [sc, keep(r)]; }
+					r.placed = false;
+				}
+				if (best) { put(r, best[1]); cur = best[0]; moved = true; } else { put(r, was); }
+				r.placed = true;
+			});
+			// swaps: two rooms exchange their corners (each with its own proportions)
+			for (var a = 0; a < list.length; a++) {
+				for (var c = a + 1; c < list.length; c++) {
+					var p = list[a], q = list[c];
+					if (p.placed !== true || q.placed !== true || p.type === q.type) { continue; }
+					var pa = p.w * p.d, qa = q.w * q.d;
+					if (Math.max(pa, qa) > 2.5 * Math.min(pa, qa)) { continue; }
+					var wp = keep(p), wq = keep(q), bestS = null;
+					var sp = progShapes(p).slice(0, deep ? 8 : 5), sq = progShapes(q).slice(0, deep ? 8 : 5);
+					[0, 1, 2, 3].forEach(function (k) {
+						sp.forEach(function (s1) {
+							sq.forEach(function (s2) {
+								// p into q's old place, q into p's old place, anchored at the same corner
+								var ax = k & 1, ay = k & 2;
+								put(p, [r2(ax ? wq[0] + wq[2] - s1[0] : wq[0]), r2(ay ? wq[1] + wq[3] - s1[1] : wq[1]), s1[0], s1[1]]);
+								put(q, [r2(ax ? wp[0] + wp[2] - s2[0] : wp[0]), r2(ay ? wp[1] + wp[3] - s2[1] : wp[1]), s2[0], s2[1]]);
+								if (progState(b, p) !== 'ok' || progState(b, q) !== 'ok') { return; }
+								var sc = layScore(rects, ctx);
+								if (sc > cur + 1e-6 && (!bestS || sc > bestS[0])) { bestS = [sc, keep(p), keep(q)]; }
+							});
+						});
+					});
+					if (bestS) { put(p, bestS[1]); put(q, bestS[2]); cur = bestS[0]; moved = true; } else { put(p, wp); put(q, wq); }
+				}
+			}
+			if (!moved) { break; }
+		}
+	}
+	// candidate starts on one axis from the snapping lines only (a side on a line); extra: points the room
+	// should cover (the entrance), as starts on the 10 cm grid round them
+	function lineCands(lines, size, lo, hi, pts) {
+		var out = [];
+		// a face on a half centimetre (plaster 1.5 cm): rounded inwards, never past the line
+		lines.forEach(function (e) { [Math.ceil(e * 100 - 1e-6) / 100, Math.floor((e - size) * 100 + 1e-6) / 100].forEach(function (q) { if (q >= lo - 0.006 && q + size <= hi + 0.006) { out.push(q); } }); });
+		(pts || []).forEach(function (v) { [0.3, size / 2, size - 0.3].forEach(function (k) { var q = r2(Math.round((v - k) * 10) / 10); if (q >= lo - 0.006 && q + size <= hi + 0.006) { out.push(q); } }); });
+		return out.sort(function (a, c) { return a - c; }).filter(function (q, i, a) { return !i || q - a[i - 1] > 0.004; });
+	}
+	// the rules' state on a level: { rules: [{ id, w, ok, desc }], n, pass, pct, score } or null
+	function layState(b, lv) {
+		var ctx = layCtx(b, lv);
+		if (!ctx) { return null; }
+		var ev = B.layoutEval(b.prog || [], ctx), R = layRules();
+		ev.rules.forEach(function (x, i) { x.desc = R[i] && R[i].desc; });
+		return ev;
+	}
+	// „Elrendezés javítása”: a deeper search on a copy; taken (one undo step) only when no room is left out
+	// that is in now and the rules' score is better
+	function progFix() {
+		var lv = st.lv, cur = layState(st.b, lv), b = JSON.parse(JSON.stringify(st.b)), was = (st.b.prog || []).filter(function (r) { return r.lv === lv && progState(st.b, r) === 'ok'; }).length;
+		if (!cur) { return; }
+		var miss = progPlace(b, lv, null, true), n = (b.prog || []).filter(function (r) { return r.lv === lv; }).length, nw = layState(b, lv);
+		if (n - miss >= was && nw && nw.score > cur.score) {
+			change(function (b2) { b2.prog = b.prog; if (b.slab.stair && b2.slab.stair) { b2.slab.stair = b.slab.stair; } });
+			if (A.toast) { A.toast(tf('b_lay_fixed', cur.pass + '/' + cur.n, nw.pass + '/' + nw.n), 'ok'); }
+		} else if (A.toast) { A.toast(t('b_lay_best'), 'ok'); }
+	}
+	function layoutBox(ev, fix) {
+		if (!ev || !ev.n) { return null; }
+		var kids = [el('p', { class: 'agh-bld-note agh-bld-laysum', 'data-pass': String(ev.pass), 'data-n': String(ev.n), 'data-score': String(ev.score), text: tf('b_lay_sum', ev.pass, ev.n) })];
+		var ul = el('ul', { class: 'agh-bld-laylist' });
+		ev.rules.forEach(function (x) {
+			if (x.ok === null) { return; }
+			var key = 'b_lay_' + x.id, txt = t(key);
+			if (txt === key) { txt = x.desc || x.id; }
+			ul.appendChild(el('li', { class: 'agh-bld-layrule ' + (x.ok ? 'is-ok' : 'is-bad'), 'data-rule': x.id, 'data-ok': x.ok ? '1' : '0' }, [el('b', { text: x.ok ? '✓' : '✗', 'aria-hidden': 'true' }), el('span', { text: txt }), el('em', { text: t(x.ok ? 'b_lay_ok' : 'b_lay_no') })]));
+		});
+		kids.push(ul);
+		if (fix) { kids.push(el('div', { class: 'agh-bld-row' }, [el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-bld-layfix', onclick: fix }, [A.icon('fit', 'agh-ico-s'), t('b_lay_fix')])])); }
+		kids.push(el('p', { class: 'agh-bld-note is-small', text: t('b_lay_note') }));
+		return el('div', { class: 'agh-bld-layout' }, [el('h4', { class: 'agh-bld-h agh-bld-h-s', text: t('b_lay_title') })].concat(kids));
 	}
 	// candidate edges on one axis: the snapping lines (as a start, and as an end) and a 10 cm grid
 	function linesOf(b, lv, skipId) {
@@ -1439,6 +1757,8 @@
 			function union(iv) { iv.sort(function (p, q) { return p[0] - q[0]; }); var out = []; iv.forEach(function (q) { var l = out[out.length - 1]; if (l && q[0] <= l[1] + 0.02) { l[1] = Math.max(l[1], q[1]); } else { out.push(q.slice()); } }); return out; }
 			function minus(iv, cut) { var out = []; iv.forEach(function (q) { var parts = [q.slice()]; cut.forEach(function (c) { parts = parts.reduce(function (acc, p) { if (c[1] <= p[0] || c[0] >= p[1]) { acc.push(p); return acc; } if (c[0] > p[0]) { acc.push([p[0], c[0]]); } if (c[1] < p[1]) { acc.push([c[1], p[1]]); } return acc; }, []); }); out = out.concat(parts); }); return out; }
 			var newW = [];
+			// 1.25.0: the partitions still to be drawn are snapping targets too (their unions, before the cuts)
+			var plan = Object.keys(lines).map(function (k) { return { dir: lines[k].dir, c: lines[k].c, iv: union(lines[k].iv.map(function (q) { return q.slice(); })) }; });
 			Object.keys(lines).forEach(function (k) {
 				var L = lines[k], cut = [];
 				walls.forEach(function (w) {
@@ -1449,12 +1769,26 @@
 				minus(union(L.iv), cut).forEach(function (q) {
 					if (q[1] - q[0] < 0.3) { return; }
 					[0, 1].forEach(function (e) {
-						var v = q[e];
+						// the end reaches the centre line of the wall it meets: the nearest one that lengthens the
+						// partition (or shortens it only by rounding) – never cut short onto a wall a few cm before the
+						// room's corner (1.25.0: the room would not close)
+						var v = q[e], best = null;
+						function take(c) { var grow = e ? c - v : v - c; if (grow >= -0.012 && (best === null || Math.abs(c - v) < Math.abs(best - v))) { best = c; } }
 						walls.concat(newW).forEach(function (w) {
 							var hz = w.a[1] === w.b[1], reach = w.t / 2 + pt + 0.03;
-							if (L.dir === 'h' && !hz && w.a[0] === w.b[0] && Math.abs(w.a[0] - v) <= reach && L.c >= Math.min(w.a[1], w.b[1]) - 0.01 && L.c <= Math.max(w.a[1], w.b[1]) + 0.01) { q[e] = w.a[0]; }
-							if (L.dir === 'v' && hz && Math.abs(w.a[1] - v) <= reach && L.c >= Math.min(w.a[0], w.b[0]) - 0.01 && L.c <= Math.max(w.a[0], w.b[0]) + 0.01) { q[e] = w.a[1]; }
+							if (L.dir === 'h' && !hz && w.a[0] === w.b[0] && Math.abs(w.a[0] - v) <= reach && L.c >= Math.min(w.a[1], w.b[1]) - 0.01 && L.c <= Math.max(w.a[1], w.b[1]) + 0.01) { take(w.a[0]); }
+							if (L.dir === 'v' && hz && Math.abs(w.a[1] - v) <= reach && L.c >= Math.min(w.a[0], w.b[0]) - 0.01 && L.c <= Math.max(w.a[0], w.b[0]) + 0.01) { take(w.a[1]); }
 						});
+						// a partition still to be drawn only when no standing wall is there (a room line inside an outer
+						// wall's body is cut away, the end goes to that wall's centre line as before)
+						if (best === null) {
+							plan.forEach(function (P) {
+								if (P.dir === L.dir || Math.abs(P.c - v) > pt / 2 + pt + 0.03) { return; }
+								if (walls.some(function (w) { var vt = w.a[0] === w.b[0], hz = w.a[1] === w.b[1]; return (P.dir === 'v' && vt && Math.abs(w.a[0] - P.c) <= w.t / 2 + pt + 0.02) || (P.dir === 'h' && hz && Math.abs(w.a[1] - P.c) <= w.t / 2 + pt + 0.02); })) { return; }
+								if (P.iv.some(function (iv) { return L.c >= iv[0] - 0.01 && L.c <= iv[1] + 0.01; })) { take(P.c); }
+							});
+						}
+						if (best !== null) { q[e] = best; }
 					});
 					var a = L.dir === 'h' ? [q[0], L.c] : [L.c, q[0]], c2 = L.dir === 'h' ? [q[1], L.c] : [L.c, q[1]];
 					var nw = { id: B.nextId(b.walls.concat(newW), 'w'), kind: 'part', lv: lv, a: [r2(a[0]), r2(a[1])], b: [r2(c2[0]), r2(c2[1])], t: pt };
@@ -1541,6 +1875,7 @@
 			kids.push(el('p', { class: 'agh-bld-note is-small', text: t('b_prog_hint') }));
 		}
 		var placed = list.length && ok === list.length;
+		if (ok) { var lb = layoutBox(layState(st.b, st.lv), progFix); if (lb) { kids.push(lb); } }
 		kids.push(budgetBox(progBudget(st.b, st.lv), placed || !list.length ? progLargestFit(st.b, st.lv) : null));
 		return group(t('b_prog'), kids);
 	}
@@ -1550,9 +1885,9 @@
 		var old = D.root.querySelector('.agh-bld-modal');
 		if (old) { old.remove(); }
 		var rows = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }).map(function (r) { return { id: r.id, type: r.type, name: r.name, area: r.area, w: r.w, d: r.d, x: r.x, y: r.y, keepWD: true, placed: r.placed }; });
-		var list = el('div', { class: 'agh-bld-proglist' }), budget = el('div', { class: 'agh-bld-progbudget' }), fitAt = {};
+		var list = el('div', { class: 'agh-bld-proglist' }), budget = el('div', { class: 'agh-bld-progbudget' }), layBox = el('div', { class: 'agh-bld-proglay' }), fitAt = {}, fixed = false;
 		// a trial run on a copy: the rows as rectangles, placed like the automatic placement does
-		function trial() {
+		function trial(final) {
 			var b = JSON.parse(JSON.stringify(st.b)), lv = st.lv, ids = [];
 			b.prog = (b.prog || []).filter(function (r) { return r.lv !== lv; });
 			rows.forEach(function (r, i) {
@@ -1562,7 +1897,7 @@
 			});
 			// rows already placed keep their place when still good; the others are placed now
 			var keep = b.prog.filter(function (r) { return r.lv === lv && rows.some(function (q) { return q.id === r.id && q.placed && q.keepWD; }) && progState(b, r) === 'ok'; }).map(function (r) { return r.id; });
-			progPlace(b, lv, ids.filter(function (id) { return keep.indexOf(id) === -1; }));
+			progPlace(b, lv, ids.filter(function (id) { return keep.indexOf(id) === -1; }), final ? false : 'quick');
 			keep.forEach(function (id) { b.prog.forEach(function (r) { if (r.id === id) { r.placed = true; } }); });
 			fitAt = {};
 			b.prog.forEach(function (r, i) { if (r.lv === lv) { fitAt[r.id] = r; } });
@@ -1573,6 +1908,10 @@
 			budget.innerHTML = '';
 			var bud = progBudget(T.b, st.lv), all = T.ids.every(function (id) { return fitAt[id] && fitAt[id].placed; });
 			budget.appendChild(budgetBox(bud, all ? progLargestFit(T.b, st.lv) : null));
+			// 1.25.0: the layout rules of the trial, one by one, and the deeper search („Elrendezés javítása”)
+			layBox.innerHTML = '';
+			var lb = T.ids.some(function (id) { return fitAt[id] && fitAt[id].placed; }) ? layoutBox(layState(T.b, st.lv), fixRows) : null;
+			if (lb) { layBox.appendChild(lb); }
 			list.innerHTML = '';
 			if (!rows.length) { list.appendChild(el('p', { class: 'agh-bld-note', text: t('b_prog_empty') })); return; }
 			if (rows.length >= 3 && !rows.some(function (r) { return r.type === 'hall' || r.type === 'corridor'; }) && bud) {
@@ -1608,7 +1947,16 @@
 		// Done: the rows become rectangles placed in the base where they fit (the trial's places and sizes),
 		// the others wait beside the house
 		var done = function () {
-			var T = trial(), miss = 0;
+			var miss = commitRows();
+			close(); fitView(); renderPlan();
+			if (miss && A.toast) { A.toast(tf('b_prog_nofit', miss), 'warn'); }
+		};
+		// the rows as they are now become the programme (one undo step), then the deeper search (a second
+		// one, Ctrl+Z takes it back); the dialog then shows the plan's programme
+		function reload() { rows = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }).map(function (r) { return { id: r.id, type: r.type, name: r.name, area: r.area, w: r.w, d: r.d, x: r.x, y: r.y, keepWD: true, placed: r.placed }; }); }
+		function fixRows() { commitRows(); progFix(); fixed = true; reload(); draw(); }
+		function commitRows() {
+			var T = trial(true), miss = 0;
 			change(function (b) {
 				var lv = st.lv;
 				b.prog = (b.prog || []).filter(function (r) { return r.lv !== lv; });
@@ -1621,20 +1969,24 @@
 				});
 				if (T.b.slab.stair && b.slab.stair) { b.slab.stair = T.b.slab.stair; }
 			});
-			close(); fitView(); renderPlan();
-			if (miss && A.toast) { A.toast(tf('b_prog_nofit', miss), 'warn'); }
-		};
+			return miss;
+		}
 		var modal = el('div', { class: 'agh-bld-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('b_prog') }, [
 			el('div', { class: 'agh-bld-modal-box' }, [
 				el('div', { class: 'agh-bld-modal-head' }, [el('h3', { class: 'agh-bld-h', text: t('b_prog_title') }), el('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('b_prog_done'), title: t('b_prog_done'), onclick: close }, A.icon('close'))]),
 				el('p', { class: 'agh-bld-note', text: t('b_prog_lead') }),
 				budget,
 				el('p', { class: 'agh-bld-note is-small', text: t('b_prog_add_hint') }),
-				pills, list,
+				pills, list, layBox,
 				el('div', { class: 'agh-bld-modal-foot' }, [el('button', { type: 'button', class: 'agh-btn agh-btn-primary agh-bld-progdone', onclick: done }, t('b_prog_done'))])
 			])
 		]);
-		modal.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } });
+		modal.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
+			// after „Elrendezés javítása” the dialog shows the plan: Ctrl+Z / Ctrl+Y step it back and forth
+			var typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '');
+			if (fixed && !typing && (e.ctrlKey || e.metaKey) && /^[zy]$/i.test(e.key)) { e.preventDefault(); e.stopPropagation(); if (e.key.toLowerCase() === 'y' || e.shiftKey) { redo(); } else { undo(); } reload(); draw(); }
+		});
 		modal.addEventListener('click', function (e) { if (e.target === modal) { close(); } });
 		draw();
 		D.root.appendChild(modal);
@@ -1837,5 +2189,5 @@
 
 	// load a whole drawing (a saved one, a template or a test house) as one undoable change
 	function load(b) { change(function () { st.b = B.normalize(b); }); st.sel = null; fitView(); renderAll(); }
-	root.AGH_BuildUI = { version: '1.0.0', open: open, close: close, onKey: onKey, load: load, state: function () { return st; }, pick3D: function (ray) { return st ? rayPick(ray) : null; }, _prog: { budget: function (lv) { return progBudget(st.b, lv === undefined ? st.lv : lv); }, state: function (r) { return progState(st.b, r); }, stairState: function () { return stairState(st.b); }, largest: function (lv) { return progLargestFit(st.b, lv === undefined ? st.lv : lv); }, cfg: progCfg, raw: function (lv) { return progLargest(progGrid(st.b, lv || 0, null, true)); } }, goStep: function (i) { goStep(i); }, closeStep: function () { closeStep(); }, setView: function (v) { setView(v); }, setPhase: function (p) { setPhase(p); } };
+	root.AGH_BuildUI = { version: '1.0.0', open: open, close: close, onKey: onKey, load: load, state: function () { return st; }, pick3D: function (ray) { return st ? rayPick(ray) : null; }, _prog: { budget: function (lv) { return progBudget(st.b, lv === undefined ? st.lv : lv); }, state: function (r) { return progState(st.b, r); }, stairState: function () { return stairState(st.b); }, largest: function (lv) { return progLargestFit(st.b, lv === undefined ? st.lv : lv); }, cfg: progCfg, layout: function (lv) { return layState(st.b, lv === undefined ? st.lv : lv); }, raw: function (lv) { return progLargest(progGrid(st.b, lv || 0, null, true)); } }, goStep: function (i) { goStep(i); }, closeStep: function () { closeStep(); }, setView: function (v) { setView(v); }, setPhase: function (p) { setPhase(p); } };
 }(window));
