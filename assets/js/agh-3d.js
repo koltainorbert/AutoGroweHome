@@ -2219,6 +2219,8 @@ function mergeStatic(group, skip) {
 	(function walk(o) {
 		o.children.slice().forEach(function (ch) {
 			if (skips.indexOf(ch) !== -1) { return; }
+			// a model already merged once per material (vehicles, people, pets – 1.24.0) stays as it is
+			if (ch.isMesh && ch.geometry && ch.geometry.userData && ch.geometry.userData.premerged) { return; }
 			if (ch.isMesh && !ch.isInstancedMesh && !ch.isSkinnedMesh && ch.geometry && ch.geometry.attributes.position && !hasLight(ch)) {
 				var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
 				if (!mats.some(function (m) { return !m || m.transparent || m.transmission > 0 || m.vertexColors; })) { take(ch, mats); return; }

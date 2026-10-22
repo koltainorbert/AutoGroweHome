@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.24.0 – 2026-10-22
+
+Norbi: „élethű autó, ember és járműveket akarok a 3D képre”. (`docs/FELADAT-1.18.0.md`)
+
+- **Autók (szedán, ferdehátú, SUV, pickup, kisbusz, sportautó, elektromos):** lekerekített karosszéria, befelé dőlő üvegház, kerekedő orr és far, kivágott kerékjárati ívek sötét béléssel; gumi oldalfallal, ötküllős felni féktárcsával és nyereggel; sötét, tükröző üvegezés oszlopokkal és krómcsíkkal, ülések és kormány bent; fényszóró-csoport nappali fénnyel, hátsó lámpa, hűtőrács lamellákkal, lökhárítók, küszöb, tükrök száron, kilincsek, ajtóhézagok, rendszámtábla (EU-csík). Este a lámpák világítanak.
+- **Emberek:** arc (szem fehérje és írisz, szemöldök, orr, száj, fül, áll), frizura (rövid, bob, hosszú, lófarok), törzs mellkassal, derékkal, csípővel, ing gallérral és redőkkel, öv csattal, szoknya redőkkel, rövid/hosszú ujj mandzsettával, kéz ujjakkal és hüvelykujjal, cipő talppal. **Kutya:** mély mellkas, pofa orral, szem, lógó vagy álló fül, nyakörv, mancsok, ívelt farok. **Macska:** kerek fej, hegyes fül rózsaszín belsővel, zöld szem pupillával, bajusz, hosszú farok.
+- **Sebesség:** minden modell egyszer épül meg kinézetenként, anyagonként egy hálóba összevonva, és másolatként kerül a jelenetbe – a részletesebb modellekkel a nézet gyorsabb, mint előtte. Mérve (SwiftShader, ugyanazon a gépen, 3 futás): a teljes nézet (építés + összevonás + első kép) 73–75 ms → 36–48 ms; háromszög: autó 8 400–10 000 (≤ 20 000), ember ~8 400, kutya ~5 900, macska ~2 000.
+- Mérve: új `e2e/life.js` 10/10 (minden jármű, a család, a kutyák és a macska felépül, részletek, autó anyagonként egy hálóban, konzolhiba 0) · `move.js` 21/21 · `pick.js` 122 rész · `cards.js` 55 mező 0 hiba · `layout.js` 15/15 · `detail.js` 9/9 · `outb.js` 14/14 · `guide.js` zöld · sketch 0 hiba · autoloader 125/125.
+
 ## 1.23.0 – 2026-10-22
 
 Norbi: „melléképületek (tároló, faház, műhely) … kintre garázs, tároló stb., méretezni és berendezni, tetőt tenni rá”. (`docs/FELADAT-1.18.0.md`)
