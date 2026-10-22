@@ -18,6 +18,24 @@ A „felső 2 pont” az ALLAPOT nyitott tételei közül:
 - a helyiségek egymáshoz képesti logikus elrendezése (hálók a kert felé, fürdő a háló mellett);
 - a lépcső a kész ház (9. lépés) 3D-jében.
 
+### Irányváltás (Norbi, 2026-10-22 20:48), szó szerint
+
+> a grafika javítása miatt a nagy helyet igénylő kulső polys technologiakat ne használjuk! cak a mi
+> biztonságos az ég jó lenne és a háttérben a tárgyak fák és amit te még javasolsz
+
+Következmény (ez felülírja a 2–4. pontot):
+- **Elmarad:** fotó-PBR textúracsomag (Poly Haven / ambientCG), admin anyagcsomag-feltöltés,
+  `build-matpack.sh`, glTF modellek.
+- **Marad, kicsiben:** HDRI égbolt a plugin ZIP-jébe beépítve (5–6 CC0 HDRI erősen tömörítve,
+  összesen legfeljebb ~3 MB, `assets/sky/manifest.json`: forrás, licenc, md5); betöltési hiba esetén
+  a mai festett ég.
+- **Erősödik:** háttér-tárgyak és fák procedurálisan (több faj, távoli fasor InstancedMesh/LOD-dal,
+  bokor, sövény, kerítés, kandeláber, pad, szomszéd házak részletei), fű InstancedMesh-sel.
+- **Javaslat, marad:** sztochasztikus csempézés a meglévő procedurális textúrákra, olcsó procedurális
+  kopás/szennyeződés, minőségi szintek, beépített teljesítményteszt. A sugárkövetés (7.) és az
+  utóeffektek (8.) kód, nem adat: maradnak, a hozzáadott vendor ≤ 500 KB.
+- Tesztek: `tests/e2e/matpack.js` helyett `sky.js` és `scenery.js`.
+
 ## Közös szabályok (minden körre)
 
 - Minden megmarad, ami ma működik; semmi nem vész el. Ha nincs anyagcsomag, nincs WebGL2, gyenge a
