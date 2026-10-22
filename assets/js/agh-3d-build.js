@@ -174,6 +174,8 @@ function draw(c, H, A, P) {
 		return out;
 	}
 	function add(k, m) { if (m) { P[k].add(m); } }
+	var spMemo;
+	function stairPlanOf() { if (spMemo === undefined) { spMemo = H.stairPlan ? H.stairPlan(A, b, ox, oy) : null; } return spMemo; }
 	var bbW = bb ? bb.x1 - bb.x0 : 0, bbD = bb ? bb.y1 - bb.y0 : 0;
 
 	/* 0 – site: plot lines, corner stakes, batter boards with string lines */
@@ -275,16 +277,14 @@ function draw(c, H, A, P) {
 		});
 		// slab over the centre outline, the stair hole on every level but the top one
 		if (center) {
-			var holes = null, st = b.slab.stair, sr = null;
-			if (st && lv < n - 1) {
-				// 1.21.0: the opening of a designed stair (L-shaped for a quarter-turn flight), else the drawn rectangle
-				sr = A.stairRects ? A.stairRects(b) : null;
-				var hp = sr ? sr.holePoly.map(function (q) { return [q[0] - ox, q[1] - oy]; }) : [[st.x - ox, st.y - oy], [st.x - ox + st.w, st.y - oy], [st.x - ox + st.w, st.y - oy + st.d], [st.x - ox, st.y - oy + st.d]];
-				if (hp.every(function (p) { return A._inPoly(inner || center, p[0], p[1]); })) { holes = [hp.slice().reverse()]; }
-			}
-			add(8, slab(center, base + lh - b.slab.t, base + lh - 0.004, M.concrete, holes));
+			// 1.21.0: the opening of a designed stair (L-shaped for a quarter-turn flight), else the drawn rectangle;
+			// 1.25.0: one stair plan (agh-3d.js stairPlan) for the construction, the finished house and the rooms
+			var SP = lv < n - 1 ? stairPlanOf() : null, holes = SP && SP.hole ? [SP.hole.slice().reverse()] : null;
+			var sm = slab(center, base + lh - b.slab.t, base + lh - 0.004, M.concrete, holes);
+			if (sm && holes) { sm.userData.stair = 'slab'; }
+			add(8, sm);
 			// 1.21.0: the treads of a designed stair, from this floor up to the next
-			if (holes && sr && sr.steps.length) { sr.steps.forEach(function (q) { add(8, slab(q.pts.map(function (p) { return [p[0] - ox, p[1] - oy]; }), base + Math.max(0, q.z - 0.2), base + q.z, M.concrete, null)); }); }
+			if (holes) { SP.steps.forEach(function (q) { var tm = slab(q.pts, base + Math.max(0, q.z - 0.2), base + q.z, M.concrete, null); if (tm) { tm.userData.stair = 'tread'; } add(8, tm); }); }
 		}
 	}
 	// a lintel: a box along the wall from u0 to u1 (wall-local), z0..z1, a little wider than the wall

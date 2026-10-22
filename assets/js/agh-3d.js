@@ -398,7 +398,10 @@ House.prototype.build = function () {
 	var c = this.c, K = SK(), pl = K.plan(c), vols = K._volumes(c, pl), self = this;
 	this.pl = pl; this.vols = vols;
 	this.balcVol = vols.some(function (q) { return q.balc; });
+	// 1.25.0: the designed stair of a drawn house (build mode), with the slab openings it needs
+	this.bst = this.o.mini ? null : stairHouse(c);
 	vols.forEach(function (v, idx) { self.volume(v, idx, K._vtype(c, v), K._vplan(pl, v)); });
+	if (this.bst) { this.stairBuild(); }
 	if (pl.units > 1) { this.units(vols[0]); }
 	this.extras();
 	if (!this.o.mini) { this.site(); }
@@ -460,7 +463,9 @@ House.prototype.volume = function (v, idx, type, vpl) {
 		this.add(roundSlab(v, r, -T - 0.02, z0 + 0.05, v.h - 0.05, dark));
 	} else {
 		// interior: dark box so open doors/thin glass never show the sky through the house
-		if (!v.glass) { this.add(box(v.x0 + T + 0.02, v.y0 + T + 0.02, z0 + 0.05, v.x1 - T - 0.02, v.y1 - T - 0.02, v.h - 0.05, dark, { noCast: true })); }
+		// 1.25.0: a drawn house with a designed stair gets a lit inside (floors, the stair) instead of the box
+		if (!v.glass && this.bst) { this.stairShell(v, z0, T); }
+		else if (!v.glass) { this.add(box(v.x0 + T + 0.02, v.y0 + T + 0.02, z0 + 0.05, v.x1 - T - 0.02, v.y1 - T - 0.02, v.h - 0.05, dark, { noCast: true })); }
 		// plinth band
 		var pm = plinthMat(c);
 		if (pm && !z0) {
@@ -2950,6 +2955,163 @@ function floorScene(c) {
 	return hs;
 }
 
+/* ================================================================== the designed stair (1.25.0)
+ * Build mode („Építés az alapoktól”): the stair of the drawing (slab.stair: type, width, rot) in the finished
+ * house and in the room views. The plan comes only from AGH_Build.stairRects – the construction stages
+ * (agh-3d-build.js) take the same stairPlan(), so treads and the slab opening agree in every view. */
+function bldOf(c) {
+	var A = window.AGH_Build;
+	if (!A || !A.active || !A.stairRects || !c || !c.build || !c.build.walls || !c.build.walls.length) { return null; }
+	var ad = A.adapt(c.build);
+	return ad && ad.ok ? { A: A, ad: ad } : null;
+}
+// The stair of the normalised build b in plan metres shifted by (ox, oy): the slab opening (null when it is not
+// inside the inner outline – then no slab gets it), the treads [{ pts, z }] and the railing lines
+// [{ a: [x, y, z], b, hole }] (z above the floor the flight starts on).
+function stairPlan(A, b, ox, oy) {
+	var st = b && b.slab && b.slab.stair;
+	if (!st || b.levels.length < 2) { return null; }
+	var sr = A.stairRects ? A.stairRects(b) : null, ol = A.outline(b);
+	function sh(q) { return [q[0] - ox, q[1] - oy]; }
+	var hole = (sr ? sr.holePoly : [[st.x, st.y], [st.x + st.w, st.y], [st.x + st.w, st.y + st.d], [st.x, st.y + st.d]]).map(sh);
+	var lim = ol.closed ? (ol.inner || ol.center).map(function (q) { return [q[0] / 1000 - ox, q[1] / 1000 - oy]; }) : null;
+	var out = { hole: null, steps: [], rails: [], calc: sr ? sr.calc : null, sr: sr };
+	if (!lim || !hole.every(function (p) { return A._inPoly(lim, p[0], p[1]); })) { return out; }
+	out.hole = hole;
+	if (sr) {
+		out.steps = sr.steps.map(function (q) { return { z: q.z, pts: q.pts.map(sh) }; });
+		out.rails = (sr.rails || []).map(function (s) { return { a: [s.a[0] - ox, s.a[1] - oy, s.a[2]], b: [s.b[0] - ox, s.b[1] - oy, s.b[2]], hole: s.hole }; });
+	}
+	return out;
+}
+// Horizontal polygon (plan metres, optional polygonal holes) extruded from z0 to z1.
+function prism(pts, z0, z1, mat, holes, noCast) {
+	if (!pts || pts.length < 3 || !(z1 - z0 > 1e-4)) { return null; }
+	var sh = new THREE.Shape();
+	pts.forEach(function (p, k) { if (k) { sh.lineTo(p[0], -p[1]); } else { sh.moveTo(p[0], -p[1]); } });
+	(holes || []).forEach(function (hp) { var pa = new THREE.Path(); hp.forEach(function (p, k) { if (k) { pa.lineTo(p[0], -p[1]); } else { pa.moveTo(p[0], -p[1]); } }); sh.holes.push(pa); });
+	var geo = new THREE.ExtrudeGeometry(sh, { depth: z1 - z0, bevelEnabled: false, curveSegments: 1 });
+	geo.rotateX(-Math.PI / 2); geo.translate(0, z0, 0);
+	var m = new THREE.Mesh(geo, mat); m.castShadow = !noCast; m.receiveShadow = true;
+	return m;
+}
+// The pieces of a stair plan S (stairPlan, any frame in plan metres) on the floor at z0: treads in the floor
+// material over a light structure, the newel of a spiral, the railing of the house's balcony type (glass,
+// timber or metal balusters) along the flights and around the opening. o: { floor: floor key, lo, hi: the
+// heights above z0 that are drawn, railHi: the top of the railings' clipping, flights / hole: false leaves those
+// railings out }. Returns the tread count.
+function stairParts(c, S, z0, add0, o) {
+	o = o || {};
+	var lo = typeof o.lo === 'number' ? o.lo : -1e9, hi = typeof o.hi === 'number' ? o.hi : 1e9, n = 0, rhi = typeof o.railHi === 'number' ? o.railHi : hi;
+	// every piece is marked (the tests count the treads and the triangles of the stair)
+	function add(m) { if (m) { m.userData.stair = m.userData.stair || 'part'; add0(m); } }
+	var fm = roomFloorMat(c, o.floor || roomFloorKey(c, 'stairs')), under = solid('#EEEAE3', 0.85);
+	S.steps.forEach(function (q) {
+		if (q.z < lo - 1e-6 || q.z > hi + 1e-6) { return; }
+		var t = prism(q.pts, z0 + q.z - 0.04, z0 + q.z, fm);
+		if (t) { t.userData.stair = 'tread'; add(t); n++; }
+		add(prism(q.pts, z0 + Math.max(0, q.z - 0.2), z0 + q.z - 0.04, under));
+	});
+	var cal = S.calc, bt = SK()._balconyType ? SK()._balconyType(c) : 'metal', style = bt === 'glass' || bt === 'wood' ? bt : 'metal';
+	var metal = solid('#33373B', 0.4, 0.75), wood = pbr('wood', { color: '#9C6B44' }, { normal: 1 }), rm = style === 'wood' ? wood : metal;
+	var railGlass = cached('balglass', function () { return stdMat({ color: '#BFD6DE', roughness: 0.05, metalness: 0, transmission: 0, transparent: true, opacity: 0.32, envMapIntensity: 1.5 }); });
+	if (cal && cal.type === 'spiral' && S.steps.length) {
+		var cp = S.steps[0].pts[0], ztop = Math.min(cal.H + 0.95, hi);
+		if (ztop > lo) { add(rod(X(cp[0], cp[1], z0 + Math.max(0, lo)), X(cp[0], cp[1], z0 + ztop), 0.06, metal, 12)); }
+	}
+	var bal = [], bw = style === 'wood' ? 0.03 : 0.016, gap = style === 'wood' ? 0.12 : 0.11;
+	S.rails.forEach(function (s) {
+		if (s.hole ? o.hole === false : o.flights === false) { return; }
+		var a = s.a.slice(), b = s.b.slice();
+		// clipped to the drawn height band (a room view shows its own storey only)
+		function cut(p, q, z) { var t = (z - p[2]) / (q[2] - p[2]); return [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, z]; }
+		if ((a[2] > rhi && b[2] > rhi) || (a[2] < lo && b[2] < lo)) { return; }
+		if (a[2] > rhi) { a = cut(b, a, rhi); } else if (b[2] > rhi) { b = cut(a, b, rhi); }
+		if (a[2] < lo) { a = cut(b, a, lo); } else if (b[2] < lo) { b = cut(a, b, lo); }
+		var L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+		if (L < 0.03) { return; }
+		add(rod(X(a[0], a[1], z0 + a[2] + 0.92), X(b[0], b[1], z0 + b[2] + 0.92), style === 'wood' ? 0.03 : 0.022, rm, 8));
+		if (style === 'glass') {
+			var gp = polyMesh([X(a[0], a[1], z0 + a[2] + 0.08), X(b[0], b[1], z0 + b[2] + 0.08), X(b[0], b[1], z0 + b[2] + 0.88), X(a[0], a[1], z0 + a[2] + 0.88)], [railGlass, railGlass], { thick: 0.012, noCast: true });
+			if (gp) { add(gp); }
+			[a, b].forEach(function (p) { bal.push([p[0] - 0.02, z0 + p[2], p[1] - 0.02, p[0] + 0.02, z0 + p[2] + 0.92, p[1] + 0.02]); });
+			return;
+		}
+		var k = Math.max(1, Math.round(L / gap));
+		for (var i = 0; i <= k; i++) {
+			var t = i / k, x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t, z = z0 + a[2] + (b[2] - a[2]) * t;
+			bal.push([x - bw / 2, z, y - bw / 2, x + bw / 2, z + 0.92, y + bw / 2]);
+		}
+	});
+	var bm = lboxes(bal, rm);
+	if (bm) { add(bm); }
+	return n;
+}
+// The finished house of a build with a stair: what the inside needs so the stair shows through the windows.
+function stairHouse(c) {
+	var B = bldOf(c);
+	if (!B) { return null; }
+	var A = B.A, b = A.normalize(c.build), S = stairPlan(A, b, B.ad.origin[0], B.ad.origin[1]);
+	if (!S || !S.hole) { return null; }
+	var n = b.levels.length;
+	return { A: A, b: b, S: S, ol: A.outline(b), ox: B.ad.origin[0], oy: B.ad.origin[1], top: A.levelBase(b, n - 1) + b.levels[n - 1].h - b.slab.t };
+}
+// Instead of the dark interior box (1.25.0): the storeys stay open inside (the walls' inner faces close them), the
+// dark box fills only what is above the top ceiling.
+House.prototype.stairShell = function (v, z0, T) {
+	var e = T + 0.02, zb = Math.max(z0 + 0.05, this.bst.top + 0.02);
+	if (v.x1 - v.x0 - 2 * e < 0.2 || v.y1 - v.y0 - 2 * e < 0.2 || v.h - 0.05 - zb < 0.02) { return; }
+	this.add(box(v.x0 + e, v.y0 + e, zb, v.x1 - e, v.y1 - e, v.h - 0.05, solid('#1F1E1C', 1, 0), { noCast: true }));
+};
+// The floors with the slab opening, the top ceiling and the stair from every floor to the next one.
+House.prototype.stairBuild = function () {
+	var bs = this.bst, A = bs.A, b = bs.b, n = b.levels.length, ox = bs.ox, oy = bs.oy, self = this, c = this.c;
+	var sp = (A._offset(bs.ol.outer, bs.ol.outer.map(function () { return 280; })) || []).map(function (q) { return [q[0] / 1000 - ox, q[1] / 1000 - oy]; });
+	if (sp.length < 3) { return; }
+	var hole = [bs.S.hole.slice().reverse()], white = solid('#F2F0EC', 0.9), main = roomFloorMat(c, roomFloorKey(c, 'living')), fe = roomFloorMat(c, roomFloorKey(c, 'hall'));
+	var ph = this.pl.plinth, prev = this.tagNow;
+	this.tagNow = null;
+	this.add(prism(sp, ph, ph + 0.012, main, null, true));
+	var treads = 0;
+	for (var lv = 0; lv < n - 1; lv++) {
+		var zt = A.levelBase(b, lv + 1), sl = prism(sp, zt - b.slab.t, zt - 0.012, white, hole);
+		if (sl) { sl.userData.stair = 'slab'; this.add(sl); }
+		this.add(prism(sp, zt - 0.012, zt, lv + 1 === n - 1 ? fe : main, hole, true));
+		treads += stairParts(c, bs.S, A.levelBase(b, lv), function (m) { if (m) { self.add(m); } });
+	}
+	this.add(prism(sp, bs.top, bs.top + 0.02, white));
+	this.stairTreads = treads; this.root.userData.stairTreads = treads;
+	this.tagNow = prev;
+};
+// A room view of a build: the designed stair when the room holds it (lower: the flight starts here; upper: the
+// slab opening is in its floor), in the room's own frame (x along W, y along D; the room is turned when it is
+// deeper than wide, exactly like the room view turns it). null: no designed stair, or not a room of the drawing
+// (the room view then does what it always did); { none: true }: the house has one, but not in this room.
+function stairRoom(c, room) {
+	var B = bldOf(c);
+	if (!B || !room || !room.id) { return null; }
+	var A = B.A, b = A.normalize(c.build), n = b.levels.length, S = stairPlan(A, b, 0, 0);
+	if (!S || !S.hole || !S.steps.length || !S.sr) { return null; }
+	var me = ((A.params(c.build, c) || {})._rooms || []).filter(function (r) { return r.id === room.id; })[0];
+	if (!me) { return null; }
+	var ol = A.outline(b), poly = null;
+	A.rooms(b, me.level, ol).forEach(function (q) { if (q.key === me.key) { poly = q.net; } });
+	if (!poly) { return null; }
+	// the room of the first tread holds the flight, the room of the last one (under the opening) its arrival
+	function mid(q) { var x = 0, y = 0; q.pts.forEach(function (p) { x += p[0] / q.pts.length; y += p[1] / q.pts.length; }); return A._inPoly(poly, Math.round(x * 1000), Math.round(y * 1000)); }
+	var lower = me.level < n - 1 && mid(S.steps[0]), upper = me.level > 0 && mid(S.steps[S.steps.length - 1]);
+	if (!lower && !upper) { return { none: true }; }
+	var bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+	poly.forEach(function (q) { bx0 = Math.min(bx0, q[0] / 1000); by0 = Math.min(by0, q[1] / 1000); bx1 = Math.max(bx1, q[0] / 1000); by1 = Math.max(by1, q[1] / 1000); });
+	var turn = bx1 - bx0 < by1 - by0;
+	function tf(p) { return turn ? [p[1] - by0, bx1 - p[0]] : [p[0] - bx0, p[1] - by0]; }
+	return {
+		lower: lower, upper: upper, H: S.calc.H, calc: S.calc, hole: S.hole.map(tf),
+		steps: S.steps.map(function (q) { return { z: q.z, pts: q.pts.map(tf) }; }),
+		rails: S.rails.map(function (s) { var a = tf(s.a), q = tf(s.b); return { a: [a[0], a[1], s.a[2]], b: [q[0], q[1], s.b[2]], hole: s.hole }; })
+	};
+}
+
 /* ================================================================== interior helpers (rooms and items: agh-3d-int.js) */
 function roomFloorKey(c, type) {
 	var same = function (v) { return !v || v === 'same' ? (c.floor_main || 'parquet') : v; };
@@ -2983,7 +3145,7 @@ function bathTileMat(c) {
 	}
 }
 
-INT.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, boxGeo: boxGeo, box: box, X: X, House: House, shadeHex: shadeHex, col: col, num: num, clamp: clamp, has: has, SK: SK, canopyGeo: canopyGeo, leafMat: leafMat, frameMat: frameMat, glassMat: glassMat, roomFloorMat: roomFloorMat, roomFloorKey: roomFloorKey, fitInRoom: fitInRoom, bathTileMat: bathTileMat, imageTexture: imageTexture, onImage: onImage });
+INT.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, boxGeo: boxGeo, box: box, X: X, House: House, shadeHex: shadeHex, col: col, num: num, clamp: clamp, has: has, SK: SK, canopyGeo: canopyGeo, leafMat: leafMat, frameMat: frameMat, glassMat: glassMat, roomFloorMat: roomFloorMat, roomFloorKey: roomFloorKey, stairRoom: stairRoom, stairParts: stairParts, prism: prism, fitInRoom: fitInRoom, bathTileMat: bathTileMat, imageTexture: imageTexture, onImage: onImage });
 LAND.setup({ stdMat: stdMat, solid: solid, pbr: pbr, cached: cached, box: box, House: House, groundKind: groundKind, canopyGeo: canopyGeo, leafMat: leafMat, mergeStatic: mergeStatic });
 
 /* ------------------------------------------------------------------ public API */
@@ -3257,7 +3419,7 @@ function guides(views, w, h, out, opts) {
  * „Építés az alapoktól”: agh-3d-build.js registers a scene builder for the 'build' mode and gets the
  * shared helpers (same three.js instance, same materials cache). Unused, nothing here changes. */
 var BUILD_SCENE = null;
-var H3 = { THREE: THREE, X: X, box: box, boxGeo: boxGeo, pbr: pbr, solid: solid, glassMat: glassMat, frameMat: frameMat, House: House, SK: SK };
+var H3 = { THREE: THREE, X: X, box: box, boxGeo: boxGeo, pbr: pbr, solid: solid, glassMat: glassMat, frameMat: frameMat, House: House, SK: SK, stairPlan: stairPlan, stairParts: stairParts, prism: prism };
 var api = {
 	attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-2',
 	registerBuild: function (fn) { BUILD_SCENE = fn; }, helpers: function () { return H3; }
