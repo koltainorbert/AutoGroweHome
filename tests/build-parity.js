@@ -31,7 +31,40 @@ function entry(name, raw) {
 		});
 	}
 	out.seams = a.ok ? a.seams : 0;
+	out.layout = layoutCase(b, list.length + 1);
 	return out;
+}
+
+// 1.25.0: the layout rules of the room programme (JS = PHP): a programme of deterministic rectangles
+// (a grid over the house, random types, some not placed) on every level, one orientation per case
+const LTYPES = ['living', 'living_kitchen', 'kitchen', 'dining', 'master', 'bedroom', 'kids', 'guest', 'bathroom', 'wc', 'hall', 'corridor', 'pantry', 'laundry', 'utility', 'technical', 'office', 'garage', 'sauna'];
+const ORIENT = ['south', 'south_west', 'south_east', 'west', 'east', 'north'];
+function layoutCase(b, seed) {
+	const ol = B.outline(b);
+	if (!ol.closed) { return null; }
+	let s = seed * 7919 + 13;
+	const R = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+	const xs = ol.inner.map(p => p[0] / 1000), ys = ol.inner.map(p => p[1] / 1000), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+	const prog = [];
+	for (let lv = 0; lv < b.levels.length; lv++) {
+		const nx = 2 + Math.floor(R() * 3), ny = 2 + Math.floor(R() * 3), cw = (x1 - x0) / nx, cd = (y1 - y0) / ny;
+		for (let j = 0; j < ny; j++) {
+			for (let i = 0; i < nx; i++) {
+				if (R() < 0.15) { continue; }
+				const g = R() < 0.5 ? 0.13 : 0.6 + R() * 0.5, w = r2(cw - g), d = r2(cd - g);
+				prog.push({ id: 'r' + (prog.length + 1), type: LTYPES[Math.floor(R() * LTYPES.length)], name: '', area: r2(w * d), w: w, d: d, x: r2(x0 + 0.015 + i * cw), y: r2(y0 + 0.015 + j * cd), lv: lv, placed: R() < 0.9 });
+			}
+		}
+	}
+	// every other case: a hall right at the entrance (inside the house, against the wall)
+	const ctx = B.layoutCtx(b, 0, 'south');
+	if (ctx && ctx.ent.length && seed % 2) {
+		const e = ctx.ent[0], hx = r2(Math.min(Math.max(e.x - 0.8, x0 + 0.015), x1 - 1.615)), hy = r2(Math.min(Math.max(e.y - 1.6, y0 + 0.015), y1 - 1.615));
+		prog.push({ id: 'r' + (prog.length + 1), type: 'hall', name: '', area: 2.56, w: 1.6, d: 1.6, x: Math.abs(e.y - y1) < 0.4 ? hx : r2(Math.min(Math.max(e.x - 0.8, x0 + 0.015), x1 - 1.615)), y: Math.abs(e.y - y1) < 0.4 ? r2(y1 - 1.615) : hy, lv: 0, placed: true });
+	}
+	const raw = Object.assign({}, b, { prog: prog }), nb = B.normalize(raw), orient = ORIENT[seed % ORIENT.length], res = [];
+	for (let lv = 0; lv < nb.levels.length; lv++) { res.push(B.layout(nb, lv, orient)); }
+	return { build: nb, orient: orient, res: res };
 }
 
 const list = [];

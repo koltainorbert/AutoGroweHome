@@ -195,6 +195,24 @@ foreach ( $agh_cases as $c ) {
 	}
 	agh_ok( $in, $c['name'] . ': openings inside the footprint' );
 }
+/* ---------------------------------------------------------------- d) layout rules of the programme (1.25.0) */
+$agh_lay_n = 0;
+foreach ( $agh_cases as $c ) {
+	if ( empty( $c['layout'] ) ) {
+		continue;
+	}
+	foreach ( $c['layout']['res'] as $lv => $js ) {
+		$ph = Build::layout( $c['layout']['build'], $lv, $c['layout']['orient'] );
+		$same = is_array( $ph ) && is_array( $js ) && count( $ph['rules'] ) === count( $js['rules'] ) && $ph['n'] === $js['n'] && $ph['pass'] === $js['pass'] && abs( $ph['pct'] - $js['pct'] ) < 1e-9 && abs( $ph['score'] - $js['score'] ) < 1e-9;
+		foreach ( $js['rules'] ?? array() as $i => $x ) {
+			$same = $same && $ph['rules'][ $i ]['id'] === $x['id'] && $ph['rules'][ $i ]['ok'] === $x['ok'];
+		}
+		agh_ok( $same, $c['name'] . ': layout rules lv ' . $lv . ' ' . json_encode( $ph ) . ' vs ' . json_encode( $js ) );
+		$agh_lay_n += is_array( $js ) ? $js['n'] : 0;
+	}
+}
+agh_ok( $agh_lay_n > 500, 'layout rules: enough rules apply (' . $agh_lay_n . ')' );
+
 // the prompt phrase of the masonry
 $agh_rect = $agh_cases[120]['build'] ?? array();
 agh_ok( 'load-bearing walls of 38 cm ceramic masonry blocks with 12 cm EPS insulation' === \AutoGroweHome\Prompt\PromptEngine::masonry_phrase( $agh_cfg + array( 'build' => $agh_rect ) ), 'prompt: masonry phrase' );

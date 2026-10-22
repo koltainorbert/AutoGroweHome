@@ -86,6 +86,29 @@
 			"wardrobe": [2.5, 1.2], "bathroom": [3.5, 1.6], "wc": [1.2, 0.9], "laundry": [3, 1.5], "pantry": [1.5, 0.9],
 			"utility": [3, 1.5], "technical": [3, 1.5], "hall": [3, 1.3], "corridor": [2, 1.0], "stairs": [4, 1.1],
 			"sauna": [3, 1.6], "gym": [8, 2.5], "playroom": [8, 2.5]
+		},
+		"layout": {
+			"note": "1.25.0: a helyiségek egymáshoz képesti elrendezése – hazai jó gyakorlat, nem jogszabály; verified: false: figyelmeztet, nem tilt. A kert a ház hátsó homlokzata (a rajzon fent), az utca elöl; a garden_dir a telek tájolása szerint a nap felé fordítja a kerti oldalt. Szomszédos: legfeljebb adj_gap távolságra, legalább adj_overlap közös oldalhosszal. key: kiemelt szabály, az automatikus elhelyezés előbb ezt teljesíti.",
+			"verified": false,
+			"adj_gap": 0.6,
+			"adj_overlap": 0.8,
+			"entry_near": 3.0,
+			"garden_dir": { "south": [0, -1], "south_west": [-0.4, -1], "south_east": [0.4, -1], "west": [-0.7, -1], "east": [0.7, -1], "north": [0, -1] },
+			"rules": [
+				{ "id": "living_garden", "key": true, "kind": "side", "side": "garden", "types": ["living", "living_kitchen"], "w": 4, "desc": "A nappali a kert / a nap felé néz." },
+				{ "id": "sleep_garden", "kind": "side", "side": "garden", "need": "half", "types": ["master", "bedroom", "guest", "kids"], "w": 3, "desc": "A hálók (legalább a fele) a csendes kerti oldalon." },
+				{ "id": "kitchen_living", "kind": "adj", "types": ["kitchen"], "to": ["living", "dining", "living_kitchen"], "w": 3, "desc": "A konyha a nappali vagy az étkező mellett (vagy egy légtérben)." },
+				{ "id": "dining_between", "kind": "between", "types": ["dining"], "to": [["kitchen", "living_kitchen"], ["living", "living_kitchen"]], "w": 2, "desc": "Az étkező a konyha és a nappali között." },
+				{ "id": "bath_sleep", "key": true, "kind": "adj", "types": ["bathroom"], "to": ["master", "bedroom", "guest", "kids"], "via": ["corridor", "hall"], "w": 4, "desc": "A fürdő a hálók mellett, vagy a hálókat összekötő közlekedőről nyílik." },
+				{ "id": "wc_entry", "kind": "adj", "types": ["wc"], "to": ["hall"], "entry": true, "w": 2, "desc": "A WC az előtér / a bejárat közelében." },
+				{ "id": "pantry_kitchen", "kind": "adj", "types": ["pantry"], "to": ["kitchen", "living_kitchen"], "w": 2, "desc": "A kamra a konyha mellett." },
+				{ "id": "utility_bath", "kind": "adj", "types": ["laundry", "utility"], "to": ["bathroom", "wc", "garage", "technical"], "orside": "street", "w": 1, "desc": "A háztartási helyiség / mosókonyha a fürdő vagy a garázs (utca) felé." },
+				{ "id": "service_street", "kind": "side", "side": "street", "types": ["technical", "garage"], "w": 1, "desc": "A gépészet és a garázs az utca felé." },
+				{ "id": "office_quiet", "kind": "apart", "types": ["office"], "from": ["living", "living_kitchen"], "w": 1, "desc": "A dolgozó csendes helyen, nem a nappali mellett." },
+				{ "id": "hall_entry", "kind": "entry", "types": ["hall"], "w": 3, "desc": "Az előtér a bejáratnál." },
+				{ "id": "corridor_links", "kind": "links", "types": ["corridor"], "to": ["master", "bedroom", "guest", "kids"], "need": 2, "w": 2, "desc": "A közlekedő összeköti a hálókat (legalább kettőhöz csatlakozik)." },
+				{ "id": "wet_cluster", "kind": "cluster", "types": ["bathroom", "wc", "laundry", "wellness", "sauna"], "near": 1.5, "w": 2, "desc": "A vizes helyiségek egy vezetékfal körül, egymás közelében." }
+			]
 		}
 	},
 	"practice": [

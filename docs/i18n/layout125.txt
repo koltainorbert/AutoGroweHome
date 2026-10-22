@@ -1,0 +1,21 @@
+Elrendezési szabályok (jó gyakorlat, nem ellenőrzött)
+%1$s / %2$s elrendezési szabály teljesül
+teljesül
+nem teljesül
+Elrendezés javítása
+Elrendezés javítva: %1$s → %2$s szabály teljesül. Ctrl+Z: vissza.
+Ennél jobb elrendezést nem találtam – a mostani marad.
+A szabályok csak javaslatok: figyelmeztetnek, de nem tiltanak – a helyiségeket bárhová húzhatod. A kert a ház hátsó oldala (a rajzon fent), az utca elöl.
+A nappali a kert / a nap felé néz
+A hálók (legalább a fele) a csendes kerti oldalon
+A konyha a nappali vagy az étkező mellett
+Az étkező a konyha és a nappali között
+A fürdő a hálók mellett vagy a hálókat összekötő közlekedőről
+A WC az előtér / a bejárat közelében
+A kamra a konyha mellett
+A háztartási helyiség a fürdő vagy a garázs felé
+A gépészet és a garázs az utca felé
+A dolgozó csendes helyen, a nappalitól távolabb
+Az előtér a bejáratnál
+A közlekedő összeköti a hálókat
+A vizes helyiségek egy vezetékfal körül

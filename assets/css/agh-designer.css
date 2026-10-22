@@ -1182,6 +1182,14 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 .agh-bld-progfits { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 2px; font-size: 12px; }
 .agh-bld-progfit.is-ok { color: #2E7D4F; }
 .agh-bld-progfit.is-bad { color: #C2382E; font-weight: 600; }
+/* 1.25.0: layout rules of the room programme */
+.agh-bld-layout { margin: 8px 0; }
+.agh-bld-h-s { font-size: 13px; margin: 6px 0 4px; }
+.agh-bld-laylist { list-style: none; margin: 4px 0 8px; padding: 0; font-size: 12.5px; }
+.agh-bld-layrule { display: grid; grid-template-columns: 16px 1fr auto; gap: 6px; align-items: baseline; padding: 2px 0; }
+.agh-bld-layrule em { font-style: normal; font-size: 11.5px; white-space: nowrap; }
+.agh-bld-layrule.is-ok b, .agh-bld-layrule.is-ok em { color: #2E7D4F; }
+.agh-bld-layrule.is-bad b, .agh-bld-layrule.is-bad em { color: #B26A00; }
 .agh-bld-progfit.is-warn { color: #9A6A12; }
 .agh-bld-progrow.is-bad { box-shadow: inset 0 0 0 1px rgba(194,56,46,.45); }
 .agh-bld-pill.is-on { border-color: var(--agh-primary, #2E6B4F); background: var(--agh-primary, #2E6B4F); color: #fff; }

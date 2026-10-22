@@ -903,6 +903,293 @@ final class Build {
 		return array( 'x0' => $x0, 'y0' => $y0, 'x1' => $x1, 'y1' => $y1 );
 	}
 
+	/* ------------------------------------------------------------------ room layout rules (1.25.0) */
+
+	/**
+	 * The layout rules of the room programme on one level (port of layoutRules() / layoutCtx() /
+	 * layoutEval() in agh-build.js): { rules: [{id, w, ok}], n, pass, w, pw, pct, score } with ok
+	 * true / false / null (does not apply), or null when the outline is not closed. Good practice
+	 * (defaults.programme.layout, verified: false): it warns, never blocks.
+	 *
+	 * @param mixed  $raw         The build.
+	 * @param int    $lv          Level.
+	 * @param string $orientation The plot's orientation (garden side), e.g. 'south'.
+	 */
+	public static function layout( $raw, int $lv = 0, string $orientation = 'south' ): ?array {
+		$b = self::sanitize( $raw );
+		if ( ! $b ) {
+			return null;
+		}
+		$b   = json_decode( (string) json_encode( $b ), true );
+		$ctx = self::layout_ctx( $b, $lv, $orientation );
+		return null === $ctx ? null : self::layout_eval( $b['prog'], $ctx );
+	}
+
+	private static function layout_cfg(): array {
+		$p = self::at( self::defaults(), 'programme' );
+		$l = self::at( $p, 'layout' );
+		$d = self::at( $l, 'garden_dir' );
+		$r = self::at( $l, 'rules' );
+		return array(
+			'rules' => self::is_list( $r ) ? $r : array(),
+			'gap'   => self::num( self::at( $l, 'adj_gap' ), 0.6 ),
+			'lap'   => self::num( self::at( $l, 'adj_overlap' ), 0.8 ),
+			'near'  => self::num( self::at( $l, 'entry_near' ), 3.0 ),
+			'dirs'  => self::is_obj( $d ) ? $d : array(),
+			'p'     => self::num( self::at( $p, 'plaster' ), 0.015 ),
+		);
+	}
+
+	private static function layout_ctx( array $b, int $lv, string $orientation ): ?array {
+		$ol = self::outline_of( $b );
+		if ( ! $ol['closed'] ) {
+			return null;
+		}
+		$l  = self::layout_cfg();
+		$g  = self::at( $l['dirs'], $orientation );
+		$g  = is_array( $g ) ? $g : ( is_array( self::at( $l['dirs'], 'south' ) ) ? $l['dirs']['south'] : array( 0, -1 ) );
+		$gx = self::num( self::at( $g, 0 ), 0.0 );
+		$gy = self::num( self::at( $g, 1 ), -1.0 );
+		$p  = $ol['inner'];
+		$n  = count( $p );
+		$a2 = 0.0;
+		$cx = 0.0;
+		$cy = 0.0;
+		for ( $i = 0; $i < $n; $i++ ) {
+			$q   = $p[ ( $i + 1 ) % $n ];
+			$cr  = $p[ $i ][0] * $q[1] - $q[0] * $p[ $i ][1];
+			$a2 += $cr;
+			$cx += ( $p[ $i ][0] + $q[0] ) * $cr;
+			$cy += ( $p[ $i ][1] + $q[1] ) * $cr;
+		}
+		if ( ! $a2 ) {
+			return null;
+		}
+		$faces = array();
+		$gl    = sqrt( $gx * $gx + $gy * $gy );
+		$gl    = $gl ? $gl : 1.0;
+		for ( $k = 0; $k < $n; $k++ ) {
+			$a    = $p[ $k ];
+			$c    = $p[ ( $k + 1 ) % $n ];
+			$vert = $a[0] == $c[0]; // phpcs:ignore Universal.Operators.StrictComparisons
+			if ( ! $vert && $a[1] != $c[1] ) { // phpcs:ignore Universal.Operators.StrictComparisons
+				continue;
+			}
+			$mx = ( $a[0] + $c[0] ) / 2;
+			$my = ( $a[1] + $c[1] ) / 2;
+			$nx = $vert ? 1 : 0;
+			$ny = $vert ? 0 : 1;
+			if ( self::in_poly( $p, $mx + $nx * 10, $my + $ny * 10 ) ) {
+				$nx = -$nx;
+				$ny = -$ny;
+			}
+			$gd      = ( $nx * $gx + $ny * $gy ) / $gl;
+			$faces[] = array(
+				'v'      => $vert,
+				'c'      => ( $vert ? $a[0] : $a[1] ) / 1000,
+				'lo'     => min( $vert ? $a[1] : $a[0], $vert ? $c[1] : $c[0] ) / 1000,
+				'hi'     => max( $vert ? $a[1] : $a[0], $vert ? $c[1] : $c[0] ) / 1000,
+				'garden' => $gd > 0.3,
+				'street' => $ny > 0.5,
+				'ext'    => true,
+			);
+		}
+		$ws = array();
+		foreach ( $b['walls'] as $w ) {
+			$ws[ $w['id'] ] = $w;
+		}
+		$ent = array();
+		foreach ( $b['openings'] as $o ) {
+			$w = $ws[ $o['wall'] ] ?? null;
+			if ( 'entrance' !== $o['type'] || $o['lv'] !== $lv || ! $w ) {
+				continue;
+			}
+			$dx  = $w['b'][0] - $w['a'][0];
+			$dy  = $w['b'][1] - $w['a'][1];
+			$len = sqrt( $dx * $dx + $dy * $dy );
+			$u   = $o['at'] + $o['w'] / 2;
+			if ( ! $len ) {
+				continue;
+			}
+			$ent[] = array(
+				'x' => $w['a'][0] + $dx / $len * $u,
+				'y' => $w['a'][1] + $dy / $len * $u,
+				'm' => $w['t'] / 2 + $l['p'] + 0.06,
+			);
+		}
+		return array(
+			'lv'    => $lv,
+			'mx'    => self::js_round( $cx / ( 3 * $a2 ) ) / 1000,
+			'my'    => self::js_round( $cy / ( 3 * $a2 ) ) / 1000,
+			'gx'    => $gx,
+			'gy'    => $gy,
+			'ent'   => $ent,
+			'faces' => $faces,
+		);
+	}
+
+	private static function layout_eval( array $rects, array $ctx ): array {
+		$l   = self::layout_cfg();
+		$all = array_values( array_filter( $rects, static fn( $r ) => $r['lv'] === $ctx['lv'] ) );
+		$on  = array_values( array_filter( $all, static fn( $r ) => true === $r['placed'] ) );
+		$out = array( 'rules' => array(), 'n' => 0, 'pass' => 0, 'w' => 0, 'pw' => 0, 'pct' => 100, 'score' => 100 );
+		$of  = static fn( $types, array $list ): array => self::is_list( $types ) ? array_values( array_filter( $list, static fn( $r ) => in_array( $r['type'], $types, true ) ) ) : array();
+		$adj = static function ( array $a, array $c ) use ( $l ): bool {
+			$dx = max( $c['x'] - ( $a['x'] + $a['w'] ), $a['x'] - ( $c['x'] + $c['w'] ) );
+			$dy = max( $c['y'] - ( $a['y'] + $a['d'] ), $a['y'] - ( $c['y'] + $c['d'] ) );
+			$ox = min( $a['x'] + $a['w'], $c['x'] + $c['w'] ) - max( $a['x'], $c['x'] );
+			$oy = min( $a['y'] + $a['d'], $c['y'] + $c['d'] ) - max( $a['y'], $c['y'] );
+			return ( $dx <= $l['gap'] && $oy >= min( $l['lap'], $a['d'], $c['d'] ) - 0.001 ) || ( $dy <= $l['gap'] && $ox >= min( $l['lap'], $a['w'], $c['w'] ) - 0.001 );
+		};
+		$dist2 = static function ( array $a, array $c ): float {
+			$ex = max( 0, $c['x'] - ( $a['x'] + $a['w'] ), $a['x'] - ( $c['x'] + $c['w'] ) );
+			$ey = max( 0, $c['y'] - ( $a['y'] + $a['d'] ), $a['y'] - ( $c['y'] + $c['d'] ) );
+			return $ex * $ex + $ey * $ey;
+		};
+		$ent_d2 = static function ( array $r, array $e ): float {
+			$ex = max( $r['x'] - $e['x'], 0, $e['x'] - ( $r['x'] + $r['w'] ) );
+			$ey = max( $r['y'] - $e['y'], 0, $e['y'] - ( $r['y'] + $r['d'] ) );
+			return $ex * $ex + $ey * $ey;
+		};
+		$face = static function ( array $r, string $key ) use ( $ctx, $l ): bool {
+			foreach ( $ctx['faces'] as $f ) {
+				if ( ! $f[ $key ] ) {
+					continue;
+				}
+				$e0 = $f['v'] ? $r['x'] : $r['y'];
+				$e1 = $f['v'] ? $r['x'] + $r['w'] : $r['y'] + $r['d'];
+				$lo = $f['v'] ? $r['y'] : $r['x'];
+				$hi = $f['v'] ? $r['y'] + $r['d'] : $r['x'] + $r['w'];
+				if ( ( abs( $e0 - $f['c'] ) <= $l['p'] + 0.03 || abs( $e1 - $f['c'] ) <= $l['p'] + 0.03 ) && min( $hi, $f['hi'] ) - max( $lo, $f['lo'] ) >= min( $l['lap'], $hi - $lo ) - 0.001 ) {
+					return true;
+				}
+			}
+			return false;
+		};
+		$garden  = static fn( array $r ): bool => $face( $r, 'garden' ) || ( ( $r['x'] + $r['w'] / 2 - $ctx['mx'] ) * $ctx['gx'] + ( $r['y'] + $r['d'] / 2 - $ctx['my'] ) * $ctx['gy'] > 0 && $face( $r, 'ext' ) );
+		$street  = static fn( array $r ): bool => $face( $r, 'street' ) || ( $r['y'] + $r['d'] / 2 - $ctx['my'] > 0 && $face( $r, 'ext' ) );
+		$is_on   = static fn( array $r ): bool => true === $r['placed'];
+		$any_adj = static function ( array $r, array $list ) use ( $adj ): bool {
+			foreach ( $list as $q ) {
+				if ( $q['id'] !== $r['id'] && $adj( $r, $q ) ) {
+					return true;
+				}
+			}
+			return false;
+		};
+		$every = static function ( array $list, callable $fn ): bool {
+			foreach ( $list as $x ) {
+				if ( ! $fn( $x ) ) {
+					return false;
+				}
+			}
+			return true;
+		};
+		$some = static function ( array $list, callable $fn ): bool {
+			foreach ( $list as $x ) {
+				if ( $fn( $x ) ) {
+					return true;
+				}
+			}
+			return false;
+		};
+		foreach ( $l['rules'] as $rule ) {
+			if ( ! self::is_obj( $rule ) || array() === $rule || ! is_string( self::at( $rule, 'id' ) ) ) {
+				$out['rules'][] = array( 'id' => '', 'w' => 0, 'ok' => null );
+				continue;
+			}
+			$kind  = self::at( $rule, 'kind' );
+			$aa    = $of( self::at( $rule, 'types' ), $all );
+			$w     = max( 0, self::num( self::at( $rule, 'w' ), 1.0 ) );
+			$ok    = null;
+			$t_all = $of( self::at( $rule, 'to' ), $all );
+			$tt    = $of( self::at( $rule, 'to' ), $on );
+			if ( 'side' === $kind ) {
+				if ( $aa ) {
+					$side = self::at( $rule, 'side' );
+					$k    = count( array_filter( $aa, static fn( $r ) => $is_on( $r ) && ( 'street' === $side ? $street( $r ) : $garden( $r ) ) ) );
+					$ok   = $k >= ( 'half' === self::at( $rule, 'need' ) ? (int) ceil( count( $aa ) / 2 ) : count( $aa ) );
+				}
+			} elseif ( 'adj' === $kind ) {
+				$vv     = $of( self::at( $rule, 'via' ), $on );
+				$entry  = self::truthy( self::at( $rule, 'entry' ) );
+				$orside = self::at( $rule, 'orside' );
+				if ( $aa && ( $t_all || ( $entry && $ctx['ent'] ) || self::truthy( $orside ) ) ) {
+					$ok = $every(
+						$aa,
+						static function ( $r ) use ( $is_on, $any_adj, $tt, $vv, $adj, $t_all, $entry, $ctx, $ent_d2, $l, $orside, $street, $some ) {
+							if ( ! $is_on( $r ) ) {
+								return false;
+							}
+							if ( $any_adj( $r, $tt ) ) {
+								return true;
+							}
+							$via = $some( $vv, static fn( $v ) => $adj( $r, $v ) && count( array_filter( $tt, static fn( $q ) => $adj( $v, $q ) ) ) >= min( 2, count( $t_all ) ) );
+							if ( $via ) {
+								return true;
+							}
+							if ( $entry && $some( $ctx['ent'], static fn( $e ) => $ent_d2( $r, $e ) <= $l['near'] * $l['near'] ) ) {
+								return true;
+							}
+							return 'street' === $orside ? $street( $r ) : false;
+						}
+					);
+				}
+			} elseif ( 'between' === $kind ) {
+				$to = self::at( $rule, 'to' );
+				$gs = self::is_list( $to ) ? array_values( array_filter( $to, array( __CLASS__, 'is_list' ) ) ) : array();
+				if ( $aa && $gs && $every( $gs, static fn( $g2 ) => count( $of( $g2, $all ) ) > 0 ) ) {
+					$ok = $every( $aa, static fn( $r ) => $is_on( $r ) && $every( $gs, static fn( $g2 ) => $any_adj( $r, $of( $g2, $on ) ) ) );
+				}
+			} elseif ( 'apart' === $kind ) {
+				$ff = $of( self::at( $rule, 'from' ), $all );
+				if ( $aa && $ff ) {
+					$fo = $of( self::at( $rule, 'from' ), $on );
+					$ok = $every( $aa, static fn( $r ) => $is_on( $r ) && ! $any_adj( $r, $fo ) );
+				}
+			} elseif ( 'entry' === $kind ) {
+				if ( $aa && $ctx['ent'] ) {
+					$ok = $some( $aa, static fn( $r ) => $is_on( $r ) && $some( $ctx['ent'], static fn( $e ) => $ent_d2( $r, $e ) <= $e['m'] * $e['m'] ) );
+				}
+			} elseif ( 'links' === $kind ) {
+				$nd = min( count( $t_all ), max( 2, self::num( self::at( $rule, 'need' ), (float) count( $t_all ) ) ) );
+				if ( $aa && count( $t_all ) >= 2 ) {
+					$ok = $some( $aa, static fn( $r ) => $is_on( $r ) && count( array_filter( $tt, static fn( $q ) => $adj( $r, $q ) ) ) >= $nd );
+				}
+			} elseif ( 'cluster' === $kind ) {
+				if ( count( $aa ) >= 2 ) {
+					$nr   = self::num( self::at( $rule, 'near' ), $l['gap'] );
+					$seen = array( 0 );
+					$all_on = $every( $aa, $is_on );
+					if ( $all_on ) {
+						for ( $i2 = 0; $i2 < count( $seen ); $i2++ ) { // phpcs:ignore Generic.CodeAnalysis.ForLoopWithTestFunctionCall
+							$cur = $aa[ $seen[ $i2 ] ];
+							foreach ( $aa as $j => $q ) {
+								if ( ! in_array( $j, $seen, true ) && ( $adj( $cur, $q ) || $dist2( $cur, $q ) <= $nr * $nr ) ) {
+									$seen[] = $j;
+								}
+							}
+						}
+					}
+					$ok = $all_on && count( $seen ) === count( $aa );
+				}
+			}
+			$out['rules'][] = array( 'id' => $rule['id'], 'w' => $w, 'ok' => $ok );
+			if ( null === $ok ) {
+				continue;
+			}
+			++$out['n'];
+			$out['w'] += $w;
+			if ( $ok ) {
+				++$out['pass'];
+				$out['pw'] += $w;
+			}
+		}
+		$out['pct']   = $out['n'] ? self::js_round( 1000 * $out['pass'] / $out['n'] ) / 10 : 100;
+		$out['score'] = $out['w'] ? self::js_round( 100 * $out['pw'] / $out['w'] ) : 100;
+		return $out;
+	}
+
 	/* ------------------------------------------------------------------ analysis */
 
 	private static function walls_of_level( array $b, int $lv ): array {
