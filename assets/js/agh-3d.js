@@ -1756,6 +1756,7 @@ Viewer.prototype.update = function (cfg, mode) {
 	if (!inner) { this.landFor(c, mode); }
 	this.lampsToPool(this.house.root);
 	this.sel = null; this.drag = null;
+	if (this.bmark) { this.bmark.visible = false; }
 	if (mode === 'build' && this.house.phases) {
 		// construction phases (agh-3d-build.js): every phase is merged on its own, so it can be shown or hidden
 		this.picks = null; this.ops = null;
@@ -2251,6 +2252,7 @@ function fieldOf(o) { var f = ''; if (o) { o.traverse(function (q) { if (!f && q
 // Grab the piece under the pointer: the orbit controls stop, the piece lifts a little and follows.
 Viewer.prototype.grabAt = function (cx, cy, ev) {
 	if (!this.house) { return false; }
+	if (this.house.phases) { return this.grabBuild(cx, cy, ev); }
 	if (!this.house.room || !this.house.room.W) { return this.grabExt(cx, cy, ev); }
 	var it = this.itemAt(cx, cy);
 	if (!it) { return false; }
@@ -2312,6 +2314,12 @@ Viewer.prototype.dragTo = function (e) {
 	var d = this.drag, hs = this.house;
 	if (!d || !hs || !this.el) { return; }
 	if (d.ext) { this.extDragTo(e); return; }
+	if (d.build) {
+		var at = this.planAt(e.clientX, e.clientY, d.y);
+		if (at && this.onBuildDrag) { this.onBuildDrag(at.p, { shift: e.shiftKey }); }
+		d.moved = true;
+		return;
+	}
 	if ((e.ctrlKey || e.metaKey) && !d.wall) { this.turnDrag((e.clientX - d.lastX) * 0.5); d.lastX = e.clientX; return; }
 	d.lastX = e.clientX;
 	var ray = this.rayFrom(e.clientX, e.clientY);
@@ -2323,6 +2331,53 @@ Viewer.prototype.dragTo = function (e) {
 	if (e.shiftKey && !d.wall) { d.obj.rotation.y = snap90(d.obj.rotation.y); }
 	if (d.wall) { snapWall(d.obj, d.w0, d.rot0, hs.room.W, hs.room.D); }
 	else { fitInRoom(d.obj, hs.room.W, hs.room.D); }
+	this.requestRender();
+};
+/* Build mode (1.19.0): a wall or an opening of the drawing can be picked in the 3D construction view. The
+ * build editor decides what is under the point (in plan metres, `onBuildGrab`) and moves it with the same
+ * rules as on the plan (`onBuildDrag`); `markBox` shows the selection, the 3D rebuilds when it is let go. */
+function shown(o) { for (var q = o; q; q = q.parent) { if (!q.visible) { return false; } } return true; }
+Viewer.prototype.planAt = function (cx, cy, y) {
+	var ray = this.rayFrom(cx, cy), hs = this.house, o = hs && hs.origin;
+	if (!ray || !o) { return null; }
+	var hit = new THREE.Vector3();
+	if (y === undefined) {
+		var hits = ray.intersectObject(hs.root, true).filter(function (h) { return !h.object.isLine && shown(h.object) && !(h.object.userData && h.object.userData.noPick); });
+		if (hits.length) { hit.copy(hits[0].point); }
+		else if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit)) { return null; }
+	} else if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), hit)) { return null; }
+	return { p: [hit.x + o[0], hit.z + o[1]], y: hit.y };
+};
+Viewer.prototype.grabBuild = function (cx, cy, ev) {
+	if (!this.onBuildGrab) { return false; }
+	var at = this.planAt(cx, cy), R = this.ray && this.ray.ray, org = this.house.origin;
+	// the ray itself in plan metres (x, y = plan, z = height): a window is a hole, the editor tests its box
+	var ray = R && org ? { o: [R.origin.x + org[0], R.origin.z + org[1], R.origin.y], d: [R.direction.x, R.direction.z, R.direction.y] } : null;
+	var g = at ? this.onBuildGrab(at.p, { y: at.y, shift: !!(ev && ev.shiftKey), ray: ray }) : null;
+	if (!g) { return false; }
+	// the drag runs on the horizontal plane at the height where the piece was taken
+	this.drag = { build: true, y: g && typeof g === 'object' && isFinite(g.y) ? g.y : Math.max(0, at.y), moved: false };
+	if (this.controls) { this.controls.enabled = false; }
+	if (this.el) { this.el.style.cursor = 'grabbing'; }
+	return true;
+};
+// The selected (or held) wall / opening: a box in scene metres (centre x/z, y0…y1, length along `rot`, thickness).
+Viewer.prototype.markBox = function (b) {
+	if (!b) { if (this.bmark) { this.bmark.visible = false; this.requestRender(); } return; }
+	if (!this.bmark) {
+		var g = new THREE.Group(), fm = new THREE.MeshBasicMaterial({ color: '#2FB36B', transparent: true, opacity: 0.22, depthWrite: false, depthTest: false, fog: false });
+		var lm = new THREE.LineBasicMaterial({ color: '#2FB36B', depthTest: false, transparent: true, fog: false }), bg = new THREE.BoxGeometry(1, 1, 1);
+		var fill = new THREE.Mesh(bg, fm), line = new THREE.LineSegments(new THREE.EdgesGeometry(bg), lm);
+		fill.renderOrder = 998; line.renderOrder = 999; fill.userData.noPick = line.userData.noPick = g.userData.noPick = true;
+		g.add(fill); g.add(line); this.scene.add(g);
+		this.bmark = g; this.bmarkFill = fm; this.bmarkLine = lm;
+	}
+	var c = b.bad ? '#E0483E' : '#2FB36B';
+	this.bmarkFill.color.set(c); this.bmarkLine.color.set(c);
+	this.bmark.position.set(b.x, (b.y0 + b.y1) / 2, b.z);
+	this.bmark.rotation.set(0, b.rot || 0, 0);
+	this.bmark.scale.set(Math.max(0.05, b.len), Math.max(0.05, b.y1 - b.y0), Math.max(0.05, b.t));
+	this.bmark.visible = true;
 	this.requestRender();
 };
 Viewer.prototype.extDragTo = function (e) {
@@ -2363,7 +2418,7 @@ Viewer.prototype.extDragTo = function (e) {
 // Turn the grabbed piece; it snaps to 15 degrees, and the turned piece is pushed back inside the room.
 Viewer.prototype.turnDrag = function (deg) {
 	var d = this.drag;
-	if (!d || d.wall) { return; }
+	if (!d || d.wall || d.build) { return; }
 	if (d.ext) {
 		if (d.kind !== 'mover') { return; }
 		d.obj.rotation.y = Math.round((d.obj.rotation.y / D2R + deg) / 15) * 15 * D2R;
@@ -2392,6 +2447,13 @@ Viewer.prototype.dropDrag = function (cancel) {
 	var d = this.drag;
 	if (!d) { return; }
 	if (d.ext) { this.extDrop(cancel); return; }
+	if (d.build) {
+		this.drag = null;
+		if (this.controls) { this.controls.enabled = true; }
+		if (this.el) { this.el.style.cursor = ''; }
+		if (this.onBuildDrop) { this.onBuildDrop(!!cancel, d.moved); }
+		return;
+	}
 	if (!d.wall) { d.obj.position.y = d.y0; }
 	if (cancel && d.p0) { d.obj.position.copy(d.p0); d.obj.rotation.y = d.rot0; }
 	this.drag = null;

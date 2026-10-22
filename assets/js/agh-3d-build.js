@@ -35,7 +35,7 @@ export function buildScene(c, H) {
 	};
 	var start = typeof c._phase === 'number' ? c._phase : 8;
 	if (!A || !A.normalize) { return res.setPhase(start); }
-	try { draw(c, H, A, phases); } catch (e) { res.error = String(e && e.message); if (window.console) { console.warn('AGH build 3D:', res.error); } }
+	try { draw(c, H, A, phases); res.origin = phases.origin || [0, 0]; } catch (e) { res.error = String(e && e.message); if (window.console) { console.warn('AGH build 3D:', res.error); } }
 	// an empty drawing still gets a patch of ground, so the camera has something to frame
 	if (!phases.some(function (q, k) { return k > 0 && k < 9 && q.children.length; })) {
 		// the size typed under "Kezdés" plus the working margin (1.16.2), else a 4 × 4 m patch
@@ -56,6 +56,8 @@ function draw(c, H, A, P) {
 		ox = Math.min.apply(null, b.walls.map(function (w) { return Math.min(w.a[0], w.b[0]) - w.t / 2; }));
 		oy = Math.min.apply(null, b.walls.map(function (w) { return Math.min(w.a[1], w.b[1]) - w.t / 2; }));
 	}
+	// plan metres → scene: x − ox, y − oy (kept for picking walls and openings in the 3D view, 1.19.0)
+	P.origin = [ox, oy];
 	// polygons of the outline (whole millimetres) → shifted metres
 	function poly(p) { return (p || []).map(function (q) { return [q[0] / 1000 - ox, q[1] / 1000 - oy]; }); }
 	var outer = ol.closed ? poly(ol.outer) : null, center = ol.closed ? poly(ol.center) : null, inner = ol.closed ? poly(ol.inner) : null;

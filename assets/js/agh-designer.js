@@ -2298,6 +2298,7 @@
 			setParam: function (id, v) { S.config[id] = v; S.explicit[id] = true; S.dirty = true; persist(); validate(); renderSummary(); },
 			preview3D: buildPreview3D,
 			setPhase: function (p) { var v = A3 && A3.viewer(); if (v && v.setPhase) { v.setPhase(p); } },
+			viewer: function () { return A3 ? A3.viewer() : null; },
 			sketch: function (c) { return previewSvg(c); },
 			fsButton: function (getEl, cls) { return fsButton(getEl, cls); },
 			roomTypes: buildRoomTypes,

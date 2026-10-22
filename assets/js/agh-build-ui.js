@@ -46,7 +46,7 @@
 		renderAll(true);
 	}
 	// closing empties the host (it belongs to the designer and is reused on the next visit)
-	function close() { if (D.ro) { D.ro.disconnect(); } if (D.root) { D.root.innerHTML = ''; D.root.removeAttribute('data-pane'); } window.removeEventListener('resize', onResize); D = {}; st = null; }
+	function close() { hook3D(false); if (D.ro) { D.ro.disconnect(); } if (D.root) { D.root.innerHTML = ''; D.root.removeAttribute('data-pane'); } window.removeEventListener('resize', onResize); D = {}; st = null; }
 	function snapshot() { return JSON.stringify(st.b); }
 	function change(fn, opts) {
 		opts = opts || {};
@@ -103,6 +103,7 @@
 		if (!keepPanel) { renderPanel(); } else { renderPanelInfo(); }
 		renderPlan();
 		renderNav();
+		renderSelBar();
 		if (st.view === '3d') { schedule3D(); }
 		if (first) { setPane(st.pane); setView(st.view); }
 	}
@@ -205,6 +206,7 @@
 		renderPanelInfo();
 		D.panel.scrollTop = scroll;
 		if (keepK) { var n = D.panel.querySelector('[data-k="' + keepK + '"]'); if (n && n.focus) { n.focus({ preventScroll: true }); } }
+		renderSelBar();
 	}
 	// checklist, checks, rules and materials of the step (re-rendered without touching the inputs)
 	function renderPanelInfo() {
@@ -544,7 +546,7 @@
 			if (sel.k === 'wall') { b.walls = b.walls.filter(function (w) { return w.id !== sel.id; }); b.openings = b.openings.filter(function (o) { return o.wall !== sel.id; }); }
 			else { b.openings = b.openings.filter(function (o) { return o.id !== sel.id; }); }
 		});
-		st.sel = null; renderPanel();
+		st.sel = null; renderPanel(); renderSelBar();
 	}
 	// moves the ends of the other walls that were joined at `from` along with it
 	function moveJoined(b, from, to, skip) {
@@ -580,7 +582,8 @@
 		]);
 		// full screen of the drawing side (plan, 3D and the stage slider), the designer's own mechanism
 		D.fsBtn = A.fsButton ? A.fsButton(function () { return D.stage; }, 'agh-iconbtn agh-bld-fs') : null;
-		D.tabs.appendChild(D.viewSeg); D.tabs.appendChild(el('div', { class: 'agh-bld-right' }, [D.tools, D.fsBtn]));
+		D.selBar = el('div', { class: 'agh-bld-selbar', role: 'group', 'aria-label': t('b_selection'), hidden: true });
+		D.tabs.appendChild(D.viewSeg); D.tabs.appendChild(D.selBar); D.tabs.appendChild(el('div', { class: 'agh-bld-right' }, [D.tools, D.fsBtn]));
 		D.planWrap = el('div', { class: 'agh-bld-planwrap' });
 		D.svg = sv('svg', { class: 'agh-bld-svg', role: 'application', 'aria-label': t('b_plan_aria'), tabindex: '0', preserveAspectRatio: 'xMidYMid meet' });
 		D.planWrap.appendChild(D.svg);
@@ -599,7 +602,7 @@
 		D.planWrap.hidden = v !== 'plan'; D.view3.hidden = v !== '3d'; D.phaseBar.hidden = v !== '3d';
 		D.tools.hidden = v !== 'plan';
 		if (st.pane === 'plan' || st.pane === '3d') { st.pane = v; D.root.setAttribute('data-pane', v); Array.prototype.forEach.call(D.panes.children, function (b) { b.setAttribute('aria-selected', b.getAttribute('data-pane') === v ? 'true' : 'false'); }); }
-		if (v === '3d') { renderPhaseBar(); show3D(true); } else { renderPlan(); }
+		if (v === '3d') { renderPhaseBar(); show3D(true); } else { renderPlan(); mark3D(); }
 	}
 	var t3 = 0;
 	function schedule3D() { clearTimeout(t3); t3 = setTimeout(function () { if (st && st.view === '3d') { show3D(); } }, 250); }
@@ -609,6 +612,7 @@
 		var c3 = cfg();
 		if (!st.b.walls.length) { st.tpl = st.tpl || { w: 10, d: 8 }; c3 = Object.assign({}, c3, { _bld_preview: { w: st.tpl.w, d: st.tpl.d, m: num((st.b.earth || {}).margin, 1) } }); }
 		var ok = A.preview3D(D.view3, c3, st.phase, !!reset);
+		if (ok) { hook3D(true); setTimeout(mark3D, 0); }
 		D.view3.classList.toggle('is-2d', !ok);
 		if (!ok) { D.view3.innerHTML = A.sketch(cfg()); D.view3.appendChild(el('p', { class: 'agh-bld-note agh-bld-no3d', text: t('b_no3d') })); }
 	}
@@ -889,20 +893,7 @@
 				if (w0) { var other = st.drag.end === 'a' ? w0.b : w0.a; if (!e.shiftKey) { q = Math.abs(q[0] - other[0]) > Math.abs(q[1] - other[1]) ? [q[0], other[1]] : [other[0], q[1]]; } var from = w0[st.drag.end].slice(); w0[st.drag.end] = q; moveJoined(st.b, from, q, w0.id); }
 				st.drag.moved = true; renderPlan(); return;
 			}
-			if (st.drag && st.drag.move) {
-				var o = find(st.drag.move), dx = p[0] - st.drag.p0[0], dy = p[1] - st.drag.p0[1], g = B.defaults().grid || 0.1;
-				if (!o) { return; }
-				if (st.drag.move.k === 'wall') {
-					var od = st.drag.orig, ddx = Math.round(dx / g) * g, ddy = Math.round(dy / g) * g;
-					if (od.a[1] === od.b[1]) { ddx = 0; } else if (od.a[0] === od.b[0]) { ddy = 0; }
-					var na = [r2(od.a[0] + ddx), r2(od.a[1] + ddy)], nb = [r2(od.b[0] + ddx), r2(od.b[1] + ddy)];
-					moveJoined(st.b, o.a, na, o.id); moveJoined(st.b, o.b, nb, o.id); o.a = na; o.b = nb;
-				} else {
-					var w1 = st.b.walls.filter(function (x) { return x.id === o.wall; })[0];
-					if (w1) { var L = Math.hypot(w1.b[0] - w1.a[0], w1.b[1] - w1.a[1]) || 1, du = (dx * (w1.b[0] - w1.a[0]) + dy * (w1.b[1] - w1.a[1])) / L; o.at = r2(Math.round((st.drag.orig.at + du) / 0.05) * 0.05); }
-				}
-				st.drag.moved = true; renderPlan(); return;
-			}
+			if (st.drag && st.drag.move) { if (moveSel(p)) { renderPlan(); } return; }
 			if (st.tool === 'wall' || st.tool === 'rect') {
 				st.cursor = snapPt(p, st.tool === 'wall' && st.draw ? st.draw.p0 : null, e.shiftKey);
 				if (st.draw) { st.draw.p1 = st.cursor; }
@@ -938,6 +929,148 @@
 		s.addEventListener('keydown', function (e) { if (e.key === ' ') { st.space = true; } });
 		s.addEventListener('keyup', function (e) { if (e.key === ' ') { st.space = false; } });
 	}
+	// A held wall slides square to itself (grid steps), the joined walls follow; an opening slides along its
+	// wall (5 cm steps). Shared by the plan and the 3D construction view (1.19.0).
+	function moveSel(p) {
+		var o = find(st.drag.move), dx = p[0] - st.drag.p0[0], dy = p[1] - st.drag.p0[1], g = B.defaults().grid || 0.1;
+		if (!o) { return false; }
+		if (st.drag.move.k === 'wall') {
+			var od = st.drag.orig, ddx = Math.round(dx / g) * g, ddy = Math.round(dy / g) * g;
+			if (od.a[1] === od.b[1]) { ddx = 0; } else if (od.a[0] === od.b[0]) { ddy = 0; }
+			var na = [r2(od.a[0] + ddx), r2(od.a[1] + ddy)], nb = [r2(od.b[0] + ddx), r2(od.b[1] + ddy)];
+			moveJoined(st.b, o.a, na, o.id); moveJoined(st.b, o.b, nb, o.id); o.a = na; o.b = nb;
+		} else {
+			var w1 = st.b.walls.filter(function (x) { return x.id === o.wall; })[0];
+			if (w1) { var L = Math.hypot(w1.b[0] - w1.a[0], w1.b[1] - w1.a[1]) || 1, du = (dx * (w1.b[0] - w1.a[0]) + dy * (w1.b[1] - w1.a[1])) / L; o.at = r2(Math.round((st.drag.orig.at + du) / 0.05) * 0.05); }
+		}
+		st.drag.moved = true;
+		return true;
+	}
+	// Arrows move the selection: a wall square to itself (10 cm, Shift 50 cm), an opening along its wall.
+	function nudgeSel(key, big) {
+		var o = find(st.sel);
+		if (!o) { return false; }
+		var d = big ? 0.5 : 0.1, dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[key];
+		if (!dir) { return false; }
+		change(function (b) {
+			if (st.sel.k === 'wall') {
+				var w = b.walls.filter(function (q) { return q.id === o.id; })[0], dx = dir[0] * d, dy = dir[1] * d;
+				if (w.a[1] === w.b[1]) { dx = 0; } else if (w.a[0] === w.b[0]) { dy = 0; }
+				if (!dx && !dy) { return; }
+				var na = [r2(w.a[0] + dx), r2(w.a[1] + dy)], nb = [r2(w.b[0] + dx), r2(w.b[1] + dy)];
+				moveJoined(b, w.a, na, w.id); moveJoined(b, w.b, nb, w.id); w.a = na; w.b = nb;
+			} else {
+				var op = b.openings.filter(function (q) { return q.id === o.id; })[0], wl = b.walls.filter(function (q) { return q.id === op.wall; })[0];
+				if (!wl) { return; }
+				var L = Math.hypot(wl.b[0] - wl.a[0], wl.b[1] - wl.a[1]) || 1, s = (dir[0] * (wl.b[0] - wl.a[0]) + dir[1] * (wl.b[1] - wl.a[1])) / L;
+				if (Math.abs(s) < 0.2) { return; }
+				op.at = r2(Math.max(0, op.at + (s > 0 ? d : -d)));
+			}
+		});
+		return true;
+	}
+	/* ------------------------------------------------------------------ 3D construction view (1.19.0)
+	 * The same selection, delete and moves as on the plan, in the 3D view of steps 5–7: the viewer hands
+	 * over the point under the pointer in plan metres; a box shows what is selected. */
+	function can3D() { return !!st && st.view === '3d' && st.step >= 5 && st.step <= 7; }
+	function hook3D(on) {
+		var v = A && A.viewer ? A.viewer() : null;
+		if (!v) { return; }
+		v.onBuildGrab = on ? grab3D : null; v.onBuildDrag = on ? drag3D : null; v.onBuildDrop = on ? drop3D : null;
+		if (!on && v.markBox) { v.markBox(null); }
+	}
+	function lvAt(y) {
+		var b = st.b, z = b.found.top, lv = 0;
+		for (var i = 0; i < b.levels.length; i++) { if (y >= z - 0.05) { lv = i; } z += b.levels[i].h; }
+		return lv;
+	}
+	// The wall or opening the ray meets first (its box in plan metres; an opening wins inside its wall).
+	function rayPick(R) {
+		var b = st.b, best = null, top = B.levelBase(b, b.levels.length - 1) + b.levels[b.levels.length - 1].h;
+		function box(w, u0, u1, n, y0, y1) {
+			var L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) || 1, ux = (w.b[0] - w.a[0]) / L, uy = (w.b[1] - w.a[1]) / L;
+			var ox = R.o[0] - w.a[0], oy = R.o[1] - w.a[1], o = [ox * ux + oy * uy, -ox * uy + oy * ux, R.o[2]], d = [R.d[0] * ux + R.d[1] * uy, -R.d[0] * uy + R.d[1] * ux, R.d[2]];
+			var lo = [u0, -n, y0], hi = [u1, n, y1], t0 = 0, t1 = 1e9;
+			for (var k = 0; k < 3; k++) {
+				if (Math.abs(d[k]) < 1e-9) { if (o[k] < lo[k] || o[k] > hi[k]) { return null; } continue; }
+				var a = (lo[k] - o[k]) / d[k], c = (hi[k] - o[k]) / d[k];
+				if (a > c) { var q = a; a = c; c = q; }
+				t0 = Math.max(t0, a); t1 = Math.min(t1, c);
+				if (t0 > t1) { return null; }
+			}
+			return t0;
+		}
+		b.openings.forEach(function (op) {
+			var w = b.walls.filter(function (q) { return q.id === op.wall; })[0];
+			if (!w) { return; }
+			var z0 = B.levelBase(b, op.lv) + op.sill, tt = box(w, op.at, op.at + op.w, w.t / 2 + 0.06, z0, z0 + op.h);
+			if (tt !== null && (!best || tt < best.t + 0.4)) { if (!best || best.k !== 'op' || tt < best.t) { best = { k: 'op', id: op.id, t: tt, lv: op.lv }; } }
+		});
+		b.walls.forEach(function (w) {
+			var z0 = w.kind === 'ext' ? B.levelBase(b, 0) : B.levelBase(b, w.lv), z1 = w.kind === 'ext' ? top : z0 + b.levels[w.lv].h, tt = box(w, 0, Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), w.t / 2, z0, z1);
+			if (tt === null) { return; }
+			if (!best || (best.k === 'wall' && tt < best.t) || (best.k === 'op' && tt < best.t - 0.4)) { best = { k: 'wall', id: w.id, t: tt, lv: w.kind === 'ext' ? null : w.lv }; }
+		});
+		return best;
+	}
+	function grab3D(p, o) {
+		if (!can3D()) { return false; }
+		var rp = o && o.ray ? rayPick(o.ray) : null, hit = null, y = o && o.y;
+		if (rp) {
+			hit = { k: rp.k, id: rp.id };
+			if (rp.lv !== null && rp.lv !== undefined) { st.lv = rp.lv; }
+			// the point where the ray meets the piece (not what lies behind a window hole)
+			p = [o.ray.o[0] + o.ray.d[0] * rp.t, o.ray.o[1] + o.ray.d[1] * rp.t]; y = o.ray.o[2] + o.ray.d[2] * rp.t;
+		}
+		else {
+			var lv = lvAt(o && o.y !== undefined ? o.y : 0);
+			if (lv !== st.lv && st.b.levels.length > 1) { st.lv = lv; }
+			hit = hitTest(p, 0.3);
+		}
+		st.sel = hit; renderPanel(); renderSelBar(); mark3D();
+		if (!hit) { return false; }
+		st.drag = { move: hit, p0: p, orig: JSON.parse(JSON.stringify(find(hit))), snap: snapshot(), d3: true };
+		return { y: y };
+	}
+	function drag3D(p) { if (st && st.drag && st.drag.d3 && moveSel(p)) { mark3D(); } }
+	function drop3D(cancel, moved) {
+		if (!st || !st.drag) { return; }
+		var d = st.drag;
+		st.drag = null;
+		if (cancel && d.moved) { st.b = JSON.parse(d.snap); renderPanel(); mark3D(); return; }
+		if (d.moved && moved) { st.undo.push(d.snap); st.redo = []; commit(); }
+	}
+	// the box around the selected wall or opening, in the scene's metres
+	function mark3D() {
+		var v = A && A.viewer ? A.viewer() : null, o = st && st.sel ? find(st.sel) : null, org = v && v.house && v.house.origin;
+		if (!v || !v.markBox) { return; }
+		if (!o || !org || st.view !== '3d') { v.markBox(null); return; }
+		var b = st.b, errs = B.check(b).errors || [], bad = errs.some(function (e) { return String(e.ref || '').split(',').indexOf(o.id) !== -1; });
+		var w = st.sel.k === 'wall' ? o : b.walls.filter(function (q) { return q.id === o.wall; })[0];
+		if (!w) { v.markBox(null); return; }
+		var L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) || 1, ux = (w.b[0] - w.a[0]) / L, uy = (w.b[1] - w.a[1]) / L;
+		var lv = st.sel.k === 'wall' ? (w.kind === 'ext' ? 0 : w.lv) : o.lv, z0 = B.levelBase(b, lv), rot = -Math.atan2(uy, ux);
+		if (st.sel.k === 'wall') {
+			var top = w.kind === 'ext' ? B.levelBase(b, b.levels.length - 1) + b.levels[b.levels.length - 1].h : z0 + b.levels[lv].h;
+			v.markBox({ x: (w.a[0] + w.b[0]) / 2 - org[0], z: (w.a[1] + w.b[1]) / 2 - org[1], y0: z0, y1: top, len: L + 0.04, t: w.t + 0.06, rot: rot, bad: bad });
+		} else {
+			var u = o.at + o.w / 2;
+			v.markBox({ x: w.a[0] + ux * u - org[0], z: w.a[1] + uy * u - org[1], y0: z0 + o.sill, y1: z0 + o.sill + o.h, len: o.w + 0.06, t: w.t + 0.12, rot: rot, bad: bad });
+		}
+	}
+	// Above the drawing: what is selected, and a delete button (in the plan and in the 3D view).
+	function renderSelBar() {
+		if (!D.selBar || !st) { return; }
+		D.selBar.innerHTML = '';
+		var o = find(st.sel);
+		D.selBar.hidden = !o;
+		if (!o) { return; }
+		var name = st.sel.k === 'wall' ? t('b_kind_' + o.kind) : t('b_op_' + o.type);
+		D.selBar.appendChild(el('span', { class: 'agh-bld-selname', text: name + ' · ' + o.id }));
+		D.selBar.appendChild(el('button', { type: 'button', class: 'agh-iconbtn agh-bld-seldel', title: t('b_delete') + ' (Del)', 'aria-label': t('b_delete') }, A.icon('trash')));
+		D.selBar.lastChild.addEventListener('click', function () { delSel(); });
+		mark3D();
+	}
 	function hitTest(p, tol) {
 		var lv = st.lv, best = null;
 		st.b.openings.forEach(function (o) {
@@ -958,17 +1091,18 @@
 		if (e.key === 'Escape') {
 			if (document.querySelector('.agh-dialog-wrap')) { return false; }
 			if (st.draw) { st.draw = null; renderPlan(); e.preventDefault(); return true; }
-			if (st.sel) { st.sel = null; renderPanel(); renderPlan(); e.preventDefault(); return true; }
+			if (st.sel) { st.sel = null; renderPanel(); renderPlan(); renderSelBar(); e.preventDefault(); return true; }
 			return false; // the designer leaves the full screen (and never closes itself in build mode)
 		}
 		if (typing) { return false; }
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); if (e.shiftKey) { redo(); } else { undo(); } return true; }
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redo(); return true; }
 		if ((e.key === 'Delete' || e.key === 'Backspace') && st.sel) { e.preventDefault(); delSel(); return true; }
+		if (st.sel && /^Arrow/.test(e.key) && nudgeSel(e.key, e.shiftKey)) { e.preventDefault(); return true; }
 		return false;
 	}
 
 	// load a whole drawing (a saved one, a template or a test house) as one undoable change
 	function load(b) { change(function () { st.b = B.normalize(b); }); st.sel = null; fitView(); renderAll(); }
-	root.AGH_BuildUI = { version: '1.0.0', open: open, close: close, onKey: onKey, load: load, state: function () { return st; }, goStep: function (i) { goStep(i); }, closeStep: function () { closeStep(); }, setView: function (v) { setView(v); }, setPhase: function (p) { setPhase(p); } };
+	root.AGH_BuildUI = { version: '1.0.0', open: open, close: close, onKey: onKey, load: load, state: function () { return st; }, pick3D: function (ray) { return st ? rayPick(ray) : null; }, goStep: function (i) { goStep(i); }, closeStep: function () { closeStep(); }, setView: function (v) { setView(v); }, setPhase: function (p) { setPhase(p); } };
 }(window));
