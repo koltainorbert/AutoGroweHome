@@ -11226,3 +11226,110 @@ msgstr "Pomoćni objekti"
 #: includes/Params/Definitions.php
 msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
 msgstr "Ostava, kućica, radionica, letnja kuhinja, garaža, štala ili staklenik: mere, krov, zidovi, vrata, prozori i oprema. U 3D-u se pomera i okreće."
+
+#: includes/Admin/Admin.php includes/Frontend/Frontend.php
+msgid "3D teljesítményteszt"
+msgstr "3D тест перформанси"
+
+#: includes/Admin/Pages.php includes/Frontend/Frontend.php
+msgid "Ugyanaz a mintaház minden minőségi szinten: első kép ideje, képkocka/s, képkockaidő (p50/p95), háromszögek, rajzhívások. Futtasd azon a gépen vagy telefonon, amelyet mérni szeretnél; a teszt alatt ne válts lapot."
+msgstr "Иста огледна кућа на сваком нивоу квалитета: време до прве сличице, сличице/с, време сличице (p50/p95), троуглови, позиви цртања. Покрените тест на рачунару или телефону који желите да измерите; током теста не мењајте картицу."
+
+#: includes/Admin/Pages.php
+msgid "Telefonon: nyisd meg a tervező oldalát ezzel a címmel:"
+msgstr "На телефону: отворите страницу дизајнера на овој адреси:"
+
+#: includes/Frontend/Frontend.php
+msgid "Minőség"
+msgstr "Квалитет"
+
+#: includes/Frontend/Frontend.php
+msgid "automatikus"
+msgstr "аутоматски"
+
+#: includes/Frontend/Frontend.php
+msgid "alacsony"
+msgstr "низак"
+
+#: includes/Frontend/Frontend.php
+msgid "közepes"
+msgstr "средњи"
+
+#: includes/Frontend/Frontend.php
+msgid "magas"
+msgstr "висок"
+
+#: includes/Frontend/Frontend.php
+msgid "ultra"
+msgstr "ултра"
+
+#: includes/Frontend/Frontend.php
+msgid "Teszt indítása"
+msgstr "Покрени тест"
+
+#. translators: 1: quality level 2: current step 3: number of steps
+#: includes/Frontend/Frontend.php
+msgid "Mérés: %1$s (%2$s / %3$s)…"
+msgstr "Мерење: %1$s (%2$s / %3$s)…"
+
+#. translators: %s: recommended quality level
+#: includes/Frontend/Frontend.php
+msgid "Kész. Javasolt szint ezen a gépen: %s"
+msgstr "Готово. Препоручени квалитет на овом уређају: %s"
+
+#: includes/Frontend/Frontend.php
+msgid "Másolás"
+msgstr "Копирај"
+
+#: includes/Frontend/Frontend.php
+msgid "Vágólapra másolva."
+msgstr "Копирано у оставу."
+
+#: includes/Frontend/Frontend.php
+msgid "Grafikus kártya"
+msgstr "Графичка картица"
+
+#: includes/Frontend/Frontend.php
+msgid "a böngésző nem adja meg"
+msgstr "прегледач је не наводи"
+
+#: includes/Frontend/Frontend.php
+msgctxt "3D quality level"
+msgid "Szint"
+msgstr "Ниво"
+
+#: includes/Frontend/Frontend.php
+msgid "Első kép"
+msgstr "Прва сличица"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkocka/s"
+msgstr "Сличице/с"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkockaidő p50"
+msgstr "Време сличице p50"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkockaidő p95"
+msgstr "Време сличице p95"
+
+#: includes/Frontend/Frontend.php
+msgid "Háromszög"
+msgstr "Троуглови"
+
+#: includes/Frontend/Frontend.php
+msgid "Rajzhívás"
+msgstr "Позиви цртања"
+
+#: includes/Frontend/Frontend.php
+msgid "Memória (JS)"
+msgstr "Меморија (JS)"
+
+#: includes/Frontend/Frontend.php
+msgid "Ez a böngésző nem támogatja a WebGL2-t, a 3D előnézet itt nem fut."
+msgstr "Овај прегледач не подржава WebGL2, 3D преглед овде не ради."
+
+#: includes/Frontend/Frontend.php
+msgid "A teszt megszakadt:"
+msgstr "Тест је прекинут:"

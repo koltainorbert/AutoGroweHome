@@ -11226,3 +11226,110 @@ msgstr "Budynki gospodarcze"
 #: includes/Params/Definitions.php
 msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
 msgstr "Szopa, domek, warsztat, letnia kuchnia, garaż, stodoła lub szklarnia: wymiary, dach, ściany, drzwi, okna i wyposażenie. W 3D można przesuwać i obracać."
+
+#: includes/Admin/Admin.php includes/Frontend/Frontend.php
+msgid "3D teljesítményteszt"
+msgstr "Test wydajności 3D"
+
+#: includes/Admin/Pages.php includes/Frontend/Frontend.php
+msgid "Ugyanaz a mintaház minden minőségi szinten: első kép ideje, képkocka/s, képkockaidő (p50/p95), háromszögek, rajzhívások. Futtasd azon a gépen vagy telefonon, amelyet mérni szeretnél; a teszt alatt ne válts lapot."
+msgstr "Ten sam przykładowy dom na każdym poziomie jakości: czas do pierwszej klatki, klatki/s, czas klatki (p50/p95), trójkąty, wywołania rysowania. Uruchom test na komputerze lub telefonie, który chcesz zmierzyć; w trakcie testu nie przełączaj karty."
+
+#: includes/Admin/Pages.php
+msgid "Telefonon: nyisd meg a tervező oldalát ezzel a címmel:"
+msgstr "Na telefonie: otwórz stronę projektanta pod tym adresem:"
+
+#: includes/Frontend/Frontend.php
+msgid "Minőség"
+msgstr "Jakość"
+
+#: includes/Frontend/Frontend.php
+msgid "automatikus"
+msgstr "automatyczna"
+
+#: includes/Frontend/Frontend.php
+msgid "alacsony"
+msgstr "niska"
+
+#: includes/Frontend/Frontend.php
+msgid "közepes"
+msgstr "średnia"
+
+#: includes/Frontend/Frontend.php
+msgid "magas"
+msgstr "wysoka"
+
+#: includes/Frontend/Frontend.php
+msgid "ultra"
+msgstr "ultra"
+
+#: includes/Frontend/Frontend.php
+msgid "Teszt indítása"
+msgstr "Uruchom test"
+
+#. translators: 1: quality level 2: current step 3: number of steps
+#: includes/Frontend/Frontend.php
+msgid "Mérés: %1$s (%2$s / %3$s)…"
+msgstr "Pomiar: %1$s (%2$s / %3$s)…"
+
+#. translators: %s: recommended quality level
+#: includes/Frontend/Frontend.php
+msgid "Kész. Javasolt szint ezen a gépen: %s"
+msgstr "Gotowe. Zalecana jakość na tym urządzeniu: %s"
+
+#: includes/Frontend/Frontend.php
+msgid "Másolás"
+msgstr "Kopiuj"
+
+#: includes/Frontend/Frontend.php
+msgid "Vágólapra másolva."
+msgstr "Skopiowano do schowka."
+
+#: includes/Frontend/Frontend.php
+msgid "Grafikus kártya"
+msgstr "Karta graficzna"
+
+#: includes/Frontend/Frontend.php
+msgid "a böngésző nem adja meg"
+msgstr "przeglądarka jej nie podaje"
+
+#: includes/Frontend/Frontend.php
+msgctxt "3D quality level"
+msgid "Szint"
+msgstr "Poziom"
+
+#: includes/Frontend/Frontend.php
+msgid "Első kép"
+msgstr "Pierwsza klatka"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkocka/s"
+msgstr "Klatki/s"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkockaidő p50"
+msgstr "Czas klatki p50"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkockaidő p95"
+msgstr "Czas klatki p95"
+
+#: includes/Frontend/Frontend.php
+msgid "Háromszög"
+msgstr "Trójkąty"
+
+#: includes/Frontend/Frontend.php
+msgid "Rajzhívás"
+msgstr "Wywołania rysowania"
+
+#: includes/Frontend/Frontend.php
+msgid "Memória (JS)"
+msgstr "Pamięć (JS)"
+
+#: includes/Frontend/Frontend.php
+msgid "Ez a böngésző nem támogatja a WebGL2-t, a 3D előnézet itt nem fut."
+msgstr "Ta przeglądarka nie obsługuje WebGL2, podgląd 3D tu nie działa."
+
+#: includes/Frontend/Frontend.php
+msgid "A teszt megszakadt:"
+msgstr "Test został przerwany:"

@@ -11224,3 +11224,110 @@ msgstr "Outbuildings"
 #: includes/Params/Definitions.php
 msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
 msgstr "Shed, cabin, workshop, summer kitchen, detached garage, barn or greenhouse: size, roof, walls, door, windows and what is inside. Grab it in 3D to move and turn it."
+
+#: includes/Admin/Admin.php includes/Frontend/Frontend.php
+msgid "3D teljesítményteszt"
+msgstr "3D benchmark"
+
+#: includes/Admin/Pages.php includes/Frontend/Frontend.php
+msgid "Ugyanaz a mintaház minden minőségi szinten: első kép ideje, képkocka/s, képkockaidő (p50/p95), háromszögek, rajzhívások. Futtasd azon a gépen vagy telefonon, amelyet mérni szeretnél; a teszt alatt ne válts lapot."
+msgstr "The same sample house at every quality level: time to first frame, frames per second, frame time (p50/p95), triangles, draw calls. Run it on the computer or phone you want to measure; do not switch tabs during the test."
+
+#: includes/Admin/Pages.php
+msgid "Telefonon: nyisd meg a tervező oldalát ezzel a címmel:"
+msgstr "On a phone: open the designer page at this address:"
+
+#: includes/Frontend/Frontend.php
+msgid "Minőség"
+msgstr "Quality"
+
+#: includes/Frontend/Frontend.php
+msgid "automatikus"
+msgstr "automatic"
+
+#: includes/Frontend/Frontend.php
+msgid "alacsony"
+msgstr "low"
+
+#: includes/Frontend/Frontend.php
+msgid "közepes"
+msgstr "medium"
+
+#: includes/Frontend/Frontend.php
+msgid "magas"
+msgstr "high"
+
+#: includes/Frontend/Frontend.php
+msgid "ultra"
+msgstr "ultra"
+
+#: includes/Frontend/Frontend.php
+msgid "Teszt indítása"
+msgstr "Start test"
+
+#. translators: 1: quality level 2: current step 3: number of steps
+#: includes/Frontend/Frontend.php
+msgid "Mérés: %1$s (%2$s / %3$s)…"
+msgstr "Measuring: %1$s (%2$s / %3$s)…"
+
+#. translators: %s: recommended quality level
+#: includes/Frontend/Frontend.php
+msgid "Kész. Javasolt szint ezen a gépen: %s"
+msgstr "Done. Recommended level on this device: %s"
+
+#: includes/Frontend/Frontend.php
+msgid "Másolás"
+msgstr "Copy"
+
+#: includes/Frontend/Frontend.php
+msgid "Vágólapra másolva."
+msgstr "Copied to clipboard."
+
+#: includes/Frontend/Frontend.php
+msgid "Grafikus kártya"
+msgstr "Graphics card"
+
+#: includes/Frontend/Frontend.php
+msgid "a böngésző nem adja meg"
+msgstr "not reported by the browser"
+
+#: includes/Frontend/Frontend.php
+msgctxt "3D quality level"
+msgid "Szint"
+msgstr "Level"
+
+#: includes/Frontend/Frontend.php
+msgid "Első kép"
+msgstr "First frame"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkocka/s"
+msgstr "Frames/s"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkockaidő p50"
+msgstr "Frame time p50"
+
+#: includes/Frontend/Frontend.php
+msgid "Képkockaidő p95"
+msgstr "Frame time p95"
+
+#: includes/Frontend/Frontend.php
+msgid "Háromszög"
+msgstr "Triangles"
+
+#: includes/Frontend/Frontend.php
+msgid "Rajzhívás"
+msgstr "Draw calls"
+
+#: includes/Frontend/Frontend.php
+msgid "Memória (JS)"
+msgstr "Memory (JS)"
+
+#: includes/Frontend/Frontend.php
+msgid "Ez a böngésző nem támogatja a WebGL2-t, a 3D előnézet itt nem fut."
+msgstr "This browser does not support WebGL2, so the 3D preview cannot run here."
+
+#: includes/Frontend/Frontend.php
+msgid "A teszt megszakadt:"
+msgstr "The test was interrupted:"

@@ -194,13 +194,15 @@ final class Frontend {
 				'title'    => __( '3D teljesítményteszt', 'autogrowehome' ),
 				'lead'     => __( 'Ugyanaz a mintaház minden minőségi szinten: első kép ideje, képkocka/s, képkockaidő (p50/p95), háromszögek, rajzhívások. Futtasd azon a gépen vagy telefonon, amelyet mérni szeretnél; a teszt alatt ne válts lapot.', 'autogrowehome' ),
 				'start'    => __( 'Teszt indítása', 'autogrowehome' ),
+				/* translators: 1: quality level 2: current step 3: number of steps */
 				'running'  => __( 'Mérés: %1$s (%2$s / %3$s)…', 'autogrowehome' ),
+				/* translators: %s: recommended quality level */
 				'done'     => __( 'Kész. Javasolt szint ezen a gépen: %s', 'autogrowehome' ),
 				'copy'     => __( 'Másolás', 'autogrowehome' ),
 				'copied'   => __( 'Vágólapra másolva.', 'autogrowehome' ),
 				'gpu'      => __( 'Grafikus kártya', 'autogrowehome' ),
 				'unknown'  => __( 'a böngésző nem adja meg', 'autogrowehome' ),
-				'level'    => __( 'Szint', 'autogrowehome' ),
+				'level'    => _x( 'Szint', '3D quality level', 'autogrowehome' ),
 				'first'    => __( 'Első kép', 'autogrowehome' ),
 				'fps'      => __( 'Képkocka/s', 'autogrowehome' ),
 				'p50'      => __( 'Képkockaidő p50', 'autogrowehome' ),
