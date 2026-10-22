@@ -10849,6 +10849,90 @@ msgstr "De trap is smaller dan aanbevolen"
 msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
 msgstr "Eén zijde ligt maar deels tegen een muur – schuif hem tot het einde van de muur of helemaal ervan weg."
 
+#: includes/Frontend/Strings.php
+msgid "Elrendezési szabályok (jó gyakorlat, nem ellenőrzött)"
+msgstr "Indelingsregels (goede praktijk, niet bindend)"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elrendezési szabály teljesül"
+msgstr "%1$s / %2$s indelingsregels voldaan"
+
+#: includes/Frontend/Strings.php
+msgid "teljesül"
+msgstr "voldaan"
+
+#: includes/Frontend/Strings.php
+msgid "nem teljesül"
+msgstr "niet voldaan"
+
+#: includes/Frontend/Strings.php
+msgid "Elrendezés javítása"
+msgstr "Indeling verbeteren"
+
+#: includes/Frontend/Strings.php
+msgid "Elrendezés javítva: %1$s → %2$s szabály teljesül. Ctrl+Z: vissza."
+msgstr "Indeling verbeterd: %1$s → %2$s regels voldaan. Ctrl+Z: ongedaan maken."
+
+#: includes/Frontend/Strings.php
+msgid "Ennél jobb elrendezést nem találtam – a mostani marad."
+msgstr "Ik heb geen betere indeling gevonden – de huidige blijft."
+
+#: includes/Frontend/Strings.php
+msgid "A szabályok csak javaslatok: figyelmeztetnek, de nem tiltanak – a helyiségeket bárhová húzhatod. A kert a ház hátsó oldala (a rajzon fent), az utca elöl."
+msgstr "De regels zijn alleen suggesties: ze waarschuwen, maar verbieden niets – je kunt de ruimtes overal naartoe slepen. De tuin is de achterkant van het huis (boven in de tekening), de straat de voorkant."
+
+#: includes/Frontend/Strings.php
+msgid "A nappali a kert / a nap felé néz"
+msgstr "De woonkamer gericht op de tuin / de zon"
+
+#: includes/Frontend/Strings.php
+msgid "A hálók (legalább a fele) a csendes kerti oldalon"
+msgstr "De slaapkamers (minstens de helft) aan de rustige tuinzijde"
+
+#: includes/Frontend/Strings.php
+msgid "A konyha a nappali vagy az étkező mellett"
+msgstr "De keuken naast de woonkamer of de eetkamer"
+
+#: includes/Frontend/Strings.php
+msgid "Az étkező a konyha és a nappali között"
+msgstr "De eetkamer tussen de keuken en de woonkamer"
+
+#: includes/Frontend/Strings.php
+msgid "A fürdő a hálók mellett vagy a hálókat összekötő közlekedőről"
+msgstr "De badkamer naast de slaapkamers of bereikbaar via de gang die ze verbindt"
+
+#: includes/Frontend/Strings.php
+msgid "A WC az előtér / a bejárat közelében"
+msgstr "Het toilet dicht bij de hal / de ingang"
+
+#: includes/Frontend/Strings.php
+msgid "A kamra a konyha mellett"
+msgstr "De voorraadkamer naast de keuken"
+
+#: includes/Frontend/Strings.php
+msgid "A háztartási helyiség a fürdő vagy a garázs felé"
+msgstr "De bijkeuken richting badkamer of garage"
+
+#: includes/Frontend/Strings.php
+msgid "A gépészet és a garázs az utca felé"
+msgstr "Installaties en garage aan de straatzijde"
+
+#: includes/Frontend/Strings.php
+msgid "A dolgozó csendes helyen, a nappalitól távolabb"
+msgstr "De werkkamer op een rustige plek, uit de buurt van de woonkamer"
+
+#: includes/Frontend/Strings.php
+msgid "Az előtér a bejáratnál"
+msgstr "De hal bij de ingang"
+
+#: includes/Frontend/Strings.php
+msgid "A közlekedő összeköti a hálókat"
+msgstr "De gang verbindt de slaapkamers"
+
+#: includes/Frontend/Strings.php
+msgid "A vizes helyiségek egy vezetékfal körül"
+msgstr "De natte ruimtes rond één installatiewand"
+
 #: includes/Params/Definitions.php
 msgid "Beállók száma"
 msgstr "Aantal plaatsen"

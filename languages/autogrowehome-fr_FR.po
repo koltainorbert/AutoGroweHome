@@ -10849,6 +10849,90 @@ msgstr "La volée d'escalier est plus étroite que recommandé"
 msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
 msgstr "Un côté n'est que partiellement contre un mur : poussez-le jusqu'au bout du mur ou éloignez-le complètement."
 
+#: includes/Frontend/Strings.php
+msgid "Elrendezési szabályok (jó gyakorlat, nem ellenőrzött)"
+msgstr "Règles d'agencement (bonne pratique, non contraignantes)"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elrendezési szabály teljesül"
+msgstr "%1$s / %2$s règles d'agencement respectées"
+
+#: includes/Frontend/Strings.php
+msgid "teljesül"
+msgstr "respectée"
+
+#: includes/Frontend/Strings.php
+msgid "nem teljesül"
+msgstr "non respectée"
+
+#: includes/Frontend/Strings.php
+msgid "Elrendezés javítása"
+msgstr "Améliorer l'agencement"
+
+#: includes/Frontend/Strings.php
+msgid "Elrendezés javítva: %1$s → %2$s szabály teljesül. Ctrl+Z: vissza."
+msgstr "Agencement amélioré : %1$s → %2$s règles respectées. Ctrl+Z : annuler."
+
+#: includes/Frontend/Strings.php
+msgid "Ennél jobb elrendezést nem találtam – a mostani marad."
+msgstr "Je n'ai pas trouvé de meilleur agencement – l'actuel est conservé."
+
+#: includes/Frontend/Strings.php
+msgid "A szabályok csak javaslatok: figyelmeztetnek, de nem tiltanak – a helyiségeket bárhová húzhatod. A kert a ház hátsó oldala (a rajzon fent), az utca elöl."
+msgstr "Les règles ne sont que des suggestions : elles avertissent sans interdire – vous pouvez déplacer les pièces où vous voulez. Le jardin est à l'arrière de la maison (en haut du dessin), la rue à l'avant."
+
+#: includes/Frontend/Strings.php
+msgid "A nappali a kert / a nap felé néz"
+msgstr "Le séjour orienté vers le jardin / le soleil"
+
+#: includes/Frontend/Strings.php
+msgid "A hálók (legalább a fele) a csendes kerti oldalon"
+msgstr "Les chambres (au moins la moitié) côté jardin, au calme"
+
+#: includes/Frontend/Strings.php
+msgid "A konyha a nappali vagy az étkező mellett"
+msgstr "La cuisine à côté du séjour ou de la salle à manger"
+
+#: includes/Frontend/Strings.php
+msgid "Az étkező a konyha és a nappali között"
+msgstr "La salle à manger entre la cuisine et le séjour"
+
+#: includes/Frontend/Strings.php
+msgid "A fürdő a hálók mellett vagy a hálókat összekötő közlekedőről"
+msgstr "La salle de bain près des chambres ou accessible depuis le dégagement qui les dessert"
+
+#: includes/Frontend/Strings.php
+msgid "A WC az előtér / a bejárat közelében"
+msgstr "Les WC près de l'entrée / de la porte d'entrée"
+
+#: includes/Frontend/Strings.php
+msgid "A kamra a konyha mellett"
+msgstr "Le cellier à côté de la cuisine"
+
+#: includes/Frontend/Strings.php
+msgid "A háztartási helyiség a fürdő vagy a garázs felé"
+msgstr "Le local ménager vers la salle de bain ou le garage"
+
+#: includes/Frontend/Strings.php
+msgid "A gépészet és a garázs az utca felé"
+msgstr "Les équipements techniques et le garage côté rue"
+
+#: includes/Frontend/Strings.php
+msgid "A dolgozó csendes helyen, a nappalitól távolabb"
+msgstr "Le bureau dans un endroit calme, à l'écart du séjour"
+
+#: includes/Frontend/Strings.php
+msgid "Az előtér a bejáratnál"
+msgstr "L'entrée près de la porte d'entrée"
+
+#: includes/Frontend/Strings.php
+msgid "A közlekedő összeköti a hálókat"
+msgstr "Le dégagement dessert les chambres"
+
+#: includes/Frontend/Strings.php
+msgid "A vizes helyiségek egy vezetékfal körül"
+msgstr "Les pièces d'eau autour d'une même gaine technique"
+
 #: includes/Params/Definitions.php
 msgid "Beállók száma"
 msgstr "Nombre de places"

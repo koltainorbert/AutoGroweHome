@@ -10851,6 +10851,90 @@ msgstr "Rampa scării este mai îngustă decât se recomandă"
 msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
 msgstr "O latură stă doar parțial pe un perete – mut-o până la capătul peretelui sau complet departe de el."
 
+#: includes/Frontend/Strings.php
+msgid "Elrendezési szabályok (jó gyakorlat, nem ellenőrzött)"
+msgstr "Reguli de dispunere (bună practică, neobligatorii)"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elrendezési szabály teljesül"
+msgstr "%1$s / %2$s reguli de dispunere respectate"
+
+#: includes/Frontend/Strings.php
+msgid "teljesül"
+msgstr "respectată"
+
+#: includes/Frontend/Strings.php
+msgid "nem teljesül"
+msgstr "nerespectată"
+
+#: includes/Frontend/Strings.php
+msgid "Elrendezés javítása"
+msgstr "Îmbunătățește dispunerea"
+
+#: includes/Frontend/Strings.php
+msgid "Elrendezés javítva: %1$s → %2$s szabály teljesül. Ctrl+Z: vissza."
+msgstr "Dispunere îmbunătățită: %1$s → %2$s reguli respectate. Ctrl+Z: anulează."
+
+#: includes/Frontend/Strings.php
+msgid "Ennél jobb elrendezést nem találtam – a mostani marad."
+msgstr "N-am găsit o dispunere mai bună – rămâne cea actuală."
+
+#: includes/Frontend/Strings.php
+msgid "A szabályok csak javaslatok: figyelmeztetnek, de nem tiltanak – a helyiségeket bárhová húzhatod. A kert a ház hátsó oldala (a rajzon fent), az utca elöl."
+msgstr "Regulile sunt doar sugestii: avertizează, dar nu interzic – poți trage încăperile oriunde. Grădina este partea din spate a casei (sus în desen), strada este în față."
+
+#: includes/Frontend/Strings.php
+msgid "A nappali a kert / a nap felé néz"
+msgstr "Livingul orientat spre grădină / soare"
+
+#: includes/Frontend/Strings.php
+msgid "A hálók (legalább a fele) a csendes kerti oldalon"
+msgstr "Dormitoarele (cel puțin jumătate) pe latura liniștită, spre grădină"
+
+#: includes/Frontend/Strings.php
+msgid "A konyha a nappali vagy az étkező mellett"
+msgstr "Bucătăria lângă living sau sufragerie"
+
+#: includes/Frontend/Strings.php
+msgid "Az étkező a konyha és a nappali között"
+msgstr "Sufrageria între bucătărie și living"
+
+#: includes/Frontend/Strings.php
+msgid "A fürdő a hálók mellett vagy a hálókat összekötő közlekedőről"
+msgstr "Baia lângă dormitoare sau cu acces din holul care le leagă"
+
+#: includes/Frontend/Strings.php
+msgid "A WC az előtér / a bejárat közelében"
+msgstr "Toaleta aproape de holul de intrare / de intrare"
+
+#: includes/Frontend/Strings.php
+msgid "A kamra a konyha mellett"
+msgstr "Cămara lângă bucătărie"
+
+#: includes/Frontend/Strings.php
+msgid "A háztartási helyiség a fürdő vagy a garázs felé"
+msgstr "Camera utilitară spre baie sau garaj"
+
+#: includes/Frontend/Strings.php
+msgid "A gépészet és a garázs az utca felé"
+msgstr "Instalațiile și garajul spre stradă"
+
+#: includes/Frontend/Strings.php
+msgid "A dolgozó csendes helyen, a nappalitól távolabb"
+msgstr "Biroul într-un loc liniștit, departe de living"
+
+#: includes/Frontend/Strings.php
+msgid "Az előtér a bejáratnál"
+msgstr "Holul de intrare la ușa de intrare"
+
+#: includes/Frontend/Strings.php
+msgid "A közlekedő összeköti a hálókat"
+msgstr "Holul leagă dormitoarele"
+
+#: includes/Frontend/Strings.php
+msgid "A vizes helyiségek egy vezetékfal körül"
+msgstr "Spațiile umede în jurul unui singur perete de instalații"
+
 #: includes/Params/Definitions.php
 msgid "Beállók száma"
 msgstr "Număr de locuri"
