@@ -110,7 +110,7 @@ add_filter(
 
 Secrets::set( 'anthropic_api_key', 'sk-ant-test-only' );
 Settings::update_group( 'anthropic', array( 'enabled' => true, 'use_for_plan' => false, 'vision_prompt' => true, 'vision_template' => '' ) );
-Settings::update_group( 'magnific', array( 'structure_guidance' => true, 'fidelity' => 'faithful', 'negative_inline' => true ) );
+Settings::update_group( 'magnific', array( 'render_mode' => 'structure', 'structure_guidance' => true, 'fidelity' => 'faithful', 'negative_inline' => true ) );
 Settings::update_group( 'images', array( 'allow_test_provider' => true, 'provider' => 'test' ) );
 Settings::flush();
 

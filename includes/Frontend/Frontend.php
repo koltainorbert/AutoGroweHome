@@ -387,7 +387,8 @@ final class Frontend {
 				'camera' => (string) Settings::get( 'magnific.hero_camera', 'auto' ),
 				'rooms'  => min( 8, (int) Settings::get( 'limits.interiors_max', 4 ) ),
 				// 1.15.0: beside a clean guide the full scene is taken too – Claude writes the prompt from it
-				'scene'  => (bool) Settings::get( 'magnific.guide_clean', true ) && VisionPrompt::applies( 'view', 'hero' ) && VisionPrompt::enabled(),
+				// … and in "photo from the 3D picture" mode that full scene is the picture that becomes the photo (1.16.0)
+				'scene'  => (bool) Settings::get( 'magnific.guide_clean', true ) && ( ( VisionPrompt::applies( 'view', 'hero' ) && VisionPrompt::enabled() ) || \AutoGroweHome\Prompt\PromptEngine::photo_mode() ),
 			),
 			'consents'  => QuoteService::consents(),
 			'tour'      => Help::tour(),

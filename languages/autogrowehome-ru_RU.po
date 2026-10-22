@@ -10372,3 +10372,19 @@ msgstr "Промпт по 3D-изображению (описание изобр
 #: includes/Admin/Admin.php
 msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
 msgstr "Доступно с тарифа Professional; в текущем тарифе не работает, отправляется обычный промпт."
+
+#: includes/Admin/Admin.php
+msgid "Képkészítés módja"
+msgstr "Режим создания изображения"
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott): a látogató 3D képe maga megy be a képgenerálóba, és abból lesz fotó – a tető színe, az anyagok, az autó, a pergola, minden a helyén marad. Csak „Hű”, „Klón” és egyedi hűségnél; a nézetek a kiválasztott fő képet is megkapják, hogy egyformák legyenek. Forma-vezetés: a régi út (a 3D csak formát ad, a színeket a szöveg és a stílusminta)."
+msgstr "Фото по 3D-изображению (рекомендуется): само 3D-изображение посетителя поступает в генератор и становится фотографией – цвет крыши, материалы, автомобиль, пергола, всё остаётся на месте. Только при точности «Точно», «Клон» и пользовательской; виды также получают выбранное главное изображение, чтобы совпадать. Управление формой: старый способ (3D задаёт только форму, цвета берутся из текста и образца стиля)."
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott)"
+msgstr "Фото по 3D-изображению (рекомендуется)"
+
+#: includes/Admin/Admin.php
+msgid "Forma-vezetés (régi)"
+msgstr "Управление формой (старое)"

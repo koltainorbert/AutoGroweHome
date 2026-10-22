@@ -10372,3 +10372,19 @@ msgstr "Prompt z obrazu 3D (opis obrazu przez Claude)"
 #: includes/Admin/Admin.php
 msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
 msgstr "Dostępne od pakietu Professional; w obecnym pakiecie nie działa, wysyłany jest zwykły prompt."
+
+#: includes/Admin/Admin.php
+msgid "Képkészítés módja"
+msgstr "Tryb tworzenia obrazu"
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott): a látogató 3D képe maga megy be a képgenerálóba, és abból lesz fotó – a tető színe, az anyagok, az autó, a pergola, minden a helyén marad. Csak „Hű”, „Klón” és egyedi hűségnél; a nézetek a kiválasztott fő képet is megkapják, hogy egyformák legyenek. Forma-vezetés: a régi út (a 3D csak formát ad, a színeket a szöveg és a stílusminta)."
+msgstr "Zdjęcie z obrazu 3D (zalecane): sam obraz 3D odwiedzającego trafia do generatora i staje się zdjęciem – kolor dachu, materiały, samochód, pergola, wszystko zostaje na miejscu. Tylko przy wierności „Wierny”, „Klon” i własnej; widoki dostają też wybrany obraz główny, aby były spójne. Prowadzenie formy: stara metoda (3D daje tylko kształt, kolory pochodzą z tekstu i próbki stylu)."
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott)"
+msgstr "Zdjęcie z obrazu 3D (zalecane)"
+
+#: includes/Admin/Admin.php
+msgid "Forma-vezetés (régi)"
+msgstr "Prowadzenie formy (stare)"

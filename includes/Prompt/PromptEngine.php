@@ -903,6 +903,70 @@ final class PromptEngine {
 		return empty( $facts ) ? '' : 'Exact colours and materials of the design (binding, the screenshot light may tint them): ' . implode( '; ', $facts ) . '.';
 	}
 
+	/**
+	 * "Photo from the 3D picture" (1.16.0, Settings → Magnific → Képkészítés módja): the visitor's
+	 * 3D picture itself is the input image and becomes the photograph. Only where the picture must
+	 * follow the model (Faithful, Clone, custom); Free and Balanced keep the structure way.
+	 */
+	public static function photo_mode(): bool {
+		return 'photo' === (string) Settings::get( 'magnific.render_mode', 'photo' )
+			&& in_array( (string) Settings::get( 'magnific.fidelity', 'faithful' ), array( 'faithful', 'clone', 'custom' ), true );
+	}
+
+	/**
+	 * Output size for the photo in the shape of the 3D picture: at most 1440 px on the long side,
+	 * multiples of 16 (Flux), never below 256.
+	 *
+	 * @return array{0:int,1:int}
+	 */
+	public static function photo_size( int $w, int $h ): array {
+		if ( $w <= 0 || $h <= 0 ) {
+			$w = 1152;
+			$h = 700;
+		}
+		$k   = 1440 / max( $w, $h );
+		$fit = static fn( float $v ): int => (int) max( 256, min( 1440, round( $v / 16 ) * 16 ) );
+		return array( $fit( $w * $k ), $fit( $h * $k ) );
+	}
+
+	/**
+	 * The instruction that turns the 3D picture into a photograph of the same house (or room): keep
+	 * everything, change only what a camera would. $described is the prompt Claude wrote from the
+	 * picture (1.15.0), if any; $with_hero: the second input image is the chosen hero photograph.
+	 */
+	public static function photo_prompt( array $c, string $view, ?array $room = null, bool $with_hero = false, string $described = '' ): string {
+		$light = trim( implode( ', ', array_filter( array( self::phrase( 'time_of_day', $c ), self::phrase( 'season', $c ), self::phrase( 'weather', $c ) ) ) ) );
+		if ( 'interior' === $view ) {
+			$label = $room ? strtolower( str_replace( '_', ' ', (string) ( $room['type'] ?? 'room' ) ) ) : 'room';
+			$out   = 'Turn this screenshot of a 3D room model into a real, professional interior photograph of exactly the same ' . $label . '.'
+				. ' Keep everything exactly as in the image: the room shape, walls, ceiling, every window and door, every piece of furniture and object with its position, size, shape and colour, the floor and wall colours.'
+				. ' Keep the camera position, angle and framing exactly.'
+				. ' Change only what a photograph would change: real physically accurate materials and textures, natural daylight through the windows and soft shadows, real fabrics, wood grain, reflections.'
+				. ' Interior design magazine photography, sharp, natural colours, no CGI look. Remove all user interface elements, labels, text and watermarks.';
+			return self::clip( self::tidy( $out ) );
+		}
+		$out = 'Turn this screenshot of a 3D house model into a real, professional architectural photograph of exactly the same house.'
+			. ' Keep everything exactly as in the image: the building shape and size, the number of floors, the roof shape, pitch and colour, the facade materials and colours,'
+			. ' every window and door with its position, size and frame colour, the terrace, pergola, garage, carport, pool, fence, gate, driveway and paths,'
+			. ' and every car, person, animal, piece of furniture and plant in its place. Keep the camera position, angle and framing exactly. Do not add or remove anything.';
+		if ( $with_hero ) {
+			$out .= ' The second image is a finished photograph of this same house from another angle: match its materials, colours, light and photographic look exactly.';
+		}
+		$facts = self::design_facts( $c );
+		if ( '' !== $facts ) {
+			$out .= ' ' . $facts;
+		}
+		if ( '' !== trim( $described ) ) {
+			$out .= ' What the image shows: ' . trim( $described );
+		}
+		$out .= ' Turn low-poly trees, cone-shaped trees, blob bushes and flat textured grass into real trees, shrubs and a real lawn of the same size, shape and place;'
+			. ' turn simple placeholder cars, people and animals into real ones in the same place and pose.'
+			. ( '' !== $light ? ' Light: ' . $light . ', natural soft shadows.' : '' )
+			. ' Professional architectural photography, corrected vertical lines, real physically accurate materials, natural colours, sharp detail, no CGI or video-game look.'
+			. ' Remove all user interface elements, labels, text and watermarks.';
+		return self::clip( self::tidy( $out ) );
+	}
+
 	public static function reference_lead(): string {
 		$f = (string) Settings::get( 'magnific.fidelity', 'faithful' );
 		if ( ! in_array( $f, array( 'faithful', 'clone', 'custom' ), true ) ) {

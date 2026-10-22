@@ -394,6 +394,15 @@ A felbontás: a koncepcióképek 2k-ban készülnek (gyors, olcsó), a kiválasz
 4k-ban. Nyomtatáshoz vagy nagy bemutatóhoz a „Felskálázás a kiválasztott galériánál” kapcsoló tesz
 rá még egy lépést (külön költség).
 
+### Fotó a 3D képből (1.16.0, alapértelmezett)
+
+AI-szolgáltatók → Magnific → „Képkészítés módja”. **Fotó a 3D képből:** a látogató 3D képe (a teljes
+jelenet, autóval, emberrel) maga a bemenő kép, a Flux 2 Pro abból készít fotót – a tető színe, az anyagok
+és minden tárgy a helyén marad. A nézetek a saját 3D képüket és a kiválasztott fő képet kapják. Csak
+„Hű”, „Klón” és egyedi hűségnél, és csak a látogató 3D képével (szerveroldali tömegvázlatból nem). A kép
+1440 px széles; nagyobbhoz a „Felskálázás a kiválasztott galériánál”. **Forma-vezetés (régi):** a 3D csak
+formát ad (Mystic structure), a színeket a szöveg és a stílusminta.
+
 **Kötött hűség (1.15.2–1.15.3):** „Hű”, „Klón” és egyedi hűségnél, ha van 3D vezetőkép, a prompt a 3D
 színeit mondja (tető, kő, kerítés), a koncepciók és a stílus tömegleírása (pl. „torony”, „U alak”,
 „íves nyílások”) kimarad, és a galéria nézetei a „Nézetek egysége” beállítástól függetlenül a Mystic

@@ -77,6 +77,7 @@ final class Settings {
 				'hdr'                => 35,
 				'negative_inline'    => true,
 				'guide_clean'        => true,
+				'render_mode'        => 'photo',
 				'hero_camera'        => 'auto',
 				'style_ref_default'  => 0,
 				'style_ref_interior' => 0,

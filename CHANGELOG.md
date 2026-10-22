@@ -1,5 +1,16 @@
 # Változásnapló
 
+## 1.16.0 – 2026-10-22
+
+Norbi 10 pontos listája (7 képpel). Ebben a verzióban az 1., a 9. és a 10. pont; a többi (helyiségprogram, törlés/mozgatás, globális mozgatás-forgatás, anyagok helye, medence, garázs, melléképületek) ütemezve az 1.17–1.22-re. Munkaprompt: `docs/FELADAT-1.16.0.md`.
+
+- **Fotó a 3D képből (10. pont, új alapértelmezés):** a látogató 3D képe maga megy be a képgenerálóba (Flux 2 Pro szerkesztés) és abból lesz fotó – „ugyanezt a házat alakítsd valódi fotóvá, semmit ne tegyél hozzá és ne vegyél el”. A bemenet a teljes jelenet (autó, ember, állat is), a méret a 3D kép alakja (1440 × 880), a nézetek a saját 3D képük mellé a kiválasztott fő képet is megkapják. Gyökérok: eddig a 3D kép csak structure referencia volt (a Mystic csak formát vesz át, színt nem), a színt a stílusminta adta – a „Modern minimalista” minta sötét tetős házától lett fekete a piros tető. Csak Hű/Klón/egyedi hűségnél és a látogató 3D képével; Magnific → „Képkészítés módja”: a régi forma-vezetés választható.
+- Próba a Magnific-appban Norbi 3D képén: piros cseréptető, vakolat, pergola a kültéri konyhával, medence, lapos tetős dupla garázs, kerítés, esővízgyűjtő és autó a helyén (100 kredit). A Magnific kreatív felskálázó ugyanezen a képen a garázstetőt és az autót megváltoztatta – ezért nem az.
+- **Kezdő méret (1. pont):** az építési mód Szélesség/Mélység mezője minden újrarajzolásnál visszaugrott 10 × 8 m-re. Most megmarad. Mérve (új `tests/e2e/buildsize.js`): 14 × 11,5 m beírva → a téglalap 14,00 × 11,50 m (előtte 10,00 × 8,00).
+- **Pergola a tetőben (9. pont):** a terasz-pergola fix magassága egyszintes háznál az eresz fölé ért. Most az eresz alatt marad, ha ott kevés a belmagasság, az eresz előtt kezdődik. Mérve 600 házon: tetőbe lógó pergola 179 → 0, legkisebb belmagasság 2,10 m.
+- Mérve: új `tests/photo-test.php` 22/22 · `guide-test` 62/62, `vision-test` 55/55, `match-test` 26/26 (a régi úton) · `e2e/guide.js` konzolhiba 0 · `e2e/build.js 2` 20/20 lépés, geometriai hiba 0 · stuck 9/9 · gen zöld · sketch 0 hiba · autoloader 123/123 · lint 0 · 15 nyelv × 2499 szöveg, 0 hiba.
+- **Nem mérhető itt:** a pluginból éles kulccsal (a próba a Magnific-appban futott, ugyanazzal a modellel). A fotó 1440 px széles; nagyobbhoz a „Felskálázás a kiválasztott galériánál” kapcsoló.
+
 ## 1.15.3 – 2026-10-21
 
 Norbi: „az első képet kiválasztotta, akkor megcsinál több nézetet, azok meg rosszabbak” – a madártávlaton és az elölnézeten torony, íves ablakok, más tömeg. Munkaprompt: `docs/FELADAT-1.15.3.md`.

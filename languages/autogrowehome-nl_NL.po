@@ -10370,3 +10370,19 @@ msgstr "Prompt uit de 3D-afbeelding (beeldbeschrijving door Claude)"
 #: includes/Admin/Admin.php
 msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
 msgstr "Beschikbaar vanaf het Professional-pakket; in het huidige pakket werkt het niet en wordt de gebruikelijke prompt verstuurd."
+
+#: includes/Admin/Admin.php
+msgid "Képkészítés módja"
+msgstr "Modus voor beeldcreatie"
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott): a látogató 3D képe maga megy be a képgenerálóba, és abból lesz fotó – a tető színe, az anyagok, az autó, a pergola, minden a helyén marad. Csak „Hű”, „Klón” és egyedi hűségnél; a nézetek a kiválasztott fő képet is megkapják, hogy egyformák legyenek. Forma-vezetés: a régi út (a 3D csak formát ad, a színeket a szöveg és a stílusminta)."
+msgstr "Foto uit de 3D-afbeelding (aanbevolen): de 3D-afbeelding van de bezoeker zelf gaat de generator in en wordt de foto – de dakkleur, de materialen, de auto, de pergola, alles blijft op zijn plaats. Alleen bij getrouwheid ‘Getrouw’, ‘Kloon’ en aangepast; de aanzichten krijgen ook het gekozen hoofdbeeld, zodat ze overeenkomen. Vormsturing: de oude manier (de 3D geeft alleen de vorm, de kleuren komen uit de tekst en het stijlvoorbeeld)."
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott)"
+msgstr "Foto uit de 3D-afbeelding (aanbevolen)"
+
+#: includes/Admin/Admin.php
+msgid "Forma-vezetés (régi)"
+msgstr "Vormsturing (oud)"

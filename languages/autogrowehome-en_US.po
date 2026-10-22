@@ -10370,3 +10370,19 @@ msgstr "Prompt from the 3D picture (Claude image description)"
 #: includes/Admin/Admin.php
 msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
 msgstr "Available from the Professional plan; it does not run in the current plan, the usual prompt is sent."
+
+#: includes/Admin/Admin.php
+msgid "Képkészítés módja"
+msgstr "Image creation mode"
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott): a látogató 3D képe maga megy be a képgenerálóba, és abból lesz fotó – a tető színe, az anyagok, az autó, a pergola, minden a helyén marad. Csak „Hű”, „Klón” és egyedi hűségnél; a nézetek a kiválasztott fő képet is megkapják, hogy egyformák legyenek. Forma-vezetés: a régi út (a 3D csak formát ad, a színeket a szöveg és a stílusminta)."
+msgstr "Photo from the 3D picture (recommended): the visitor's 3D picture itself goes into the image generator and becomes the photo – the roof colour, the materials, the car, the pergola, everything stays in place. Only at “Faithful”, “Clone” and custom fidelity; the views also get the chosen main picture so they match. Structure guidance: the old way (the 3D gives only the form, the colours come from the text and the style sample)."
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott)"
+msgstr "Photo from the 3D picture (recommended)"
+
+#: includes/Admin/Admin.php
+msgid "Forma-vezetés (régi)"
+msgstr "Structure guidance (old)"

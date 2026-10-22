@@ -1052,12 +1052,18 @@ House.prototype.extras = function () {
 		if (c.season === 'winter') { tm = pbr('snow', {}, { normal: 0.4 }); }
 		this.add(box(tx0, mainV.y1, 0, tx0 + tw, ty1, 0.18, tm));
 		if (has(c.shading, 'pergola') || has(gf, 'pergola') || c.outdoor_covered) {
-			var ph = pl.plinth + 2.6, pcol = c.arch_style === 'high_tech' || c.arch_style === 'industrial' ? '#2E3135' : '#8A6A4C';
+			// under the eave (1.16.0: on a single storey the beams ran into the roof overhang): the
+			// pergola stays below the underside of the eave; where that leaves too little headroom it
+			// starts outside the overhang instead
+			var pez = c.roof_type === 'flat' ? mainV.h : mainV.h - (pl.eave || 0) * Math.tan((pl.pitch || 0) * D2R) - 0.05;
+			var ph = Math.min(pl.plinth + 2.6, pez - 0.4), pby = mainV.y1;
+			if (ph < pl.plinth + 2.25) { ph = pl.plinth + 2.6; pby = mainV.y1 + (pl.eave || 0) + 0.1; }
+			var pcol = c.arch_style === 'high_tech' || c.arch_style === 'industrial' ? '#2E3135' : '#8A6A4C';
 			var pm = pcol === '#2E3135' ? solid(pcol, 0.4, 0.6) : pbr('wood', { color: pcol }, { normal: 1 });
 			[[tx0 + 0.1, ty1 - 0.2], [tx0 + tw - 0.25, ty1 - 0.2]].forEach(function (q) { self.add(box(q[0], q[1] - 0.15, 0.18, q[0] + 0.15, q[1], ph, pm)); });
 			this.add(box(tx0, ty1 - 0.2, ph, tx0 + tw, ty1 - 0.04, ph + 0.18, pm));
-			if (c.outdoor_covered) { this.add(box(tx0, mainV.y1, ph + 0.18, tx0 + tw, ty1, ph + 0.3, solid(shadeHex(col(c.facade_color, '#F2EFE9'), -0.1), 0.7))); }
-			else { for (var bb = 0; bb < tw; bb += 0.55) { this.add(box(tx0 + bb, mainV.y1, ph + 0.18, tx0 + bb + 0.1, ty1, ph + 0.32, pm)); } }
+			if (c.outdoor_covered) { this.add(box(tx0, pby, ph + 0.18, tx0 + tw, ty1, ph + 0.3, solid(shadeHex(col(c.facade_color, '#F2EFE9'), -0.1), 0.7))); }
+			else { for (var bb = 0; bb < tw; bb += 0.55) { this.add(box(tx0 + bb, pby, ph + 0.18, tx0 + bb + 0.1, ty1, ph + 0.32, pm)); } }
 		}
 		if (has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen')) { this.furniture(tx0 + tw * 0.4, mainV.y1 + td * 0.35, 0.18, has(gf, 'outdoor_kitchen')); }
 	}

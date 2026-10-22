@@ -67,7 +67,7 @@ add_filter(
 	2
 );
 
-Settings::update_group( 'magnific', array( 'structure_guidance' => true ) );
+Settings::update_group( 'magnific', array( 'render_mode' => 'structure', 'structure_guidance' => true ) );
 Settings::update_group( 'images', array( 'allow_test_provider' => true, 'provider' => 'test' ) );
 Settings::flush();
 

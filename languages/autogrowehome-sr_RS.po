@@ -10372,3 +10372,19 @@ msgstr "Промпт из 3D слике (Claude опис слике)"
 #: includes/Admin/Admin.php
 msgid "A Professional csomagtól érhető el; a mostani csomagban nem fut, a megszokott prompt megy."
 msgstr "Доступно од пакета Professional; у тренутном пакету не ради, шаље се уобичајени промпт."
+
+#: includes/Admin/Admin.php
+msgid "Képkészítés módja"
+msgstr "Начин израде слике"
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott): a látogató 3D képe maga megy be a képgenerálóba, és abból lesz fotó – a tető színe, az anyagok, az autó, a pergola, minden a helyén marad. Csak „Hű”, „Klón” és egyedi hűségnél; a nézetek a kiválasztott fő képet is megkapják, hogy egyformák legyenek. Forma-vezetés: a régi út (a 3D csak formát ad, a színeket a szöveg és a stílusminta)."
+msgstr "Фотографија из 3D слике (препоручено): сама 3D слика посетиоца улази у генератор и постаје фотографија – боја крова, материјали, аутомобил, пергола, све остаје на свом месту. Само при верности „Верно”, „Клон” и прилагођеној; погледи добијају и изабрану главну слику да би се подударали. Вођење облика: стари начин (3D даје само облик, боје долазе из текста и стилског узорка)."
+
+#: includes/Admin/Admin.php
+msgid "Fotó a 3D képből (ajánlott)"
+msgstr "Фотографија из 3D слике (препоручено)"
+
+#: includes/Admin/Admin.php
+msgid "Forma-vezetés (régi)"
+msgstr "Вођење облика (старо)"

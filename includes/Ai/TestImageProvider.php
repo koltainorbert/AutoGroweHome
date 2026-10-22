@@ -35,6 +35,7 @@ final class TestImageProvider implements ImageProviderInterface {
 			// the guide picture of the visitor's own 3D model is accepted: in test mode that very
 			// picture comes back (watermarked), so the whole path is visible without an AI service
 			'structure' => true,
+			'photo'     => true,   // the 3D picture itself can be turned into the photo (1.16.0)
 			'native_4k' => false,
 			'upscale'   => false,
 			'is_test'   => true,

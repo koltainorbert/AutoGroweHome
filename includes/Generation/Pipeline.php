@@ -420,6 +420,7 @@ final class Pipeline {
 			}
 		}
 		$structure  = '';
+		$shot       = '';
 		$guide_view = 'interior' === $op ? ( null !== $room ? 'interior_' . preg_replace( '/[^a-z0-9_]/', '', strtolower( (string) $room['id'] ) ) : '' ) : (string) $asset['view'];
 		if ( '' !== $guide_view && $provider->capabilities()['structure'] && Settings::get( 'magnific.structure_guidance', true ) ) {
 			$shot = Storage::guide_path( (string) $p['uuid'], $guide_view );
@@ -464,6 +465,21 @@ final class Pipeline {
 		}
 		$inline = ! ( $provider->capabilities()['negative'] ?? false ) && Settings::get( 'magnific.negative_inline', true );
 		$prompt = PromptEngine::compose( $built, $lead, $note, $inline );
+		// 1.16.0 "photo from the 3D picture": the visitor's own 3D picture itself goes in as the input
+		// image and is turned into a photograph (Flux 2 Pro edit) – colours, materials and every object
+		// stay where the visitor put them. Only with their screenshot, at Faithful/Clone/custom.
+		$photo  = false;
+		$width  = 0;
+		$height = 0;
+		if ( '' !== $shot && PromptEngine::photo_mode() && ( $provider->capabilities()['photo'] ?? false ) ) {
+			$pic   = VisionPrompt::picture( (string) $p['uuid'], $guide_view );
+			$pic   = '' !== $pic ? $pic : $shot;
+			$size  = @getimagesize( $pic ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+			$photo = true;
+			$structure = base64_encode( (string) file_get_contents( $pic ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+			list( $width, $height ) = PromptEngine::photo_size( (int) ( $size[0] ?? 0 ), (int) ( $size[1] ?? 0 ) );
+			$prompt = PromptEngine::photo_prompt( (array) $p['config'], 'interior' === $op ? 'interior' : (string) $asset['view'], $room, '' !== $reference, null !== $vision ? (string) $vision['prompt'] : '' );
+		}
 		if ( $prompt !== (string) $asset['prompt'] ) {
 			// every asset keeps the exact prompt that went out
 			Repository::update_asset( $asset['id'], array( 'prompt' => $prompt ) );
@@ -477,6 +493,9 @@ final class Pipeline {
 			'reference_image' => $reference,
 			'structure_image' => $structure,
 			'bound'           => $bound,   // Faithful/Clone with the 3D picture: the provider keeps to the structure (1.15.3)
+			'photo'           => $photo,   // the 3D picture itself is turned into the photo (1.16.0)
+			'width'           => $width,
+			'height'          => $height,
 			'style_image'     => $style_image,
 			'negative_prompt' => (string) ( $built['negative_list'] ?? $built['negative'] ),
 			'building'        => $concept['building'],

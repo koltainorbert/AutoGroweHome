@@ -239,6 +239,7 @@ Jelmagyarázat: a „Tartomány” oszlop az admin űrlap min./max. értéke (me
 | `hdr` | HDR / részletesség | 35 | 0–100 | Csak stílusreferencia mellett megy; kisebb = természetesebb |
 | `negative_inline` | Negatív prompt a szöveg végén | be | be/ki | A konfigurációból készülő tiltólista „Also avoid: …” mondatként a prompt végén (a Mysticnek nincs negatív mezője) |
 | `guide_clean` | Tiszta vezetőkép | be | be/ki | A vezetőképről lekerülnek a járművek, emberek, állatok, a háttér fái és a pára |
+| `render_mode` | Képkészítés módja | `photo` | `photo` / `structure` | 1.16.0: `photo` = a látogató 3D képe maga a bemenet (Flux 2 Pro szerkesztés), csak Hű/Klón/egyedi hűségnél; `structure` = Mystic forma-vezetés (régi) |
 | `hero_camera` | Fő kép kameramagassága | `auto` | auto / visitor | auto: 18° feletti látogatói nézőpontnál a hero vezetőkép 9°-ról, a látogató irányából készül (kivéve „Madártávlat” kameránál) |
 | `style_ref_default` | Általános mintakép | 0 | médiatár-kép | Ha a stílusnak nincs saját mintája |
 | `style_ref_interior` | Belső tér mintakép | 0 | médiatár-kép | A belső nézetek stílusmintája |

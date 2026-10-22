@@ -72,6 +72,7 @@ final class MagnificProvider implements ImageProviderInterface {
 		return array(
 			'reference' => true,
 			'structure' => true,
+			'photo'     => true,   // the 3D picture itself can be turned into the photo (1.16.0)
 			'native_4k' => true,
 			'upscale'   => true,
 			'is_test'   => false,
@@ -105,6 +106,9 @@ final class MagnificProvider implements ImageProviderInterface {
 		$op = $r['op'] ?? 'hero';
 		if ( 'upscale' === $op ) {
 			return $this->submit_upscale( $r );
+		}
+		if ( ! empty( $r['photo'] ) && ! empty( $r['structure_image'] ) ) {
+			return $this->submit_photo( $r );
 		}
 		$use_reference = in_array( $op, array( 'view', 'interior' ), true ) && ! empty( $r['reference_image'] );
 		$strategy      = (string) Settings::get( 'magnific.view_strategy', 'reference' );
@@ -173,6 +177,38 @@ final class MagnificProvider implements ImageProviderInterface {
 		$out['native_resolution'] = $native;
 		$out['model']             = $model;
 		$out['cost_key']          = 'flux-2-pro' === $model ? 'reference_image' : ( '4k' === $native ? 'mystic_4k' : 'mystic_2k' );
+		return $out;
+	}
+
+	/**
+	 * "Photo from the 3D picture" (1.16.0): Flux 2 Pro edits the visitor's 3D picture into a
+	 * photograph; a view also gets the chosen hero photo as second image (same materials and light).
+	 * Measured in the Magnific app on Norbi's 3D picture: roof colour, garage, pergola, pool, fence
+	 * and car all stayed in place.
+	 */
+	private function submit_photo( array $r ): array {
+		$endpoint = $this->endpoint( 'reference_endpoint', '/v1/ai/text-to-image/flux-2-pro' );
+		$size     = static fn( $v, int $d ): int => (int) max( 256, min( 1440, ( (int) round( ( (int) $v ?: $d ) / 16 ) ) * 16 ) );
+		$body     = array(
+			'prompt'      => PromptEngine::clip( (string) $r['prompt'] ),
+			'width'       => $size( $r['width'] ?? 0, 1440 ),
+			'height'      => $size( $r['height'] ?? 0, 880 ),
+			'input_image' => (string) $r['structure_image'],
+		);
+		if ( ! empty( $r['reference_image'] ) ) {
+			$body['input_image_2'] = (string) $r['reference_image'];
+		}
+		if ( isset( $r['seed'] ) ) {
+			$body['seed'] = (int) $r['seed'];
+		}
+		if ( ! empty( $r['webhook_url'] ) ) {
+			$body['webhook_url'] = (string) $r['webhook_url'];
+		}
+		$resp = Http::request( 'POST', $this->base() . $endpoint, $this->headers(), $body, 60, (int) Settings::get( 'magnific.retries', 2 ) );
+		$out  = $this->parse( $resp, $endpoint );
+		$out['native_resolution'] = '1k';
+		$out['model']             = 'flux-2-pro/photo';
+		$out['cost_key']          = 'reference_image';
 		return $out;
 	}
 

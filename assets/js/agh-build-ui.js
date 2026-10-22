@@ -437,12 +437,17 @@
 			if (st.b.walls.length) { A.confirm(t('b_tpl_replace_title'), t('b_tpl_replace'), t('b_tpl_replace_go'), go); } else { go(); }
 		}
 		var ext = (B.defaults().model || {}).wall || {}, et = (ext.ext || {}).t || 0.38;
-		var W = el('input', { type: 'number', class: 'agh-input agh-bld-num', 'data-k': 'tpl.w', value: '10', min: '4', max: '40', step: '0.1', inputmode: 'decimal', 'aria-label': t('b_w') });
-		var Dd = el('input', { type: 'number', class: 'agh-input agh-bld-num', 'data-k': 'tpl.d', value: '8', min: '4', max: '30', step: '0.1', inputmode: 'decimal', 'aria-label': t('b_d') });
+		// 1.16.0: the typed size is kept – the panel is rebuilt on every change, and the fields came
+		// back as 10 × 8 each time, so a bigger house could not be started
+		st.tpl = st.tpl || { w: 10, d: 8 };
+		var W = el('input', { type: 'number', class: 'agh-input agh-bld-num', 'data-k': 'tpl.w', value: String(st.tpl.w), min: '4', max: '40', step: '0.1', inputmode: 'decimal', 'aria-label': t('b_w') });
+		var Dd = el('input', { type: 'number', class: 'agh-input agh-bld-num', 'data-k': 'tpl.d', value: String(st.tpl.d), min: '4', max: '30', step: '0.1', inputmode: 'decimal', 'aria-label': t('b_d') });
+		W.addEventListener('input', function () { var n = parseFloat(String(W.value).replace(',', '.')); if (isFinite(n)) { st.tpl.w = Math.max(4, Math.min(40, n)); } });
+		Dd.addEventListener('input', function () { var n = parseFloat(String(Dd.value).replace(',', '.')); if (isFinite(n)) { st.tpl.d = Math.max(4, Math.min(30, n)); } });
 		var row = el('div', { class: 'agh-bld-tpl' }, [
 			field(t('b_w'), W, 'm'), field(t('b_d'), Dd, 'm'),
-			el('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { var w = num(W.value, 10), d = num(Dd.value, 8), o = place(w, d); apply(function () { return { walls: B.rectWalls(o[0] + et / 2, o[1] + et / 2, w - et, d - et, et) }; }); } }, [A.icon('plus', 'agh-ico-s'), t('b_tpl_rect')]),
-			el('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { var w = num(W.value, 10), d = num(Dd.value, 8), o = place(w, d + 3), x = o[0] + et / 2, y = o[1] + et / 2, ww = w - et, dd = d - et, w2 = Math.max(3, Math.round(ww * 0.4 * 10) / 10); apply(function () { return { walls: B.polyWalls([[x, y], [x + ww, y], [x + ww, y + dd + 3], [x + ww - w2, y + dd + 3], [x + ww - w2, y + dd], [x, y + dd]], et) }; }); } }, [A.icon('plus', 'agh-ico-s'), t('b_tpl_l')])
+			el('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { var w = Math.max(4, Math.min(40, num(W.value, st.tpl.w))), d = Math.max(4, Math.min(30, num(Dd.value, st.tpl.d))), o = place(w, d); apply(function () { return { walls: B.rectWalls(o[0] + et / 2, o[1] + et / 2, w - et, d - et, et) }; }); } }, [A.icon('plus', 'agh-ico-s'), t('b_tpl_rect')]),
+			el('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { var w = Math.max(4, Math.min(40, num(W.value, st.tpl.w))), d = Math.max(4, Math.min(30, num(Dd.value, st.tpl.d))), o = place(w, d + 3), x = o[0] + et / 2, y = o[1] + et / 2, ww = w - et, dd = d - et, w2 = Math.max(3, Math.round(ww * 0.4 * 10) / 10); apply(function () { return { walls: B.polyWalls([[x, y], [x + ww, y], [x + ww, y + dd + 3], [x + ww - w2, y + dd + 3], [x + ww - w2, y + dd], [x, y + dd]], et) }; }); } }, [A.icon('plus', 'agh-ico-s'), t('b_tpl_l')])
 		]);
 		var kids = [row, el('div', { class: 'agh-bld-row' }, [
 			el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', onclick: function () { apply(function () { var r = B.fromHouse(cfg(), root.AGH_Sketch), p2 = plot(), bb = bbox([].concat.apply([], r.walls.map(function (w) { return [w.a, w.b]; }))), dx = Math.round(((p2.w - (bb.x1 - bb.x0)) / 2 - bb.x0) * 10) / 10, dy = Math.round((p2.d - (bb.y1 - bb.y0) - 6 - bb.y0) * 10) / 10; r.walls.forEach(function (w) { w.a = [w.a[0] + dx, w.a[1] + dy]; w.b = [w.b[0] + dx, w.b[1] + dy]; }); return { walls: r.walls, openings: r.openings, guessed: r.guessed, levels: r.levels, attic: r.attic }; }); } }, [A.icon('home', 'agh-ico-s'), t('b_from_house')]),
