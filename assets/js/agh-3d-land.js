@@ -220,7 +220,7 @@ export function woods(c, k, thumb) {
 	Object.keys(by).forEach(function (t) { by[t].forEach(function (q5) { list.push([q5[0], q5[1], q5[2], t, q5[3], q5[4]]); }); });
 	// 1.26.0: undergrowth – shrubs along the edges of the woods nearest the plot (not in the open fields,
 	// not on water); a separate random stream, so the trees themselves stand where they always stood
-	if (!thumb && (c.season || 'summer') !== 'winter') {
+	if (DETAIL && !thumb && (c.season || 'summer') !== 'winter') {
 		var rb = rng(5003 + k.length * 7), nb = 0;
 		list.slice().forEach(function (q) {
 			var d = Math.sqrt(q[0] * q[0] + q[2] * q[2]);
@@ -276,6 +276,10 @@ function townBlocks(c, k, thumb) {
 //   far: the same lumpy solid with a quarter of the triangles.
 var TREE_NEAR = 150;
 export function setTreeNear(n) { TREE_NEAR = n > 0 ? n : 150; }
+// Until the first picture is on screen the woods are built as in 1.24.0 (the same shader programs, the
+// first picture is not delayed); the viewer switches the detail on right after it (agh-3d.js upgrade()).
+var DETAIL = false;
+export function setDetail(on) { DETAIL = !!on; }
 var TRUNK = null, LIMBS = null;
 var FARGEO = {};
 // Lumpy crown solids (mid and far): the vertices pushed in and out by a smooth hash of their direction,
@@ -368,9 +372,49 @@ var FARCOL = {
 	summer: { broad: '#4A6331', conifer: '#2E4229', olive: '#6C7856' }, spring: { broad: '#5D8638', conifer: '#33492C', olive: '#728058' },
 	autumn: { broad: ['#9A7A33', '#A25A2A', '#6F6E31', '#8C6A2B'], conifer: '#33452C', olive: '#6C7856' }, winter: { broad: '#6B6157', conifer: '#3A4A35', olive: '#6C7856' }
 };
+// The trees of 1.24.0 (before the detail is switched on): one leaf-card crown near, a plain solid far.
+var FARLITE = {};
+function farGeoLite(shape) {
+	if (!FARLITE[shape]) {
+		var g = shape === 'cone' ? new THREE.ConeGeometry(0.55, 2, 7, 1) : (shape === 'column' ? new THREE.CylinderGeometry(0.22, 0.3, 2, 7, 1) : new THREE.IcosahedronGeometry(0.85, 1));
+		g.userData.shared = true; FARLITE[shape] = g;
+	}
+	return FARLITE[shape];
+}
+function treeSetLite(c, list) {
+	var g = new THREE.Group(), by = {}, m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), V = THREE.Vector3, season = c.season || 'summer';
+	list.forEach(function (t) { if (t[3] === 'bush') { return; } var far = t[0] * t[0] + t[2] * t[2] > 150 * 150; (by[t[3] + (far ? '|far' : '')] = by[t[3] + (far ? '|far' : '')] || []).push(t); });
+	var bark = L.solid('#4A3B2E', 1), winter = season === 'winter', col = new THREE.Color();
+	Object.keys(by).forEach(function (key) {
+		var items = by[key], t = key.split('|')[0], far = key.indexOf('|far') !== -1;
+		var shape = t === 'conifer' ? 'cone' : (t === 'cypress' || t === 'poplar' || t === 'columnar' ? 'column' : 'sphere');
+		var leaf = t === 'conifer' || t === 'cypress' ? 'conifer' : (t === 'olive' ? 'olive' : 'broad'), fc = (FARCOL[season] || FARCOL.summer)[leaf];
+		var crowns = far ? new THREE.InstancedMesh(farGeoLite(shape), L.cached('farleaf', function () { return L.stdMat({ color: '#FFFFFF', roughness: 0.95 }); }), items.length)
+			: new THREE.InstancedMesh(L.canopyGeo(shape, t === 'conifer' ? 64 : 48, t.length), L.leafMat(c, leaf, false), items.length);
+		var trunks = far ? null : new THREE.InstancedMesh(TRUNK, t === 'birch' ? L.solid('#D9D6CF', 0.8) : bark, items.length);
+		crowns.userData.lod = far ? 'mid' : 'near'; crowns.userData.species = t;
+		items.forEach(function (q5, j) {
+			var sz = q5[4], H = { conifer: 15 + sz * 13, broad: 9 + sz * 9, birch: 10 + sz * 7, poplar: 16 + sz * 9, olive: 4.5 + sz * 3, cypress: 9 + sz * 6, columnar: 7 + sz * 4, street: 7 + sz * 3 }[t] || 9 + sz * 6, w, cy, ch, tk;
+			if (t === 'conifer') { w = H * (0.62 + q5[5] * 0.16); cy = H * 0.55; ch = H * 0.47; tk = 0.25; }
+			else if (t === 'cypress') { w = H * 0.5; cy = H * 0.52; ch = H * 0.47; tk = 0.2; }
+			else if (t === 'poplar' || t === 'columnar') { w = H * 0.62; cy = H * 0.58; ch = H * 0.42; tk = 0.3; }
+			else if (t === 'olive') { w = H * (0.42 + q5[5] * 0.1); cy = H * 0.62; ch = H * 0.32; tk = 0.45; }
+			else { w = H * (0.3 + q5[5] * 0.14); cy = H * 0.62; ch = H * 0.36; tk = 0.5; }
+			if (winter && leaf === 'broad') { w *= 0.8; ch *= 0.85; }
+			q.setFromAxisAngle(new V(0, 1, 0), q5[5] * 6.28);
+			m4.compose(new V(q5[0], q5[1] + cy, q5[2]), q, new V(w, ch, w)); crowns.setMatrixAt(j, m4);
+			if (far) { col.set(Array.isArray(fc) ? fc[j % fc.length] : fc).multiplyScalar(0.85 + q5[5] * 0.3); crowns.setColorAt(j, col); }
+			else { m4.compose(new V(q5[0], q5[1] + H * tk * 0.5 - 0.3, q5[2]), q, new V(t === 'olive' ? 1.6 : 1, H * tk + 0.6, t === 'olive' ? 1.6 : 1)); trunks.setMatrixAt(j, m4); }
+		});
+		crowns.computeBoundingSphere(); g.add(crowns);
+		if (trunks) { trunks.computeBoundingSphere(); g.add(trunks); }
+	});
+	return g;
+}
 export function treeSet(c, list) {
 	var g = new THREE.Group(), by = {}, m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), V = THREE.Vector3, season = c.season || 'summer';
 	if (!TRUNK) { TRUNK = new THREE.CylinderGeometry(0.16, 0.26, 1, 6); TRUNK.userData.shared = true; }
+	if (!DETAIL) { return treeSetLite(c, list); }
 	var mid2 = Math.pow(Math.max(TREE_NEAR * 2.6, 380), 2);
 	list.forEach(function (t) {
 		var d2 = t[0] * t[0] + t[2] * t[2], tier = d2 > TREE_NEAR * TREE_NEAR ? (d2 > mid2 ? '|xfar' : '|far') : '';

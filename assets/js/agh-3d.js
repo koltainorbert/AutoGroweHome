@@ -68,9 +68,33 @@ function pbr(kind, opts, params) {
 		if (params.clearcoat && params.roughness === undefined) { m.roughness = 0.85; }
 		if (tint) { m.color = new THREE.Color(opts.color).multiplyScalar(1 / NEUTRAL_LIN); }
 		if (params.color) { m.color = new THREE.Color(params.color); }
-		if (!t.alpha && !t.noTile && (STOCH[kind] || params.grime)) { surfaceDetail(m, !!STOCH[kind], !!params.grime); }
+		if (!t.alpha && !t.noTile && (STOCH[kind] || params.grime)) {
+			// the surface detail comes after the first picture (detailFlags): that picture keeps the shader
+			// programs of 1.24.0 and is not delayed by new ones
+			m.userData.surf = [!!STOCH[kind], !!params.grime];
+			if (DETAIL_ON) { surfaceDetail(m, !!STOCH[kind], !!params.grime); m.userData.surfOn = 1; }
+		}
 		return m;
 	});
+}
+/* 1.26.0 – staged detail. Until the live preview has drawn its first picture, the scene is the one of
+ * 1.24.0 (same materials, same woods); the new detail – grass, undergrowth, the detailed far trees and
+ * the shader surface detail – is switched on right after it (Viewer.upgrade), its shaders compiled in the
+ * background while the first picture stays. Guide pictures and option cards wait for it (detailReady). */
+var DETAIL_ON = false;
+function detailFlags() {
+	if (DETAIL_ON) { return; }
+	DETAIL_ON = true;
+	LAND.setDetail(true);
+	Object.keys(MATS).forEach(function (k) { var m = MATS[k], s = m.userData.surf; if (s && !m.userData.surfOn) { surfaceDetail(m, s[0], s[1]); m.userData.surfOn = 1; m.needsUpdate = true; } });
+}
+// The stochastic tiling costs about a seventh of a frame (measured on SwiftShader): only on high/ultra,
+// and there it is compiled in; on low/medium the shader is built without it.
+var SURF_STOCH = true;
+function setSurfStoch(on) {
+	if (SURF_STOCH === !!on) { return; }
+	SURF_STOCH = !!on;
+	Object.keys(MATS).forEach(function (k) { var m = MATS[k], s = m.userData.surf; if (s && s[0] && m.userData.surfOn) { m.needsUpdate = true; } });
 }
 /* 1.26.0 – surface detail in the shader, no extra textures:
  * - stochastic tiling (isotropic patterns: render, stone, gravel, lawn, soil …): every fragment picks two
@@ -116,8 +140,9 @@ var AGH_FRAG = [
 	'#endif',
 	'}'
 ].join('\n');
-function surfaceDetail(m, stoch, grime) {
+function surfaceDetail(m, stoch0, grime) {
 	m.onBeforeCompile = function (sh) {
+		var stoch = stoch0 && SURF_STOCH;
 		sh.uniforms.aghStoch = SHQ.aghStoch; sh.uniforms.aghDetail = SHQ.aghDetail;
 		sh.defines = sh.defines || {};
 		if (stoch) { sh.defines.AGH_STOCH = ''; }
@@ -135,7 +160,7 @@ function surfaceDetail(m, stoch, grime) {
 			.replace('#include <roughnessmap_fragment>', THREE.ShaderChunk.roughnessmap_fragment.replace('texture2D( roughnessMap, vRoughnessMapUv )', 'aghTex( roughnessMap, vRoughnessMapUv, aghv )'))
 			.replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', 'vec3 mapN = aghNrm( normalMap, vNormalMapUv, aghv );'));
 	};
-	m.customProgramCacheKey = function () { return 'aghSurf' + (stoch ? 's' : '') + (grime ? 'g' : ''); };
+	m.customProgramCacheKey = function () { return 'aghSurf' + (stoch0 && SURF_STOCH ? 's' : '') + (grime ? 'g' : ''); };
 }
 function glassMat(c, night) {
 	if (night && c.night_lighting !== false) { return solid('#2A2218', 0.2, 0, { emissive: '#FFC27A', emissiveIntensity: 1.6 }); }
@@ -1990,7 +2015,8 @@ function Viewer(opts) {
 		if (this.quality === 'high') { this.makeComposer(); }
 		// 1.26.0: the quality profile of the level, and the photographed sky when it arrives
 		var selfQ = this;
-		this.env.onSky = function () { if (!selfQ.disposed && selfQ.c) { selfQ.envApply(); selfQ.requestRender(); } };
+		// a sky that arrives after the first picture: applied at once; before it, the upgrade takes it along
+		this.env.onSky = function () { if (!selfQ.disposed && selfQ.c && (DETAIL_ON || selfQ.thumb)) { selfQ.envApply(); selfQ.requestRender(); } };
 		if (this.levels) {
 			this.gpu = QL.gpuInfo(r.getContext());
 			QL.setGpu(this.gpu.renderer);
@@ -2034,6 +2060,7 @@ Viewer.prototype.applyQuality = function (l) {
 	this.gtaoOn = P.gtao;
 	if (this.gtao && P.gtao && this.gtaoSamples !== P.gtaoSamples) { this.gtao.updateGtaoMaterial({ samples: P.gtaoSamples }); this.gtaoSamples = P.gtaoSamples; }
 	SHQ.aghStoch.value = P.stochastic ? 1 : 0;
+	setSurfStoch(P.stochastic);
 	SHQ.aghDetail.value = l === 'low' ? 0.5 : 1;
 	this.env.skyRes = P.sky;
 	if (this.c && prev) {
@@ -2221,7 +2248,7 @@ Viewer.prototype.landFor = function (c, mode) {
 	if (pb) { LAND.setRoad(pb.front); }
 	// 1.26.0: how far the detailed trees reach follows the quality level (150 m = 1.24.0; option cards too)
 	var near = this.qp ? this.qp.treeNear : 150;
-	var key = [k, c.season || 'summer', pb ? Math.round(pb.front / 10) : 2, this.thumb ? 't' : '', near].join('|');
+	var key = [k, c.season || 'summer', pb ? Math.round(pb.front / 10) : 2, this.thumb ? 't' : '', DETAIL_ON ? 'd' : '', near].join('|');
 	this.ground.material = LAND.terrainMat(c);
 	if (key !== this.landKey) {
 		this.landKey = key;
@@ -2275,10 +2302,15 @@ function grassGeo() {
 }
 var GRASSCOL = { spring: ['#5E7C33', '#7E9A43'], summer: ['#4F6A2B', '#738A3F'], autumn: ['#6F7136', '#97894A'] };
 Viewer.prototype.grassFor = function () {
-	if (this.grass) { this.scene.remove(this.grass); this.grass.dispose(); this.grass = null; }
 	var P = this.qp, hs = this.house, c = this.c || {}, season = c.season || 'summer';
+	var off = !DETAIL_ON || !P || !P.grass || !hs || !hs.gardenPlan || !hs.plotBox || this.innerNow || this.thumb || season === 'winter' || (this.modeNow && this.modeNow !== 'guide');
+	// the same plot, garden and level: the grass of the last build stays as it is (no rebuild)
+	var gkey = off ? '' : JSON.stringify([P.level, season, hs.plotBox, hs.gardenPlan, (hs.vols || []).map(function (v) { return [v.x0, v.y0, v.x1, v.y1]; }), hs.terrace || null, hs.garage || null, c.garden_features || null, hs.movers ? hs.movers.children.map(function (o) { var m = o.userData.move || {}; return [o.userData.slot, m.cx, m.cy, m.turn]; }) : null]);
+	if (gkey && gkey === this.grassKey && this.grass) { if (!this.grass.parent) { this.scene.add(this.grass); } return; }
+	if (this.grass) { this.scene.remove(this.grass); this.grass.dispose(); this.grass = null; }
+	this.grassKey = gkey;
 	this.grassInfo = { level: P ? P.level : '', count: 0, tris: 0 };
-	if (!P || !P.grass || !hs || !hs.gardenPlan || !hs.plotBox || this.innerNow || this.thumb || season === 'winter' || (this.modeNow && this.modeNow !== 'guide')) { return; }
+	if (off) { return; }
 	var G = hs.gardenPlan, pb = hs.plotBox, lawnOn = (c.garden_features || []).indexOf('lawn') !== -1 || !c.garden_features;
 	var hard = [], R = function (r, m) { if (r) { hard.push([r.x0 - (m || 0), r.y0 - (m || 0), r.x1 + (m || 0), r.y1 + (m || 0)]); } };
 	var U = function (q, m) { if (q && q.w !== undefined) { var hw = Math.max(q.w, q.d) / 2 + (m || 0); hard.push([q.cx - hw, q.cy - hw, q.cx + hw, q.cy + hw]); } };
@@ -2328,6 +2360,69 @@ Viewer.prototype.grassFor = function () {
 	this.grassInfo = { level: P.level, count: pts.length, tris: pts.length * GRASS_TRIS };
 };
 // The woods of the landscape alone (a new quality level changes how far the detailed trees reach).
+// After the first picture (1.26.0): the detail is switched on in time slices – the new shaders are compiled
+// in the background (compileAsync where the driver can), then woods, grass and sky are put in and drawn once.
+// Until it is done, the first picture stays on screen. Resolves when the full scene is there.
+var DETAIL_P = null, DETAIL_RES = null;
+function detailReady() { return DETAIL_ON && !DETAIL_P ? Promise.resolve() : (DETAIL_P || (DETAIL_P = new Promise(function (r) { DETAIL_RES = r; }))); }
+// The full scene, now: guide pictures (the image model gets the whole scene) and option cards wait for it.
+// If the live preview has not drawn yet (hidden box), the upgrade is started here; option cards without a
+// live picture after `wait` ms switch the detail on themselves (they have no grass).
+function fullDetail(wait) {
+	if (DETAIL_ON && !DETAIL_P) { return Promise.resolve(); }
+	if (live && live.house && live.levels && !live.disposed) { if (!live.upgrading) { live.upgrade(); } return detailReady(); }
+	if (!wait) { detailFlags(); return Promise.resolve(); }
+	return Promise.race([detailReady(), new Promise(function (r) { setTimeout(r, wait); })]).then(function () { detailFlags(); });
+}
+Viewer.prototype.upgrade = function () {
+	var self = this;
+	if (this.upgrading || DETAIL_ON || this.thumb || !this.house) { return; }
+	this.upgrading = true;
+	detailReady();
+	var idle = function (fn) { (window.requestIdleCallback || function (f) { return setTimeout(f, 30); })(function () { try { fn(); } catch (e) { finish(); } }, { timeout: 400 }); };
+	var finish = function () { self.upgrading = false; if (DETAIL_RES) { var r = DETAIL_RES; DETAIL_RES = null; DETAIL_P = null; r(); } };
+	idle(function () {
+		if (self.disposed) { finish(); return; }
+		// 1) the materials get their surface detail; their programs are compiled before they are used
+		detailFlags();
+		var scene = self.scene, c = self.c || {};
+		idle(function () {
+			// 2) the detailed woods and the grass, built off the visible scene
+			var inner = self.innerNow, woods = null;
+			if (!inner && self.house && self.house.plotBox) {
+				var near = self.qp ? self.qp.treeNear : 150;
+				LAND.setTreeNear(near);
+				try { woods = LAND.woods(c, LAND.landKind(c), self.thumb); } finally { LAND.setTreeNear(150); }
+			}
+			idle(function () {
+				var tmp = new THREE.Group(); if (woods) { tmp.add(woods); }
+				self.grassFor(); if (self.grass) { scene.remove(self.grass); tmp.add(self.grass); }
+				// compiled with the live scene's lights, fog and environment (targetScene), into the buffer the
+				// viewer really draws to; meanwhile the first picture stays (no redraw with half-made shaders).
+				// The house's own materials are in the scene: compileAsync(scene) prepares their new programs.
+				var job = self.compileJob = {};
+				var r = self.renderer, prevRT = r.getRenderTarget();
+				var done = function () {
+					if (self.compileJob === job) { self.compileJob = null; }
+					if (woods) { while (self.treeline.children.length) { self.treeline.remove(self.treeline.children[0]); } self.treeline.add(woods); self.woodsNear = self.qp ? self.qp.treeNear : 150; self.landKey = self.landKey.replace(/\|\|([0-9.]+)$/, '|d|$1'); }
+					if (self.grass) { tmp.remove(self.grass); scene.add(self.grass); }
+					// the photographed sky, if it arrived meanwhile
+					if (self.env.want && self.env.photo !== self.env.want && SKY.status(self.env.want) === 'ready') { self.envApply(); }
+					self.shadowDirty = true;
+					self.requestRender();
+					finish();
+				};
+				var cmp = Promise.resolve();
+				if (r.compileAsync) {
+					r.setRenderTarget(self.composer && self.useComposer !== false ? self.composer.renderTarget1 : null);
+					try { cmp = Promise.all([r.compileAsync(tmp, self.camera, scene), r.compileAsync(scene, self.camera)]); } catch (e) { cmp = Promise.resolve(); }
+					r.setRenderTarget(prevRT);
+				}
+				cmp.then(done, done);
+			});
+		});
+	});
+};
 Viewer.prototype.woodsFor = function (c) {
 	var near = this.qp ? this.qp.treeNear : 150;
 	this.woodsNear = near;
@@ -2496,7 +2591,9 @@ Viewer.prototype.render = function () {
 	if (this.gtao) { this.gtao.enabled = !this.interacting && this.gtaoOn !== false; }
 	if (this.composer && this.useComposer !== false) { this.composer.render(); } else { this.renderer.render(this.scene, this.camera); }
 	this.frames = (this.frames || 0) + 1;
-	if (this.levels && this.frames > 2 && !this.probing && QL.needsProbe()) { var self = this; setTimeout(function () { self.probe(); }, 0); }
+	// 1.26.0: the first picture is on screen – now the detail (grass, woods, surface detail, sky)
+	if (!DETAIL_ON && !this.upgrading && !this.thumb && this.house && this.levels) { var selfU = this; setTimeout(function () { selfU.upgrade(); }, 0); }
+	if (this.levels && this.frames > 2 && !this.probing && !this.upgrading && QL.needsProbe()) { var self = this; setTimeout(function () { self.probe(); }, 0); }
 };
 // Fingerprint of the current scene: geometry bounds, materials and environment. The tests compare it
 // before and after a parameter change.
@@ -3421,7 +3518,7 @@ function thumb(cfg, w, h, mode, alive) {
 				var go = function () {
 					if (alive && !alive()) { res(''); return; }
 					// 1.26.0: the photographed sky of the card is waited for, so a kept picture never has the painted one by chance
-					if (!go.sky) { go.sky = 1; skyReady(cfg).then(go); return; }
+					if (!go.sky) { go.sky = 1; Promise.all([skyReady(cfg), fullDetail(6000)]).then(go); return; }
 					try {
 						var v = sharedThumb();
 						v.setSize(w, h);
@@ -3505,7 +3602,7 @@ function guides(views, w, h, out, opts) {
 	var fixed = views.filter(function (v) { return v.indexOf('interior_') !== 0 && (v !== 'hero' || !exact); });
 	var rooms = views.filter(function (v) { return v.indexOf('interior_') === 0 && opts.rooms && opts.rooms[v.slice(9)]; });
 	var step = function (fn) { return new Promise(function (res) { setTimeout(function () { try { fn(res); } catch (e) { res(); } }, 0); }); };
-	var job = Promise.all([texturesReady(), skyReady(base)]).then(function () {
+	var job = Promise.all([texturesReady(), skyReady(base), fullDetail()]).then(function () { return texturesReady(); }).then(function () {
 		// the live view may still show the painted sky if the photograph arrived a moment ago
 		if (live.env.want && live.env.photo !== live.env.want && SKY.status(live.env.want) === 'ready') { live.envApply(); }
 	});
@@ -3643,7 +3740,8 @@ function bench(container, cfg, opts) {
 	// not reliable for that in every browser)
 	var frame = function () { info.reset(); var t0 = performance.now(); v.render(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); return performance.now() - t0; };
 	var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
-	var job = Promise.resolve();
+	// the benchmark measures the full scene: the staged detail is switched on first
+	var job = fullDetail();
 	levels.forEach(function (l, li) {
 		job = job.then(function () {
 			QL.pin(l);
@@ -3697,6 +3795,8 @@ var api = {
 	sky: { pick: SKY.pick, status: SKY.status, load: SKY.load, manifest: SKY.manifest, current: function () { return live ? { photo: live.env.photo, want: live.env.want } : null; } },
 	paintedSky: function (on) { NO_PHOTO = !!on; if (live && live.c) { live.envApply(); live.requestRender(); } },
 	bench: bench,
+	// resolves once the staged detail (grass, detailed woods, surface detail) is in the scene
+	detailReady: function () { return fullDetail(); },
 	_shq: SHQ
 };
 window.AGH_3D = api;

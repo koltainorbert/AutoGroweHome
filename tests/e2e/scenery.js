@@ -32,6 +32,8 @@ const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
   await page.click('[data-agh-open]');
   await page.waitForSelector('.agh-preview-box.has-3d canvas', { timeout: 120000 });
   await page.waitForTimeout(3000);
+  // 1.26.0: the detail (grass, woods, sky) comes after the first picture – wait for it
+  await page.evaluate(() => window.AGH_3D.detailReady());
   const prof = await page.evaluate(() => { const Q = window.AGH_3D.quality; return { p: Q.profile(), levels: Q.levels, menu: !!document.querySelector('.agh-3d-quality'), opts: Array.from(document.querySelectorAll('.agh-3d-quality option')).map(o => o.value) }; });
   ok(prof.p && prof.p.level && prof.p.post && typeof prof.p.post === 'object' && prof.levels.join() === 'low,medium,high,ultra', 'quality profile olvasható (' + prof.p.level + ', post kulcs megvan)');
   ok(prof.menu && prof.opts.join() === 'auto,low,medium,high,ultra', 'minőségválasztó a 3D nézetben (automatikus + 4 szint)');

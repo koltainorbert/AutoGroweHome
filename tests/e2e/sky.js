@@ -35,6 +35,8 @@ const SKYDIR = path.join(__dirname, '..', '..', 'assets', 'sky');
   await page.click('[data-agh-open]');
   await page.waitForSelector('.agh-preview-box.has-3d canvas', { timeout: 120000 });
   await page.waitForTimeout(2500);
+  // 1.26.0: the detail (grass, woods, sky) comes after the first picture – wait for it
+  await page.evaluate(() => window.AGH_3D.detailReady());
   // (2)+(3) every time of day and the weather variants
   const cases = [['morning', 'few_clouds', 'morning'], ['midday', 'few_clouds', 'midday'], ['midday', 'clear', 'midday_clear'], ['golden', 'few_clouds', 'golden'], ['blue', 'few_clouds', 'blue'], ['night', 'few_clouds', 'night'], ['golden', 'overcast', 'overcast'], ['midday', 'overcast', 'overcast']];
   const seen = {};
