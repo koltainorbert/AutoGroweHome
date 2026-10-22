@@ -1,5 +1,13 @@
 # Változásnapló
 
+## 1.19.0 – 2026-10-22
+
+Norbi: „falak, ablakok, ajtók törlése és mozgatása a rajzon és a 3D-ben.” (`docs/FELADAT-1.18.0.md`)
+
+- **Építési mód, alaprajz:** a kijelölt fal, ablak, ajtó húzással mozgatható (a csatlakozó falak követik), nyilakkal 10 cm-enként (Shift: 50 cm); törlés Del-lel vagy a rajz fölötti sávban a **kuka** gombbal, a sáv mutatja, mi van kijelölve. Ctrl+Z bájtra visszaállít.
+- **Építési mód, 3D (5–7. lépés):** a falra vagy nyílásra koppintva kijelöl, húzással a saját falán csúszik az ablak/ajtó, a fal merőlegesen tolható; keret mutatja az új helyet (piros, ha a szerkezet hibás lenne). Ablakon át nem a mögötte lévő falat fogja meg.
+- Mérve: új `tests/e2e/buildedit.js`: 50 ház – ablak/ajtó húzás 50/50, fal húzás 50/50 (csatlakozó falak 50/50), nyíl 50/50, Del 50/50, kuka 50/50, Ctrl+Z 250/250, szerkezeti hiba +0; 3D 8 ház: ablak- és falhúzás 8/8, jelölés, törlés, visszavonás 8/8; szerver = JS 10/10; konzolhiba 0 · `build.js` 20 ház, 200/200 lépés, geometriai hiba 0, konzolhiba 0 · `build-test` 6975/6975 · `move.js` 21/21. Új szöveg nincs.
+
 ## 1.18.0 – 2026-10-22
 
 Norbi: „3D tervezőben is arrébb akarom tudni tenni a kéményt, az ablakokat, ajtókat és mindent, és forgatni”, Shift-tel egyenesbe, jelölve, hova szabad tenni és hova nem. A teljes lista (törlés, helyiségprogram, díszítőanyag, medence/garázs, melléképületek, élethű modellek) ütemezve: `docs/FELADAT-1.18.0.md`.

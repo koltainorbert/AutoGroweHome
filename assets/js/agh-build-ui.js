@@ -1030,7 +1030,10 @@
 		st.sel = hit; renderPanel(); renderSelBar(); mark3D();
 		if (!hit) { return false; }
 		st.drag = { move: hit, p0: p, orig: JSON.parse(JSON.stringify(find(hit))), snap: snapshot(), d3: true };
-		return { y: y };
+		// the plane the viewer drags on: the wall's own (an opening slides in it), or across the wall
+		var ob = find(hit), ww = hit.k === 'wall' ? ob : st.b.walls.filter(function (q) { return q.id === ob.wall; })[0], n = null;
+		if (ww) { var L = Math.hypot(ww.b[0] - ww.a[0], ww.b[1] - ww.a[1]) || 1, ux = (ww.b[0] - ww.a[0]) / L, uy = (ww.b[1] - ww.a[1]) / L; n = hit.k === 'wall' ? [ux, uy] : [-uy, ux]; }
+		return { y: y, pt: p, n: n };
 	}
 	function drag3D(p) { if (st && st.drag && st.drag.d3 && moveSel(p)) { mark3D(); } }
 	function drop3D(cancel, moved) {

@@ -2315,7 +2315,7 @@ Viewer.prototype.dragTo = function (e) {
 	if (!d || !hs || !this.el) { return; }
 	if (d.ext) { this.extDragTo(e); return; }
 	if (d.build) {
-		var at = this.planAt(e.clientX, e.clientY, d.y);
+		var at = this.planAt(e.clientX, e.clientY, d.y, d.plane);
 		if (at && this.onBuildDrag) { this.onBuildDrag(at.p, { shift: e.shiftKey }); }
 		d.moved = true;
 		return;
@@ -2337,11 +2337,12 @@ Viewer.prototype.dragTo = function (e) {
  * build editor decides what is under the point (in plan metres, `onBuildGrab`) and moves it with the same
  * rules as on the plan (`onBuildDrag`); `markBox` shows the selection, the 3D rebuilds when it is let go. */
 function shown(o) { for (var q = o; q; q = q.parent) { if (!q.visible) { return false; } } return true; }
-Viewer.prototype.planAt = function (cx, cy, y) {
+Viewer.prototype.planAt = function (cx, cy, y, plane) {
 	var ray = this.rayFrom(cx, cy), hs = this.house, o = hs && hs.origin;
 	if (!ray || !o) { return null; }
 	var hit = new THREE.Vector3();
-	if (y === undefined) {
+	if (plane) { if (!ray.ray.intersectPlane(plane, hit)) { return null; } }
+	else if (y === undefined) {
 		var hits = ray.intersectObject(hs.root, true).filter(function (h) { return !h.object.isLine && shown(h.object) && !(h.object.userData && h.object.userData.noPick); });
 		if (hits.length) { hit.copy(hits[0].point); }
 		else if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit)) { return null; }
@@ -2355,8 +2356,12 @@ Viewer.prototype.grabBuild = function (cx, cy, ev) {
 	var ray = R && org ? { o: [R.origin.x + org[0], R.origin.z + org[1], R.origin.y], d: [R.direction.x, R.direction.z, R.direction.y] } : null;
 	var g = at ? this.onBuildGrab(at.p, { y: at.y, shift: !!(ev && ev.shiftKey), ray: ray }) : null;
 	if (!g) { return false; }
-	// the drag runs on the horizontal plane at the height where the piece was taken
-	this.drag = { build: true, y: g && typeof g === 'object' && isFinite(g.y) ? g.y : Math.max(0, at.y), moved: false };
+	// the drag runs on a plane through the point where the piece was taken: the editor gives a vertical one
+	// (the wall's own plane for an opening, across the wall for a wall) – a horizontal plane seen at a low
+	// angle turns a pixel into half a metre
+	var y = g && typeof g === 'object' && isFinite(g.y) ? g.y : Math.max(0, at.y), plane = null;
+	if (g && g.n && g.pt) { plane = new THREE.Plane().setFromNormalAndCoplanarPoint(new THREE.Vector3(g.n[0], 0, g.n[1]).normalize(), new THREE.Vector3(g.pt[0] - org[0], y, g.pt[1] - org[1])); }
+	this.drag = { build: true, y: y, plane: plane, moved: false };
 	if (this.controls) { this.controls.enabled = false; }
 	if (this.el) { this.el.style.cursor = 'grabbing'; }
 	return true;

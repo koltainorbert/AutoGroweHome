@@ -144,26 +144,36 @@ const STRUCT = ['no_ext', 'ext_open', 'wall_short', 'wall_overlap', 'wall_float'
       // an opening of the ground floor in view: try a few camera turns
       const pick = await page.evaluate(async () => {
         const v = window.AGH_3D.viewer(), st = window.AGH_BuildUI.state(), b = st.b, B = window.AGH_Build, r = v.el.getBoundingClientRect(), org = v.house.origin;
+        // no damping: the camera set here must stay where it is while the mouse drags
+        v.controls.enableDamping = false;
         const t = v.controls.target.clone(), off = v.camera.position.clone().sub(t), R = off.length();
         for (const az of [0, 60, -60, 120, -120, 180]) {
           const a0 = Math.atan2(off.x, off.z) + az * Math.PI / 180, el = Math.asin(off.y / R);
           v.camera.position.set(t.x + R * Math.sin(a0) * Math.cos(el), t.y + R * Math.sin(el), t.z + R * Math.cos(a0) * Math.cos(el)); v.camera.lookAt(t); v.controls.update(); v.camera.updateMatrixWorld(true);
           for (const op of b.openings.filter(q => q.lv === 0)) {
             const w = b.walls.filter(x => x.id === op.wall)[0], L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), ux = (w.b[0] - w.a[0]) / L, uy = (w.b[1] - w.a[1]) / L, u = op.at + op.w / 2, y = B.levelBase(b, 0) + op.sill + op.h / 2;
-            const P = v.camera.position.clone().set(w.a[0] + ux * u - org[0], y, w.a[1] + uy * u - org[1]), Q = P.clone().set(w.a[0] + ux * (u + 0.6) - org[0], y, w.a[1] + uy * (u + 0.6) - org[1]);
+            // on the face of the opening's box that looks at the camera (where the pointer takes it)
+            const cx0 = w.a[0] + ux * u - org[0], cz0 = w.a[1] + uy * u - org[1], nx = -uy, nz = ux, side = Math.sign((v.camera.position.x - cx0) * nx + (v.camera.position.z - cz0) * nz) || 1, off = (w.t / 2 + 0.06) * side;
+            const P = v.camera.position.clone().set(cx0 + nx * off, y, cz0 + nz * off), Q = P.clone().set(cx0 + nx * off + ux * 0.6, y, cz0 + nz * off + uy * 0.6);
+            // a wall seen from the side (at a grazing angle) turns a pixel into decimetres: only walls facing the camera
+            const vd = v.camera.position.clone().sub(P).normalize();
+            if (Math.abs(vd.x * nx + vd.z * nz) < 0.5) { continue; }
             const p = P.clone().project(v.camera), q = Q.clone().project(v.camera);
             if (Math.abs(p.x) > 0.9 || Math.abs(p.y) > 0.9) { continue; }
             const sx = r.left + (p.x + 1) / 2 * r.width, sy = r.top + (1 - p.y) / 2 * r.height, R = v.rayFrom(sx, sy).ray;
             const hit = window.AGH_BuildUI.pick3D({ o: [R.origin.x + org[0], R.origin.z + org[1], R.origin.y], d: [R.direction.x, R.direction.z, R.direction.y] });
             if (!hit || hit.k !== 'op' || hit.id !== op.id) { continue; }
-            return { id: op.id, at: op.at, a: { x: sx, y: sy }, b: { x: r.left + (q.x + 1) / 2 * r.width, y: r.top + (1 - q.y) / 2 * r.height }, n: b.openings.length };
+            const RR = v.rayFrom(sx, sy).ray, miss = RR.distanceToPoint(P);
+            return { miss: miss, cam: v.camera.position.toArray().map(x => +x.toFixed(3)), P: [P.x + org[0], P.z + org[1], P.y], Q: [Q.x + org[0], Q.z + org[1], Q.y], id: op.id, at: op.at, a: { x: sx, y: sy }, b: { x: r.left + (q.x + 1) / 2 * r.width, y: r.top + (1 - q.y) / 2 * r.height }, n: b.openings.length };
           }
         }
         return null;
       });
       if (!pick) { if (fail.length < 8) { fail.push('3d ' + s + ': no opening in view'); } continue; }
       const before = await page.evaluate(() => window.__be.snap());
+      if (process.env.AGH_DBG) { await page.evaluate(() => { const v = window.AGH_3D.viewer(), f = v.onBuildDrag, g = v.onBuildGrab; window.__dl = []; v.onBuildGrab = function (p, o) { const r = g(p, o); const R = o.ray, tt = (r.y - R.o[2]) / R.d[2]; window.__dl.push(['grab', v.camera.position.toArray().map(x => +x.toFixed(3)), p, r, window.AGH_BuildUI.state().drag && window.AGH_BuildUI.state().drag.p0, [R.o[0] + R.d[0] * tt, R.o[1] + R.d[1] * tt], R]); return r; }; v.onBuildDrag = function (p, o) { window.__dl.push([p, v.drag && v.drag.y]); return f(p, o); }; }); }
       await drag(pick.a, pick.b);
+      if (process.env.AGH_DBG) { console.log(JSON.stringify(await page.evaluate(() => window.__dl)), JSON.stringify(pick)); }
       await page.waitForTimeout(1800);
       const r = await page.evaluate((id) => { const st = window.AGH_BuildUI.state(), q = st.b.openings.filter(x => x.id === id)[0], v = window.AGH_3D.viewer(); return { at: q ? q.at : null, sel: st.sel && st.sel.id, box: !!(v.bmark && v.bmark.visible), bin: !!document.querySelector('.agh-bld-selbar:not([hidden]) .agh-bld-seldel') }; }, pick.id);
       if (r.at !== null && Math.abs(r.at - pick.at - 0.6) <= 0.1) { o.d3Move++; } else if (fail.length < 8) { fail.push('3d move ' + s + ': ' + pick.at + ' → ' + r.at); }
@@ -173,6 +183,34 @@ const STRUCT = ['no_ext', 'ext_open', 'wall_short', 'wall_overlap', 'wall_float'
       if (n1 === pick.n - 1) { o.d3Del++; }
       await page.keyboard.press('Control+z'); await page.waitForTimeout(300); await page.keyboard.press('Control+z'); await page.waitForTimeout(1500);
       if (await page.evaluate(() => window.__be.snap()) === before) { o.d3Undo++; }
+      // a wall taken in the 3D view slides square to itself (0.5 m), the joined walls follow
+      const wp = await page.evaluate(() => {
+        const v = window.AGH_3D.viewer(), st = window.AGH_BuildUI.state(), b = st.b, B = window.AGH_Build, r = v.el.getBoundingClientRect(), org = v.house.origin;
+        for (const w of b.walls.filter(x => x.kind === 'ext' && (x.a[0] === x.b[0] || x.a[1] === x.b[1]))) {
+          const L = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), ux = (w.b[0] - w.a[0]) / L, uy = (w.b[1] - w.a[1]) / L, nx = -uy, nz = ux;
+          for (const f of [0.5, 0.3, 0.7]) {
+            const u = L * f; if (b.openings.some(q => q.wall === w.id && q.at - 0.2 < u && q.at + q.w + 0.2 > u)) { continue; }
+            const cx0 = w.a[0] + ux * u - org[0], cz0 = w.a[1] + uy * u - org[1], y = B.levelBase(b, 0) + 0.6;
+            const side = Math.sign((v.camera.position.x - cx0) * nx + (v.camera.position.z - cz0) * nz) || 1, off = w.t / 2 * side;
+            const P = v.camera.position.clone().set(cx0 + nx * off, y, cz0 + nz * off), Q = P.clone().set(P.x + nx * 0.5, y, P.z + nz * 0.5);
+            const vd = v.camera.position.clone().sub(P).normalize(); if (Math.abs(vd.x * ux + vd.z * uy) < 0.4) { continue; }
+            const p = P.clone().project(v.camera), q = Q.clone().project(v.camera);
+            if (Math.abs(p.x) > 0.9 || Math.abs(p.y) > 0.9) { continue; }
+            const sx = r.left + (p.x + 1) / 2 * r.width, sy = r.top + (1 - p.y) / 2 * r.height, R = v.rayFrom(sx, sy).ray;
+            const hit = window.AGH_BuildUI.pick3D({ o: [R.origin.x + org[0], R.origin.z + org[1], R.origin.y], d: [R.direction.x, R.direction.z, R.direction.y] });
+            if (!hit || hit.k !== 'wall' || hit.id !== w.id) { continue; }
+            return { id: w.id, a0: w.a.slice(), n: [nx, nz], s: { x: sx, y: sy }, e: { x: r.left + (q.x + 1) / 2 * r.width, y: r.top + (1 - q.y) / 2 * r.height } };
+          }
+        }
+        return null;
+      });
+      if (wp) {
+        o.d3Wall = (o.d3Wall || 0) + 1;
+        await drag(wp.s, wp.e); await page.waitForTimeout(1500);
+        const wr = await page.evaluate((wp) => { const w = window.AGH_BuildUI.state().b.walls.filter(x => x.id === wp.id)[0]; return w ? (w.a[0] - wp.a0[0]) * wp.n[0] + (w.a[1] - wp.a0[1]) * wp.n[1] : null; }, wp);
+        if (wr !== null && Math.abs(wr - 0.5) < 0.11) { o.d3WallOk = (o.d3WallOk || 0) + 1; } else if (fail.length < 8) { fail.push('3d wall ' + s + ': ' + wr); }
+        await page.keyboard.press('Control+z'); await page.waitForTimeout(1200);
+      }
     }
 
     // the server keeps exactly the edited drawing (Validator → Build::sanitize = JS normalize)
@@ -198,7 +236,7 @@ const STRUCT = ['no_ext', 'ext_open', 'wall_short', 'wall_overlap', 'wall_float'
   if (fail.length) { console.error(fail); }
   if (errors.length) { console.error(errors.slice(0, 5)); }
   const ok = o.opMoveOk === o.opMove && o.wallMoveOk === o.wallMove && o.joinedOk === o.wallMove && o.nudgeOk === o.nudge && o.delOk === o.del && o.binDelOk === o.binDel && o.undoOk === o.undoN && o.structUp === 0
-    && o.d3Move === o.d3 && o.d3Box === o.d3 && o.d3Del === o.d3 && o.d3Undo === o.d3 && o.serverSame === o.server && !errors.length;
-  console.log(`építési szerkesztés: ${o.houses} ház – ablak/ajtó húzás ${o.opMoveOk}/${o.opMove}, fal húzás ${o.wallMoveOk}/${o.wallMove} (csatlakozó falak ${o.joinedOk}/${o.wallMove}), nyíl ${o.nudgeOk}/${o.nudge}, Del ${o.delOk}/${o.del}, kuka ${o.binDelOk}/${o.binDel}, Ctrl+Z bájtra ${o.undoOk}/${o.undoN}, szerkezeti hiba +${o.structUp} · 3D ${o.d3} ház: húzás ${o.d3Move}, jelölés ${o.d3Box}, törlés ${o.d3Del}, visszavonás ${o.d3Undo} · szerver = JS ${o.serverSame}/${o.server} · konzolhiba ${errors.length}`);
+    && o.d3Move === o.d3 && o.d3Box === o.d3 && (o.d3WallOk || 0) === (o.d3Wall || 0) && (o.d3Wall || 0) > 0 && o.d3Del === o.d3 && o.d3Undo === o.d3 && o.serverSame === o.server && !errors.length;
+  console.log(`építési szerkesztés: ${o.houses} ház – ablak/ajtó húzás ${o.opMoveOk}/${o.opMove}, fal húzás ${o.wallMoveOk}/${o.wallMove} (csatlakozó falak ${o.joinedOk}/${o.wallMove}), nyíl ${o.nudgeOk}/${o.nudge}, Del ${o.delOk}/${o.del}, kuka ${o.binDelOk}/${o.binDel}, Ctrl+Z bájtra ${o.undoOk}/${o.undoN}, szerkezeti hiba +${o.structUp} · 3D ${o.d3} ház: ablak húzás ${o.d3Move}, fal húzás ${o.d3WallOk || 0}/${o.d3Wall || 0}, jelölés ${o.d3Box}, törlés ${o.d3Del}, visszavonás ${o.d3Undo} · szerver = JS ${o.serverSame}/${o.server} · konzolhiba ${errors.length}`);
   process.exit(ok ? 0 : 1);
 })();
