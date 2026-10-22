@@ -848,6 +848,9 @@
 			case 'rooms':
 				ctl = renderRooms();
 				break;
+			case 'outbuildings':
+				ctl = renderOutbuildings(f);
+				break;
 			default:
 				ctl = h('input', { class: 'agh-input', id: 'agh-f-' + f.id, type: 'text', maxlength: f.max || 200, value: v || '', oninput: debounce(function (e) { setValue(f.id, e.target.value); }, 400) });
 		}
@@ -1602,6 +1605,33 @@
 			card.appendChild(d);
 		}
 		return card;
+	}
+	/* ------------------------------------------------------------------ outbuildings editor (1.23.0) */
+	var OB_LIST = ['shed', 'cabin', 'workshop', 'summer_kitchen', 'garage', 'barn', 'greenhouse'];
+	var OB_DEFS = { shed: [3, 2.5, 2.3, []], cabin: [4, 3.5, 2.5, ['table']], workshop: [5, 4, 2.8, ['workbench', 'tool_wall', 'shelves']], summer_kitchen: [4, 3.5, 2.6, ['kitchen', 'table']], garage: [3.4, 6, 2.6, ['car', 'shelves']], barn: [6, 5, 3.2, ['machines', 'firewood']], greenhouse: [3, 2.5, 2.2, ['plants']] };
+	function renderOutbuildings(f) {
+		var list = Array.isArray(S.config.outbuildings) ? S.config.outbuildings : [], box = h('div', { class: 'agh-obs' });
+		// the list is drawn again after the change: later, so the field that fired the change (often on blur) is not
+		// removed while its event is still running
+		var set = function (nl) { setTimeout(function () { setValue('outbuildings', nl, true); }, 0); };
+		box.appendChild(h('div', { class: 'agh-obs-add' }, OB_LIST.map(function (ty) {
+			return h('button', { type: 'button', class: 'agh-pill agh-ob-addbtn', 'data-type': ty, disabled: list.length >= 6 ? 'disabled' : null, onclick: function () { var d = OB_DEFS[ty]; set(list.concat([{ type: ty, w: d[0], d: d[1], h: d[2], roof: 'gable', roof_mat: 'metal', wall: ty === 'greenhouse' ? 'glass' : 'wood', door: ty === 'garage' ? 'garage' : 'single', windows: 1, items: d[3].slice() }])); } }, icon('plus', 'agh-ico-s'), t('ob_' + ty));
+		})));
+		list.forEach(function (o, i) {
+			var upd = function (k, v) { var nl = list.map(function (q) { return Object.assign({}, q); }); nl[i][k] = v; set(nl); };
+			var sel = function (k, opts) { var s2 = h('select', { class: 'agh-select', 'data-k': k, onchange: function (e) { upd(k, e.target.value); } }); opts.forEach(function (op) { s2.appendChild(h('option', { value: op, selected: o[k] === op ? 'selected' : null, text: t('ob_' + k + '_' + op) })); }); return h('label', null, t('ob_' + k), s2); };
+			var numIn2 = function (k, min, max, step) { return h('label', null, t('ob_' + k), h('input', { class: 'agh-input', type: 'number', 'data-k': k, min: min, max: max, step: step, value: o[k], onchange: function (e) { var v = Number(e.target.value); if (isFinite(v)) { upd(k, Math.min(max, Math.max(min, v))); } } })); };
+			var items = h('div', { class: 'agh-ob-items' }, ['shelves', 'workbench', 'tool_wall', 'machines', 'car', 'bike', 'firewood', 'table', 'kitchen', 'plants'].map(function (it) {
+				var on = (o.items || []).indexOf(it) !== -1;
+				return h('button', { type: 'button', class: 'agh-pill agh-ob-item' + (on ? ' is-on' : ''), 'data-item': it, 'aria-pressed': on ? 'true' : 'false', onclick: function () { var cur = (o.items || []).slice(), k2 = cur.indexOf(it); if (k2 === -1) { cur.push(it); } else { cur.splice(k2, 1); } upd('items', cur); } }, t('ob_item_' + it));
+			}));
+			box.appendChild(h('div', { class: 'agh-room agh-ob', 'data-i': String(i) },
+				h('div', { class: 'agh-room-row' }, h('b', { text: (i + 1) + '. ' + t('ob_' + o.type) + ' · ' + fmt(Number(o.w) * Number(o.d), 1) + ' m²' }),
+					h('button', { type: 'button', class: 'agh-iconbtn agh-ob-del', 'aria-label': t('delete'), title: t('delete'), onclick: function () { var nl = list.slice(); nl.splice(i, 1); set(nl); } }, icon('trash', 'agh-ico-s'))),
+				h('div', { class: 'agh-room-details agh-ob-grid' }, sel('type', OB_LIST), numIn2('w', 1.5, 12, 0.1), numIn2('d', 1.5, 12, 0.1), numIn2('h', 2, 4, 0.05), sel('roof', ['gable', 'shed', 'flat', 'green']), sel('roof_mat', ['tile', 'metal', 'shingle', 'bitumen']), sel('wall', ['wood', 'render', 'brick', 'metal', 'stone', 'glass']), sel('door', ['single', 'double', 'sliding', 'garage']), numIn2('windows', 0, 4, 1)),
+				items));
+		});
+		return box;
 	}
 	function addRoom(type) {
 		var rt = roomType(type);

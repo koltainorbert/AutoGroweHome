@@ -1092,6 +1092,8 @@ final class Definitions {
 		// 1.18.0: the garden pieces, openings and the chimney moved and turned by hand in the 3D view
 		// 1.21.0: where the accent material goes, marked by tapping the walls in the 3D view
 		$f[] = array( 'id' => 'accent_layout', 'category' => 'facade', 'type' => 'layout', 'layout' => 'accent', 'label' => __( 'A díszítőanyag helye', 'autogrowehome' ), 'help' => __( 'A 3D nézetben a falra kattintva kijelölt helyek, ahová a kiegészítő anyag kerül.', 'autogrowehome' ), 'default' => array(), 'prompt' => '' );
+		// 1.23.0: outbuildings – the visitor's own list (type, size, roof, walls, door, windows, inside)
+		$f[] = array( 'id' => 'outbuildings', 'category' => 'garden', 'type' => 'outbuildings', 'label' => __( 'Melléképületek', 'autogrowehome' ), 'help' => __( 'Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható.', 'autogrowehome' ), 'default' => array(), 'prompt' => '' );
 		$f[] = array( 'id' => 'site_layout', 'category' => 'garden', 'type' => 'layout', 'layout' => 'site', 'label' => __( 'Kézi elrendezés kívül', 'autogrowehome' ), 'help' => __( 'A 3D nézetben egérrel áthelyezett és elforgatott kerti tárgyak, nyílászárók és a kémény.', 'autogrowehome' ), 'default' => array(), 'prompt' => '' );
 		// Build mode („Építés az alapoktól”, includes/Build/Build.php): the drawn foundation, walls and openings.
 		$f[] = array( 'id' => 'build', 'category' => 'basics', 'type' => 'build', 'label' => __( 'Építési terv', 'autogrowehome' ), 'help' => __( 'Az „Építés az alapoktól” módban rajzolt alap, falak és nyílások.', 'autogrowehome' ), 'default' => array(), 'prompt' => '' );

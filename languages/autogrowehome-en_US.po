@@ -11056,3 +11056,87 @@ msgstr "The garage (%s m deep) sticks out at the front or back of the plot – r
 #: includes/Frontend/Strings.php
 msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
 msgstr "The house (and garage) need %1$s m of width, the plot is only %2$s m wide – the drawing widens the plot to fit."
+
+#: includes/Frontend/Strings.php
+msgid "Faház"
+msgstr "Timber cabin"
+
+#: includes/Frontend/Strings.php
+msgid "Nyári konyha"
+msgstr "Summer kitchen"
+
+#: includes/Frontend/Strings.php
+msgid "Külön garázs"
+msgstr "Detached garage"
+
+#: includes/Frontend/Strings.php
+msgid "Pajta"
+msgstr "Barn"
+
+#: includes/Frontend/Strings.php
+msgid "Üvegház"
+msgstr "Greenhouse"
+
+#: includes/Frontend/Strings.php
+msgid "Falmagasság"
+msgstr "Wall height"
+
+#: includes/Frontend/Strings.php
+msgid "Cserép"
+msgstr "Tiles"
+
+#: includes/Frontend/Strings.php
+msgid "Zsindely"
+msgstr "Shingle"
+
+#: includes/Frontend/Strings.php
+msgid "Egyszárnyú"
+msgstr "Single"
+
+#: includes/Frontend/Strings.php
+msgid "Polcok"
+msgstr "Shelves"
+
+#: includes/Frontend/Strings.php
+msgid "Munkapad"
+msgstr "Workbench"
+
+#: includes/Frontend/Strings.php
+msgid "Szerszámfal"
+msgstr "Tool wall"
+
+#: includes/Frontend/Strings.php
+msgid "Kerti gépek"
+msgstr "Garden machines"
+
+#: includes/Frontend/Strings.php
+msgid "Autó"
+msgstr "Car"
+
+#: includes/Frontend/Strings.php
+msgid "Tűzifa"
+msgstr "Firewood"
+
+#: includes/Frontend/Strings.php
+msgid "Asztal"
+msgstr "Table"
+
+#: includes/Frontend/Strings.php
+msgid "Konyhapult"
+msgstr "Kitchen counter"
+
+#: includes/Frontend/Strings.php
+msgid "Növények"
+msgstr "Plants"
+
+#: includes/Frontend/Strings.php
+msgid "A(z) %1$s. melléképület (%2$s × %3$s m) nem fér el a telken a ház és a kert elemei mellett – kisebbítsd, vagy növeld a telket."
+msgstr "Outbuilding %1$s (%2$s × %3$s m) does not fit on the plot beside the house and garden – make it smaller or the plot bigger."
+
+#: includes/Params/Definitions.php
+msgid "Melléképületek"
+msgstr "Outbuildings"
+
+#: includes/Params/Definitions.php
+msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
+msgstr "Shed, cabin, workshop, summer kitchen, detached garage, barn or greenhouse: size, roof, walls, door, windows and what is inside. Grab it in 3D to move and turn it."

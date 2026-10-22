@@ -11056,3 +11056,87 @@ msgstr "De garage (%s m diep) steekt voor of achter buiten het perceel – maak 
 #: includes/Frontend/Strings.php
 msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
 msgstr "Het huis (en de garage) vragen %1$s m breedte, het perceel is maar %2$s m breed – de tekening verbreedt het."
+
+#: includes/Frontend/Strings.php
+msgid "Faház"
+msgstr "Blokhut"
+
+#: includes/Frontend/Strings.php
+msgid "Nyári konyha"
+msgstr "Zomerkeuken"
+
+#: includes/Frontend/Strings.php
+msgid "Külön garázs"
+msgstr "Vrijstaande garage"
+
+#: includes/Frontend/Strings.php
+msgid "Pajta"
+msgstr "Schuur"
+
+#: includes/Frontend/Strings.php
+msgid "Üvegház"
+msgstr "Kas"
+
+#: includes/Frontend/Strings.php
+msgid "Falmagasság"
+msgstr "Wandhoogte"
+
+#: includes/Frontend/Strings.php
+msgid "Cserép"
+msgstr "Pannen"
+
+#: includes/Frontend/Strings.php
+msgid "Zsindely"
+msgstr "Shingles"
+
+#: includes/Frontend/Strings.php
+msgid "Egyszárnyú"
+msgstr "Enkel"
+
+#: includes/Frontend/Strings.php
+msgid "Polcok"
+msgstr "Schappen"
+
+#: includes/Frontend/Strings.php
+msgid "Munkapad"
+msgstr "Werkbank"
+
+#: includes/Frontend/Strings.php
+msgid "Szerszámfal"
+msgstr "Gereedschapswand"
+
+#: includes/Frontend/Strings.php
+msgid "Kerti gépek"
+msgstr "Tuinmachines"
+
+#: includes/Frontend/Strings.php
+msgid "Autó"
+msgstr "Auto"
+
+#: includes/Frontend/Strings.php
+msgid "Tűzifa"
+msgstr "Brandhout"
+
+#: includes/Frontend/Strings.php
+msgid "Asztal"
+msgstr "Tafel"
+
+#: includes/Frontend/Strings.php
+msgid "Konyhapult"
+msgstr "Keukenblok"
+
+#: includes/Frontend/Strings.php
+msgid "Növények"
+msgstr "Planten"
+
+#: includes/Frontend/Strings.php
+msgid "A(z) %1$s. melléképület (%2$s × %3$s m) nem fér el a telken a ház és a kert elemei mellett – kisebbítsd, vagy növeld a telket."
+msgstr "Bijgebouw %1$s (%2$s × %3$s m) past niet op het perceel naast huis en tuin – maak het kleiner of het perceel groter."
+
+#: includes/Params/Definitions.php
+msgid "Melléképületek"
+msgstr "Bijgebouwen"
+
+#: includes/Params/Definitions.php
+msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
+msgstr "Tuinhuis, blokhut, werkplaats, zomerkeuken, garage, schuur of kas: maat, dak, wanden, deur, ramen en inrichting. In 3D te verplaatsen en te draaien."

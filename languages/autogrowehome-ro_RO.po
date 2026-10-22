@@ -11058,3 +11058,87 @@ msgstr "Garajul (adâncime %s m) iese în față sau în spate din teren – mic
 #: includes/Frontend/Strings.php
 msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
 msgstr "Casa (și garajul) cer %1$s m lățime, terenul are doar %2$s m – desenul îl lărgește."
+
+#: includes/Frontend/Strings.php
+msgid "Faház"
+msgstr "Căsuță de lemn"
+
+#: includes/Frontend/Strings.php
+msgid "Nyári konyha"
+msgstr "Bucătărie de vară"
+
+#: includes/Frontend/Strings.php
+msgid "Külön garázs"
+msgstr "Garaj separat"
+
+#: includes/Frontend/Strings.php
+msgid "Pajta"
+msgstr "Șură"
+
+#: includes/Frontend/Strings.php
+msgid "Üvegház"
+msgstr "Seră"
+
+#: includes/Frontend/Strings.php
+msgid "Falmagasság"
+msgstr "Înălțimea pereților"
+
+#: includes/Frontend/Strings.php
+msgid "Cserép"
+msgstr "Țiglă"
+
+#: includes/Frontend/Strings.php
+msgid "Zsindely"
+msgstr "Șindrilă"
+
+#: includes/Frontend/Strings.php
+msgid "Egyszárnyú"
+msgstr "Simplă"
+
+#: includes/Frontend/Strings.php
+msgid "Polcok"
+msgstr "Rafturi"
+
+#: includes/Frontend/Strings.php
+msgid "Munkapad"
+msgstr "Banc de lucru"
+
+#: includes/Frontend/Strings.php
+msgid "Szerszámfal"
+msgstr "Perete pentru scule"
+
+#: includes/Frontend/Strings.php
+msgid "Kerti gépek"
+msgstr "Utilaje de grădină"
+
+#: includes/Frontend/Strings.php
+msgid "Autó"
+msgstr "Mașină"
+
+#: includes/Frontend/Strings.php
+msgid "Tűzifa"
+msgstr "Lemne de foc"
+
+#: includes/Frontend/Strings.php
+msgid "Asztal"
+msgstr "Masă"
+
+#: includes/Frontend/Strings.php
+msgid "Konyhapult"
+msgstr "Blat de bucătărie"
+
+#: includes/Frontend/Strings.php
+msgid "Növények"
+msgstr "Plante"
+
+#: includes/Frontend/Strings.php
+msgid "A(z) %1$s. melléképület (%2$s × %3$s m) nem fér el a telken a ház és a kert elemei mellett – kisebbítsd, vagy növeld a telket."
+msgstr "Anexa %1$s (%2$s × %3$s m) nu încape pe teren lângă casă și grădină – micșoreaz-o sau mărește terenul."
+
+#: includes/Params/Definitions.php
+msgid "Melléképületek"
+msgstr "Anexe"
+
+#: includes/Params/Definitions.php
+msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
+msgstr "Magazie, căsuță, atelier, bucătărie de vară, garaj, șură sau seră: dimensiuni, acoperiș, pereți, ușă, ferestre și dotări. În 3D se mută și se rotește."

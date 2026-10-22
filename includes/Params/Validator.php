@@ -133,6 +133,8 @@ final class Validator {
 					$out[ $room ] = $list;
 				}
 				return $out;
+			case 'outbuildings':
+				return self::outbuildings( $value );
 			case 'layout':
 				if ( 'site' === ( $def['layout'] ?? '' ) ) {
 					return self::site_layout( $value );
@@ -418,6 +420,41 @@ final class Validator {
 				'levels'   => $levels,
 			),
 		);
+	}
+
+	/** The outbuildings (1.23.0): at most 6, the same clamps as agh-sketch.js outList(). */
+	public static function outbuildings( $value ): array {
+		$types = array( 'shed' => array( 3, 2.5, 2.3 ), 'cabin' => array( 4, 3.5, 2.5 ), 'workshop' => array( 5, 4, 2.8 ), 'summer_kitchen' => array( 4, 3.5, 2.6 ), 'garage' => array( 3.4, 6, 2.6 ), 'barn' => array( 6, 5, 3.2 ), 'greenhouse' => array( 3, 2.5, 2.2 ) );
+		$items = array( 'shelves', 'workbench', 'tool_wall', 'machines', 'car', 'bike', 'firewood', 'table', 'kitchen', 'plants' );
+		$pick  = static fn( $v, array $l, string $d ): string => is_string( $v ) && in_array( $v, $l, true ) ? $v : $d;
+		$num   = static fn( $v, float $d, float $a, float $b ): float => round( min( $b, max( $a, is_numeric( $v ) ? (float) $v : $d ) ), 2 );
+		$out   = array();
+		foreach ( is_array( $value ) ? array_slice( array_values( $value ), 0, 6 ) : array() as $o ) {
+			if ( ! is_array( $o ) ) {
+				continue;
+			}
+			$t  = $pick( $o['type'] ?? '', array_keys( $types ), 'shed' );
+			$df = $types[ $t ];
+			$it = array();
+			foreach ( is_array( $o['items'] ?? null ) ? $o['items'] : array() as $x ) {
+				if ( is_string( $x ) && in_array( $x, $items, true ) && ! in_array( $x, $it, true ) && count( $it ) < 8 ) {
+					$it[] = $x;
+				}
+			}
+			$out[] = array(
+				'type'     => $t,
+				'w'        => $num( $o['w'] ?? null, $df[0], 1.5, 12 ),
+				'd'        => $num( $o['d'] ?? null, $df[1], 1.5, 12 ),
+				'h'        => $num( $o['h'] ?? null, $df[2], 2, 4 ),
+				'roof'     => $pick( $o['roof'] ?? '', array( 'gable', 'shed', 'flat', 'green' ), 'gable' ),
+				'roof_mat' => $pick( $o['roof_mat'] ?? '', array( 'tile', 'metal', 'shingle', 'bitumen' ), 'metal' ),
+				'wall'     => $pick( $o['wall'] ?? '', array( 'wood', 'render', 'brick', 'metal', 'stone', 'glass' ), 'greenhouse' === $t ? 'glass' : 'wood' ),
+				'door'     => $pick( $o['door'] ?? '', array( 'single', 'double', 'sliding', 'garage' ), 'garage' === $t ? 'garage' : 'single' ),
+				'windows'  => (int) round( $num( $o['windows'] ?? null, 1, 0, 4 ) ),
+				'items'    => $it,
+			);
+		}
+		return $out;
 	}
 
 	/** Where the accent material goes (1.21.0): "<volume>:<face>:<zone>" => index into facade_accent (−1: none). */

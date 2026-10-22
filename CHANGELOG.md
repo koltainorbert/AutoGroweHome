@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.23.0 – 2026-10-22
+
+Norbi: „melléképületek (tároló, faház, műhely) … kintre garázs, tároló stb., méretezni és berendezni, tetőt tenni rá”. (`docs/FELADAT-1.18.0.md`)
+
+- **Melléképületek (Kert lap, új mező `outbuildings`, legfeljebb 6):** pillére koppintva tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház; mindegyiknél szélesség × mélység × falmagasság, tető (nyereg, félnyereg, lapos, zöld) és fedése (cserép, fém, zsindely, bitumenes lemez), fal (fa, vakolt, tégla, fém, kő, üveg), ajtó (egy-, kétszárnyú, toló, garázskapu), ablakok száma, és berendezés (polcok, munkapad, szerszámfal, kerti gépek, autó, kerékpár, tűzifa, asztal, konyhapult, növények).
+- **Elhelyezés:** a közös terv a ház mögé, a telken belül, egymást és a kert elemeit kerülve teszi őket (a legnagyobbat először, szükség esetén elfordítva); ami nem fér el, azt a mező alatt kiírja. A 3D-ben mind megfogható, mozgatható, forgatható (`site_layout` → `out#n`), újratöltés után is ott marad.
+- **3D:** falak az anyagukkal, nyitott ajtó (a berendezés látszik), ablakok, tető a fedéssel, belül a választott berendezés (az autó csak ha befér). **2D:** falak, tető, ajtó, ablakok. **Prompt:** „outbuildings on the plot: a 5 × 4 m brick workshop with a gable tiled roof and double doors, …”.
+- Mérve: új `e2e/outb.js` 14/14 (szerkesztő: hozzáadás, méret, berendezés, törlés; 3 épület egy telken átfedés nélkül, telken belül, a házon kívül, 2D-ben látszik, 3D-ben mind megfogható; mozgatás mentve és újratöltés után a helyén; túl nagy épület jelez; konzolhiba 0) · `sketch-test` 40 telek, 79 melléképület, átfedés/kilógás 0, hiba 0 · `match-test` 35/35 · `move.js` 21/21 · `layout.js` 15/15 · `detail.js` 9/9 · guide 62/62 · photo 28/28 · vision 55/55 · autoloader 125/125 · 15 nyelv × 2687 szöveg, 0 hiba (javítva: öt ismétlődő fordítási kulcs).
+
 ## 1.22.0 – 2026-10-22
 
 Norbi: „medencetípusok és méret, a garázs részletei (m², belső osztás, tető, anyag, kapu, ablak)” – és „minden el kell férjen, ki kell tudnod számolni, hogyan fér el”. (`docs/FELADAT-1.18.0.md`, `docs/FELADAT-1.21.0.md`)

@@ -476,6 +476,8 @@ final class PromptEngine {
 			$cl['landscape'] = Definitions::landscape_for_style( (string) ( $c['arch_style'] ?? '' ) );
 		}
 		$garden = self::join_phrases( $garden, self::phrase( 'landscape', $cl ) );
+		// 1.23.0: the outbuildings, each with its size, walls and roof
+		$garden = self::join_phrases( $garden, self::outbuildings_phrase( $c ) );
 		// pieces the visitor placed and turned by hand in the 3D view (1.18.0): the image keeps that arrangement
 		$site = $c['site_layout'] ?? array();
 		if ( is_array( $site ) && count( $site ) ) {
@@ -891,6 +893,29 @@ final class PromptEngine {
 			$out = self::join_phrases( $out, self::phrases( $ids, $c ) );
 		}
 		return $out;
+	}
+
+	/**
+	 * The outbuildings (1.23.0): "outbuildings on the plot: a 3 × 2.5 m timber garden shed with a gable metal
+	 * roof and a single door, …". '' when there are none.
+	 */
+	public static function outbuildings_phrase( array $c ): string {
+		$list = \AutoGroweHome\Params\Validator::outbuildings( $c['outbuildings'] ?? array() );
+		if ( ! $list ) {
+			return '';
+		}
+		$type  = array( 'shed' => 'garden shed', 'cabin' => 'timber cabin', 'workshop' => 'workshop', 'summer_kitchen' => 'summer kitchen', 'garage' => 'detached garage', 'barn' => 'barn', 'greenhouse' => 'greenhouse' );
+		$wall  = array( 'wood' => 'timber', 'render' => 'rendered', 'brick' => 'brick', 'metal' => 'metal-clad', 'stone' => 'stone', 'glass' => 'glazed' );
+		$roof  = array( 'gable' => 'gable', 'shed' => 'lean-to', 'flat' => 'flat', 'green' => 'green' );
+		$rmat  = array( 'tile' => 'tiled', 'metal' => 'metal', 'shingle' => 'shingle', 'bitumen' => 'bitumen' );
+		$door  = array( 'single' => 'a single door', 'double' => 'double doors', 'sliding' => 'a sliding door', 'garage' => 'a garage door' );
+		$parts = array();
+		foreach ( $list as $o ) {
+			$fmt     = static fn( float $v ): string => rtrim( rtrim( number_format( $v, 1, '.', '' ), '0' ), '.' );
+			$r       = 'green' === $o['roof'] ? 'a green roof' : 'a ' . $roof[ $o['roof'] ] . ' ' . $rmat[ $o['roof_mat'] ] . ' roof';
+			$parts[] = 'a ' . $fmt( $o['w'] ) . ' × ' . $fmt( $o['d'] ) . ' m ' . $wall[ $o['wall'] ] . ' ' . $type[ $o['type'] ] . ' with ' . $r . ' and ' . $door[ $o['door'] ];
+		}
+		return 'outbuildings on the plot: ' . implode( ', ', $parts );
 	}
 
 	/**

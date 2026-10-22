@@ -11028,3 +11028,87 @@ msgstr ""
 #: includes/Frontend/Strings.php
 msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
 msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Faház"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Nyári konyha"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Külön garázs"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Pajta"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Üvegház"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Falmagasság"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Cserép"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Zsindely"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Egyszárnyú"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Polcok"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Munkapad"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Szerszámfal"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Kerti gépek"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Autó"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Tűzifa"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Asztal"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Konyhapult"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Növények"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "A(z) %1$s. melléképület (%2$s × %3$s m) nem fér el a telken a ház és a kert elemei mellett – kisebbítsd, vagy növeld a telket."
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Melléképületek"
+msgstr ""
+
+#: includes/Params/Definitions.php
+msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
+msgstr ""

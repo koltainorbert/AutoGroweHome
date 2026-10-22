@@ -103,7 +103,7 @@ const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
     ok(back && pos && Math.abs(back.x - pos.x) < 0.05 && Math.abs(back.z - pos.y) < 0.05, 'újratöltés után ott van');
   }
   // (4) too big for the plot
-  await page.evaluate(() => window.AGH_Designer.set({ plot_width: 16, plot_length: 26, outbuildings: [{ type: 'barn', w: 12, d: 12, h: 3.5, roof: 'gable', roof_mat: 'tile', wall: 'wood', door: 'double', windows: 2, items: [] }] }));
+  await page.evaluate(() => window.AGH_Designer.set({ plot_width: 16, plot_length: 20, outbuildings: [{ type: 'barn', w: 12, d: 12, h: 3.5, roof: 'gable', roof_mat: 'tile', wall: 'wood', door: 'double', windows: 2, items: [] }] }));
   await page.waitForTimeout(1500);
   await page.click('.agh-shell [data-cat="garden"]'); await page.waitForTimeout(400);
   const msg = await page.$eval('.agh-field[data-field="outbuildings"]', el => (el.querySelector('.agh-field-msg') || {}).textContent || '').catch(() => '');

@@ -11056,3 +11056,87 @@ msgstr "Die Garage (%s m tief) ragt vorn oder hinten über das Grundstück – v
 #: includes/Frontend/Strings.php
 msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
 msgstr "Haus (und Garage) brauchen %1$s m Breite, das Grundstück ist nur %2$s m breit – die Zeichnung verbreitert es entsprechend."
+
+#: includes/Frontend/Strings.php
+msgid "Faház"
+msgstr "Holzhaus"
+
+#: includes/Frontend/Strings.php
+msgid "Nyári konyha"
+msgstr "Sommerküche"
+
+#: includes/Frontend/Strings.php
+msgid "Külön garázs"
+msgstr "Freistehende Garage"
+
+#: includes/Frontend/Strings.php
+msgid "Pajta"
+msgstr "Scheune"
+
+#: includes/Frontend/Strings.php
+msgid "Üvegház"
+msgstr "Gewächshaus"
+
+#: includes/Frontend/Strings.php
+msgid "Falmagasság"
+msgstr "Wandhöhe"
+
+#: includes/Frontend/Strings.php
+msgid "Cserép"
+msgstr "Ziegel"
+
+#: includes/Frontend/Strings.php
+msgid "Zsindely"
+msgstr "Schindel"
+
+#: includes/Frontend/Strings.php
+msgid "Egyszárnyú"
+msgstr "Einflügelig"
+
+#: includes/Frontend/Strings.php
+msgid "Polcok"
+msgstr "Regale"
+
+#: includes/Frontend/Strings.php
+msgid "Munkapad"
+msgstr "Werkbank"
+
+#: includes/Frontend/Strings.php
+msgid "Szerszámfal"
+msgstr "Werkzeugwand"
+
+#: includes/Frontend/Strings.php
+msgid "Kerti gépek"
+msgstr "Gartengeräte"
+
+#: includes/Frontend/Strings.php
+msgid "Autó"
+msgstr "Auto"
+
+#: includes/Frontend/Strings.php
+msgid "Tűzifa"
+msgstr "Brennholz"
+
+#: includes/Frontend/Strings.php
+msgid "Asztal"
+msgstr "Tisch"
+
+#: includes/Frontend/Strings.php
+msgid "Konyhapult"
+msgstr "Küchenzeile"
+
+#: includes/Frontend/Strings.php
+msgid "Növények"
+msgstr "Pflanzen"
+
+#: includes/Frontend/Strings.php
+msgid "A(z) %1$s. melléképület (%2$s × %3$s m) nem fér el a telken a ház és a kert elemei mellett – kisebbítsd, vagy növeld a telket."
+msgstr "Nebengebäude %1$s (%2$s × %3$s m) passt neben Haus und Garten nicht aufs Grundstück – verkleinern Sie es oder vergrößern Sie das Grundstück."
+
+#: includes/Params/Definitions.php
+msgid "Melléképületek"
+msgstr "Nebengebäude"
+
+#: includes/Params/Definitions.php
+msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
+msgstr "Gerätehaus, Holzhaus, Werkstatt, Sommerküche, freistehende Garage, Scheune oder Gewächshaus: Maße, Dach, Wände, Tür, Fenster und Einrichtung. Im 3D greifen, verschieben und drehen."

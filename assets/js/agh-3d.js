@@ -1287,6 +1287,69 @@ House.prototype.poolBuild = function (x0, y0, w, d, flat) {
 		}
 	}
 };
+// An outbuilding (1.23.0): walls in its material with the door open (so what is inside shows), windows,
+// the roof (gable, lean-to, flat or green) in its covering, and the furnishing chosen for it.
+House.prototype.outBuild = function (s, x0, y0, w, d) {
+	var c = this.c, self = this, h = s.h, t = s.wall === 'glass' ? 0.04 : 0.12, x1 = x0 + w, y1 = y0 + d;
+	var wm = s.wall === 'glass' ? glassMat(c, this.night) : facadeMat(c, s.wall === 'render' ? 'render' : s.wall);
+	var frame = solid('#3B3F42', 0.5, 0.4);
+	var rm = s.roof === 'green' ? pbr('green', {}, { normal: 2 }) : ({ tile: pbr('tiles', { color: '#9C4A32' }, { normal: 2 }), metal: pbr('seam', { color: '#3E4245' }, { metalness: 0.5, normal: 1.2 }), shingle: pbr('shingle', { color: '#4A4442' }, { normal: 1.2 }), bitumen: solid('#2E3033', 0.9) })[s.roof_mat];
+	var A = function (m) { if (m) { self.add(m, false); } return m; };
+	// slab and the walls; the front (street side, y1) has the door opening
+	A(box(x0 - 0.05, y0 - 0.05, 0, x1 + 0.05, y1 + 0.05, 0.12, pbr('concrete', { color: '#B9B5AE' }, { normal: 0.8 })));
+	var dw = s.door === 'garage' ? Math.min(w - 0.4, 2.6) : (s.door === 'double' ? 1.5 : (s.door === 'sliding' ? 1.6 : 0.9)), dh = s.door === 'garage' ? Math.min(h - 0.3, 2.2) : Math.min(h - 0.2, 2.05), dx0 = x0 + (w - dw) / 2, dx1 = dx0 + dw;
+	A(box(x0, y0, 0.12, x1, y0 + t, h, wm));
+	A(box(x0, y0 + t, 0.12, x0 + t, y1, h, wm));
+	A(box(x1 - t, y0 + t, 0.12, x1, y1, h, wm));
+	A(box(x0 + t, y1 - t, 0.12, dx0, y1, h, wm)); A(box(dx1, y1 - t, 0.12, x1 - t, y1, h, wm)); A(box(dx0, y1 - t, 0.12 + dh, dx1, y1, h, wm));
+	if (s.wall === 'glass') { [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].forEach(function (p) { A(box(p[0] - 0.03, p[1] - 0.03, 0.12, p[0] + 0.03, p[1] + 0.03, h, frame)); }); }
+	// the door, open: a leaf swung out (single, double), slid aside, or a garage door rolled up under the roof
+	var leaf = s.wall === 'metal' ? solid('#5A5E62', 0.5, 0.5) : pbr('wood', { color: '#7A5638' }, { normal: 1 });
+	if (s.door === 'garage') { A(box(dx0, y1 - t - 0.6, 0.12 + dh, dx1, y1 - t, 0.12 + dh + 0.08, pbr('garagedoor', { color: '#D9DCDE' }, { normal: 1 }))); }
+	else if (s.door === 'sliding') { A(box(dx1, y1 + 0.02, 0.12, dx1 + dw * 0.9, y1 + 0.07, 0.12 + dh, leaf)); }
+	else {
+		var leaves = s.door === 'double' ? [[dx0, 1], [dx1, -1]] : [[dx0, 1]], lw = s.door === 'double' ? dw / 2 : dw;
+		leaves.forEach(function (q) {
+			var g = new THREE.Group(), m = new THREE.Mesh(boxGeo(lw, dh, 0.04), leaf);
+			m.position.set(q[1] * lw / 2, dh / 2, 0); m.castShadow = true; g.add(m);
+			g.position.copy(X(q[0], y1 + 0.02, 0.12)); g.rotation.y = q[1] * -1.2; A(g);
+		});
+	}
+	// windows: on the sides first, then the back
+	var wins = [[x0 - 0.005, 'L'], [x1 + 0.005, 'R'], [null, 'B'], [null, 'B2']].slice(0, s.windows);
+	wins.forEach(function (q) {
+		var wy = y0 + d / 2, z0 = Math.min(h - 0.9, 1.1);
+		if (q[1] === 'L' || q[1] === 'R') { var xx = q[0]; A(box(xx - 0.03, wy - 0.45, z0, xx + 0.03, wy + 0.45, z0 + 0.7, glassMat(c, self.night))); A(box(xx - 0.04, wy - 0.5, z0 - 0.05, xx + 0.04, wy + 0.5, z0, frame)); }
+		else { var bx = q[1] === 'B' ? x0 + w * 0.3 : x0 + w * 0.7; A(box(bx - 0.45, y0 - 0.03, z0, bx + 0.45, y0 + 0.03, z0 + 0.7, glassMat(c, self.night))); }
+	});
+	// the roof
+	var ov = 0.25;
+	if (s.roof === 'gable') {
+		var rz = Math.min(1.8, w * 0.35);
+		[[y1, 1], [y0, -1]].forEach(function (q) { A(polyMesh([X(x0, q[0], h), X(x1, q[0], h), X(x0 + w / 2, q[0], h + rz)], [wm, wm], { thick: 0.05, normal: new THREE.Vector3(0, 0, q[1]) })); });
+		A(polyMesh([X(x0 - ov, y0 - ov, h - 0.08), X(x0 - ov, y1 + ov, h - 0.08), X(x0 + w / 2, y1 + ov, h + rz), X(x0 + w / 2, y0 - ov, h + rz)], [rm, rm], { thick: 0.08 }));
+		A(polyMesh([X(x0 + w / 2, y0 - ov, h + rz), X(x0 + w / 2, y1 + ov, h + rz), X(x1 + ov, y1 + ov, h - 0.08), X(x1 + ov, y0 - ov, h - 0.08)], [rm, rm], { thick: 0.08 }));
+	} else if (s.roof === 'shed') {
+		var rz2 = Math.min(1.0, d * 0.2);
+		A(box(x0, y0, h, x1, y0 + t, h + rz2, wm));
+		A(polyMesh([X(x0 - ov, y0 - ov, h + rz2 + 0.04), X(x1 + ov, y0 - ov, h + rz2 + 0.04), X(x1 + ov, y1 + ov, h - 0.04), X(x0 - ov, y1 + ov, h - 0.04)], [rm, rm], { thick: 0.08 }));
+	} else {
+		A(box(x0 - 0.1, y0 - 0.1, h, x1 + 0.1, y1 + 0.1, h + 0.12, solid('#4A4D50', 0.7)));
+		A(box(x0, y0, h + 0.12, x1, y1, h + 0.14, rm));
+	}
+	// what is inside, along the back and side walls
+	var it = s.items, ix0 = x0 + t + 0.05, ix1 = x1 - t - 0.05, iy0 = y0 + t + 0.05, wood = pbr('wood', { color: '#A98458' }, { normal: 1 }), steel = solid('#8C9296', 0.35, 0.8);
+	if (it.indexOf('shelves') !== -1) { for (var sy = 0.5; sy < Math.min(h - 0.3, 2.2); sy += 0.45) { A(box(ix0, iy0, sy, Math.min(ix1, ix0 + Math.max(1.2, w * 0.5)), iy0 + 0.4, sy + 0.03, wood)); } [ix0, Math.min(ix1, ix0 + Math.max(1.2, w * 0.5)) - 0.04].forEach(function (px) { A(box(px, iy0, 0.12, px + 0.04, iy0 + 0.4, Math.min(h - 0.3, 2.2), wood)); }); }
+	if (it.indexOf('workbench') !== -1) { var wb0 = Math.max(ix0, ix1 - 1.8); A(box(wb0, iy0, 0.88, ix1, iy0 + 0.65, 0.93, wood)); [wb0 + 0.05, ix1 - 0.1].forEach(function (lx) { A(box(lx, iy0 + 0.05, 0.12, lx + 0.05, iy0 + 0.6, 0.88, steel)); }); }
+	if (it.indexOf('tool_wall') !== -1) { var tw0 = Math.max(ix0, ix1 - 1.6); A(box(tw0, iy0 - 0.03, 1.1, ix1, iy0, 1.9, pbr('wood', { color: '#C8B08A' }, { normal: 0.6 }))); for (var tk = 0; tk < 6; tk++) { A(box(tw0 + 0.15 + tk * 0.24, iy0, 1.3 + (tk % 2) * 0.2, tw0 + 0.19 + tk * 0.24, iy0 + 0.04, 1.65 + (tk % 2) * 0.1, steel)); } }
+	if (it.indexOf('machines') !== -1) { var mx = ix0 + 0.5, my = y1 - t - 1.2; A(box(mx - 0.25, my - 0.3, 0.12, mx + 0.25, my + 0.3, 0.45, solid('#3E8E41', 0.5))); A(box(mx - 0.02, my + 0.3, 0.45, mx + 0.02, my + 0.75, 1.0, steel)); }
+	if (it.indexOf('firewood') !== -1) { var fw0 = ix0, fy0 = y1 - t - 0.5; for (var lg = 0; lg < 4; lg++) { var cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.45, 8), wood); cyl.rotation.x = Math.PI / 2; cyl.position.copy(X(fw0 + 0.1 + lg * 0.17, fy0, 0.2 + (lg % 2) * 0.14)); A(cyl); } }
+	if (it.indexOf('table') !== -1) { var tx = x0 + w / 2, ty = y0 + d / 2; A(box(tx - 0.6, ty - 0.4, 0.74, tx + 0.6, ty + 0.4, 0.78, wood)); [[-0.55, -0.35], [0.5, -0.35], [-0.55, 0.3], [0.5, 0.3]].forEach(function (q) { A(box(tx + q[0], ty + q[1], 0.12, tx + q[0] + 0.05, ty + q[1] + 0.05, 0.74, wood)); }); }
+	if (it.indexOf('kitchen') !== -1) { A(box(ix0, iy0, 0.12, Math.min(ix1, ix0 + 2.2), iy0 + 0.6, 0.9, solid('#E9E6E0', 0.5))); A(box(ix0, iy0, 0.9, Math.min(ix1, ix0 + 2.2), iy0 + 0.62, 0.94, pbr('stone', { color: '#6F6A64' }, { normal: 0.8 }))); }
+	if (it.indexOf('plants') !== -1) { for (var pk = 0; pk < 3; pk++) { A(box(ix0 + pk * 0.7, iy0, 0.12, ix0 + pk * 0.7 + 0.5, iy0 + 0.4, 0.7, wood)); var bush = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), solid('#4F7F37', 0.8)); bush.position.copy(X(ix0 + pk * 0.7 + 0.25, iy0 + 0.2, 0.95)); A(bush); } }
+	if (it.indexOf('car') !== -1 && w >= 2.6 && d >= 4.6) { var car = INT.vehicle(INT.mats(c), 'sedan', col(c.car_color, '#3C4148')); A(life(car, x0 + w / 2, y0 + d / 2, -Math.PI / 2)); }
+	if (it.indexOf('bike') !== -1) { var bk = INT.bicycle(INT.mats(c), '#2F5A8A'); A(life(bk, x1 - t - 0.35, y0 + d * 0.6, Math.PI / 2)); }
+};
 House.prototype.furniture = function (x, y, z, kitchen) {
 	var wm = pbr('wood', { color: '#8A6A4C' }, { normal: 1 }), cush = solid('#E7E1D6', 0.95);
 	if (kitchen) { this.add(box(x, y, z, x + 2.2, y + 0.7, z + 0.9, pbr('concrete', { color: '#8E8B86' }, { normal: 1 }))); this.add(box(x - 0.02, y - 0.02, z + 0.9, x + 2.22, y + 0.72, z + 0.95, solid('#2B2E31', 0.3, 0.2))); return; }
@@ -1335,6 +1398,11 @@ House.prototype.site = function () {
 		var pgr = unturned(G.playground);
 		this.mover('playground', G.playground.cx, G.playground.cy, G.playground.rot, function () { flat(pgr.x0, pgr.y0, pgr.x1, pgr.y1, 0.03, groundKind(c, 'sand')); }, { kind: 'structure', w: pgr.x1 - pgr.x0, d: pgr.y1 - pgr.y0, field: 'garden_features' });
 	}
+	// 1.23.0: the outbuildings – each one movable and turnable as a whole
+	(G.outs || []).forEach(function (q) {
+		var r0 = unturned(q);
+		self.mover('out#' + q.i, q.cx, q.cy, q.rot, function () { self.outBuild(q.spec, r0.x0, r0.y0, r0.x1 - r0.x0, r0.y1 - r0.y0); }, { kind: 'structure', w: r0.x1 - r0.x0, d: r0.y1 - r0.y0, field: 'outbuildings' });
+	});
 	if (G.shed) {
 		var sh = unturned(G.shed);
 		this.mover('shed', G.shed.cx, G.shed.cy, G.shed.rot, function () { self.add(box(sh.x0 + 0.1, sh.y0 + 0.1, 0, sh.x1 - 0.1, sh.y1 - 0.1, 2.3, pbr('wood', { color: '#9A7048' }, { normal: 1 })), false); self.add(box(sh.x0, sh.y0, 2.3, sh.x1, sh.y1, 2.42, solid('#3A3D40', 0.6)), false); }, { kind: 'structure', w: sh.x1 - sh.x0, d: sh.y1 - sh.y0, field: 'garden_features' });

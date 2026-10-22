@@ -142,5 +142,10 @@ $t( 'medence: forma, méret, mélység, burkolat, lefedés, terasz a promptban',
 $t( 'garázs: beállók, tető, fal, kapu, szín, ablak, gyalogajtó, műhely a promptban', false !== strpos( $pg, 'room for 3 cars' ) && false !== strpos( $pg, 'gable roof' ) && false !== strpos( $pg, 'clad in timber' ) && false !== strpos( $pg, 'roller garage door' ) && false !== strpos( $pg, 'side door' ) && false !== strpos( $pg, 'workshop' ) );
 $t( 'medence nélkül nincs medence-részlet', false === strpos( PromptEngine::pool_garage_phrase( array_merge( $cfg, array( 'garden_features' => array(), 'pool_shape' => 'oval', 'garage' => 'none' ) ) ), 'pool' ) );
 
+/* ---------------------------------------------------------------- 1.23.0: melléképületek a promptban */
+$ob = PromptEngine::outbuildings_phrase( array( 'outbuildings' => array( array( 'type' => 'workshop', 'w' => 5, 'd' => 4, 'roof' => 'gable', 'roof_mat' => 'tile', 'wall' => 'brick', 'door' => 'double' ), array( 'type' => 'greenhouse', 'w' => 3, 'd' => 2.5, 'roof' => 'gable', 'wall' => 'glass', 'door' => 'sliding' ), array( 'type' => 'nincs_ilyen', 'w' => 99 ) ) ) );
+$t( 'melléképületek: típus, méret, fal, tető, ajtó a promptban', false !== strpos( $ob, 'a 5 × 4 m brick workshop with a gable tiled roof and double doors' ) && false !== strpos( $ob, 'glazed greenhouse' ) && false !== strpos( $ob, '12 × 2.5 m timber garden shed' ) );
+$t( 'melléképület nélkül nincs mondat', '' === PromptEngine::outbuildings_phrase( array( 'outbuildings' => array() ) ) );
+
 echo "3D-egyezés: {$ok}/" . ( $ok + $fail ) . ( $fail ? " – {$fail} HIBA" : '' ) . "\n";
 exit( $fail ? 1 : 0 );

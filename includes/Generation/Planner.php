@@ -152,7 +152,7 @@ final class Planner {
 				// the build-mode drawing is geometry, not a parameter to interpret (BuildingModel uses it)
 				continue;
 			}
-			if ( 'layout' === $def['type'] ) {
+			if ( 'layout' === $def['type'] || 'outbuildings' === $def['type'] ) {
 				// the hand-made arrangement is not a parameter to interpret, it travels as it is
 				$out[ $id ] = is_array( $v ) ? $v : array();
 				continue;
@@ -343,7 +343,7 @@ final class Planner {
 		}
 		$schema_fields = array();
 		foreach ( Registry::fields() as $id => $def ) {
-			if ( ! empty( $def['hidden'] ) || in_array( $def['type'], array( 'rooms', 'roomitems', 'layout', 'build', 'image', 'textarea' ), true ) || in_array( $id, array( 'project_name', 'house_name' ), true ) ) {
+			if ( ! empty( $def['hidden'] ) || in_array( $def['type'], array( 'rooms', 'roomitems', 'layout', 'outbuildings', 'build', 'image', 'textarea' ), true ) || in_array( $id, array( 'project_name', 'house_name' ), true ) ) {
 				continue;
 			}
 			$f = array( 'id' => $id, 'type' => 'catalog' === $def['type'] ? 'select' : $def['type'], 'label' => $def['label'] );

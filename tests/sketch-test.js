@@ -161,5 +161,32 @@ let detailN = 0, fitN = 0;
   const gbig = Object.assign({}, B2, { garage_width: 16, plot_width: 18 });
   if (!K._siteFit(gbig).some(m => m.field === 'garage')) err('1.22: a 16 m-es garázs 18 m-es telken nem jelez'); else fitN++;
 }
-console.log(`vázlat: ${n} rajz, ${tested} paraméterváltozat (${changed} változott), átlag ${(total / 800).toFixed(1)} ms, max ${maxMs.toFixed(1)} ms, ${gardenSummary}, medence/garázs ${detailN} változat, elfér-ellenőrzés ${fitN}/3, hiba ${fail}`);
+// 6) 1.23.0: outbuildings – three on one plot without overlap, inside the garden, drawn; one too big is said
+let obN = 0;
+{
+  const OB = [{ type: 'workshop', w: 5, d: 4, h: 2.8, roof: 'gable', roof_mat: 'tile', wall: 'brick', door: 'double', windows: 2, items: ['workbench'] }, { type: 'garage', w: 3.4, d: 6, h: 2.6, roof: 'flat', wall: 'render', door: 'garage', items: ['car'] }, { type: 'greenhouse', w: 3, d: 2.5, h: 2.2, roof: 'gable', wall: 'glass', door: 'sliding', items: ['plants'] }];
+  for (let i = 0; i < 40; i++) {
+    const c = Object.assign({}, BASE, { garage: ['none', 'carport', 'garage_1'][i % 3], plot_width: 26 + (i % 5) * 2, plot_length: 44 + (i % 4) * 3, net_area: 90 + (i % 6) * 20, outbuildings: OB.slice(0, 1 + (i % 3)).map((o, k) => Object.assign({}, o, { roof: ['gable', 'shed', 'flat', 'green'][(i + k) % 4] })) });
+    const svg = K.render(c, { id: 'o' + i }); check(svg, 'melléképület #' + i);
+    if (svg === K.render(Object.assign({}, c, { outbuildings: [] }), { id: 'o' + i })) err('1.23: a melléképület nem látszik #' + i);
+    const pl = K.plan(c), vols = K._volumes(c, pl), bb = K._siteBox(vols), GR = K._garageRect(c, vols, pl);
+    const plot = K._plot(c, vols, GR ? GR.base : bb.x1 + 3.8);
+    let front = bb.y1 + 6.5, back = bb.y0 - 6, left = bb.x0 - 6.5, right = (GR ? GR.x1 : bb.x1) + 6;
+    if (plot) { left = Math.min(left, plot.x0 - 1.2); right = Math.max(right, plot.x1 + 1.2); front = Math.max(front, plot.yF + 1.2); if (plot.yB !== null) back = Math.min(back, plot.yB - 1.2); }
+    const G = K._garden(c, vols, pl, { left, right, front, back }, plot, GR ? { x0: GR.x0, x1: GR.x1, y0: GR.y0, y1: GR.y1 } : null, null, K._siteEdge(c, front, plot));
+    const o = G.outs || [], A = G.area;
+    if (o.length + (G.outFail || []).length !== c.outbuildings.length) err('1.23: elveszett melléképület #' + i);
+    for (let a = 0; a < o.length; a++) {
+      const p = o[a];
+      if (p.x0 < A.x0 - 0.01 || p.x1 > A.x1 + 0.01 || p.y0 < A.y0 - 0.01 || p.y1 > A.y1 + 0.01) err('1.23: kilóg #' + i);
+      for (const v of vols) if (p.x0 < v.x1 && p.x1 > v.x0 && p.y0 < v.y1 && p.y1 > v.y0) err('1.23: a házon #' + i);
+      for (let b2 = a + 1; b2 < o.length; b2++) { const q = o[b2]; if (p.x0 < q.x1 && p.x1 > q.x0 && p.y0 < q.y1 && p.y1 > q.y0) err('1.23: átfedés #' + i); }
+    }
+    if ((G.outFail || []).length && !K._siteFit(c).some(m => m.key === 'fit_out')) err('1.23: el nem férő melléképület jelzés nélkül #' + i);
+    obN += o.length;
+  }
+  const big = Object.assign({}, BASE, { plot_width: 16, plot_length: 20, outbuildings: [{ type: 'barn', w: 12, d: 12 }] });
+  if (!K._siteFit(big).some(m => m.key === 'fit_out')) err('1.23: a 12 × 12 m-es pajta kis telken nem jelez');
+}
+console.log(`vázlat: ${n} rajz, ${tested} paraméterváltozat (${changed} változott), átlag ${(total / 800).toFixed(1)} ms, max ${maxMs.toFixed(1)} ms, ${gardenSummary}, medence/garázs ${detailN} változat, elfér-ellenőrzés ${fitN}/3, melléképület ${obN} elhelyezve, hiba ${fail}`);
 process.exit(fail ? 1 : 0);

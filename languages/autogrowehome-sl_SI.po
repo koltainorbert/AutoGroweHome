@@ -11060,3 +11060,87 @@ msgstr "Garaža (globina %s m) gleda spredaj ali zadaj iz parcele – zmanjšajt
 #: includes/Frontend/Strings.php
 msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
 msgstr "Hiša (in garaža) potrebujeta %1$s m širine, parcela je široka le %2$s m – risba jo razširi."
+
+#: includes/Frontend/Strings.php
+msgid "Faház"
+msgstr "Lesena hišica"
+
+#: includes/Frontend/Strings.php
+msgid "Nyári konyha"
+msgstr "Poletna kuhinja"
+
+#: includes/Frontend/Strings.php
+msgid "Külön garázs"
+msgstr "Samostojna garaža"
+
+#: includes/Frontend/Strings.php
+msgid "Pajta"
+msgstr "Skedenj"
+
+#: includes/Frontend/Strings.php
+msgid "Üvegház"
+msgstr "Rastlinjak"
+
+#: includes/Frontend/Strings.php
+msgid "Falmagasság"
+msgstr "Višina sten"
+
+#: includes/Frontend/Strings.php
+msgid "Cserép"
+msgstr "Opeka"
+
+#: includes/Frontend/Strings.php
+msgid "Zsindely"
+msgstr "Skodla"
+
+#: includes/Frontend/Strings.php
+msgid "Egyszárnyú"
+msgstr "Enokrilna"
+
+#: includes/Frontend/Strings.php
+msgid "Polcok"
+msgstr "Police"
+
+#: includes/Frontend/Strings.php
+msgid "Munkapad"
+msgstr "Delovna miza"
+
+#: includes/Frontend/Strings.php
+msgid "Szerszámfal"
+msgstr "Stena za orodje"
+
+#: includes/Frontend/Strings.php
+msgid "Kerti gépek"
+msgstr "Vrtni stroji"
+
+#: includes/Frontend/Strings.php
+msgid "Autó"
+msgstr "Avto"
+
+#: includes/Frontend/Strings.php
+msgid "Tűzifa"
+msgstr "Drva"
+
+#: includes/Frontend/Strings.php
+msgid "Asztal"
+msgstr "Miza"
+
+#: includes/Frontend/Strings.php
+msgid "Konyhapult"
+msgstr "Kuhinjski pult"
+
+#: includes/Frontend/Strings.php
+msgid "Növények"
+msgstr "Rastline"
+
+#: includes/Frontend/Strings.php
+msgid "A(z) %1$s. melléképület (%2$s × %3$s m) nem fér el a telken a ház és a kert elemei mellett – kisebbítsd, vagy növeld a telket."
+msgstr "Pomožni objekt %1$s (%2$s × %3$s m) ne gre na parcelo poleg hiše in vrta – zmanjšajte ga ali povečajte parcelo."
+
+#: includes/Params/Definitions.php
+msgid "Melléképületek"
+msgstr "Pomožni objekti"
+
+#: includes/Params/Definitions.php
+msgid "Tároló, faház, műhely, nyári konyha, külön garázs, pajta vagy üvegház: méret, tető, falanyag, ajtó, ablak és berendezés. A 3D-ben megfogva mozgatható és forgatható."
+msgstr "Shramba, hišica, delavnica, poletna kuhinja, garaža, skedenj ali rastlinjak: mere, streha, stene, vrata, okna in oprema. V 3D jo premikate in sukate."
