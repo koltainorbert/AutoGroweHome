@@ -399,6 +399,9 @@
 		// Ctrl+Z: take back the last hand move in the room (never while text is being typed)
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && S.view === 'int' && layoutUndo.length
 			&& !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); undoLayout(); }
+		// … and outside: the last moved garden piece, window, door or chimney (1.18.0)
+		else if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && S.view !== 'int' && siteUndo.length && !S.bld && !S.wiz
+			&& !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); undoSite(); }
 	}
 	function trapFocus(e) {
 		var scope = root.querySelector('.agh-dialog-wrap, .agh-lightbox') || (FS.el && FS.el !== root && FS.el.isConnected ? FS.el : shell);
@@ -982,6 +985,74 @@
 		persist();
 		renderPreviewOnly();
 		toast(t('layout_reset'), 'ok', 1600);
+	}
+	/* ---------------------------------------------------------------- hand-made site layout (1.18.0)
+	 * Outside, every garden piece, window, door and the chimney can be picked up in the 3D view; the new
+	 * place goes to `site_layout` (shared with the 2D sketch and the image). Ctrl+Z takes back the last
+	 * move, and the outside can be reset to the automatic arrangement. */
+	var siteUndo = [];
+	function siteAll() {
+		var v = S.config.site_layout;
+		return v && typeof v === 'object' && !Array.isArray(v) ? clone(v) : {};
+	}
+	function setSite(all) {
+		S.config.site_layout = all;
+		S.explicit.site_layout = true;
+		S.dirty = true;
+		persist();
+		renderSummary();
+	}
+	function saveSite(key, pos, rebuild) {
+		if (!key || !pos) { return; }
+		var all = siteAll();
+		siteUndo.push(siteAll());
+		if (siteUndo.length > 30) { siteUndo.shift(); }
+		all[key] = pos;
+		setSite(all);
+		// a window, a door or the chimney: the wall (or roof) is rebuilt around the new place
+		if (rebuild) { renderPreviewOnly(); } else { refreshSiteTools(); }
+	}
+	function refreshSiteTools() {
+		if (!els.previewBox || S.view === 'int') { return; }
+		var old = els.previewBox.querySelector('.agh-3d-lay');
+		if (old && old.parentNode) { old.parentNode.replaceChild(siteTools(), old); }
+	}
+	function undoSite() {
+		if (!siteUndo.length) { return; }
+		setSite(siteUndo.pop());
+		renderPreviewOnly();
+		toast(t('layout_undone'), 'ok', 1400);
+	}
+	function resetSite() {
+		var all = siteAll();
+		if (!Object.keys(all).length) { toast(t('layout_none'), 'warn', 1600); return; }
+		siteUndo.push(all);
+		setSite({});
+		renderPreviewOnly();
+		toast(t('site_reset_done'), 'ok', 1600);
+	}
+	// While a piece is held or selected: a short line in the view says whether the place is good.
+	function moveState(st, slot, dragging) {
+		var box = els.previewBox;
+		if (!box) { return; }
+		var el = box.querySelector('.agh-3d-place');
+		if (!st) { if (el) { el.remove(); } return; }
+		if (!el) { el = h('div', { class: 'agh-3d-place', role: 'status', 'aria-live': 'polite' }); box.appendChild(el); }
+		var msg = st.ok ? t(dragging ? 'place_ok' : 'place_selected') : tf(st.code, st.v !== undefined ? fmt(st.v, 1) : '');
+		el.className = 'agh-3d-place ' + (st.ok ? 'is-ok' : 'is-bad');
+		el.setAttribute('data-slot', slot || '');
+		el.textContent = '';
+		el.appendChild(icon(st.ok ? 'check' : 'alert', 'agh-ico-s'));
+		el.appendChild(h('span', { text: msg }));
+		if (!dragging) { el.appendChild(h('small', { text: t('place_keys') })); }
+	}
+	// Undo / reset for the outside, beside the view switch; the hint says what can be moved and how.
+	function siteTools() {
+		var has = Object.keys(siteAll()).length > 0;
+		// outside, the top right corner belongs to the style sample: the two buttons sit at the bottom right
+		return h('div', { class: 'agh-3d-lay is-site', role: 'group', 'aria-label': t('site_reset') },
+			has ? h('button', { type: 'button', class: 'agh-3d-laybtn', title: t('layout_undo'), 'aria-label': t('layout_undo'), disabled: !siteUndo.length, onclick: undoSite }, icon('restart', 'agh-ico-s')) : null,
+			has ? h('button', { type: 'button', class: 'agh-3d-laybtn agh-3d-sitereset', title: t('site_reset'), 'aria-label': t('site_reset'), onclick: resetSite }, icon('refresh', 'agh-ico-s')) : null);
 	}
 	// A tap on a part of the model: the settings jump to the field that part belongs to, and it lights up.
 	// A piece with no setting of its own (a household item placed by its own card) only says its name.
@@ -1673,9 +1744,10 @@
 		if (A3) {
 			// keep the live 3D canvas, replace everything else
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
-			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); var vw = A3.viewer(); vw.onPick = jumpToField; vw.onLayout = saveLayout; vw.onGrab = grabNote; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
+			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); var vw = A3.viewer(); vw.onPick = jumpToField; vw.onLayout = saveLayout; vw.onGrab = grabNote; vw.onSite = saveSite; vw.onMoveState = moveState; vw.place = S.boot.place || null; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
 			if (A3 && S.view === 'int') { box.appendChild(roomChips()); box.appendChild(layoutTools()); }
-			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
+			else if (A3) { box.appendChild(siteTools()); }
+			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), S.view === 'int' ? h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }) : h('span', { class: 'agh-3d-hint', title: t('site_hint'), text: t('site_hint_short') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
 		} else if (A3wait) {
 			clear(box);
 			box.appendChild(waitBox());

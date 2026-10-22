@@ -154,7 +154,7 @@ final class Planner {
 			}
 			if ( 'layout' === $def['type'] ) {
 				// the hand-made arrangement is not a parameter to interpret, it travels as it is
-				$out['room_layout'] = is_array( $v ) ? $v : array();
+				$out[ $id ] = is_array( $v ) ? $v : array();
 				continue;
 			}
 			if ( 'rooms' === $def['type'] ) {

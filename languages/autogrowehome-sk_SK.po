@@ -10454,3 +10454,79 @@ msgstr "Pohľady dostanú aj hlavný obrázok"
 #: includes/Admin/Admin.php
 msgid "Fotó a 3D képből módban a galéria nézetei alapból csak a saját 3D képükből készülnek. Bekapcsolva a kiválasztott fő kép is második képként megy (egységesebb anyagok), de a fő kép nézőpontja átszivároghat a hátsó és oldalsó nézetbe."
 msgstr "V režime fotografie z 3D obrázka vznikajú pohľady galérie len z vlastného 3D obrázka. Po zapnutí ide aj zvolený hlavný obrázok ako druhý (jednotnejšie materiály), jeho uhol pohľadu sa však môže preniesť do zadného a bočných pohľadov."
+
+#: includes/Params/Definitions.php
+msgid "Kézi elrendezés kívül"
+msgstr "Ručné usporiadanie vonku"
+
+#: includes/Params/Definitions.php
+msgid "A 3D nézetben egérrel áthelyezett és elforgatott kerti tárgyak, nyílászárók és a kémény."
+msgstr "Záhradné prvky, okná, dvere a komín presunuté a otočené myšou v 3D zobrazení."
+
+#: includes/Frontend/Strings.php
+msgid "Fogd meg egérrel a kerti tárgyakat, az ablakokat, az ajtókat vagy a kéményt. Ctrl + húzás: forgatás, Shift: egyenesbe."
+msgstr "Uchop myšou záhradné prvky, okná, dvere alebo komín. Ctrl + ťahanie: otočenie, Shift: vyrovnať."
+
+#: includes/Frontend/Strings.php
+msgid "Kézi elrendezés visszaállítása (kert, nyílászárók, kémény)"
+msgstr "Obnoviť ručné usporiadanie (záhrada, okná a dvere, komín)"
+
+#: includes/Frontend/Strings.php
+msgid "Visszaállítva az automatikus elrendezésre."
+msgstr "Obnovené automatické usporiadanie."
+
+#: includes/Frontend/Strings.php
+msgid "Jó hely"
+msgstr "Dobré miesto"
+
+#: includes/Frontend/Strings.php
+msgid "Kijelölve"
+msgstr "Vybrané"
+
+#: includes/Frontend/Strings.php
+msgid "Nyilak: mozgatás · R: forgatás · Esc: kész"
+msgstr "Šípky: posun · R: otočenie · Esc: hotovo"
+
+#: includes/Frontend/Strings.php
+msgid "A telken kívül van"
+msgstr "Je mimo pozemku"
+
+#: includes/Frontend/Strings.php
+msgid "A házba lóg"
+msgstr "Zasahuje do domu"
+
+#: includes/Frontend/Strings.php
+msgid "A teraszon van"
+msgstr "Je na terase"
+
+#: includes/Frontend/Strings.php
+msgid "A garázsba lóg"
+msgstr "Zasahuje do garáže"
+
+#: includes/Frontend/Strings.php
+msgid "A medence legyen legalább %s m-re a háztól"
+msgstr "Bazén by mal byť aspoň %s m od domu"
+
+#: includes/Frontend/Strings.php
+msgid "A fa legyen legalább %s m-re a háztól"
+msgstr "Strom by mal byť aspoň %s m od domu"
+
+#: includes/Frontend/Strings.php
+msgid "Másik tárgyra került"
+msgstr "Je na inom predmete"
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás legyen legalább %s m-re a saroktól"
+msgstr "Otvor by mal byť aspoň %s m od rohu"
+
+#: includes/Frontend/Strings.php
+msgid "Két nyílás között legalább %s m kell"
+msgstr "Medzi dvoma otvormi je potrebných aspoň %s m"
+
+#: includes/Frontend/Strings.php
+msgid "A kémény a gerinctől legfeljebb %s m-re javasolt"
+msgstr "Komín sa odporúča najviac %s m od hrebeňa"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
+msgstr "Ťahaj pozadie: otáčanie · Uchop predmet: presun"

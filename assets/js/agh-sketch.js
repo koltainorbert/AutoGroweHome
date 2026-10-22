@@ -379,7 +379,7 @@
 	var MASSING = ['pavilion', 'cantilever', 'courtyard', 'gable_pair', 'cubes', 'engawa', 'symmetric', 'long_house', 'twin_barns', 'cross_gable', 'chalet', 'loft', 'organic', 'glass_frame', 'compact'];
 	function volumes(c, pl) {
 		var B = bld(c);
-		if (B) { return JSON.parse(JSON.stringify(B.vols)); }
+		if (B) { return JSON.parse(JSON.stringify(B.vols)).map(function (q, i) { q.vi = i; return q; }); }
 		var W = pl.W, D = pl.D, P = pl.plinth, FH = pl.FH, fl = pl.floors, h = P + fl * FH + (pl.attic ? 0.9 : 0), A = W * D, v = [];
 		var m = pl.units > 1 ? 'auto' : (c.massing || 'auto');
 		function V(o) { o.ridge = o.ridge || 'x'; v.push(o); return o; }
@@ -486,7 +486,7 @@
 		}
 		if (!v.some(function (q) { return q.entrance; })) { v[0].entrance = true; }
 		if (!v.some(function (q) { return q.items; })) { v[0].items = true; }
-		v.forEach(function (q) { q.z0 = q.z0 || 0; });
+		v.forEach(function (q, i) { q.z0 = q.z0 || 0; q.vi = i; });
 		return v;
 	}
 	// Roof type of one volume.
@@ -502,6 +502,64 @@
 	function vplan(pl, v) { return v.pitch ? Object.assign({}, pl, { pitch: v.pitch, over: Math.min(pl.over, 0.3), eave: Math.min(pl.eave, 0.3) }) : pl; }
 	// Corner radius of a soft (rounded) volume; only with a flat roof.
 	function roundR(c, v) { var r = v.round && vtype(c, v) === 'flat' ? clamp(Math.min(2.6, (v.y1 - v.y0) / 2 - 0.4, (v.x1 - v.x0) / 2 - 0.4), 0, 2.6) : 0; return r < 0.8 ? 0 : r; }
+	/* ------------------------------------------------------------------ hand-made site layout (1.18.0)
+	 * `site_layout`: key → {x, y, rot}. Garden pieces (pool, plant#3, vehicle#0 …) keep their centre in plan
+	 * metres and an extra turn in degrees; openings (door@0, tdoor@0, win@0:front:1:2) keep their face-local
+	 * x; the chimney its centre. One reader for the 2D sketch, the 3D view and the tests. */
+	var SITE_KEY = /^(pool|shed|playground|pergola|firepit|furniture|tfurniture|kennel|charger|chimney|(plant|vehicle|person|pet|light)#\d{1,3}|(door|tdoor)@\d{1,2}|win@\d{1,2}:(front|right|back|left):\d{1,2}:(\d{1,3}|g))$/;
+	function siteLay(c) { var v = c && c.site_layout; return v && typeof v === 'object' && !Array.isArray(v) ? v : null; }
+	function siteGet(c, key) {
+		var L = siteLay(c), p = L && L[key];
+		if (!p || typeof p !== 'object' || !isFinite(Number(p.x))) { return null; }
+		return { x: Number(p.x), y: num(p.y, 0), rot: ((Math.round(num(p.rot, 0)) % 360) + 360) % 360 };
+	}
+	// A rectangle given by its centre, size and turn; x0…y1 is the footprint (the box around the turned rectangle).
+	function turnRect(cx, cy, w, d, rot) {
+		var a = (rot || 0) * D2R, cs = Math.abs(Math.cos(a)), sn = Math.abs(Math.sin(a));
+		var hw = (w * cs + d * sn) / 2, hd = (w * sn + d * cs) / 2;
+		return { x0: cx - hw, x1: cx + hw, y0: cy - hd, y1: cy + hd, cx: cx, cy: cy, w: w, d: d, rot: rot || 0 };
+	}
+	// The garden plan with the visitor's own placements on top: a moved piece keeps its size, takes the new
+	// centre and its turn (every piece carries cx/cy/w/d/rot or turn, so the 3D view can build it in place).
+	function applySite(c, out) {
+		['pool', 'shed', 'playground', 'pergola'].forEach(function (k) {
+			var r = out[k];
+			if (!r) { return; }
+			var o = siteGet(c, k), w = r.x1 - r.x0, d = r.y1 - r.y0;
+			var t = o ? turnRect(o.x, o.y, w, d, o.rot) : turnRect((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, w, d, 0);
+			if (o) { t.moved = true; }
+			out[k] = Object.assign({}, r, t);
+		});
+		var pt = function (p, key) { var o = siteGet(c, key); p.turn = 0; if (o) { p.x = o.x; p.y = o.y; p.turn = o.rot; p.moved = true; } return p; };
+		['firepit', 'kennel', 'charger'].forEach(function (k) { if (out[k]) { pt(out[k], k); } });
+		if (out.furniture) {
+			var fo = siteGet(c, 'furniture'), fu = out.furniture;
+			fu.turn = 0;
+			if (fo) { fu.x = fo.x - 0.8; fu.y = fo.y - 1.0; fu.turn = fo.rot; fu.moved = true; }
+		}
+		out.plants.forEach(function (p, i) { if (p.kind !== 'flower') { pt(p, 'plant#' + i); } });
+		(out.vehicles || []).forEach(function (p, i) { pt(p, 'vehicle#' + i); });
+		(out.people || []).forEach(function (p, i) { pt(p, 'person#' + i); });
+		(out.pets || []).forEach(function (p, i) { pt(p, 'pet#' + i); });
+		out.lights = out.lights.map(function (q, i) { var o = siteGet(c, 'light#' + i); return o ? [o.x, o.y] : q; });
+		// the sand of the play area goes with it
+		if (out.playground && out.playground.moved) { out.flats.forEach(function (fl) { if (fl.kind === 'sand') { fl.x0 = out.playground.x0; fl.x1 = out.playground.x1; fl.y0 = out.playground.y0; fl.y1 = out.playground.y1; } }); }
+		return out;
+	}
+	// A moved opening: the visitor's x along the wall, kept inside the face.
+	function openingAt(c, key, x, w, len) {
+		var o = siteGet(c, key);
+		return o ? clamp(o.x, 0.06, Math.max(0.06, len - w - 0.06)) : x;
+	}
+	// The chimney on a volume (corner x/y of its plan box): the visitor's place, else 70 % along the ridge.
+	function chimneyAt(c, v) {
+		var cs = chimneySpec(c), W = v.x1 - v.x0, cx = v.x0 + W * 0.7, cy = (v.y0 + v.y1) / 2 + 0.3, o = siteGet(c, 'chimney');
+		if (o) {
+			cx = clamp(o.x - cs.w / 2, v.x0 + 0.15, v.x1 - cs.w - 0.15);
+			cy = clamp(o.y - cs.d / 2, v.y0 + 0.15, v.y1 - cs.d - 0.15);
+		}
+		return { x: cx, y: cy, w: cs.w, d: cs.d, moved: !!o };
+	}
 	// Front face of a volume: the parts covered by other volumes, the entrance door and the terrace door
 	// (face-local x, measured from off = the start of the straight front wall).
 	function frontPlan(c, v, vols) {
@@ -536,6 +594,10 @@
 			}
 			if (len > 7 && tx !== null) { out.tdoor = { x: tx, w: tw }; }
 		}
+		// doors moved by hand along the wall (1.18.0); the terrace follows its door
+		var vi = v.vi || 0;
+		if (out.door) { out.door.x = openingAt(c, 'door@' + vi, out.door.x, out.door.w, len); }
+		if (out.tdoor) { out.tdoor.x = openingAt(c, 'tdoor@' + vi, out.tdoor.x, out.tdoor.w, len); }
 		return out;
 	}
 	// Ground footprint of all volumes (with their outside structures: frame, exoskeleton, balconies).
@@ -800,7 +862,7 @@
 			if (pathOn || c.gate !== false) { f.gaps.push([doorMid - 0.6, doorMid + 0.6]); }
 			out.fence = f;
 		}
-		return out;
+		return applySite(c, out);
 	}
 	// Massing signatures drawn around a volume: frame, veranda, balconies, exoskeleton, roof-terrace railing.
 	function deco2d(sc, v, pl, type, roof) {
@@ -1084,10 +1146,10 @@
 			if (F.name === 'right') { n = Math.max(1, Math.min(n, Math.floor((len - 1) / (w + 1.4)))); }
 			var step = len / n, row = [];
 			for (var i = 0; i < n; i++) {
-				var x = step * i + (step - w) / 2;
-				if (fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
-				if (blocked.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
-				row.push({ x: x, w: w, i: i });
+				var x = step * i + (step - w) / 2, mk = 'win@' + (v.vi || 0) + ':' + F.name + ':' + fl + ':' + i, mx = openingAt(c, mk, x, w, len);
+				if (mx === x && fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
+				if (mx === x && blocked.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
+				row.push({ x: mx, w: w, i: i });
 			}
 			// behind a balcony the windows become doors
 			if (fl > 0 && BL.length) { balcMark(BL, F.name, fl, row); }
@@ -1129,8 +1191,8 @@
 		}
 		// attic: gable window
 		if (roof.gableFace === F.name && (pl.attic || roof.rise > 2.2)) {
-			var gw = Math.min(1.6, len * 0.22);
-			s += windowSvg(sc, len / 2 - gw / 2, v.h + 0.35, gw, Math.min(1.3, roof.rise - 0.9), {});
+			var gw = Math.min(1.6, len * 0.22), gx = clamp(openingAt(c, 'win@' + (v.vi || 0) + ':' + F.name + ':0:g', len / 2 - gw / 2, gw, len), len * 0.3 - gw / 2, len * 0.7 - gw / 2);
+			s += windowSvg(sc, gx, v.h + 0.35, gw, Math.min(1.3, roof.rise - 0.9), {});
 		}
 		if (c.corner_window && F.name === 'front' && entrance) {
 			s += windowSvg(sc, len - 1.6, pl.plinth + 0.5, 1.6, 1.8, {});
@@ -1592,7 +1654,7 @@
 		var solar = c.roof_solar || has(c.energy, 'solar') || !!styleOf(c).pv;
 		var W = v.x1 - v.x0, D = v.y1 - v.y0;
 		function chimneyBox(zBase) {
-			var cs = chimneySpec(c), cx = v.x0 + W * 0.7, cy = (v.y0 + v.y1) / 2 + 0.3, cw = cs.w, cd = cs.d, zt = (roof.flatTop || v.h + roof.rise) + cs.up;
+			var cs = chimneySpec(c), ca = chimneyAt(c, v), cx = ca.x, cy = ca.y, cw = cs.w, cd = cs.d, zt = (roof.flatTop || v.h + roof.rise) + cs.up;
 			var zf = zBase(cy + cd), zr0 = zBase(cy + cd), zr1 = zBase(cy);
 			var cfill = cs.mat ? sc.mat(cs.mat, cs.color) : cs.color;
 			var fr = sc.plane([cx, cy + cd, 0], [1, 0, 0], [0, 0, 1], [[0, zf], [cw, zf], [cw, zt], [0, zt]], cfill, cs.twin ? '<path d="M' + f(cw / 2) + ' ' + f(zf) + 'V' + f(zt) + '" stroke="#2E3033" stroke-width="0.05"/>' : '');
@@ -1749,9 +1811,16 @@
 
 	// A parked vehicle (driven in forwards: nose to -y): body and cabin boxes, dark wheels below.
 	var CAB = { sedan: [0.3, 0.95, 1.45, 0.12, 0.62], hatchback: [0.3, 0.98, 1.5, 0.05, 0.62], suv: [0.42, 1.15, 1.72, 0.05, 0.68], pickup: [0.45, 1.0, 1.82, 0.42, 0.75], van: [0.38, 1.95, 1.95, 0, 0], sports: [0.25, 0.8, 1.18, 0.2, 0.55], electric: [0.3, 0.92, 1.42, 0.12, 0.66] };
-	function vehicle2d(sc, type, x, y, paint) {
+	function vehicle2d(sc, type, x, y, paint, turn) {
 		var out = [], d = VEH[type] || VEH.sedan, hw = d[0] / 2, hl = d[1] / 2, P = CAB[type], glassC = '#2A3138';
 		function put(list) { list.forEach(function (r) { out.push(r); }); }
+		// turned across (moved by hand, 1.18.0): the same body with its length along x
+		if (Math.abs(Math.sin((turn || 0) * D2R)) > 0.71) {
+			var hz = P ? P[1] : 0.6;
+			put(box(sc, x - hl, y - hw, 0, x + hl, y + hw, type === 'motorcycle' || type === 'bicycle' ? 0.95 : hz, { top: shade(paint, 0.1), front: paint, side: shade(paint, -0.12) }));
+			if (P && P[2] > hz) { put(box(sc, x - hl * 0.45, y - hw + 0.14, hz, x + hl * 0.35, y + hw - 0.14, P[2], { top: shade(paint, 0.05), front: glassC, side: glassC })); }
+			return out;
+		}
 		if (type === 'motorcycle' || type === 'bicycle') {
 			var mb = type === 'motorcycle';
 			put(box(sc, x - 0.04, y - hl + 0.1, 0, x + 0.04, y + hl - 0.1, mb ? 0.6 : 0.62, { top: '#1E1F21', front: '#1E1F21', side: '#2A2C2E' }));
@@ -1972,7 +2041,7 @@
 				box(sc, gx0 - 0.1, gy0, gh, gx0 + gW + 0.1, gy1 + 0.2, gh + 0.25, { top: c.roof_surface === 'green' ? sc.mat('green', '#6E8F45') : '#5A5E62', front: '#3A3D40' }).forEach(function (r) { gparts.push(r); });
 				// parked vehicle (the first car of the list, same place as in the garden plan)
 				var pcar = vehicleList(c).filter(function (k) { return k !== 'motorcycle' && k !== 'bicycle'; })[0];
-				if (pcar) { vehicle2d(sc, pcar, gx0 + gW / 2, gy1 - 2.975, col(c.car_color, '#3C4148')).forEach(function (r) { gparts.push(r); }); }
+				if (pcar && !siteGet(c, 'vehicle#0')) { vehicle2d(sc, pcar, gx0 + gW / 2, gy1 - 2.975, col(c.car_color, '#3C4148')).forEach(function (r) { gparts.push(r); }); }
 			} else {
 				var doors = garage === 'garage_2' ? 2 : 1, dw = garage === 'garage_2' ? 2.5 : 2.6, inner = '';
 				for (var gd = 0; gd < doors; gd++) {
@@ -2061,14 +2130,14 @@
 				sc.push(sc.depth([G.firepit.x, G.firepit.y, 0]), '<ellipse cx="' + f(fpp[0]) + '" cy="' + f(fpp[1]) + '" rx="0.7" ry="0.3" fill="#5A5550"/><ellipse cx="' + f(fpp[0]) + '" cy="' + f(fpp[1] - 0.2) + '" rx="0.35" ry="0.3" fill="#F28C38" opacity="' + (L.glow ? 0.95 : 0.7) + '"/>');
 			}
 			if (G.pergola) {
-				var pgx = G.pergola.x0, pgy = G.pergola.y0, pgc = '#8A6A4C';
-				[[pgx, pgy], [pgx + 2.8, pgy], [pgx, pgy + 2.4], [pgx + 2.8, pgy + 2.4]].forEach(function (q) { box(sc, q[0], q[1], 0, q[0] + 0.14, q[1] + 0.14, 2.5, { top: pgc, front: pgc, side: shade(pgc, -0.2) }).forEach(function (r) { sc.push(r.depth, r.svg); }); });
-				var pgb = ''; for (var pb = 0; pb < 3; pb += 0.45) { pgb += '<rect x="' + f(pb) + '" y="0" width="0.08" height="2.6" fill="' + pgc + '"/>'; }
-				var pgt = sc.plane([pgx, pgy + 2.55, 2.5], [1, 0, 0], [0, -1, 0], [[0, 0], [2.95, 0], [2.95, 2.6], [0, 2.6]], 'none', pgb, { noShade: true, edge: false });
-				if (pgt) { sc.push(sc.depth([pgx + 1.4, pgy + 1.2, 0]) + 1, pgt.svg); }
+				var pgx = G.pergola.x0, pgy = G.pergola.y0, pgc = '#8A6A4C', pgw = G.pergola.x1 - G.pergola.x0 - 0.2, pgd = G.pergola.y1 - G.pergola.y0 - 0.2;
+				[[pgx, pgy], [pgx + pgw - 0.2, pgy], [pgx, pgy + pgd - 0.2], [pgx + pgw - 0.2, pgy + pgd - 0.2]].forEach(function (q) { box(sc, q[0], q[1], 0, q[0] + 0.14, q[1] + 0.14, 2.5, { top: pgc, front: pgc, side: shade(pgc, -0.2) }).forEach(function (r) { sc.push(r.depth, r.svg); }); });
+				var pgb = ''; for (var pb = 0; pb < pgw - 0.05; pb += 0.45) { pgb += '<rect x="' + f(pb) + '" y="0" width="0.08" height="' + f(pgd) + '" fill="' + pgc + '"/>'; }
+				var pgt = sc.plane([pgx, pgy + pgd - 0.05, 2.5], [1, 0, 0], [0, -1, 0], [[0, 0], [pgw - 0.05, 0], [pgw - 0.05, pgd], [0, pgd]], 'none', pgb, { noShade: true, edge: false });
+				if (pgt) { sc.push(sc.depth([pgx + pgw / 2, pgy + pgd / 2, 0]) + 1, pgt.svg); }
 			}
 			var paint2 = col(c.car_color, '#3C4148');
-			G.vehicles.forEach(function (vh) { if (!(vh.port && (vh.type !== 'motorcycle' && vh.type !== 'bicycle'))) { vehicle2d(sc, vh.type, vh.x, vh.y, paint2).forEach(function (r) { sc.push(r.depth, r.svg); }); } });
+			G.vehicles.forEach(function (vh) { if (!(vh.port && !vh.moved && (vh.type !== 'motorcycle' && vh.type !== 'bicycle'))) { vehicle2d(sc, vh.type, vh.x, vh.y, paint2, vh.turn).forEach(function (r) { sc.push(r.depth, r.svg); }); } });
 			if (G.charger) { box(sc, G.charger.x - 0.11, G.charger.y - 0.09, 0, G.charger.x + 0.11, G.charger.y + 0.09, 1.3, { top: '#2B2E31', front: '#3A3D40', side: '#2B2E31' }, { front: '<rect x="0.04" y="0.95" width="0.14" height="0.2" fill="#4CAF7A"/>' }).forEach(function (r) { sc.push(r.depth + 0.5, r.svg); }); }
 			if (G.kennel) { box(sc, G.kennel.x - 0.45, G.kennel.y - 0.4, 0, G.kennel.x + 0.45, G.kennel.y + 0.4, 0.75, { top: '#5A3A2A', front: sc.mat('wood', '#9C7452'), side: '#8A6446' }, { front: '<path d="M0.29 0V0.3A0.16 0.16 0 0 1 0.61 0.3V0Z" fill="#1A1614"/>' }).forEach(function (r) { sc.push(r.depth, r.svg); }); }
 			G.people.forEach(function (pp) { sc.push(sc.depth([pp.x, pp.y, 0]) + 0.3, person2d(sc, pp)); });
@@ -2323,7 +2392,7 @@
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
 		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
 		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _solarFaces: solarFaces, _balconies: balconies, _balcMark: balcMark, _vehicles: vehicleList, _roomsOf: roomsOf, _roomItems: roomItems, _mainRoom: mainRoom, _balconyType: balconyType, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
-		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
+		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _vehSize: function (t) { return VEH[t] || VEH.sedan; }, _site: siteGet, _siteKey: SITE_KEY, _turnRect: turnRect, _openingAt: openingAt, _chimneyAt: chimneyAt, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));

@@ -1064,6 +1064,8 @@ final class Definitions {
 		// electronics and pets fields edit it in the interior view; items not placed go to a fitting room.
 		$f[] = array( 'id' => 'room_items', 'category' => 'furniture', 'type' => 'roomitems', 'label' => __( 'Tárgyak helyiségenként', 'autogrowehome' ), 'help' => '', 'default' => array(), 'prompt' => '' );
 		$f[] = array( 'id' => 'room_layout', 'category' => 'furniture', 'type' => 'layout', 'label' => __( 'Kézi elrendezés', 'autogrowehome' ), 'help' => __( 'A belső nézetben egérrel áthelyezett és elforgatott tárgyak.', 'autogrowehome' ), 'default' => array(), 'prompt' => '' );
+		// 1.18.0: the garden pieces, openings and the chimney moved and turned by hand in the 3D view
+		$f[] = array( 'id' => 'site_layout', 'category' => 'garden', 'type' => 'layout', 'layout' => 'site', 'label' => __( 'Kézi elrendezés kívül', 'autogrowehome' ), 'help' => __( 'A 3D nézetben egérrel áthelyezett és elforgatott kerti tárgyak, nyílászárók és a kémény.', 'autogrowehome' ), 'default' => array(), 'prompt' => '' );
 		// Build mode („Építés az alapoktól”, includes/Build/Build.php): the drawn foundation, walls and openings.
 		$f[] = array( 'id' => 'build', 'category' => 'basics', 'type' => 'build', 'label' => __( 'Építési terv', 'autogrowehome' ), 'help' => __( 'Az „Építés az alapoktól” módban rajzolt alap, falak és nyílások.', 'autogrowehome' ), 'default' => array(), 'prompt' => '' );
 		$f[] = array_merge(

@@ -644,6 +644,29 @@ final class Strings {
 			'layout_reset'           => __( 'A helyiség berendezése visszaállt automatikusra.', 'autogrowehome' ),
 			'layout_none'            => __( 'Ebben a helyiségben még nincs kézzel elhelyezett tárgy.', 'autogrowehome' ),
 			'layout_hint'            => __( 'Fogd meg egérrel a bútort, és tedd oda, ahova szeretnéd.', 'autogrowehome' ),
+			// 1.18.0: moving garden pieces, openings and the chimney outside
+			'site_hint'              => __( 'Fogd meg egérrel a kerti tárgyakat, az ablakokat, az ajtókat vagy a kéményt. Ctrl + húzás: forgatás, Shift: egyenesbe.', 'autogrowehome' ),
+			'site_hint_short'        => __( 'Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás', 'autogrowehome' ),
+			'site_reset'             => __( 'Kézi elrendezés visszaállítása (kert, nyílászárók, kémény)', 'autogrowehome' ),
+			'site_reset_done'        => __( 'Visszaállítva az automatikus elrendezésre.', 'autogrowehome' ),
+			'place_ok'               => __( 'Jó hely', 'autogrowehome' ),
+			'place_selected'         => __( 'Kijelölve', 'autogrowehome' ),
+			'place_keys'             => __( 'Nyilak: mozgatás · R: forgatás · Esc: kész', 'autogrowehome' ),
+			'place_out_plot'         => __( 'A telken kívül van', 'autogrowehome' ),
+			'place_on_house'         => __( 'A házba lóg', 'autogrowehome' ),
+			'place_on_terrace'       => __( 'A teraszon van', 'autogrowehome' ),
+			'place_on_garage'        => __( 'A garázsba lóg', 'autogrowehome' ),
+			/* translators: %s: distance in metres */
+			'place_pool_house'       => __( 'A medence legyen legalább %s m-re a háztól', 'autogrowehome' ),
+			/* translators: %s: distance in metres */
+			'place_tree_house'       => __( 'A fa legyen legalább %s m-re a háztól', 'autogrowehome' ),
+			'place_overlap'          => __( 'Másik tárgyra került', 'autogrowehome' ),
+			/* translators: %s: distance in metres */
+			'place_op_corner'        => __( 'A nyílás legyen legalább %s m-re a saroktól', 'autogrowehome' ),
+			/* translators: %s: distance in metres */
+			'place_op_gap'           => __( 'Két nyílás között legalább %s m kell', 'autogrowehome' ),
+			/* translators: %s: distance in metres */
+			'place_chimney_ridge'    => __( 'A kémény a gerinctől legfeljebb %s m-re javasolt', 'autogrowehome' ),
 			'layout_reset_room'      => __( 'Berendezés visszaállítása', 'autogrowehome' ),
 			'layout_undo'            => __( 'Mozgatás visszavonása', 'autogrowehome' ),
 			'sketch_reset_view'      => __( 'Nézet visszaállítása', 'autogrowehome' ),

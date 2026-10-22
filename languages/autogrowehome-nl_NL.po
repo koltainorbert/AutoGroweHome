@@ -10452,3 +10452,79 @@ msgstr "De aanzichten krijgen ook het hoofdbeeld"
 #: includes/Admin/Admin.php
 msgid "Fotó a 3D képből módban a galéria nézetei alapból csak a saját 3D képükből készülnek. Bekapcsolva a kiválasztott fő kép is második képként megy (egységesebb anyagok), de a fő kép nézőpontja átszivároghat a hátsó és oldalsó nézetbe."
 msgstr "In de modus foto uit de 3D-afbeelding worden de galerijaanzichten alleen uit hun eigen 3D-afbeelding gemaakt. Ingeschakeld gaat het gekozen hoofdbeeld als tweede afbeelding mee (gelijkmatigere materialen), maar het standpunt ervan kan doorsijpelen in de achter- en zijaanzichten."
+
+#: includes/Params/Definitions.php
+msgid "Kézi elrendezés kívül"
+msgstr "Handmatige indeling buiten"
+
+#: includes/Params/Definitions.php
+msgid "A 3D nézetben egérrel áthelyezett és elforgatott kerti tárgyak, nyílászárók és a kémény."
+msgstr "Tuinelementen, ramen, deuren en de schoorsteen die in de 3D-weergave met de muis zijn verplaatst en gedraaid."
+
+#: includes/Frontend/Strings.php
+msgid "Fogd meg egérrel a kerti tárgyakat, az ablakokat, az ajtókat vagy a kéményt. Ctrl + húzás: forgatás, Shift: egyenesbe."
+msgstr "Pak tuinelementen, ramen, deuren of de schoorsteen met de muis. Ctrl + slepen: draaien, Shift: rechtzetten."
+
+#: includes/Frontend/Strings.php
+msgid "Kézi elrendezés visszaállítása (kert, nyílászárók, kémény)"
+msgstr "Handmatige indeling herstellen (tuin, ramen en deuren, schoorsteen)"
+
+#: includes/Frontend/Strings.php
+msgid "Visszaállítva az automatikus elrendezésre."
+msgstr "Teruggezet naar de automatische indeling."
+
+#: includes/Frontend/Strings.php
+msgid "Jó hely"
+msgstr "Goede plek"
+
+#: includes/Frontend/Strings.php
+msgid "Kijelölve"
+msgstr "Geselecteerd"
+
+#: includes/Frontend/Strings.php
+msgid "Nyilak: mozgatás · R: forgatás · Esc: kész"
+msgstr "Pijlen: verplaatsen · R: draaien · Esc: klaar"
+
+#: includes/Frontend/Strings.php
+msgid "A telken kívül van"
+msgstr "Ligt buiten het perceel"
+
+#: includes/Frontend/Strings.php
+msgid "A házba lóg"
+msgstr "Steekt in het huis"
+
+#: includes/Frontend/Strings.php
+msgid "A teraszon van"
+msgstr "Staat op het terras"
+
+#: includes/Frontend/Strings.php
+msgid "A garázsba lóg"
+msgstr "Steekt in de garage"
+
+#: includes/Frontend/Strings.php
+msgid "A medence legyen legalább %s m-re a háztól"
+msgstr "Het zwembad hoort minstens %s m van het huis"
+
+#: includes/Frontend/Strings.php
+msgid "A fa legyen legalább %s m-re a háztól"
+msgstr "De boom hoort minstens %s m van het huis"
+
+#: includes/Frontend/Strings.php
+msgid "Másik tárgyra került"
+msgstr "Overlapt een ander element"
+
+#: includes/Frontend/Strings.php
+msgid "A nyílás legyen legalább %s m-re a saroktól"
+msgstr "De opening hoort minstens %s m van de hoek"
+
+#: includes/Frontend/Strings.php
+msgid "Két nyílás között legalább %s m kell"
+msgstr "Tussen twee openingen is minstens %s m nodig"
+
+#: includes/Frontend/Strings.php
+msgid "A kémény a gerinctől legfeljebb %s m-re javasolt"
+msgstr "De schoorsteen staat bij voorkeur hoogstens %s m van de nok"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
+msgstr "Sleep de achtergrond: draaien · Pak een object: verplaatsen"

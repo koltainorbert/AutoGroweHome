@@ -134,6 +134,9 @@ final class Validator {
 				}
 				return $out;
 			case 'layout':
+				if ( 'site' === ( $def['layout'] ?? '' ) ) {
+					return self::site_layout( $value );
+				}
 				// room id => slot ("key#index") => hand placed position and angle in the room
 				$out = array();
 				foreach ( is_array( $value ) ? array_slice( $value, 0, 60, true ) : array() as $room => $slots ) {
@@ -412,5 +415,25 @@ final class Validator {
 				'levels'   => $levels,
 			),
 		);
+	}
+
+	/**
+	 * The garden pieces, openings and chimney moved by hand in the 3D view (1.18.0): key => {x, y, rot}.
+	 * The keys are the shared plan's own (agh-sketch.js SITE_KEY); x and y are plan metres, rot degrees.
+	 */
+	public static function site_layout( $value ): array {
+		$out = array();
+		foreach ( is_array( $value ) ? array_slice( $value, 0, 200, true ) : array() as $key => $pos ) {
+			$key = (string) $key;
+			if ( ! preg_match( '/^(pool|shed|playground|pergola|firepit|furniture|tfurniture|kennel|charger|chimney|(plant|vehicle|person|pet|light)#[0-9]{1,3}|(door|tdoor)@[0-9]{1,2}|win@[0-9]{1,2}:(front|right|back|left):[0-9]{1,2}:([0-9]{1,3}|g))$/', $key ) || ! is_array( $pos ) || ! isset( $pos['x'] ) || ! is_numeric( $pos['x'] ) ) {
+				continue;
+			}
+			$out[ $key ] = array(
+				'x'   => round( min( 200, max( -200, (float) $pos['x'] ) ), 3 ),
+				'y'   => round( min( 200, max( -200, (float) ( $pos['y'] ?? 0 ) ) ), 3 ),
+				'rot' => (int) round( fmod( fmod( (float) ( $pos['rot'] ?? 0 ), 360 ) + 360, 360 ) ) % 360,
+			);
+		}
+		return $out;
 	}
 }

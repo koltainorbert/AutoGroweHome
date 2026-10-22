@@ -400,6 +400,22 @@ final class Frontend {
 		if ( Build::enabled() ) {
 			$data['build'] = self::build_boot();
 		}
+		$data['place'] = self::place_rules();
 		return $data;
+	}
+
+	/**
+	 * Placement thresholds for moving pieces by hand in the 3D view (1.18.0): metric => value, from the
+	 * `placement` records of the rule package (assets/data/rules/hu.json). Warnings only, never a ban.
+	 */
+	public static function place_rules(): array {
+		$out = array();
+		$hu  = Build::read_json( 'assets/data/rules/hu.json' );
+		foreach ( (array) ( $hu['placement'] ?? array() ) as $r ) {
+			if ( is_array( $r ) && isset( $r['metric'], $r['value'] ) && is_numeric( $r['value'] ) ) {
+				$out[ (string) $r['metric'] ] = (float) $r['value'];
+			}
+		}
+		return $out;
 	}
 }

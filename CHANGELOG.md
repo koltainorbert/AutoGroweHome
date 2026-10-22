@@ -1,5 +1,18 @@
 # Változásnapló
 
+## 1.18.0 – 2026-10-22
+
+Norbi: „3D tervezőben is arrébb akarom tudni tenni a kéményt, az ablakokat, ajtókat és mindent, és forgatni”, Shift-tel egyenesbe, jelölve, hova szabad tenni és hova nem. A teljes lista (törlés, helyiségprogram, díszítőanyag, medence/garázs, melléképületek, élethű modellek) ütemezve: `docs/FELADAT-1.18.0.md`.
+
+- **Megfogás a 3D tervezőben, kívül:** medence, tároló, játszótér, pergola, tűzrakó, kerti és teraszbútor, lámpák, fák és bokrok, járművek (a beálló autója is), emberek, kutya, macska, kutyaház, töltő – egérrel azonnal, ujjal rövid nyomás után; a tárgy fölött a mutató kézzé vált. Gyökérok: kívül minden egy hálóba olvadt, ezért semmi nem volt mozdítható; most minden kerti tárgy saját, külön összevont csoport.
+- **Ablak, bejárati ajtó, teraszajtó:** a saját falán csúszik (keret mutatja az új helyet), elengedéskor a fal újraépül az új nyílással; a terasz követi a teraszajtót. **Kémény:** a tetőn húzható.
+- **Forgatás:** Ctrl (⌘) + oldalra húzás, görgő vagy R (15°); **Shift: egyenesbe** (0/90/180/270°). Kijelölt tárgy: nyilak 10 cm (Shift: 50 cm), R, Esc. Húzás közben Esc: visszaugrik. A belső nézetben is így: a forgatás eddig Shift volt, most Ctrl/görgő/R, a Shift egyenesbe állít.
+- **Jelölés:** a tárgy alatt (az ablak körül, a kémény tetején) keret: zöld = jó hely, piros = nem, a képen alul az ok (telken kívül, a házba/garázsba lóg, a teraszon van, medence < 1 m, fa < 2 m (nagy fa < 3 m) a háztól, másik tárgyra került, nyílás < 0,6 m a saroktól vagy < 0,3 m másik nyílástól, kémény > 0,6 m a gerinctől). Figyelmeztetés, nem tiltás. Szabályok adatként: `assets/data/rules/hu.json` → `placement` (6 rekord, `verified: false`, jó gyakorlat, nem jogszabály).
+- **Mentés:** új mező `site_layout` (kulcs → {x, y, rot}); Ctrl+Z visszavon, jobb alul „Kézi elrendezés visszaállítása”. A közös terv (`gardenLayout`, `frontPlan`, ablakkiosztás, kémény) olvassa, így a 2D vázlat, a 3D, a vezetőkép és a fotó ugyanazt mutatja; a prompt (régi út) egy mondattal jelzi, hogy az elrendezést az ügyfél állította be.
+- Mérve: új `tests/e2e/move.js` 21/21 (9 tárgyfajta mozgatva és mentve, Ctrl-forgatás 0° → 48°, Shift → 90°, R +15°, nyíl 10 cm, Esc, a házra húzva piros „A házba lóg”, Ctrl+Z, ablak 8,06 → 8,85 m, ajtó 2,81 → 4,74 m, kémény 7,57 → 6,59 m újraépítve, újratöltés után 9/9 tárgy és 3/3 nyílás a helyén, visszaállítás, konzolhiba 0) · `layout.js` 15/15 fogható, kilóg 0 · `pick.js` 122 rész, 9/12 találat · `guide.js` 6 nézet + belső, konzolhiba 0 · `cards.js` 55 mező 0 hiba · `street.js` 16 helyszín · `responsive.js` 24 méret, túlfutás 0 · `fullscreen.js` 76/76 · `theme.js` zöld · `wizard`, `gen` zöld · sketch 1247 rajz 0 hiba · `guide-test` 62/62 · `match-test` 26/26 · `photo-test` 28/28 · `vision-test` 55/55 · `build-test` 6975/6975 · `build-test.php` 2235/2235 · storage 10/10 + 11/11 · stuck 9/9 · autoloader 125/125 · lint 0 · 15 nyelv × 2534 szöveg, 0 hiba.
+- **Sebesség (mérve, SwiftShader):** rajzolási hívás alapházon 96 → 106, sok kerti elemmel 153 → 186; betöltés kattintástól a kész 3D képig 6304 → 6602 ms (+4,7 %), lassú 3 Mbit/s-on 9725 → 9745 ms.
+- Korlát: a garázs és a terasz helye még nem mozdítható (a garázs az 1.22.0 része); a 2D vázlat a 90°-tól eltérő forgatást a befoglaló téglalappal rajzolja; a virágágyás virágai a ággyal maradnak.
+
 ## 1.17.0 – 2026-10-22
 
 Norbi: „a kép generálás kezd jó lenni, ez a jó út!” – de nem stúdió minőség, és a kerti, hátsó, oldalsó nézet selejt; minden irányból a 3D képből kell. Munkaprompt: `docs/FELADAT-1.17.0.md`.

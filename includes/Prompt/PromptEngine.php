@@ -474,6 +474,11 @@ final class PromptEngine {
 			$cl['landscape'] = Definitions::landscape_for_style( (string) ( $c['arch_style'] ?? '' ) );
 		}
 		$garden = self::join_phrases( $garden, self::phrase( 'landscape', $cl ) );
+		// pieces the visitor placed and turned by hand in the 3D view (1.18.0): the image keeps that arrangement
+		$site = $c['site_layout'] ?? array();
+		if ( is_array( $site ) && count( $site ) ) {
+			$garden = self::join_phrases( $garden, 'garden, windows and doors arranged by the client themselves in the 3D model – keep every piece where the 3D model shows it' );
+		}
 		// balcony details only with a balcony on an upper floor; vehicles, people and pets around the house
 		if ( ! empty( $c['balcony'] ) && 'single' !== ( $c['levels'] ?? 'single' ) ) {
 			$garden = self::join_phrases( $garden, self::phrases( array( 'balcony_type', 'balcony_place', 'balcony_size' ), $c ) );

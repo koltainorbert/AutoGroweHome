@@ -307,9 +307,10 @@ function faceOpenings(c, v, pl, F, fp, rise, gabled) {
 	if (v.glass) { return out; }
 	// build mode (agh-build.js): exactly the drawn openings of this face
 	if (v.bOps) { return (v.bOps[F.name] || []).filter(function (o) { return o.x >= 0.02 && o.x + o.w <= len - 0.02; }).map(function (o) { return { kind: o.kind, x: o.x, y: o.y, w: o.w, h: o.h, fl: o.fl }; }); }
+	var vk = v.vi || 0, K = SK();
 	if (fp) {
-		if (fp.door) { out.push({ kind: 'door', x: fp.door.x, y: pl.plinth, w: fp.door.w, h: fp.door.h }); reserved.push([fp.door.x - 0.5, fp.door.x + fp.door.w + 0.5]); }
-		if (fp.tdoor) { out.push({ kind: 'tdoor', x: fp.tdoor.x, y: pl.plinth, w: fp.tdoor.w, h: 2.35 }); reserved.push([fp.tdoor.x - 0.4, fp.tdoor.x + fp.tdoor.w + 0.4]); }
+		if (fp.door) { out.push({ kind: 'door', x: fp.door.x, y: pl.plinth, w: fp.door.w, h: fp.door.h, key: 'door@' + vk }); reserved.push([fp.door.x - 0.5, fp.door.x + fp.door.w + 0.5]); }
+		if (fp.tdoor) { out.push({ kind: 'tdoor', x: fp.tdoor.x, y: pl.plinth, w: fp.tdoor.w, h: 2.35, key: 'tdoor@' + vk }); reserved.push([fp.tdoor.x - 0.4, fp.tdoor.x + fp.tdoor.w + 0.4]); }
 		blocked = fp.block.map(function (b) { return [b[0] - 0.3, b[1] + 0.3]; });
 	}
 	var entrance = !!(fp && fp.door);
@@ -326,22 +327,24 @@ function faceOpenings(c, v, pl, F, fp, rise, gabled) {
 		if (F.name === 'back' && !st.band) { n = Math.max(1, n - 1); }
 		var step = len / n, row = [];
 		for (var i = 0; i < n; i++) {
-			var x = step * i + (step - w) / 2;
-			if (fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
-			if (blocked.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
-			row.push({ x: x, w: w, i: i });
+			// a window moved by hand along its wall (1.18.0) keeps its place even beside a door
+			var x = step * i + (step - w) / 2, wk = 'win@' + vk + ':' + F.name + ':' + fl + ':' + i, mx = K._openingAt(c, wk, x, w, len);
+			if (mx === x && fl === 0 && reserved.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
+			if (mx === x && blocked.some(function (r) { return x < r[1] && x + w > r[0]; })) { continue; }
+			row.push({ x: mx, w: w, i: i, key: wk });
 		}
 		// behind a balcony the windows become doors (shared rule with the 2D sketch)
 		if (fl > 0 && F.balc && F.balc.length) { SK()._balcMark(F.balc, F.name, fl, row); }
 		for (var ri = 0; ri < row.length; ri++) {
 			var o = row[ri];
-			if (o.door) { out.push({ kind: 'bdoor', x: o.x, y: z0 + 0.02, w: o.w, h: Math.min(2.3, pl.FH - 0.45), fl: fl, french: !!o.french }); }
-			else { out.push({ kind: 'win', x: o.x, y: z0 + sill, w: w, h: h, fl: fl, i: o.i }); }
+			if (o.door) { out.push({ kind: 'bdoor', x: o.x, y: z0 + 0.02, w: o.w, h: Math.min(2.3, pl.FH - 0.45), fl: fl, french: !!o.french, key: o.key }); }
+			else { out.push({ kind: 'win', x: o.x, y: z0 + sill, w: w, h: h, fl: fl, i: o.i, key: o.key }); }
 		}
 	}
 	if (gabled && (pl.attic || rise > 2.2)) {
 		var gw = Math.min(1.6, len * 0.22), gh = Math.min(1.3, rise - 0.9, rise * (1 - gw / len) - 0.55, gabled === 'half_hip' ? rise * 0.58 - 0.55 : 9);
-		if (gh > 0.4) { out.push({ kind: 'win', x: len / 2 - gw / 2, y: v.h + 0.35, w: gw, h: gh, gable: true }); }
+		var gk = 'win@' + vk + ':' + F.name + ':0:g', gx = clamp(K._openingAt(c, gk, len / 2 - gw / 2, gw, len), len * 0.3 - gw / 2, len * 0.7 - gw / 2);
+		if (gh > 0.4) { out.push({ kind: 'win', x: gx, y: v.h + 0.35, w: gw, h: gh, gable: true, key: gk }); }
 	}
 	if (c.corner_window && F.name === 'front' && entrance) { out.unshift({ kind: 'win', x: len - 1.7, y: pl.plinth + 0.5, w: 1.6, h: 1.8, corner: true }); }
 	// holes must not overlap: doors and the corner window win over ordinary windows
@@ -367,8 +370,28 @@ function House(c, opts) {
 House.prototype.add = function (m, fit) {
 	// which setting this piece belongs to (a tap on the model jumps there); the innermost phase wins
 	if (m && this.tagNow && !m.userData.field) { m.userData.field = this.tagNow; }
+	if (m && this.addTo) { this.addTo.add(m); return m; }
 	if (m) { (fit === false ? this.root : this.fit).add(m); }
 	return m;
+};
+/* A piece the visitor can pick up and move (1.18.0): built in its own group around its centre (plan cx, cy),
+ * turned by `turn` degrees; the group is merged on its own and stays out of the big merge of the house, so
+ * the drag moves and turns it as one. Option cards and small pictures build it straight into the house. */
+House.prototype.mover = function (key, cx, cy, turn, build, info) {
+	if (this.o.mini || this.o.noMove) { build(); return null; }
+	var outer = new THREE.Group(), inner = new THREE.Group(), prev = this.addTo;
+	this.addTo = inner;
+	try { build(); } finally { this.addTo = prev; }
+	if (!inner.children.length) { return null; }
+	inner.position.set(-cx, 0, -cy);
+	outer.position.set(cx, 0, cy);
+	outer.rotation.y = (turn || 0) * D2R;
+	outer.add(inner);
+	outer.userData.slot = key;
+	outer.userData.move = Object.assign({ kind: 'site', cx: cx, cy: cy, turn: turn || 0 }, info || {});
+	if (!this.movers) { this.movers = new THREE.Group(); this.movers.name = 'movers'; this.root.add(this.movers); }
+	this.movers.add(outer);
+	return outer;
 };
 
 House.prototype.build = function () {
@@ -407,6 +430,8 @@ House.prototype.volume = function (v, idx, type, vpl) {
 		F.balc = BL;
 		var ops = faceOpenings(c, v, pl, F, F.fp, rise, top && type !== 'shed' && type !== 'saw' ? type : false);
 		F.ops = ops;
+		// what a drag along the wall needs to know (1.18.0): the face, its length and its local → world matrix
+		ops.forEach(function (o) { if (o.key && !v.bOps) { o.face = F.name; o.len = F.len; o.m = m; o.top = top; o.z0 = z0; o.fullH = type === 'shed' && F.name === (v.ridge !== 'y' ? 'back' : 'left') ? v.h + rise : v.h; } });
 		// a shed roof's high side needs a full-height wall
 		var fullH = type === 'shed' && F.name === (v.ridge !== 'y' ? 'back' : 'left') ? v.h + rise : v.h;
 		// wall shape with holes
@@ -609,7 +634,8 @@ House.prototype.wallTech = function (g, F, T) {
 House.prototype.opening = function (g, o, T, st) {
 	// the whole opening goes into its own group, so a tap on it finds the window (or the front door)
 	var og = new THREE.Group();
-	og.userData.field = o.kind === 'door' ? 'entrance_door' : 'window_style';
+	og.userData.field = o.kind === 'door' ? 'entrance_door' : (o.kind === 'tdoor' ? 'terrace_door' : 'window_style');
+	if (o.m) { og.userData.op = o; }
 	g.add(og); g = og;
 	var c = this.c, fm = frameMat(c), gm = glassMat(c, this.night), reveal = st.reveal ? 0.2 : 0.1, fd = 0.08;
 	var w0 = T - reveal - fd, w1 = T - reveal, mat = c.window_frame_material || 'aluminium';
@@ -833,7 +859,17 @@ House.prototype.roofItems = function (v, type, info, vpl) {
 	var panelM = pbr('solar', { type: ss.t }, { roughness: ss.t === 'glass' ? 0.25 : 0.6, metalness: 0.35, normal: ss.tiles ? 1.2 : 0.8, clearcoat: 1, physical: true });
 	var panelEdge = ss.frame ? solid(ss.frame, 0.4, 0.8) : panelM, pLift = ss.flush ? 0.03 : 0.12, pThick = ss.flush ? 0.025 : 0.04;
 	function chimney(zTop) {
-		var cs = SK()._chimney(c), cx = v.x0 + W * 0.7, cy = (v.y0 + v.y1) / 2 + 0.3, zt = zTop - 1.0 + cs.up;
+		// in its own group: the chimney can be picked up and moved on the roof (1.18.0)
+		var cg = new THREE.Group(), prevA = self.addTo, prevT = self.tagNow;
+		self.addTo = cg; self.tagNow = 'chimney';
+		try { chimneyParts(zTop); } finally { self.addTo = prevA; self.tagNow = prevT; }
+		var cs0 = SK()._chimney(c), ca0 = SK()._chimneyAt(c, v);
+		cg.userData.field = 'chimney';
+		cg.userData.op = { key: 'chimney', kind: 'chimney', x: ca0.x, y: ca0.y, w: cs0.w, d: cs0.d, vx0: v.x0, vx1: v.x1, vy0: v.y0, vy1: v.y1, ridge: v.ridge, type: type, top: zTop - 1.0 + cs0.up };
+		self.add(cg);
+	}
+	function chimneyParts(zTop) {
+		var cs = SK()._chimney(c), ca = SK()._chimneyAt(c, v), cx = ca.x, cy = ca.y, zt = zTop - 1.0 + cs.up;
 		var mat = cs.mat === 'brick' ? pbr('brick', { color: cs.color }, { normal: 1.6 }) : (cs.mat === 'stone' ? pbr('stone', { color: cs.color }, { normal: 2 }) : (cs.metal ? solid(cs.color, 0.35, 0.75) : (cs.t === 'wide' ? pbr('render', { color: cs.color, texture: 'fine' }, { normal: 0.6 }) : pbr('render', { color: cs.color, texture: 'fine' }, { normal: 0.6 }))));
 		if (cs.t === 'steel') {
 			var fl = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, zt - (v.h - 0.2), 20), mat); fl.position.copy(X(cx + 0.16, cy + 0.16, (v.h - 0.2 + zt) / 2)); fl.castShadow = true; self.add(fl);
@@ -1065,7 +1101,11 @@ House.prototype.extras = function () {
 			if (c.outdoor_covered) { this.add(box(tx0, pby, ph + 0.18, tx0 + tw, ty1, ph + 0.3, solid(shadeHex(col(c.facade_color, '#F2EFE9'), -0.1), 0.7))); }
 			else { for (var bb = 0; bb < tw; bb += 0.55) { this.add(box(tx0 + bb, pby, ph + 0.18, tx0 + bb + 0.1, ty1, ph + 0.32, pm)); } }
 		}
-		if (has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen')) { this.furniture(tx0 + tw * 0.4, mainV.y1 + td * 0.35, 0.18, has(gf, 'outdoor_kitchen')); }
+		if (has(gf, 'garden_furniture') || has(gf, 'outdoor_kitchen')) {
+			// the terrace furniture can be picked up too (1.18.0): its own place, else beside the terrace door
+			var tfo = SK()._site(c, 'tfurniture'), tfx = tfo ? tfo.x : tx0 + tw * 0.4 + 0.8, tfy = tfo ? tfo.y : mainV.y1 + td * 0.35 + 1.0, okit = has(gf, 'outdoor_kitchen');
+			this.mover('tfurniture', tfx, tfy, tfo ? tfo.rot : 0, function () { self.furniture(tfx - 0.8, tfy - 1.0, tfx > tr.x0 && tfx < tr.x1 && tfy > tr.y0 && tfy < tr.y1 ? 0.18 : 0, okit); }, { kind: 'furniture', w: 2.0, d: 2.0, field: 'garden_features' });
+		}
 	}
 	var garage = c.garage || 'none';
 	if (garage !== 'none') {
@@ -1077,8 +1117,9 @@ House.prototype.extras = function () {
 			var cm = solid('#3A3D40', 0.45, 0.5);
 			[[gx0, gy1], [gx0 + gW - 0.15, gy1], [gx0, gy0 + 0.15], [gx0 + gW - 0.15, gy0 + 0.15]].forEach(function (q) { self.add(box(q[0], q[1] - 0.15, 0, q[0] + 0.15, q[1], gh, cm)); });
 			this.add(box(gx0 - 0.1, gy0, gh, gx0 + gW + 0.1, gy1 + 0.2, gh + 0.25, c.roof_surface === 'green' ? pbr('green', {}, { normal: 2 }) : solid('#5A5E62', 0.6, 0.3)));
+			// the parked car: with the garden (site) it is one of the movable vehicles there (1.18.0)
 			var pcar = SK()._vehicles(c).filter(function (k) { return k !== 'motorcycle' && k !== 'bicycle'; })[0];
-			if (pcar) { this.add(life(INT.vehicle(INT.mats(c), pcar, col(c.car_color, '#3C4148')), gx0 + gW / 2, gy1 - 2.975, Math.PI / 2)); }
+			if (pcar && this.o.mini) { this.add(life(INT.vehicle(INT.mats(c), pcar, col(c.car_color, '#3C4148')), gx0 + gW / 2, gy1 - 2.975, Math.PI / 2)); }
 		} else {
 			var doors = garage === 'garage_2' ? 2 : 1, dw = garage === 'garage_2' ? 2.5 : 2.6;
 			var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(gW, 0); s.lineTo(gW, gh); s.lineTo(0, gh); s.lineTo(0, 0);
@@ -1159,41 +1200,70 @@ House.prototype.site = function () {
 	var dk = { gravel: 'gravel', grass: 'grasspavers', asphalt: 'asphalt' }[c.driveway] || 'pavers';
 	flat(G.drive.x0, G.drive.y0, G.drive.x1, G.drive.y1, 0.02, groundKind(c, dk));
 	if (G.gravel) { flat(G.gravel.x0, G.gravel.y0, G.gravel.x1, G.gravel.y1, 0.012, groundKind(c, 'gravel')); }
+	// every piece below can be picked up in the 3D view (1.18.0): each is built around its centre in its
+	// own group; a rectangle (pool, shed, pergola, play area) keeps its size and is turned as a whole
+	var unturned = function (r) { return { x0: r.cx - r.w / 2, y0: r.cy - r.d / 2, x1: r.cx + r.w / 2, y1: r.cy + r.d / 2 }; };
 	if (G.pool) {
-		var pr = G.pool, px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
-		flat(px0, py0, px0 + poolW, py0 + pdp, 0.06, groundKind(c, 'slabs'));
-		var water = cached('water', function () { return stdMat({ color: '#2D8FB0', roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
-		flat(px0 + 0.3, py0 + 0.3, px0 + poolW - 0.3, py0 + pdp - 0.3, 0.07, water);
+		var pr = unturned(G.pool), px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
+		this.mover('pool', G.pool.cx, G.pool.cy, G.pool.rot, function () {
+			flat(px0, py0, px0 + poolW, py0 + pdp, 0.06, groundKind(c, 'slabs'));
+			var water = cached('water', function () { return stdMat({ color: '#2D8FB0', roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
+			flat(px0 + 0.3, py0 + 0.3, px0 + poolW - 0.3, py0 + pdp - 0.3, 0.07, water);
+		}, { kind: 'pool', w: poolW, d: pdp, field: 'garden_features' });
 	}
-	G.flats.forEach(function (f) { flat(f.x0, f.y0, f.x1, f.y1, 0.03, groundKind(c, f.kind)); });
-	if (G.shed) { var sh = G.shed; this.add(box(sh.x0 + 0.1, sh.y0 + 0.1, 0, sh.x1 - 0.1, sh.y1 - 0.1, 2.3, pbr('wood', { color: '#9A7048' }, { normal: 1 })), false); this.add(box(sh.x0, sh.y0, 2.3, sh.x1, sh.y1, 2.42, solid('#3A3D40', 0.6)), false); }
+	G.flats.forEach(function (f) {
+		if (f.kind === 'sand' && G.playground) { return; }
+		flat(f.x0, f.y0, f.x1, f.y1, 0.03, groundKind(c, f.kind));
+	});
+	if (G.playground) {
+		var pgr = unturned(G.playground);
+		this.mover('playground', G.playground.cx, G.playground.cy, G.playground.rot, function () { flat(pgr.x0, pgr.y0, pgr.x1, pgr.y1, 0.03, groundKind(c, 'sand')); }, { kind: 'structure', w: pgr.x1 - pgr.x0, d: pgr.y1 - pgr.y0, field: 'garden_features' });
+	}
+	if (G.shed) {
+		var sh = unturned(G.shed);
+		this.mover('shed', G.shed.cx, G.shed.cy, G.shed.rot, function () { self.add(box(sh.x0 + 0.1, sh.y0 + 0.1, 0, sh.x1 - 0.1, sh.y1 - 0.1, 2.3, pbr('wood', { color: '#9A7048' }, { normal: 1 })), false); self.add(box(sh.x0, sh.y0, 2.3, sh.x1, sh.y1, 2.42, solid('#3A3D40', 0.6)), false); }, { kind: 'structure', w: sh.x1 - sh.x0, d: sh.y1 - sh.y0, field: 'garden_features' });
+	}
 	if (G.firepit) {
-		var fp = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.65, 0.35, 24), pbr('stone', { color: '#8D8576' }, { normal: 2 })); fp.position.copy(X(G.firepit.x, G.firepit.y, 0.17)); this.add(fp, false);
-		var fire = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 12), solid('#FF8A30', 0.8, 0, { emissive: '#FF7A20', emissiveIntensity: this.night ? 4 : 1.5 })); fire.position.copy(X(G.firepit.x, G.firepit.y, 0.6)); this.add(fire, false);
+		this.mover('firepit', G.firepit.x, G.firepit.y, G.firepit.turn, function () {
+			var fp = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.65, 0.35, 24), pbr('stone', { color: '#8D8576' }, { normal: 2 })); fp.position.copy(X(G.firepit.x, G.firepit.y, 0.17)); self.add(fp, false);
+			var fire = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 12), solid('#FF8A30', 0.8, 0, { emissive: '#FF7A20', emissiveIntensity: self.night ? 4 : 1.5 })); fire.position.copy(X(G.firepit.x, G.firepit.y, 0.6)); self.add(fire, false);
+		}, { kind: 'structure', w: 1.3, d: 1.3, field: 'garden_features' });
 	}
 	if (G.pergola) {
-		var pgx = G.pergola.x0, pgy = G.pergola.y0, pm = pbr('wood', { color: '#8A6A4C' }, { normal: 1 });
-		[[pgx, pgy], [pgx + 2.8, pgy], [pgx, pgy + 2.4], [pgx + 2.8, pgy + 2.4]].forEach(function (q) { self.add(box(q[0], q[1], 0, q[0] + 0.14, q[1] + 0.14, 2.5, pm), false); });
-		for (var pb = 0; pb < 3; pb += 0.45) { this.add(box(pgx + pb, pgy - 0.1, 2.5, pgx + pb + 0.08, pgy + 2.6, 2.62, pm), false); }
+		var pgo = unturned(G.pergola), pgx = pgo.x0, pgy = pgo.y0, pgw = pgo.x1 - pgo.x0 - 0.2, pgd = pgo.y1 - pgo.y0 - 0.2, pm = pbr('wood', { color: '#8A6A4C' }, { normal: 1 });
+		this.mover('pergola', G.pergola.cx, G.pergola.cy, G.pergola.rot, function () {
+			[[pgx, pgy], [pgx + pgw - 0.2, pgy], [pgx, pgy + pgd - 0.2], [pgx + pgw - 0.2, pgy + pgd - 0.2]].forEach(function (q) { self.add(box(q[0], q[1], 0, q[0] + 0.14, q[1] + 0.14, 2.5, pm), false); });
+			for (var pb = 0; pb < pgw - 0.05; pb += 0.45) { self.add(box(pgx + pb, pgy - 0.1, 2.5, pgx + pb + 0.08, pgy + pgd, 2.62, pm), false); }
+		}, { kind: 'structure', w: pgw, d: pgd, field: 'garden_features' });
 	}
-	if (G.furniture) { this.furniture(G.furniture.x, G.furniture.y, 0, G.furniture.kitchen); }
-	G.lights.forEach(function (q) {
-		self.add(box(q[0] - 0.06, q[1] - 0.06, 0, q[0] + 0.06, q[1] + 0.06, 0.6, solid('#2E3135', 0.4, 0.5)), false);
-		self.add(box(q[0] - 0.07, q[1] - 0.07, 0.48, q[0] + 0.07, q[1] + 0.07, 0.56, self.night ? solid('#3A3020', 0.3, 0, { emissive: '#FFD9A0', emissiveIntensity: 4 }) : solid('#D8D8D2', 0.3)), false);
+	if (G.furniture) {
+		var fu = G.furniture;
+		this.mover('furniture', fu.x + 0.8, fu.y + 1.0, fu.turn, function () { self.furniture(fu.x, fu.y, 0, fu.kitchen); }, { kind: 'furniture', w: 2.0, d: 2.0, field: 'garden_features' });
+	}
+	G.lights.forEach(function (q, i) {
+		self.mover('light#' + i, q[0], q[1], 0, function () {
+			self.add(box(q[0] - 0.06, q[1] - 0.06, 0, q[0] + 0.06, q[1] + 0.06, 0.6, solid('#2E3135', 0.4, 0.5)), false);
+			self.add(box(q[0] - 0.07, q[1] - 0.07, 0.48, q[0] + 0.07, q[1] + 0.07, 0.56, self.night ? solid('#3A3020', 0.3, 0, { emissive: '#FFD9A0', emissiveIntensity: 4 }) : solid('#D8D8D2', 0.3)), false);
+		}, { kind: 'light', w: 0.3, d: 0.3, field: 'garden_features' });
 	});
-	G.plants.forEach(function (p) { self.plant(p.kind, p.x, p.y, p.size, p.seed); });
+	G.plants.forEach(function (p, i) {
+		if (p.kind === 'flower') { self.plant(p.kind, p.x, p.y, p.size, p.seed); return; }
+		var big = !(p.kind === 'grass' || p.kind === 'lavender' || p.kind === 'shrub' || p.kind === 'topiary'), r = big ? clamp(p.size * 0.12, 0.35, 0.9) : 0.35;
+		self.mover('plant#' + i, p.x, p.y, p.turn, function () { self.plant(p.kind, p.x, p.y, p.size, p.seed); }, { kind: big ? 'tree' : 'plant', w: r * 2, d: r * 2, size: p.size, field: 'tree_types' });
+	});
 	// vehicles, people and pets (shared plan with the 2D sketch)
 	if (G.vehicles.length || G.people.length || G.pets.length || G.kennel) {
 		var LM = INT.mats(c), paint = col(c.car_color, '#3C4148');
-		G.vehicles.forEach(function (vh) {
-			var two = vh.type === 'motorcycle' || vh.type === 'bicycle';
-			if (vh.port && !two) { return; }
-			self.add(life(vh.type === 'motorcycle' ? INT.motorcycle(LM, paint) : (vh.type === 'bicycle' ? INT.bicycle(LM, paint) : INT.vehicle(LM, vh.type, paint)), vh.x, vh.y, Math.PI / 2), false);
+		G.vehicles.forEach(function (vh, i) {
+			var dim = K._vehSize ? K._vehSize(vh.type) : [1.9, 4.7];
+			self.mover('vehicle#' + i, vh.x, vh.y, vh.turn, function () {
+				self.add(life(vh.type === 'motorcycle' ? INT.motorcycle(LM, paint) : (vh.type === 'bicycle' ? INT.bicycle(LM, paint) : INT.vehicle(LM, vh.type, paint)), vh.x, vh.y, Math.PI / 2), false);
+			}, { kind: 'vehicle', w: dim[0], d: dim[1], field: 'vehicles' });
 		});
-		if (G.charger) { var ch = new THREE.Group(); ch.add(box(-0.1, -0.08, 0, 0.1, 0.08, 1.0, solid('#2B2E31', 0.4, 0.3))); var wb = INT.wallbox(LM); wb.position.set(0, -0.35, 0.08); ch.add(wb); self.add(life(ch, G.charger.x, G.charger.y, 0), false); }
-		if (G.kennel) { self.add(life(INT.kennel(LM), G.kennel.x, G.kennel.y, 0.3), false); }
-		G.people.forEach(function (pp) { self.add(life(INT.person(LM, pp.kind, pp.pose, pp.seed), pp.x, pp.y, pp.rot), false); });
-		G.pets.forEach(function (pp) { self.add(life(pp.kind === 'cat' ? INT.cat(LM, pp.seed, pp.pose) : INT.dog(LM, pp.kind === 'dog_small' ? 'small' : 'large', pp.seed, pp.pose), pp.x, pp.y, pp.rot, pp.z), false); });
+		if (G.charger) { self.mover('charger', G.charger.x, G.charger.y, G.charger.turn, function () { var ch = new THREE.Group(); ch.add(box(-0.1, -0.08, 0, 0.1, 0.08, 1.0, solid('#2B2E31', 0.4, 0.3))); var wb = INT.wallbox(LM); wb.position.set(0, -0.35, 0.08); ch.add(wb); self.add(life(ch, G.charger.x, G.charger.y, 0), false); }, { kind: 'structure', w: 0.3, d: 0.3, field: 'vehicles' }); }
+		if (G.kennel) { self.mover('kennel', G.kennel.x, G.kennel.y, G.kennel.turn, function () { self.add(life(INT.kennel(LM), G.kennel.x, G.kennel.y, 0.3), false); }, { kind: 'structure', w: 1.0, d: 0.9, field: 'pets' }); }
+		G.people.forEach(function (pp, i) { self.mover('person#' + i, pp.x, pp.y, pp.turn, function () { self.add(life(INT.person(LM, pp.kind, pp.pose, pp.seed), pp.x, pp.y, pp.rot), false); }, { kind: 'person', w: 0.6, d: 0.6, field: 'people' }); });
+		G.pets.forEach(function (pp, i) { self.mover('pet#' + i, pp.x, pp.y, pp.turn, function () { self.add(life(pp.kind === 'cat' ? INT.cat(LM, pp.seed, pp.pose) : INT.dog(LM, pp.kind === 'dog_small' ? 'small' : 'large', pp.seed, pp.pose), pp.x, pp.y, pp.rot, pp.z), false); }, { kind: 'pet', w: 0.7, d: 0.7, field: 'pets' }); });
 	}
 	if (G.hedge) {
 		var hm = c.season === 'winter' ? pbr('snow', {}, { normal: 0.5 }) : pbr('hedge', { season: season }, { normal: 2.5 });
@@ -1539,23 +1609,49 @@ function Viewer(opts) {
 			if (e.pointerType === 'touch') { hold = setTimeout(function () { self.grabAt(e.clientX, e.clientY, e); }, 330); }
 			else if (e.button === 0) { self.grabAt(e.clientX, e.clientY, e); }
 		});
+		var hoverAt = 0;
 		this.el.addEventListener('pointermove', function (e) {
 			if (dn && hold && (Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1])) > 8) { clearTimeout(hold); hold = 0; }
-			if (self.drag) { self.dragTo(e); }
+			if (self.drag) { self.dragTo(e); return; }
+			// a hand over a piece that can be picked up (mouse only, a few times a second)
+			if (e.pointerType === 'mouse' && !e.buttons && self.house && Date.now() - hoverAt > 90) {
+				hoverAt = Date.now();
+				var over = self.house.room ? self.itemAt(e.clientX, e.clientY) : self.extAt(e.clientX, e.clientY);
+				self.el.style.cursor = over ? 'grab' : '';
+			}
 		});
 		this.el.addEventListener('wheel', function (e) { if (self.drag) { e.preventDefault(); self.turnDrag(e.deltaY > 0 ? 15 : -15); } }, { passive: false });
 		this.el.addEventListener('pointerup', function (e) {
 			if (hold) { clearTimeout(hold); hold = 0; }
-			var wasDrag = !!self.drag;
+			var wasDrag = !!self.drag, moved = dn ? Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1]) : 99, slow = dn ? Date.now() - dn[2] > 700 : true;
 			if (wasDrag) { self.dropDrag(); }
 			if (!dn || !self.onPick) { dn = null; return; }
-			var moved = Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1]), slow = Date.now() - dn[2] > 700;
 			dn = null;
-			if (wasDrag || moved > 6 || slow) { return; }
+			// a grab that did not move is a tap: the settings still jump to the piece's field
+			if (moved > 6 || slow) { return; }
 			var hit = self.pickAt(e.clientX, e.clientY);
 			if (hit) { self.onPick(hit); }
 		});
 		this.el.addEventListener('pointercancel', function () { if (hold) { clearTimeout(hold); hold = 0; } if (self.drag) { self.dropDrag(); } });
+		// keys while a piece is held or selected (1.18.0): Esc puts it back / lets it go, R turns it,
+		// the arrows move the selected piece. Fields of the form keep their keys.
+		this.onKey = function (e) {
+			if (!self.el || !self.el.isConnected || (!self.drag && !self.sel)) { return; }
+			var tg = (e.target && e.target.tagName) || '';
+			if (/^(INPUT|TEXTAREA|SELECT)$/.test(tg) || (e.target && e.target.isContentEditable)) { return; }
+			var k = e.key;
+			if (self.drag) {
+				if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); self.dropDrag(true); }
+				else if (k === 'r' || k === 'R') { e.preventDefault(); self.turnDrag(e.shiftKey ? 90 : 15); }
+				return;
+			}
+			if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); self.select(null); self.requestRender(); return; }
+			var st = e.shiftKey ? 0.5 : 0.1, dx = 0, dz = 0, turn = 0;
+			if (k === 'ArrowLeft') { dx = -st; } else if (k === 'ArrowRight') { dx = st; } else if (k === 'ArrowUp') { dz = st; } else if (k === 'ArrowDown') { dz = -st; } else if (k === 'r' || k === 'R') { turn = e.shiftKey ? 90 : 15; } else { return; }
+			e.preventDefault(); e.stopPropagation();
+			self.nudge(dx, dz, turn);
+		};
+		document.addEventListener('keydown', this.onKey, true);
 		if (this.quality === 'high') {
 			this.composer = new EffectComposer(r, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
 			this.composer.addPass(new RenderPass(this.scene, this.camera));
@@ -1656,23 +1752,31 @@ Viewer.prototype.update = function (cfg, mode) {
 	else if (c._item) { this.house = INT.itemScene(c, c._item); }
 	else if (inner) { this.house = INT.interiorScene(c, c._int || { type: 'living' }); }
 	else if (mode === 'build' && BUILD_SCENE) { this.house = BUILD_SCENE(c, H3); }
-	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini' }).build(); }
+	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini', noMove: !!this.thumb }).build(); }
 	if (!inner) { this.landFor(c, mode); }
 	this.lampsToPool(this.house.root);
+	this.sel = null; this.drag = null;
 	if (mode === 'build' && this.house.phases) {
 		// construction phases (agh-3d-build.js): every phase is merged on its own, so it can be shown or hidden
-		this.picks = null;
+		this.picks = null; this.ops = null;
 		this.house.phases.forEach(function (g) { if (g) { mergeStatic(g); } });
 	} else {
 		this.picks = this.thumb ? null : collectPicks(this.house.root);   // before the merge, while the pieces are still apart
+		// openings and the chimney: their place on the wall / roof, kept before the merge (1.18.0)
+		this.ops = this.thumb ? null : collectOps(this.house.root);
 		// In a room every piece is merged on its own and the furniture group is left out of the big merge:
-		// that is what keeps each piece grabbable, while the number of draw calls stays low.
+		// that is what keeps each piece grabbable, while the number of draw calls stays low. The movable
+		// pieces of the garden (1.18.0) are handled the same way.
 		var itemsG = !this.thumb && this.house.items && this.house.items.children.length ? this.house.items : null;
+		var moversG = this.house.movers && this.house.movers.children.length ? this.house.movers : null;
 		if (itemsG) { itemsG.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
-		mergeStatic(this.house.fit || this.house.root, itemsG);
-		if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, this.house.fit); }
+		if (moversG) { moversG.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
+		mergeStatic(this.house.fit || this.house.root, [itemsG, moversG]);
+		if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, [this.house.fit, moversG]); }
 	}
 	this.scene.add(this.house.root);
+	// the piece selected before the rebuild (a window that was just moved along its wall) stays selected
+	this.reselect();
 	// build mode: every phase's shaders are compiled now (hidden objects would otherwise compile on their
 	// first appearance and the phase slider would stall for seconds)
 	if (mode === 'build' && this.house.phases && this.house.setPhase && this.renderer.compile) {
@@ -1896,12 +2000,14 @@ Viewer.prototype.signature = function () {
 Viewer.prototype.dispose = function () {
 	this.disposed = true;
 	if (this.controls) { this.controls.dispose(); }
+	if (this.onKey) { document.removeEventListener('keydown', this.onKey, true); }
 	if (this.house) { disposeTree(this.house.root); }
 	this.renderer.dispose();
 };
 // Draw-call diet: the static meshes of a group that share a material (and shadow flags) are baked into
 // one mesh each. Transparent, instanced, vertex-coloured meshes and meshes carrying lights stay as they are.
 function mergeStatic(group, skip) {
+	var skips = Array.isArray(skip) ? skip.filter(Boolean) : (skip ? [skip] : []);
 	group.updateMatrixWorld(true);
 	var inv = new THREE.Matrix4().copy(group.matrixWorld).invert(), buckets = {}, order = [], kill = [];
 	function hasLight(o) { var f = false; o.traverse(function (q) { if (q.isLight) { f = true; } }); return f; }
@@ -1923,7 +2029,7 @@ function mergeStatic(group, skip) {
 	}
 	(function walk(o) {
 		o.children.slice().forEach(function (ch) {
-			if (ch === skip) { return; }
+			if (skips.indexOf(ch) !== -1) { return; }
 			if (ch.isMesh && !ch.isInstancedMesh && !ch.isSkinnedMesh && ch.geometry && ch.geometry.attributes.position && !hasLight(ch)) {
 				var mats = Array.isArray(ch.material) ? ch.material : [ch.material];
 				if (!mats.some(function (m) { return !m || m.transparent || m.transmission > 0 || m.vertexColors; })) { take(ch, mats); return; }
@@ -1954,7 +2060,7 @@ function mergeStatic(group, skip) {
 	});
 	kill.forEach(function (ch) { if (ch.parent) { ch.parent.remove(ch); } if (!ch.geometry.userData.shared && !isShared(ch.geometry)) { ch.geometry.dispose(); } });
 	// empty helper groups left behind
-	(function prune(o) { o.children.slice().forEach(function (ch) { prune(ch); if (ch.isGroup && !ch.children.length && ch !== skip) { o.remove(ch); } }); })(group);
+	(function prune(o) { o.children.slice().forEach(function (ch) { if (skips.indexOf(ch) !== -1) { return; } prune(ch); if (ch.isGroup && !ch.children.length) { o.remove(ch); } }); })(group);
 }
 function disposeTree(root) { root.traverse(function (o) { if (o.geometry && !o.geometry.userData.shared && !isShared(o.geometry)) { o.geometry.dispose(); } }); }
 function isShared(g) { for (var k in FOLIAGE) { if (FOLIAGE[k] === g) { return true; } } return false; }
@@ -1988,10 +2094,34 @@ function collectPicks(root) {
 		if (!f || o.userData.picked) { return; }
 		bx.setFromObject(o);
 		if (bx.isEmpty()) { return; }
-		var b = bx.clone(), s = b.getSize(new THREE.Vector3());
-		out.push({ field: o.userData.field || f, item: o.userData.item || '', box: b, vol: Math.max(0.001, s.x * s.y * s.z) });
+		var b = bx.clone(), s = b.getSize(new THREE.Vector3()), mv = null;
+		// a piece that can be moved by hand: its box follows the piece after a drag
+		for (var q = o; q && q !== root; q = q.parent) { if (q.userData && q.userData.slot) { mv = q; break; } }
+		out.push({ field: o.userData.field || f, item: o.userData.item || '', box: b, vol: Math.max(0.001, s.x * s.y * s.z), mv: mv, box0: mv ? b.clone() : null, m0: mv ? mv.matrixWorld.clone() : null });
 	});
 	return out;
+}
+// The places of the openings and the chimney (1.18.0): kept before the merge, like the pick boxes.
+function collectOps(root) {
+	var out = [], bx = new THREE.Box3();
+	root.updateMatrixWorld(true);
+	root.traverse(function (o) {
+		var op = o.userData && o.userData.op;
+		if (!op || !op.key) { return; }
+		bx.setFromObject(o);
+		if (bx.isEmpty()) { return; }
+		out.push({ op: op, box: bx.clone().expandByScalar(0.06) });
+	});
+	return out;
+}
+function opAt(list, p) {
+	var best = null, bv = 1e9;
+	(list || []).forEach(function (q) {
+		if (!q.box.containsPoint(p)) { return; }
+		var s = q.box.getSize(new THREE.Vector3()), v = s.x * s.y * s.z;
+		if (v < bv) { bv = v; best = q; }
+	});
+	return best;
 }
 // Which setting the point belongs to: the smallest box around it, else the nearest one within 0.4 m.
 function pickFromList(list, p) {
@@ -2056,16 +2186,40 @@ function snapWall(o, w0, rot0, W, D) {
 /* ====================================================================== moving a piece by hand
    In a room the furniture stays in its own objects (they are not merged into the walls), so a piece
    can be picked up with the pointer, dragged along the floor and turned. Whatever is moved is clamped
-   inside the room and out of the doorway, and reported through `onLayout` so the designer can save it. */
-// Which piece is under the screen point: the top-level child of the room's furniture group.
-Viewer.prototype.itemAt = function (cx, cy) {
-	var hs = this.house;
-	if (!hs || !hs.items || !hs.room || !hs.room.W || !this.el) { return null; }
+   inside the room and out of the doorway, and reported through `onLayout` so the designer can save it.
+   Outside (1.18.0) the same goes for every garden piece (pool, trees, cars, people, pets, pergola …):
+   each is its own group. A window or a door slides along its own wall and the chimney over its roof;
+   for those a frame shows the new place and the house is rebuilt when they are let go (the wall has a
+   hole). Turning: Ctrl/⌘ + sideways drag, the wheel or R; Shift puts the piece straight again
+   (0/90/180/270°). While dragging, a frame says whether the place is good (green) or not (red, with the
+   reason, through `onMoveState`); it is a warning, the piece can still be put down there. */
+var PLACE0 = { tree_house: 2, tree_big_house: 3, pool_house: 1, op_corner: 0.6, op_gap: 0.3, chimney_ridge: 0.6 };
+function snap90(rad) { return Math.round(rad / (Math.PI / 2)) * (Math.PI / 2); }
+function degOf(rad) { return Math.round(((rad / D2R) % 360 + 360) % 360) % 360; }
+function r3(v) { return Math.round(v * 1000) / 1000; }
+// plan box around a turned rectangle (centre x, plan y = world z)
+function footRect(cx, cy, w, d, rot) {
+	var cs = Math.abs(Math.cos(rot || 0)), sn = Math.abs(Math.sin(rot || 0)), hw = (w * cs + d * sn) / 2, hd = (w * sn + d * cs) / 2;
+	return { x0: cx - hw, x1: cx + hw, y0: cy - hd, y1: cy + hd };
+}
+function rectsOver(a, b, m) { m = m || 0; return a.x0 < b.x1 - m && a.x1 > b.x0 + m && a.y0 < b.y1 - m && a.y1 > b.y0 + m; }
+function rectDist(a, b) { var dx = Math.max(0, b.x0 - a.x1, a.x0 - b.x1), dy = Math.max(0, b.y0 - a.y1, a.y0 - b.y1); return Math.sqrt(dx * dx + dy * dy); }
+function volRect(v) { var e = v.ext || 0; return { x0: v.x0 - e, x1: v.x1 + e, y0: v.y0 - e, y1: v.y1 + e }; }
+Viewer.prototype.rayFrom = function (cx, cy) {
+	if (!this.el) { return null; }
 	var r = this.el.getBoundingClientRect();
 	if (!r.width || !r.height) { return null; }
 	this.ray = this.ray || new THREE.Raycaster();
 	this.ray.setFromCamera(new THREE.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1), this.camera);
-	var hits = this.ray.intersectObject(hs.items, true);
+	return this.ray;
+};
+// Which piece is under the screen point: the top-level child of the room's furniture group.
+Viewer.prototype.itemAt = function (cx, cy) {
+	var hs = this.house;
+	if (!hs || !hs.items || !hs.room || !hs.room.W || !this.el) { return null; }
+	var ray = this.rayFrom(cx, cy);
+	if (!ray) { return null; }
+	var hits = ray.intersectObject(hs.items, true);
 	for (var i = 0; i < hits.length; i++) {
 		var o = hits[i].object;
 		while (o && o.parent && o.parent !== hs.items) { o = o.parent; }
@@ -2073,9 +2227,31 @@ Viewer.prototype.itemAt = function (cx, cy) {
 	}
 	return null;
 };
+// Outside: the first surface under the pointer decides – a garden piece, an opening or the chimney. The
+// wall, the roof, the lawn or the sky: nothing to grab, the view turns as before.
+Viewer.prototype.extAt = function (cx, cy) {
+	var hs = this.house;
+	if (!hs || hs.room || hs.phases || !(hs.movers || (this.ops && this.ops.length))) { return null; }
+	var ray = this.rayFrom(cx, cy);
+	if (!ray) { return null; }
+	var hits = ray.intersectObject(hs.root, true);
+	for (var i = 0; i < hits.length && i < 8; i++) {
+		var h = hits[i], o = h.object;
+		if (!o.visible || o.isLine || o.isPoints || (o.userData && o.userData.noPick)) { continue; }
+		for (var q = o; q && q !== hs.root; q = q.parent) {
+			if (hs.movers && q.parent === hs.movers) { return { type: 'mover', obj: q, point: h.point }; }
+		}
+		var op = opAt(this.ops, h.point);
+		return op ? { type: 'op', op: op.op, point: h.point } : null;
+	}
+	return null;
+};
+// The setting a grabbed piece belongs to (the designer names it while it is being moved).
+function fieldOf(o) { var f = ''; if (o) { o.traverse(function (q) { if (!f && q.userData && (q.userData.field || q.userData.item)) { f = q.userData.item || q.userData.field; } }); } return f; }
 // Grab the piece under the pointer: the orbit controls stop, the piece lifts a little and follows.
 Viewer.prototype.grabAt = function (cx, cy, ev) {
-	if (!this.house || !this.house.room || !this.house.room.W) { return false; }
+	if (!this.house) { return false; }
+	if (!this.house.room || !this.house.room.W) { return this.grabExt(cx, cy, ev); }
 	var it = this.itemAt(cx, cy);
 	if (!it) { return false; }
 	var o = it.obj, bx = new THREE.Box3().setFromObject(o), rm = this.house.room;
@@ -2085,8 +2261,8 @@ Viewer.prototype.grabAt = function (cx, cy, ev) {
 		obj: o, slot: o.userData.slot,
 		dx: o.position.x - it.point.x, dz: o.position.z - it.point.z,
 		w: Math.max(0.12, bx.max.x - bx.min.x), d: Math.max(0.12, bx.max.z - bx.min.z),
-		rot: o.rotation.y, startX: cx, shift: !!(ev && ev.shiftKey), y0: o.position.y,
-		wall: onWall, w0: onWall ? nearWall(bx, rm.W, rm.D) : -1, rot0: o.rotation.y
+		rot: o.rotation.y, startX: cx, lastX: cx, shift: !!(ev && ev.shiftKey), y0: o.position.y,
+		wall: onWall, w0: onWall ? nearWall(bx, rm.W, rm.D) : -1, rot0: o.rotation.y, p0: o.position.clone()
 	};
 	if (!onWall) { o.position.y = this.drag.y0 + 0.012; }
 	if (this.controls) { this.controls.enabled = false; }
@@ -2095,43 +2271,296 @@ Viewer.prototype.grabAt = function (cx, cy, ev) {
 	this.requestRender();
 	return true;
 };
-// Follow the pointer on the floor plane; with Shift held, sideways movement turns the piece instead.
+Viewer.prototype.grabExt = function (cx, cy, ev) {
+	var it = this.extAt(cx, cy);
+	if (!it) { if (this.sel) { this.select(null); this.requestRender(); } return false; }
+	var d = { ext: true, lastX: cx, moved: false };
+	if (it.type === 'mover') {
+		var o = it.obj;
+		d.kind = 'mover'; d.obj = o; d.slot = o.userData.slot; d.info = o.userData.move || {};
+		d.dx = o.position.x - it.point.x; d.dz = o.position.z - it.point.z;
+		d.p0 = o.position.clone(); d.r0 = o.rotation.y;
+		o.position.y = 0.02;
+		d.field = d.info.field || fieldOf(o);
+	} else {
+		var op = it.op;
+		d.op = op; d.slot = op.key;
+		if (op.kind === 'chimney') {
+			d.kind = 'chimney'; d.field = 'chimney';
+			d.cx = d.cx0 = op.x + op.w / 2; d.cy = d.cy0 = op.y + op.d / 2;
+			d.dx = d.cx - it.point.x; d.dz = d.cy - it.point.z;
+		} else {
+			d.kind = 'op'; d.field = op.kind === 'door' ? 'entrance_door' : (op.kind === 'tdoor' ? 'terrace_door' : 'window_style');
+			d.inv = new THREE.Matrix4().copy(op.m).invert();
+			var lp = it.point.clone().applyMatrix4(d.inv);
+			d.du = op.x - lp.x; d.x = d.x0 = op.x;
+		}
+	}
+	this.drag = d;
+	this.sel = null;
+	if (this.controls) { this.controls.enabled = false; }
+	if (this.el) { this.el.style.cursor = 'grabbing'; }
+	if (this.onGrab) { this.onGrab(d.field || '', d.slot); }
+	this.updateMark();
+	this.requestRender();
+	void ev;
+	return true;
+};
+// Follow the pointer on the floor plane; with Ctrl/⌘ held, sideways movement turns the piece instead,
+// and with Shift held the piece stands straight (0/90/180/270°).
 Viewer.prototype.dragTo = function (e) {
 	var d = this.drag, hs = this.house;
 	if (!d || !hs || !this.el) { return; }
-	if (e.shiftKey && !d.wall) { this.turnDrag((e.clientX - d.startX) * 0.5 - (d.rot - d.obj.rotation.y) / D2R); d.startX = e.clientX; return; }
-	var r = this.el.getBoundingClientRect();
-	this.ray = this.ray || new THREE.Raycaster();
-	this.ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), this.camera);
+	if (d.ext) { this.extDragTo(e); return; }
+	if ((e.ctrlKey || e.metaKey) && !d.wall) { this.turnDrag((e.clientX - d.lastX) * 0.5); d.lastX = e.clientX; return; }
+	d.lastX = e.clientX;
+	var ray = this.rayFrom(e.clientX, e.clientY);
+	if (!ray) { return; }
 	var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -Math.max(0, d.y0)), hit = new THREE.Vector3();
-	if (!this.ray.ray.intersectPlane(plane, hit)) { return; }
+	if (!ray.ray.intersectPlane(plane, hit)) { return; }
 	d.obj.position.x = hit.x + d.dx;
 	d.obj.position.z = hit.z + d.dz;
+	if (e.shiftKey && !d.wall) { d.obj.rotation.y = snap90(d.obj.rotation.y); }
 	if (d.wall) { snapWall(d.obj, d.w0, d.rot0, hs.room.W, hs.room.D); }
 	else { fitInRoom(d.obj, hs.room.W, hs.room.D); }
 	this.requestRender();
 };
-// Turn the grabbed piece; it snaps to 15 degrees, and the turned piece is pushed back inside the room.
-Viewer.prototype.turnDrag = function (deg) {
-	if (!this.drag || this.drag.wall) { return; }
-	var cur = this.drag.obj.rotation.y / D2R + deg;
-	this.drag.obj.rotation.y = Math.round(cur / 15) * 15 * D2R;
-	if (this.house && this.house.room) { fitInRoom(this.drag.obj, this.house.room.W, this.house.room.D); }
+Viewer.prototype.extDragTo = function (e) {
+	var d = this.drag, hs = this.house, hit = new THREE.Vector3();
+	if (d.kind === 'mover' && (e.ctrlKey || e.metaKey)) {
+		d.obj.rotation.y += (e.clientX - d.lastX) * 0.6 * D2R;
+		d.lastX = e.clientX;
+		if (e.shiftKey) { d.obj.rotation.y = snap90(d.obj.rotation.y); }
+		d.moved = true; this.updateMark(); this.requestRender();
+		return;
+	}
+	d.lastX = e.clientX;
+	var ray = this.rayFrom(e.clientX, e.clientY);
+	if (!ray) { return; }
+	if (d.kind === 'mover') {
+		if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit)) { return; }
+		var pb = hs.plotBox, nx = hit.x + d.dx, nz = hit.z + d.dz;
+		if (pb) { nx = clamp(nx, pb.left + 0.3, pb.right - 0.3); nz = clamp(nz, pb.back + 0.3, pb.front - 0.3); }
+		d.obj.position.x = nx; d.obj.position.z = nz;
+		if (e.shiftKey) { d.obj.rotation.y = snap90(d.obj.rotation.y); }
+	} else if (d.kind === 'op') {
+		// on the plane of the wall's outer face; it never leaves its own wall
+		var m = d.op.m, n = new THREE.Vector3().setFromMatrixColumn(m, 2).normalize(), o0 = new THREE.Vector3(0, 0, 0.3).applyMatrix4(m);
+		if (!ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(n, o0), hit)) { return; }
+		var lp = hit.applyMatrix4(d.inv), nxo = lp.x + d.du;
+		if (e.shiftKey) { nxo = Math.round(nxo * 10) / 10; }
+		d.x = clamp(nxo, 0.06, Math.max(0.06, d.op.len - d.op.w - 0.06));
+	} else {
+		// the chimney slides over its roof (at the height of its top)
+		if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -d.op.top), hit)) { return; }
+		d.cx = clamp(hit.x + d.dx, d.op.vx0 + d.op.w / 2 + 0.15, d.op.vx1 - d.op.w / 2 - 0.15);
+		d.cy = clamp(hit.z + d.dz, d.op.vy0 + d.op.d / 2 + 0.15, d.op.vy1 - d.op.d / 2 - 0.15);
+	}
+	d.moved = true;
+	this.updateMark();
 	this.requestRender();
 };
-// Let go: the piece stays where it is, and the designer is told so it can be saved.
-Viewer.prototype.dropDrag = function () {
+// Turn the grabbed piece; it snaps to 15 degrees, and the turned piece is pushed back inside the room.
+Viewer.prototype.turnDrag = function (deg) {
+	var d = this.drag;
+	if (!d || d.wall) { return; }
+	if (d.ext) {
+		if (d.kind !== 'mover') { return; }
+		d.obj.rotation.y = Math.round((d.obj.rotation.y / D2R + deg) / 15) * 15 * D2R;
+		d.moved = true; this.updateMark(); this.requestRender();
+		return;
+	}
+	var cur = d.obj.rotation.y / D2R + deg;
+	d.obj.rotation.y = Math.round(cur / 15) * 15 * D2R;
+	if (this.house && this.house.room) { fitInRoom(d.obj, this.house.room.W, this.house.room.D); }
+	this.requestRender();
+};
+// The pick boxes of a moved piece go with it (a tap on it still finds its setting).
+Viewer.prototype.movePicks = function (obj) {
+	if (!this.picks || !obj) { return; }
+	obj.updateMatrixWorld(true);
+	var m = new THREE.Matrix4();
+	this.picks.forEach(function (p) {
+		if (p.mv !== obj || !p.box0) { return; }
+		m.copy(obj.matrixWorld).multiply(new THREE.Matrix4().copy(p.m0).invert());
+		p.box = p.box0.clone().applyMatrix4(m);
+	});
+};
+// Let go: the piece stays where it is, and the designer is told so it can be saved. `cancel` (Esc):
+// the piece goes back to where it was picked up.
+Viewer.prototype.dropDrag = function (cancel) {
 	var d = this.drag;
 	if (!d) { return; }
+	if (d.ext) { this.extDrop(cancel); return; }
 	if (!d.wall) { d.obj.position.y = d.y0; }
+	if (cancel && d.p0) { d.obj.position.copy(d.p0); d.obj.rotation.y = d.rot0; }
 	this.drag = null;
 	if (this.controls) { this.controls.enabled = true; }
 	if (this.el) { this.el.style.cursor = ''; }
-	this.picks = this.thumb ? null : collectPicks(this.house.root);
-	if (this.onLayout) {
-		this.onLayout(d.slot, { x: Math.round(d.obj.position.x * 1000) / 1000, y: Math.round(d.obj.position.z * 1000) / 1000, rot: Math.round(((d.obj.rotation.y / D2R) % 360 + 360) % 360) });
+	this.movePicks(d.obj);
+	if (this.onLayout && !cancel) {
+		this.onLayout(d.slot, { x: r3(d.obj.position.x), y: r3(d.obj.position.z), rot: degOf(d.obj.rotation.y) });
 	}
 	this.requestRender();
+};
+Viewer.prototype.extDrop = function (cancel) {
+	var d = this.drag;
+	this.drag = null;
+	if (this.controls) { this.controls.enabled = true; }
+	if (this.el) { this.el.style.cursor = ''; }
+	if (d.kind === 'mover') {
+		d.obj.position.y = 0;
+		if (cancel) { d.obj.position.copy(d.p0); d.obj.position.y = 0; d.obj.rotation.y = d.r0; }
+		this.movePicks(d.obj);
+		this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
+		this.select({ kind: 'mover', obj: d.obj, slot: d.slot, info: d.info, field: d.field });
+		if (!cancel && d.moved && this.onSite) { this.onSite(d.slot, { x: r3(d.obj.position.x), y: r3(d.obj.position.z), rot: degOf(d.obj.rotation.y) }, false); }
+	} else if (!cancel && d.moved && this.onSite) {
+		// the wall's hole (or the roof's opening) moves too: the designer saves and the house is rebuilt
+		this.selKey = d.slot;
+		this.select(null, true);
+		this.onSite(d.slot, d.kind === 'op' ? { x: r3(d.x), y: 0, rot: 0 } : { x: r3(d.cx), y: r3(d.cy), rot: 0 }, true);
+	} else {
+		this.select({ kind: d.kind, op: d.op, slot: d.slot, field: d.field });
+	}
+	this.requestRender();
+};
+// The last moved piece stays selected: arrows move it (10 cm, with Shift 50 cm), R turns it (15°, with
+// Shift 90°), Esc lets it go. A tap on an empty spot ends the selection.
+Viewer.prototype.select = function (s, keepKey) {
+	this.sel = s || null;
+	if (s) { this.selKey = s.slot; } else if (!keepKey) { this.selKey = null; }
+	if (s) { this.updateMark(); } else { this.hideMark(); }
+};
+Viewer.prototype.reselect = function () {
+	var k = this.selKey, hs = this.house;
+	if (!k || !hs || hs.room || hs.phases) { this.select(null); return; }
+	var mv = hs.movers ? hs.movers.children.filter(function (q) { return q.userData.slot === k; })[0] : null;
+	if (mv) { this.select({ kind: 'mover', obj: mv, slot: k, info: mv.userData.move || {}, field: (mv.userData.move || {}).field || fieldOf(mv) }); return; }
+	var op = (this.ops || []).filter(function (q) { return q.op.key === k; })[0];
+	if (op) { this.select({ kind: op.op.kind === 'chimney' ? 'chimney' : 'op', op: op.op, slot: k }); return; }
+	this.select(null);
+};
+Viewer.prototype.nudge = function (dx, dz, turn) {
+	var s = this.sel;
+	if (!s) { return; }
+	// arrows follow the screen: up = away from the camera, right = to the right of the view
+	var t = this.controls ? this.controls.target : new THREE.Vector3(), f = t.clone().sub(this.camera.position);
+	f.y = 0; if (f.lengthSq() < 1e-6) { f.set(0, 0, -1); } f.normalize();
+	var rt = new THREE.Vector3(-f.z, 0, f.x), mx = rt.x * dx + f.x * dz, mz = rt.z * dx + f.z * dz;
+	if (s.kind === 'mover') {
+		var o = s.obj, pb = this.house && this.house.plotBox;
+		o.position.x += mx; o.position.z += mz;
+		if (pb) { o.position.x = clamp(o.position.x, pb.left + 0.3, pb.right - 0.3); o.position.z = clamp(o.position.z, pb.back + 0.3, pb.front - 0.3); }
+		if (turn) { o.rotation.y = turn === 90 ? snap90(o.rotation.y) + Math.PI / 2 : Math.round((o.rotation.y / D2R + turn) / 15) * 15 * D2R; }
+		this.movePicks(o);
+		this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
+		this.updateMark(); this.requestRender();
+		if (this.onSite) { this.onSite(s.slot, { x: r3(o.position.x), y: r3(o.position.z), rot: degOf(o.rotation.y) }, false); }
+		return;
+	}
+	if (turn || !this.onSite) { return; }
+	this.selKey = s.slot;
+	if (s.kind === 'op') {
+		// along the wall: the screen direction projected on the wall's own axis
+		var u = new THREE.Vector3().setFromMatrixColumn(s.op.m, 0).normalize(), du = mx * u.x + mz * u.z;
+		if (!du) { return; }
+		var nx = clamp(s.op.x + du, 0.06, Math.max(0.06, s.op.len - s.op.w - 0.06));
+		this.onSite(s.slot, { x: r3(nx), y: 0, rot: 0 }, true);
+	} else {
+		var cx = clamp(s.op.x + s.op.w / 2 + mx, s.op.vx0 + s.op.w / 2 + 0.15, s.op.vx1 - s.op.w / 2 - 0.15);
+		var cy = clamp(s.op.y + s.op.d / 2 + mz, s.op.vy0 + s.op.d / 2 + 0.15, s.op.vy1 - s.op.d / 2 - 0.15);
+		this.onSite(s.slot, { x: r3(cx), y: r3(cy), rot: 0 }, true);
+	}
+};
+// Is the place good? Rules from the placement package (assets/data/rules/hu.json → boot `place`), as
+// warnings: inside the plot, not on the house, terrace or garage, pool and trees away from the house,
+// pieces not on one another; openings away from the corner and from each other; the chimney near the ridge.
+Viewer.prototype.checkPlace = function (d) {
+	var hs = this.house, P = Object.assign({}, PLACE0, this.place || {});
+	var bad = function (code, v) { return { ok: false, code: code, v: v }; };
+	if (!hs || !d) { return { ok: true }; }
+	if (d.kind === 'mover') {
+		var k = d.info.kind || 'site', o = d.obj, fp = footRect(o.position.x, o.position.z, d.info.w || 1, d.info.d || 1, o.rotation.y);
+		var A = hs.gardenPlan && hs.gardenPlan.area;
+		if (A && (fp.x0 < A.x0 - 0.3 || fp.x1 > A.x1 + 0.3 || fp.y0 < A.y0 - 0.3 || fp.y1 > A.y1 + 0.3)) { return bad('place_out_plot'); }
+		var vols = hs.vols || [];
+		if (vols.some(function (v) { return rectsOver(fp, volRect(v), 0.02); })) { return bad('place_on_house'); }
+		var soft = k === 'person' || k === 'pet' || k === 'furniture' || k === 'light';
+		if (!soft && hs.terrace && rectsOver(fp, hs.terrace, 0.05)) { return bad('place_on_terrace'); }
+		if (hs.garage && k !== 'vehicle' && k !== 'person' && k !== 'pet' && rectsOver(fp, hs.garage, 0.05)) { return bad('place_on_garage'); }
+		var dh = vols.reduce(function (m, v) { return Math.min(m, rectDist(fp, volRect(v))); }, 1e9);
+		if (k === 'pool' && dh < P.pool_house - 1e-6) { return bad('place_pool_house', P.pool_house); }
+		if (k === 'tree') { var lim = (d.info.size || 0) >= 6 ? P.tree_big_house : P.tree_house; if (dh < lim - 1e-6) { return bad('place_tree_house', lim); } }
+		var light = function (q) { return q === 'person' || q === 'pet' || q === 'light'; };
+		var core = footRect(o.position.x, o.position.z, (d.info.w || 1) * 0.8, (d.info.d || 1) * 0.8, o.rotation.y);
+		var clash = (hs.movers ? hs.movers.children : []).some(function (q) {
+			if (q === o) { return false; }
+			var qi = q.userData.move || {};
+			if (light(k) && light(qi.kind)) { return false; }
+			return rectsOver(core, footRect(q.position.x, q.position.z, (qi.w || 1) * 0.8, (qi.d || 1) * 0.8, q.rotation.y), 0);
+		});
+		return clash ? bad('place_overlap') : { ok: true };
+	}
+	if (d.kind === 'op') {
+		var op = d.op, x = this.drag === d ? d.x : op.x;
+		if (x < P.op_corner - 1e-6 || x + op.w > op.len - P.op_corner + 1e-6) { return bad('place_op_corner', P.op_corner); }
+		var near = (this.ops || []).some(function (q) {
+			var b = q.op;
+			if (b === op || b.m !== op.m || b.y > op.y + op.h || b.y + b.h < op.y) { return false; }
+			return x < b.x + b.w + P.op_gap - 1e-6 && x + op.w > b.x - P.op_gap + 1e-6;
+		});
+		return near ? bad('place_op_gap', P.op_gap) : { ok: true };
+	}
+	var c2 = d.op, cx = this.drag === d ? d.cx : c2.x + c2.w / 2, cy = this.drag === d ? d.cy : c2.y + c2.d / 2;
+	if (c2.type && c2.type !== 'flat' && c2.type !== 'shed') {
+		var off = c2.ridge === 'y' ? Math.abs(cx - (c2.vx0 + c2.vx1) / 2) : Math.abs(cy - (c2.vy0 + c2.vy1) / 2);
+		if (off > P.chimney_ridge + 1e-6) { return bad('place_chimney_ridge', P.chimney_ridge); }
+	}
+	return { ok: true };
+};
+// The frame of the dragged or selected piece: on the ground under a garden piece, on the wall around an
+// opening, on top of the chimney. Drawn over everything, never picked, never in a guide picture.
+Viewer.prototype.markGroup = function () {
+	if (this.mark) { return this.mark; }
+	var g = new THREE.Group(), fm = new THREE.MeshBasicMaterial({ color: '#2FB36B', transparent: true, opacity: 0.24, depthWrite: false, depthTest: false, side: THREE.DoubleSide, fog: false });
+	var lm = new THREE.LineBasicMaterial({ color: '#2FB36B', depthTest: false, transparent: true, fog: false });
+	var fill = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), fm), sq = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.5, -0.5, 0), new THREE.Vector3(0.5, -0.5, 0), new THREE.Vector3(0.5, 0.5, 0), new THREE.Vector3(-0.5, 0.5, 0)]);
+	var line = new THREE.LineLoop(sq, lm);
+	fill.renderOrder = 998; line.renderOrder = 999; fill.userData.noPick = line.userData.noPick = g.userData.noPick = true;
+	g.add(fill); g.add(line); g.visible = false;
+	this.scene.add(g);
+	this.mark = g; this.markFill = fm; this.markLine = lm;
+	return g;
+};
+Viewer.prototype.updateMark = function () {
+	var d = this.drag || this.sel;
+	if (!d || !this.scene) { this.hideMark(); return; }
+	var g = this.markGroup(), st = this.checkPlace(d), colr = st.ok ? '#2FB36B' : '#E0483E';
+	this.markFill.color.set(colr); this.markLine.color.set(colr);
+	if (d.kind === 'mover') {
+		g.position.set(d.obj.position.x, 0.07, d.obj.position.z);
+		g.rotation.set(-Math.PI / 2, d.obj.rotation.y, 0, 'YXZ');
+		g.scale.set((d.info.w || 1) + 0.2, (d.info.d || 1) + 0.2, 1);
+	} else if (d.kind === 'op') {
+		var op = d.op, x = this.drag === d ? d.x : op.x;
+		g.position.copy(new THREE.Vector3(x + op.w / 2, op.y + op.h / 2, 0.36).applyMatrix4(op.m));
+		g.rotation.set(0, 0, 0); g.quaternion.setFromRotationMatrix(op.m);
+		g.scale.set(op.w + 0.14, op.h + 0.14, 1);
+	} else {
+		var c2 = d.op, cx = this.drag === d ? d.cx : c2.x + c2.w / 2, cy = this.drag === d ? d.cy : c2.y + c2.d / 2;
+		g.position.set(cx, c2.top + 0.14, cy);
+		g.rotation.set(-Math.PI / 2, 0, 0, 'YXZ');
+		g.scale.set(c2.w + 0.25, c2.d + 0.25, 1);
+	}
+	g.visible = true;
+	this.lastPlace = st;
+	if (this.onMoveState) { this.onMoveState(st, d.slot, !!this.drag); }
+};
+Viewer.prototype.hideMark = function () {
+	if (this.mark) { this.mark.visible = false; }
+	this.lastPlace = null;
+	if (this.onMoveState) { this.onMoveState(null); }
 };
 // Screen point (CSS pixels) → the setting of the part under it.
 Viewer.prototype.pickAt = function (cx, cy) {
@@ -2141,7 +2570,7 @@ Viewer.prototype.pickAt = function (cx, cy) {
 	var ndc = new THREE.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
 	this.ray = this.ray || new THREE.Raycaster();
 	this.ray.setFromCamera(ndc, this.camera);
-	var hits = this.ray.intersectObject(this.scene, true).filter(function (h) { return h.object && h.object.visible && !h.object.isLine; });
+	var hits = this.ray.intersectObject(this.scene, true).filter(function (h) { return h.object && h.object.visible && !h.object.isLine && !h.object.userData.noPick; });
 	// the first surface may belong to nothing (a ceiling seen from outside, glass, a curtain): keep going
 	for (var i = 0; i < hits.length && i < 6; i++) {
 		var p = pickFromList(this.picks, hits[i].point);
@@ -2436,10 +2865,12 @@ function guides(views, w, h, out, opts) {
 		// exactly the visitor's own view: the live camera, only the picture shape differs
 		job = job.then(function () {
 			return step(function (res) {
-				var cam = live.camera, keep = cam.aspect;
+				var cam = live.camera, keep = cam.aspect, mk = live.mark && live.mark.visible;
+				if (mk) { live.mark.visible = false; }
 				cam.aspect = w / h; cam.updateProjectionMatrix();
 				if (!live.rtA || live.rtA.width !== w || live.rtA.height !== h) { thumbPixels.prep(live, w, h); }
 				out.hero = thumbPixels(live, w, h);
+				if (mk) { live.mark.visible = true; }
 				cam.aspect = keep; cam.updateProjectionMatrix();
 				if (live.rtA) { live.rtA.dispose(); live.rtB.dispose(); live.rtA = live.rtB = null; }
 				live.requestRender();
