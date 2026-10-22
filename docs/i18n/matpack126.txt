@@ -1,0 +1,26 @@
+3D teljesítményteszt
+A teszt megszakadt:
+Első kép
+Ez a böngésző nem támogatja a WebGL2-t, a 3D előnézet itt nem fut.
+Grafikus kártya
+Háromszög
+Képkocka/s
+Képkockaidő p50
+Képkockaidő p95
+Kész. Javasolt szint ezen a gépen: %s
+Memória (JS)
+Minőség
+Másolás
+Mérés: %1$s (%2$s / %3$s)…
+Rajzhívás
+Szint
+Telefonon: nyisd meg a tervező oldalát ezzel a címmel:
+Teszt indítása
+Ugyanaz a mintaház minden minőségi szinten: első kép ideje, képkocka/s, képkockaidő (p50/p95), háromszögek, rajzhívások. Futtasd azon a gépen vagy telefonon, amelyet mérni szeretnél; a teszt alatt ne válts lapot.
+Vágólapra másolva.
+a böngésző nem adja meg
+alacsony
+automatikus
+közepes
+magas
+ultra

@@ -1,0 +1,172 @@
+{
+ "format": "log2-rgb-webp",
+ "license": "CC0 1.0 Universal (public domain)",
+ "source": "https://polyhaven.com",
+ "skies": {
+  "morning": {
+   "file": "sky-morning.webp",
+   "w": 2048,
+   "h": 1024,
+   "lo": -5.0,
+   "hi": 6.0,
+   "mean": 0.518395,
+   "sun": {
+    "u": 0.5996,
+    "el": 20.4
+   },
+   "asset": "qwantani_morning_puresky",
+   "name": "Qwantani Morning (Pure Sky)",
+   "authors": [
+    "Jarod Guest"
+   ],
+   "url": "https://polyhaven.com/a/qwantani_morning_puresky",
+   "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_morning_puresky_2k.hdr",
+   "license": "CC0",
+   "md5_source": "87dfe2068bbf9ad2dc9b4ee1c95ce30c",
+   "md5": "acf1003e1d5e90f960025bad04ae19f7",
+   "bytes": 14988
+  },
+  "midday": {
+   "file": "sky-midday.webp",
+   "w": 2048,
+   "h": 1024,
+   "lo": -4.75,
+   "hi": 5.25,
+   "mean": 0.462564,
+   "sun": {
+    "u": 0.5957,
+    "el": 48.5
+   },
+   "asset": "kloofendal_48d_partly_cloudy_puresky",
+   "name": "Kloofendal 48d Partly Cloudy (Pure Sky)",
+   "authors": [
+    "Greg Zaal",
+    "Jarod Guest"
+   ],
+   "url": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
+   "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+   "license": "CC0",
+   "md5_source": "2eba3a4d7eeb23cbfbeca364c97e7980",
+   "md5": "477bae81d1a658c406f721d448341a35",
+   "bytes": 51834
+  },
+  "midday_clear": {
+   "file": "sky-midday_clear.webp",
+   "w": 2048,
+   "h": 1024,
+   "lo": -5.25,
+   "hi": 5.75,
+   "mean": 0.486939,
+   "sun": {
+    "u": 0.5996,
+    "el": 42.9
+   },
+   "asset": "kloofendal_43d_clear_puresky",
+   "name": "Kloofendal 43d Clear (Pure Sky)",
+   "authors": [
+    "Greg Zaal"
+   ],
+   "url": "https://polyhaven.com/a/kloofendal_43d_clear_puresky",
+   "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_43d_clear_puresky_2k.hdr",
+   "license": "CC0",
+   "md5_source": "62f7cb7b1dac5a90a5bbde728606773b",
+   "md5": "30a6ac66be633ac7d88a9fb1e27b86bc",
+   "bytes": 17588
+  },
+  "golden": {
+   "file": "sky-golden.webp",
+   "w": 2048,
+   "h": 1024,
+   "lo": -4.25,
+   "hi": 5.75,
+   "mean": 0.888728,
+   "sun": {
+    "u": 0.5996,
+    "el": 12.0
+   },
+   "asset": "hilly_terrain_01_puresky",
+   "name": "Hilly Terrain 01 (Pure Sky)",
+   "authors": [
+    "Jarod Guest",
+    "Sergej Majboroda"
+   ],
+   "url": "https://polyhaven.com/a/hilly_terrain_01_puresky",
+   "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/hilly_terrain_01_puresky_2k.hdr",
+   "license": "CC0",
+   "md5_source": "556348c09916903ad4f0fbf995a5ce09",
+   "md5": "b4ca346a7d55de4029495a71cc11b1b9",
+   "bytes": 22830
+  },
+  "blue": {
+   "file": "sky-blue.webp",
+   "w": 2048,
+   "h": 1024,
+   "lo": -2.5,
+   "hi": 3.5,
+   "mean": 1.246114,
+   "sun": {
+    "u": 0.6035,
+    "el": 12.0
+   },
+   "asset": "qwantani_dusk_2_puresky",
+   "name": "Qwantani Dusk 2 (Pure Sky)",
+   "authors": [
+    "Greg Zaal",
+    "Jarod Guest"
+   ],
+   "url": "https://polyhaven.com/a/qwantani_dusk_2_puresky",
+   "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/qwantani_dusk_2_puresky_2k.hdr",
+   "license": "CC0",
+   "md5_source": "a6754f300315d6b2e06c4682009a7991",
+   "md5": "7730d4df1e9f9f4641852224fc53adf7",
+   "bytes": 20002
+  },
+  "night": {
+   "file": "sky-night.webp",
+   "w": 2048,
+   "h": 1024,
+   "lo": -5.5,
+   "hi": 4.75,
+   "mean": 0.230762,
+   "sun": {
+    "u": 0.5996,
+    "el": 17.6
+   },
+   "asset": "kloppenheim_02_puresky",
+   "name": "Kloppenheim 02 (Pure Sky)",
+   "authors": [
+    "Greg Zaal",
+    "Jarod Guest"
+   ],
+   "url": "https://polyhaven.com/a/kloppenheim_02_puresky",
+   "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloppenheim_02_puresky_2k.hdr",
+   "license": "CC0",
+   "md5_source": "60bfe04a56522962933359cf4410f32c",
+   "md5": "f2b2f52fc2f287b036f02977f71697f8",
+   "bytes": 63182
+  },
+  "overcast": {
+   "file": "sky-overcast.webp",
+   "w": 2048,
+   "h": 1024,
+   "lo": -2.0,
+   "hi": 2.75,
+   "mean": 1.223268,
+   "sun": {
+    "u": 0.584,
+    "el": 23.2
+   },
+   "asset": "kloofendal_overcast_puresky",
+   "name": "Kloofendal Overcast (Pure Sky)",
+   "authors": [
+    "Greg Zaal"
+   ],
+   "url": "https://polyhaven.com/a/kloofendal_overcast_puresky",
+   "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_overcast_puresky_2k.hdr",
+   "license": "CC0",
+   "md5_source": "26462123fc5ce757a331553d05e4db37",
+   "md5": "be28a8b7493edc3485235470bbad3587",
+   "bytes": 33164
+  }
+ }
+}

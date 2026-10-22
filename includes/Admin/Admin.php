@@ -60,6 +60,7 @@ final class Admin {
 			'agh-legal'      => array( __( 'Jogi és GDPR', 'autogrowehome' ), 'agh_manage', 'legal' ),
 			'agh-license'    => array( __( 'Licenc', 'autogrowehome' ), 'agh_manage', 'license' ),
 			'agh-help'       => array( __( 'Súgó és rendszer', 'autogrowehome' ), 'agh_manage', 'help' ),
+			'agh-bench'      => array( __( '3D teljesítményteszt', 'autogrowehome' ), 'agh_manage', 'bench' ),
 		);
 	}
 

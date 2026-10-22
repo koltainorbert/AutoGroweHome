@@ -794,6 +794,22 @@ final class Pages {
 		);
 	}
 
+	/**
+	 * 1.26.0: the built-in 3D benchmark – the sample house at every quality level, measured in this very
+	 * browser (assets/js/agh-bench.js). The same test runs on the designer page with ?agh_bench=1, so a
+	 * phone can be measured without logging in to the admin.
+	 */
+	public static function page_bench(): void {
+		$pages = get_posts( array( 'post_type' => 'page', 'post_status' => 'publish', 's' => '[autogrowehome', 'numberposts' => 1, 'fields' => 'ids' ) );
+		echo '<div class="agh-card"><p>' . esc_html__( 'Ugyanaz a mintaház minden minőségi szinten: első kép ideje, képkocka/s, képkockaidő (p50/p95), háromszögek, rajzhívások. Futtasd azon a gépen vagy telefonon, amelyet mérni szeretnél; a teszt alatt ne válts lapot.', 'autogrowehome' ) . '</p>';
+		if ( $pages ) {
+			$url = add_query_arg( 'agh_bench', '1', get_permalink( (int) $pages[0] ) );
+			echo '<p class="description">' . esc_html__( 'Telefonon: nyisd meg a tervező oldalát ezzel a címmel:', 'autogrowehome' ) . ' <code>' . esc_html( $url ) . '</code></p>';
+		}
+		echo '<div id="agh-bench"></div></div>';
+		\AutoGroweHome\Frontend\Frontend::bench_tags();
+	}
+
 	public static function page_help(): void {
 		$tour = Help::tour();
 		$faq  = Help::faq();
