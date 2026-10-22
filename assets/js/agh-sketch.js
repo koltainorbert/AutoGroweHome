@@ -506,7 +506,7 @@
 	 * `site_layout`: key → {x, y, rot}. Garden pieces (pool, plant#3, vehicle#0 …) keep their centre in plan
 	 * metres and an extra turn in degrees; openings (door@0, tdoor@0, win@0:front:1:2) keep their face-local
 	 * x; the chimney its centre. One reader for the 2D sketch, the 3D view and the tests. */
-	var SITE_KEY = /^(pool|shed|playground|pergola|firepit|furniture|tfurniture|kennel|charger|chimney|(plant|vehicle|person|pet|light)#\d{1,3}|(door|tdoor)@\d{1,2}|win@\d{1,2}:(front|right|back|left):\d{1,2}:(\d{1,3}|g))$/;
+	var SITE_KEY = /^(pool|shed|playground|pergola|firepit|furniture|tfurniture|kennel|charger|chimney|garage|(plant|vehicle|person|pet|light|out)#\d{1,3}|(door|tdoor)@\d{1,2}|win@\d{1,2}:(front|right|back|left):\d{1,2}:(\d{1,3}|g))$/;
 	function siteLay(c) { var v = c && c.site_layout; return v && typeof v === 'object' && !Array.isArray(v) ? v : null; }
 	function siteGet(c, key) {
 		var L = siteLay(c), p = L && L[key];
@@ -595,6 +595,40 @@
 			if (poly) { out.push({ zone: z, mat: mat, poly: poly }); }
 		});
 		return any ? out : null;
+	}
+	/* ------------------------------------------------------------------ pool and garage in detail (1.22.0) */
+	// Width of the surround round the water: only the coping (0.3 m, as before), stone slabs or a deck.
+	function poolDeck(c) { return { stone: 0.9, wood: 1.2, wpc: 1.2 }[c.pool_deck] || 0.3; }
+	// Water size (inside the surround) the visitor asked for, else what the shape suggests; null = automatic.
+	function poolWater(c) {
+		var L = num(c.pool_length, 0), W = num(c.pool_width, 0), sh = c.pool_shape || 'rect';
+		if (L >= 1.5 && W >= 1.2) { return [Math.max(L, W), Math.min(L, W)]; }
+		if (sh === 'plunge') { return [3.0, 2.2]; }
+		if (sh === 'jacuzzi') { return [2.2, 2.2]; }
+		return null;
+	}
+	function poolSpec(c) {
+		var dep = clamp(num(c.pool_depth, 1.5) || 1.5, 0.6, 3), fin = c.pool_finish || 'blue_tile';
+		var base = { blue_tile: '#2D8FB0', white: '#4FB6CF', grey_stone: '#3C7F8C', sand: '#5BB3B8', black: '#1F4A57' }[fin] || '#2D8FB0';
+		// deeper water reads darker
+		return { shape: c.pool_shape || 'rect', deck: poolDeck(c), depth: dep, water: shade(base, -clamp((dep - 1.5) * 0.12, -0.15, 0.25)), cover: c.pool_cover || 'none', deckKind: c.pool_deck || 'coping', finish: fin };
+	}
+	// The garage / carport footprint: type, the visitor's size, spaces and rooms, and a hand-moved place.
+	// `base` is its right edge at the automatic place (the plot is laid out from that, so moving the
+	// garage never moves the plot).
+	function garageRect(c, vols, pl) {
+		var g = c.garage || 'none';
+		if (g === 'none') { return null; }
+		var bb = siteBox(vols), maxX = bb.x1, D = pl.D, sp = Math.round(num(c.garage_spaces, 0));
+		var spaces = sp > 0 ? clamp(sp, 1, 4) : (g === 'garage_2' ? 2 : 1);
+		var gw0 = num(c.garage_width, 0), gd0 = num(c.garage_depth, 0);
+		var gW = gw0 >= 2.5 ? clamp(gw0, 2.5, 16) : (spaces === 1 ? 3.4 : Math.max(6.2, spaces * 3.1)), gD = gd0 >= 4 ? clamp(gd0, 4, 14) : 6.2;
+		var annex = (Array.isArray(c.garage_rooms) && c.garage_rooms.length && g !== 'carport') ? 2.4 : 0;
+		var gx0 = g === 'separate' ? maxX + 2.2 : maxX + 0.4, gy1 = g === 'separate' ? D * 0.8 : Math.min(D, gD), base = gx0 + gW, o = siteGet(c, 'garage');
+		if (o) { gx0 = o.x - gW / 2; gy1 = o.y + (gD + annex) / 2; }
+		var gy0 = gy1 - gD;
+		return { type: g, x0: gx0, x1: gx0 + gW, y0: gy0 - annex, y1: gy1, body0: gy0, w: gW, d: gD, annex: annex, spaces: spaces, dw: clamp(gW / spaces - 0.6, 2.2, 2.6), h: 2.9, base: base, moved: !!o,
+			roof: c.garage_roof || 'flat', facade: c.garage_facade || 'same', door: c.garage_door || 'sectional', window: !!c.garage_window, sideDoor: !!c.garage_side_door };
 	}
 	// A moved opening: the visitor's x along the wall, kept inside the face.
 	function openingAt(c, key, x, w, len) {
@@ -703,7 +737,7 @@
 	}
 	// Pool footprint: inside the plot and the fence, clear of the house and the garden areas; preferably
 	// beside the house, otherwise behind it (never in front of it when there is any other room).
-	function poolRect(c, vols, ext, plot, fenceY, avoid) {
+	function poolRect(c, vols, ext, plot, fenceY, avoid, only) {
 		var bb = siteBox(vols);
 		var L = Math.max(ext.left + 1.0, plot ? plot.x0 + 0.8 : -1e9), R = Math.min(ext.right - 1.0, plot ? plot.x1 - 0.8 : 1e9);
 		var F = Math.min(fenceY, ext.front) - 1.2, B = Math.max(ext.back + 1.0, plot && plot.yB !== null ? plot.yB + 0.8 : -1e9);
@@ -714,6 +748,13 @@
 			return false;
 		}
 		var tx = bb.x0 - 1.0, ty = (bb.y0 + bb.y1) / 2, sizes = [[3.4, 7], [7, 3.4], [3.2, 6], [6, 3.2], [3, 5], [5, 3], [2.6, 4.2], [2.4, 3.4]];
+		// the visitor's own water size (1.22.0) is tried first, both ways round, with its surround
+		var pw = only || poolWater(c), dk = poolDeck(c);
+		if (only) { sizes = [[only[1] + 2 * dk, only[0] + 2 * dk], [only[0] + 2 * dk, only[1] + 2 * dk]]; }
+		else if (pw || dk !== 0.3) {
+			var wl = pw || [6.4, 2.8], ww = [wl[1] + 2 * dk, wl[0] + 2 * dk];
+			sizes = [ww, [ww[1], ww[0]]].concat(sizes.map(function (q) { return [q[0] - 0.6 + 2 * dk, q[1] - 0.6 + 2 * dk]; }));
+		}
 		for (var si = 0; si < sizes.length; si++) {
 			var w = sizes[si][0], d = sizes[si][1], best = null, bd = 1e18;
 			for (var x = L; x + w <= R + 1e-6; x += 0.5) {
@@ -725,6 +766,7 @@
 			}
 			if (best) { return best; }
 		}
+		if (only) { return null; }
 		var fw = 2.4, fd = 3.4, fx = clamp(bb.x0, L, R - fw), fy = clamp(bb.y0 - 1.2 - fd, B, F - fd);
 		return { x0: fx, y0: fy, x1: fx + fw, y1: fy + fd };
 	}
@@ -749,7 +791,22 @@
 		hard.push([doorMid - 1.3, ent.y, doorMid + 1.3, ent.y + 1.6]);
 		if ((c.ac_units || 'none') !== 'none' || has(c.energy, 'heat_pump')) { hard.push([mainV.x1, D * 0.35 - 0.4, mainV.x1 + 1.2, D * 0.35 + 1.5]); }
 		if (has(gf, 'pool')) {
-			out.pool = poolRect(c, vols, ext, plot, fenceY, siteAvoid(c, vols, ext, gar, ter, doorMid, ent.y));
+			var pav = siteAvoid(c, vols, ext, gar, ter, doorMid, ent.y);
+			out.pool = poolRect(c, vols, ext, plot, fenceY, pav);
+			// 1.22.0: the visitor's own size – placed as asked, or the largest of the same proportion that fits
+			var pw0 = poolWater(c);
+			if (pw0 && out.pool) {
+				var dk0 = poolDeck(c), gw = out.pool.x1 - out.pool.x0 - 2 * dk0, gd = out.pool.y1 - out.pool.y0 - 2 * dk0;
+				var asked = (Math.abs(Math.max(gw, gd) - pw0[0]) < 0.05 && Math.abs(Math.min(gw, gd) - pw0[1]) < 0.05);
+				out.poolFit = { asked: pw0, ok: asked };
+				if (!asked) {
+					for (var pk = 0.95; pk >= 0.3; pk -= 0.05) {
+						var tw = [Math.floor(pw0[0] * pk * 10) / 10, Math.floor(pw0[1] * pk * 10) / 10];
+						if (tw[1] < 1.2) { break; }
+						if (poolRect(c, vols, ext, plot, fenceY, pav, tw)) { out.poolFit.max = tw; break; }
+					}
+				}
+			}
 			H(out.pool, 0.6);
 		}
 		var placed = [];
@@ -1070,6 +1127,39 @@
 		var c = sc.c, tint = c.facade_accent_color && (mat === 'wood' || mat === 'metal' || mat === 'render_dark');
 		return sc.mat(mat, tint ? col(c.facade_accent_color, facadeBase(c, mat)) : facadeBase(c, mat));
 	}
+	// Does everything asked for fit on the plot (1.22.0)? [{ field, key, args }] – the designer shows them at
+	// the field. The same plan as the 2D sketch and the 3D view.
+	function siteFit(c) {
+		var out = [];
+		try {
+			var pl = plan(c), vols = volumes(c, pl), bbx = siteBox(vols), GR = garageRect(c, vols, pl), maxX = bbx.x1;
+			var plot = plotRect(c, vols, GR ? GR.base : maxX + 3.8);
+			var front = bbx.y1 + 6.5, back = bbx.y0 - 6, left = bbx.x0 - 6.5, right = (GR ? GR.x1 : maxX) + 6;
+			if (plot) { left = Math.min(left, plot.x0 - 1.2); right = Math.max(right, plot.x1 + 1.2); front = Math.max(front, plot.yF + 1.2); if (plot.yB !== null) { back = Math.min(back, plot.yB - 1.2); } }
+			var ta = clamp(num(c.terrace_area, 0), 0, 200), fy = siteEdge(c, front, plot);
+			var G = gardenLayout(c, vols, pl, { left: left, right: right, front: front, back: back }, plot, GR ? { x0: GR.x0, x1: GR.x1, y0: GR.y0, y1: GR.y1 } : null, ta > 0 ? terraceRect(c, vols[0], vols, ta) : null, fy);
+			if (G.poolFit && !G.poolFit.ok) {
+				var a = G.poolFit.asked;
+				out.push(G.poolFit.max ? { field: 'pool_length', key: 'fit_pool_max', args: [a[0], a[1], G.poolFit.max[0], G.poolFit.max[1]] } : { field: 'pool_length', key: 'fit_pool_none', args: [a[0], a[1]] });
+			}
+			// the plot as given: the house and the garage need their width (1 m margin on both sides); the drawing
+			// widens the plot when they do not fit, so it is said here
+			var pw = num(c.plot_width, 0), houseW = bbx.x1 - bbx.x0;
+			if (pw > 0 && pw <= 60) {
+				var need = Math.max(bbx.x1, GR ? GR.base : 0) - bbx.x0 + 2;
+				if (need > pw + 0.01) {
+					if (GR && houseW + 2 <= pw) { out.push({ field: 'garage', key: 'fit_garage', args: [Math.round(GR.w * 10) / 10, Math.max(0, Math.floor((pw - 2 - houseW - (GR.base - GR.w - bbx.x1)) * 10) / 10)] }); }
+					else { out.push({ field: 'plot_width', key: 'fit_plot', args: [Math.round(need * 10) / 10, pw] }); }
+				}
+			}
+			if (plot && GR) {
+				if (GR.y1 > plot.yF + 0.01 || (plot.yB !== null && GR.y0 < plot.yB - 0.01)) { out.push({ field: 'garage', key: 'fit_garage_depth', args: [Math.round((GR.y1 - GR.y0) * 10) / 10] }); }
+			}
+		} catch (e) { /* a half-filled config: no checks */ }
+		return out;
+	}
+	// a garage wall in its own material (1.22.0)
+	function garageFill(sc, m) { var c = sc.c; return m === 'render' ? sc.mat('render', col(c.facade_color, '#F2EFE9')) : sc.mat(m, facadeBase(c, m)); }
 	var VISUAL_ENERGY = ['heat_pump', 'ac', 'solar', 'battery', 'ev_charger', 'mvhr', 'rainwater'];
 	function plinthFill(c) {
 		switch (c.plinth) {
@@ -1926,12 +2016,11 @@
 		var W = pl.W, D = pl.D, bbx = siteBox(vols), maxY = bbx.y1;
 		var maxX = bbx.x1;
 		var tight = !!opts.tight, front = maxY + (mini ? 2.5 : (tight ? 5.5 : 6.5)), back = bbx.y0 - (mini ? 2 : (tight ? 2.5 : 6)), left = bbx.x0 - (mini ? 2 : (tight ? 3.5 : 6.5));
-		var garage = c.garage || 'none';
-		var gx0 = maxX + 0.4, gW = garage === 'garage_2' ? 6.2 : 3.4, gD = 6.2;
-		if (garage === 'separate') { gx0 = maxX + 2.2; }
-		var right = (garage !== 'none' ? gx0 + gW : maxX) + (mini ? 2 : (tight ? 3.5 : 6));
+		var garage = c.garage || 'none', GR = garageRect(c, vols, pl);
+		var gx0 = GR ? GR.x0 : maxX + 0.4, gW = GR ? GR.w : 3.4, gD = GR ? GR.d : 6.2;
+		var right = (GR ? Math.max(GR.x1, GR.base) : maxX) + (mini ? 2 : (tight ? 3.5 : 6));
 		// the plot: house centred on the plot width, 5 m front setback; the plot outline is drawn when it fits
-		var plot = mini || tight ? null : plotRect(c, vols, garage !== 'none' ? gx0 + gW : maxX + 3.8);
+		var plot = mini || tight ? null : plotRect(c, vols, GR ? GR.base : maxX + 3.8);
 		if (plot) {
 			left = Math.min(left, plot.x0 - 1.2); right = Math.max(right, plot.x1 + 1.2); front = Math.max(front, plot.yF + 1.2);
 			if (plot.yB !== null) { back = Math.min(back, plot.yB - 1.2); }
@@ -2085,8 +2174,8 @@
 
 		/* garage / carport */
 		if (garage !== 'none') {
-			var gy1 = garage === 'separate' ? D * 0.8 : Math.min(D, gD), gy0 = gy1 - gD;
-			var gh = 2.9, gfac = (c.facade_accent || []).length ? wallFill(sc, { wing: true }, 'front') : wallFill(sc, mainV, 'front');
+			var gy1 = GR.y1, gy0 = GR.body0;
+			var gh = 2.9, gfac = GR.facade !== 'same' ? garageFill(sc, GR.facade) : ((c.facade_accent || []).length ? wallFill(sc, { wing: true }, 'front') : wallFill(sc, mainV, 'front'));
 			var gparts = [];
 			if (garage === 'carport') {
 				var pc2 = '#3A3D40';
@@ -2096,13 +2185,34 @@
 				var pcar = vehicleList(c).filter(function (k) { return k !== 'motorcycle' && k !== 'bicycle'; })[0];
 				if (pcar && !siteGet(c, 'vehicle#0')) { vehicle2d(sc, pcar, gx0 + gW / 2, gy1 - 2.975, col(c.car_color, '#3C4148')).forEach(function (r) { gparts.push(r); }); }
 			} else {
-				var doors = garage === 'garage_2' ? 2 : 1, dw = garage === 'garage_2' ? 2.5 : 2.6, inner = '';
+				var doors = GR.spaces, dw = GR.dw, inner = '', side = '';
+				var dc = col(c.garage_door_color, shade(col(c.window_frame_color, '#2F3235'), 0.12));
 				for (var gd = 0; gd < doors; gd++) {
-					var gxx = gd * (gW / doors) + (gW / doors - dw) / 2, dc = col(c.window_frame_color, '#2F3235');
-					inner += '<rect x="' + f(gxx) + '" y="0" width="' + f(dw) + '" height="2.25" fill="' + shade(dc, 0.12) + '"/>';
-					for (var gl = 0.45; gl < 2.25; gl += 0.45) { inner += '<rect x="' + f(gxx) + '" y="' + f(gl) + '" width="' + f(dw) + '" height="0.025" fill="' + shade(dc, -0.2) + '"/>'; }
+					var gxx = gd * (gW / doors) + (gW / doors - dw) / 2;
+					inner += '<rect x="' + f(gxx) + '" y="0" width="' + f(dw) + '" height="2.25" fill="' + (GR.door === 'glass' ? glass(sc) : dc) + '"/>';
+					if (GR.door === 'sectional' || GR.door === 'glass') { for (var gl = 0.45; gl < 2.25; gl += 0.45) { inner += '<rect x="' + f(gxx) + '" y="' + f(gl) + '" width="' + f(dw) + '" height="0.025" fill="' + shade(dc, -0.2) + '"/>'; } }
+					else if (GR.door === 'roller') { for (var gr2 = 0.1; gr2 < 2.25; gr2 += 0.1) { inner += '<rect x="' + f(gxx) + '" y="' + f(gr2) + '" width="' + f(dw) + '" height="0.012" fill="' + shade(dc, -0.15) + '"/>'; } inner += '<rect x="' + f(gxx - 0.05) + '" y="2.25" width="' + f(dw + 0.1) + '" height="0.25" fill="' + shade(dc, 0.1) + '"/>'; }
+					else if (GR.door === 'side_hinged') { inner += '<rect x="' + f(gxx + dw / 2 - 0.02) + '" y="0" width="0.04" height="2.25" fill="' + shade(dc, -0.3) + '"/>'; }
+					else { inner += '<rect x="' + f(gxx + 0.08) + '" y="0.08" width="' + f(dw - 0.16) + '" height="2.09" fill="none" stroke="' + shade(dc, -0.2) + '" stroke-width="0.03"/>'; }
 				}
-				gparts = box(sc, gx0, gy0, 0, gx0 + gW, gy1, gh, { top: c.roof_type === 'flat' || garage !== 'separate' ? (c.roof_surface === 'green' ? sc.mat('green', '#6E8F45') : sc.mat('gravel', '#A9A49B')) : sc.mat('gravel', '#A9A49B'), front: gfac, side: gfac }, { front: inner });
+				if (GR.sideDoor) { side += doorSvg(sc, 1.0, 0.9, 2.1); }
+				if (GR.window) { side += windowSvg(sc, GR.d - 2.2, 1.1, 1.2, 1.0, {}); }
+				var gtop = GR.roof === 'green' || (GR.roof === 'flat' && c.roof_surface === 'green') ? sc.mat('green', '#6E8F45') : sc.mat('gravel', '#A9A49B');
+				gparts = box(sc, gx0, gy0, 0, gx0 + gW, gy1, gh, { top: gtop, front: gfac, side: gfac }, { front: inner, side: side });
+				// pitched garage roofs: a gable or a lean-to on top of the walls
+				if (GR.roof === 'gable' || GR.roof === 'shed') {
+					var rc = sc.mat('roof', col(c.roof_color, '#3A3D40')), rz = GR.roof === 'gable' ? Math.min(1.6, gW * 0.32) : 0.8, ov = 0.2, rp;
+					if (GR.roof === 'gable') {
+						rp = sc.plane([gx0, gy1, gh], [1, 0, 0], [0, 0, 1], [[0, 0], [gW, 0], [gW / 2, rz]], gfac, ''); if (rp) { gparts.push(rp); }
+						rp = sc.poly3([[gx0 - ov, gy1 + ov, gh - 0.05], [gx0 - ov, gy0 - ov, gh - 0.05], [gx0 + gW / 2, gy0 - ov, gh + rz], [gx0 + gW / 2, gy1 + ov, gh + rz]], rc, ''); if (rp) { gparts.push(rp); }
+						rp = sc.poly3([[gx0 + gW / 2, gy1 + ov, gh + rz], [gx0 + gW / 2, gy0 - ov, gh + rz], [gx0 + gW + ov, gy0 - ov, gh - 0.05], [gx0 + gW + ov, gy1 + ov, gh - 0.05]], rc, ''); if (rp) { gparts.push(rp); }
+					} else {
+						rp = sc.plane([gx0 + gW, gy1, gh], [0, -1, 0], [0, 0, 1], [[0, 0], [gD, 0], [gD, rz]], gfac, ''); if (rp) { gparts.push(rp); }
+						rp = sc.poly3([[gx0 - ov, gy1 + ov, gh - 0.05], [gx0 + gW + ov, gy1 + ov, gh - 0.05], [gx0 + gW + ov, gy0 - ov, gh + rz], [gx0 - ov, gy0 - ov, gh + rz]], rc, ''); if (rp) { gparts.push(rp); }
+					}
+				}
+				// the rooms behind (workshop, storage, boiler room): a lower annex at the back
+				if (GR.annex) { box(sc, gx0, GR.y0, 0, gx0 + gW, gy0, gh - 0.3, { top: gtop, front: gfac, side: gfac }, { side: windowSvg(sc, 0.6, 1.2, 0.8, 0.7, {}) }).forEach(function (r) { gparts.push(r); }); }
 			}
 			var gg = group(gparts, 0);
 			if (gg) { sc.push(sc.depth([gx0 + gW / 2, gy1 - 1, 0]), gg.svg); }
@@ -2152,7 +2262,7 @@
 		/* garden: path, pool, trees, hedges, fence – the shared garden plan (inside the plot, nothing on paving) */
 		if (!mini) {
 			var gf = c.garden_features || [], fenceY = siteEdge(c, front, plot);
-			var garR = garage !== 'none' ? { x0: gx0, x1: gx0 + gW, y0: (garage === 'separate' ? D * 0.8 : Math.min(D, gD)) - gD, y1: garage === 'separate' ? D * 0.8 : Math.min(D, gD) } : null;
+			var garR = GR ? { x0: GR.x0, x1: GR.x1, y0: GR.y0, y1: GR.y1 } : null;
 			var G = gardenLayout(c, vols, pl, { left: left, right: right, front: front, back: back }, plot, garR, ta > 0 ? terraceRect(c, mainV, vols, ta) : null, fenceY);
 			var doorMid = G.ent.x;
 			if (G.path) {
@@ -2161,9 +2271,20 @@
 				if (pth) { groundSvg += pth.svg; }
 			}
 			if (G.pool) {
-				var px0 = G.pool.x0, py0 = G.pool.y0, pw2 = G.pool.x1 - G.pool.x0, pd = G.pool.y1 - G.pool.y0;
-				var pool = sc.plane([px0, py0 + pd, 0.02], [1, 0, 0], [0, -1, 0], [[0, 0], [pw2, 0], [pw2, pd], [0, pd]], '#E9E4DA', '<rect x="0.25" y="0.25" width="' + f(pw2 - 0.5) + '" height="' + f(pd - 0.5) + '" fill="' + (L.dark ? '#1E5C7A' : '#5FB2CF') + '"/><rect x="0.25" y="' + f(pd * 0.55) + '" width="' + f(pw2 - 0.5) + '" height="' + f(pd * 0.1) + '" fill="#9FDBEA" opacity="0.5"/>', { noShade: true });
+				var px0 = G.pool.x0, py0 = G.pool.y0, pw2 = G.pool.x1 - G.pool.x0, pd = G.pool.y1 - G.pool.y0, PS = poolSpec(c), e2 = Math.max(0.25, PS.deck - 0.05);
+				var wcol = L.dark ? shade(PS.water, -0.35) : shade(PS.water, 0.25), deckC = { stone: '#D9D2C4', wood: '#A97B52', wpc: '#7A6E64' }[PS.deckKind] || '#E9E4DA', wi = '';
+				var ww2 = pw2 - 2 * e2, wd2 = pd - 2 * e2;
+				if (PS.shape === 'oval' || PS.shape === 'jacuzzi') { wi = '<ellipse cx="' + f(pw2 / 2) + '" cy="' + f(pd / 2) + '" rx="' + f(ww2 / 2) + '" ry="' + f(wd2 / 2) + '" fill="' + wcol + '"/>'; }
+				else if (PS.shape === 'l_shape') { wi = '<path d="M' + f(e2) + ' ' + f(e2) + 'H' + f(pw2 - e2) + 'V' + f(e2 + wd2 * 0.45) + 'H' + f(e2 + ww2 * 0.4) + 'V' + f(pd - e2) + 'H' + f(e2) + 'Z" fill="' + wcol + '"/>'; }
+				else { wi = '<rect x="' + f(e2) + '" y="' + f(e2) + '" width="' + f(ww2) + '" height="' + f(wd2) + '" fill="' + wcol + '"/>'; }
+				if (PS.shape === 'infinity') { wi += '<rect x="' + f(e2) + '" y="' + f(pd - e2) + '" width="' + f(ww2) + '" height="' + f(e2 * 0.6) + '" fill="' + shade(wcol, -0.2) + '"/>'; }
+				wi += '<rect x="' + f(e2) + '" y="' + f(pd * 0.55) + '" width="' + f(ww2) + '" height="' + f(pd * 0.1) + '" fill="#9FDBEA" opacity="' + f(clamp(0.7 - PS.depth * 0.15, 0.2, 0.6)) + '"/>';
+				if (PS.cover === 'slatted') { for (var sl2 = e2; sl2 < e2 + ww2 * 0.8; sl2 += 0.16) { wi += '<rect x="' + f(sl2) + '" y="' + f(e2) + '" width="0.13" height="' + f(wd2) + '" fill="#D8D5CF"/>'; } }
+				else if (PS.cover === 'roller') { wi += '<rect x="' + f(e2) + '" y="' + f(e2) + '" width="' + f(ww2) + '" height="' + f(wd2 * 0.6) + '" fill="#3D6E8A" opacity="0.85"/><rect x="' + f(e2 - 0.1) + '" y="' + f(e2 - 0.25) + '" width="' + f(ww2 + 0.2) + '" height="0.25" fill="#B9BDC1"/>'; }
+				var pool = sc.plane([px0, py0 + pd, 0.02], [1, 0, 0], [0, -1, 0], [[0, 0], [pw2, 0], [pw2, pd], [0, pd]], deckC, wi, { noShade: true });
 				if (pool) { groundSvg += pool.svg; }
+				if (PS.cover === 'telescopic') { box(sc, px0 + e2 - 0.05, py0 + e2 - 0.05, 0.02, px0 + pw2 - e2 + 0.05, py0 + pd - e2 + 0.05, 0.9, { top: 'rgba(210,228,236,0.45)', front: 'rgba(200,222,232,0.4)', side: 'rgba(190,214,226,0.4)' }).forEach(function (r) { sc.push(r.depth, r.svg); }); }
+				if (PS.shape === 'jacuzzi') { box(sc, px0 + e2 - 0.15, py0 + e2 - 0.15, 0, px0 + pw2 - e2 + 0.15, py0 + pd - e2 + 0.15, 0.55, { top: 'none', front: deckC, side: shade(deckC, -0.15) }).forEach(function (r) { sc.push(r.depth, r.svg); }); }
 			}
 			if (G.gravel) {
 				var g1 = G.gravel, gp = sc.plane([g1.x0, g1.y1, 0.008], [1, 0, 0], [0, -1, 0], [[0, 0], [g1.x1 - g1.x0, 0], [g1.x1 - g1.x0, g1.y1 - g1.y0], [0, g1.y1 - g1.y0]], sc.mat('gravel', '#A9A49B'), '', { noShade: true, edge: false });
@@ -2372,7 +2493,7 @@
 		return render(c, { id: 'v' + kind + value, mini: false, fit: 'xMidYMid slice', tight: true, plantScale: kind === 'garden' ? 1.7 : 1.2 });
 	}
 
-	var VISUAL = ['plot_width', 'plot_length', 'exterior_steps', 'accessible', 'ridge_height', 'eaves_depth', 'snow_guards', 'roof_ventilation', 'exposed_rafters', 'facade_texture', 'property_type', 'levels', 'net_area', 'building_width', 'building_length', 'orientation', 'arch_style', 'massing', 'footprint', 'garage', 'terrace_area', 'balcony', 'entrance_canopy', 'outdoor_covered', 'basement', 'chimney', 'ceiling_height',
+	var VISUAL = ['pool_shape', 'pool_length', 'pool_width', 'pool_depth', 'pool_finish', 'pool_cover', 'pool_deck', 'garage_spaces', 'garage_width', 'garage_depth', 'garage_rooms', 'garage_roof', 'garage_facade', 'garage_door', 'garage_door_color', 'garage_window', 'garage_side_door', 'plot_width', 'plot_length', 'exterior_steps', 'accessible', 'ridge_height', 'eaves_depth', 'snow_guards', 'roof_ventilation', 'exposed_rafters', 'facade_texture', 'property_type', 'levels', 'net_area', 'building_width', 'building_length', 'orientation', 'arch_style', 'massing', 'footprint', 'garage', 'terrace_area', 'balcony', 'entrance_canopy', 'outdoor_covered', 'basement', 'chimney', 'ceiling_height',
 		'roof_type', 'roof_pitch', 'roof_overhang', 'gable_finish', 'roof_windows', 'dormers', 'roof_solar', 'gutters', 'roof_product', 'roof_color', 'roof_surface',
 		'facade_main', 'facade_color', 'facade_accent', 'facade_accent_color', 'plinth', 'plinth_color', 'facade_ornaments', 'corner_detail', 'exterior_lighting', 'house_number',
 		'window_style', 'window_frame_color', 'window_frame_material', 'window_trim', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading',
@@ -2394,6 +2515,10 @@
 		var pitched = c.roof_type !== 'flat', ta = num(c.terrace_area, 0) > 0, acc = c.facade_accent || [];
 		switch (id) {
 			case 'balcony': return true;
+			case 'pool_shape': case 'pool_depth': case 'pool_finish': case 'pool_cover': case 'pool_deck': return has(c.garden_features, 'pool');
+			case 'pool_length': case 'pool_width': return has(c.garden_features, 'pool') && num(c.pool_length, 0) >= 1.5 && num(c.pool_width, 0) >= 1.2;
+			case 'garage_spaces': case 'garage_width': case 'garage_depth': return (c.garage || 'none') !== 'none';
+			case 'garage_rooms': case 'garage_roof': case 'garage_facade': case 'garage_door': case 'garage_door_color': case 'garage_window': case 'garage_side_door': return (c.garage || 'none') !== 'none' && c.garage !== 'carport';
 			case 'window_trim': return !!trimColor(c);
 			case 'massing': return c.property_type !== 'semi_detached' && c.property_type !== 'row';
 			case 'footprint': return c.property_type !== 'semi_detached' && c.property_type !== 'row' && (c.massing || 'auto') === 'auto';
@@ -2445,7 +2570,7 @@
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
 		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
 		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _solarFaces: solarFaces, _balconies: balconies, _balcMark: balcMark, _vehicles: vehicleList, _roomsOf: roomsOf, _roomItems: roomItems, _mainRoom: mainRoom, _balconyType: balconyType, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
-		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _accentZones: accentZones, _accentVol: accentVol, _accKey: ACC_KEY, _vehSize: function (t) { return VEH[t] || VEH.sedan; }, _site: siteGet, _siteKey: SITE_KEY, _turnRect: turnRect, _openingAt: openingAt, _chimneyAt: chimneyAt, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
+		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _poolSpec: poolSpec, _siteFit: siteFit, _poolWater: poolWater, _garageRect: garageRect, _accentZones: accentZones, _accentVol: accentVol, _accKey: ACC_KEY, _vehSize: function (t) { return VEH[t] || VEH.sedan; }, _site: siteGet, _siteKey: SITE_KEY, _turnRect: turnRect, _openingAt: openingAt, _chimneyAt: chimneyAt, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));

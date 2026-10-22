@@ -136,5 +136,11 @@ $cfgA = array_merge( $cfg, array( 'facade_accent' => array( 'wood' ), 'accent_la
 $pA   = PromptEngine::build( $cfgA, $con, 'hero', null, $ver )['prompt'];
 $t( 'a teljes promptban is benne van a hely', false !== strpos( $pA, 'the upper floor of the front wall' ) );
 
+/* ---------------------------------------------------------------- 1.22.0: medence és garázs a promptban */
+$pg = PromptEngine::pool_garage_phrase( array_merge( $cfg, array( 'garden_features' => array( 'pool' ), 'pool_shape' => 'infinity', 'pool_length' => 9, 'pool_width' => 4, 'pool_depth' => 1.8, 'pool_finish' => 'black', 'pool_cover' => 'telescopic', 'pool_deck' => 'wood', 'garage' => 'garage_2', 'garage_spaces' => 3, 'garage_roof' => 'gable', 'garage_facade' => 'wood', 'garage_door' => 'roller', 'garage_door_color' => '#8A2E2E', 'garage_window' => true, 'garage_side_door' => true, 'garage_rooms' => array( 'workshop' ) ) ) );
+$t( 'medence: forma, méret, mélység, burkolat, lefedés, terasz a promptban', false !== strpos( $pg, 'infinity-edge swimming pool' ) && false !== strpos( $pg, 'pool 9 m long' ) && false !== strpos( $pg, 'black finish' ) && false !== strpos( $pg, 'telescopic enclosure' ) && false !== strpos( $pg, 'timber deck' ) );
+$t( 'garázs: beállók, tető, fal, kapu, szín, ablak, gyalogajtó, műhely a promptban', false !== strpos( $pg, 'room for 3 cars' ) && false !== strpos( $pg, 'gable roof' ) && false !== strpos( $pg, 'clad in timber' ) && false !== strpos( $pg, 'roller garage door' ) && false !== strpos( $pg, 'side door' ) && false !== strpos( $pg, 'workshop' ) );
+$t( 'medence nélkül nincs medence-részlet', false === strpos( PromptEngine::pool_garage_phrase( array_merge( $cfg, array( 'garden_features' => array(), 'pool_shape' => 'oval', 'garage' => 'none' ) ) ), 'pool' ) );
+
 echo "3D-egyezés: {$ok}/" . ( $ok + $fail ) . ( $fail ? " – {$fail} HIBA" : '' ) . "\n";
 exit( $fail ? 1 : 0 );

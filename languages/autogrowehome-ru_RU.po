@@ -10850,3 +10850,211 @@ msgstr "Марш лестницы уже рекомендуемого"
 #: includes/Frontend/Strings.php
 msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
 msgstr "Одна сторона лишь частично примыкает к стене – сдвиньте её до конца стены или полностью от неё."
+
+#: includes/Params/Definitions.php
+msgid "Beállók száma"
+msgstr "Количество мест"
+
+#: includes/Params/Definitions.php
+msgid "0 = a garázs típusa szerint."
+msgstr "0 = по типу гаража."
+
+#: includes/Params/Definitions.php
+msgid "Garázs szélessége"
+msgstr "Ширина гаража"
+
+#: includes/Params/Definitions.php
+msgid "0 = automatikus."
+msgstr "0 = автоматически."
+
+#: includes/Params/Definitions.php
+msgid "Garázs mélysége"
+msgstr "Глубина гаража"
+
+#: includes/Params/Definitions.php
+msgid "Garázs belső osztása"
+msgstr "Внутренняя планировка гаража"
+
+#: includes/Params/Definitions.php
+msgid "A garázs mögött külön helyiségek."
+msgstr "Отдельные помещения за гаражом."
+
+#: includes/Params/Definitions.php
+msgid "Műhely"
+msgstr "Мастерская"
+
+#: includes/Params/Definitions.php
+msgid "Tároló"
+msgstr "Кладовая"
+
+#: includes/Params/Definitions.php
+msgid "Kazánház"
+msgstr "Котельная"
+
+#: includes/Params/Definitions.php
+msgid "Kerékpártároló"
+msgstr "Велосипедная"
+
+#: includes/Params/Definitions.php
+msgid "Garázs teteje"
+msgstr "Крыша гаража"
+
+#: includes/Params/Definitions.php
+msgid "Lapos"
+msgstr "Плоская"
+
+#: includes/Params/Definitions.php
+msgid "Félnyereg"
+msgstr "Односкатная"
+
+#: includes/Params/Definitions.php
+msgid "Garázs homlokzata"
+msgstr "Фасад гаража"
+
+#: includes/Params/Definitions.php
+msgid "Mint a ház"
+msgstr "Как у дома"
+
+#: includes/Params/Definitions.php
+msgid "Garázskapu"
+msgstr "Гаражные ворота"
+
+#: includes/Params/Definitions.php
+msgid "Szekcionált"
+msgstr "Секционные"
+
+#: includes/Params/Definitions.php
+msgid "Redőnykapu"
+msgstr "Рулонные"
+
+#: includes/Params/Definitions.php
+msgid "Billenő"
+msgstr "Подъёмно-поворотные"
+
+#: includes/Params/Definitions.php
+msgid "Üveges"
+msgstr "Остеклённые"
+
+#: includes/Params/Definitions.php
+msgid "Garázskapu színe"
+msgstr "Цвет гаражных ворот"
+
+#: includes/Params/Definitions.php
+msgid "Üresen az ablakkeret színe."
+msgstr "Пусто = цвет оконных рам."
+
+#: includes/Params/Definitions.php
+msgid "Garázsablak"
+msgstr "Окно в гараже"
+
+#: includes/Params/Definitions.php
+msgid "Gyalogajtó a garázson"
+msgstr "Калитка в гараж"
+
+#: includes/Params/Definitions.php
+msgid "Medence formája"
+msgstr "Форма бассейна"
+
+#: includes/Params/Definitions.php
+msgid "Ovális / kör"
+msgstr "Овальный / круглый"
+
+#: includes/Params/Definitions.php
+msgid "Végtelenített (infinity)"
+msgstr "Переливной (infinity)"
+
+#: includes/Params/Definitions.php
+msgid "Merülőmedence"
+msgstr "Купель"
+
+#: includes/Params/Definitions.php
+msgid "Jakuzzi"
+msgstr "Джакузи"
+
+#: includes/Params/Definitions.php
+msgid "Medence hossza"
+msgstr "Длина бассейна"
+
+#: includes/Params/Definitions.php
+msgid "A víztükör hossza; 0 = automatikus."
+msgstr "Длина зеркала воды; 0 = автоматически."
+
+#: includes/Params/Definitions.php
+msgid "Medence szélessége"
+msgstr "Ширина бассейна"
+
+#: includes/Params/Definitions.php
+msgid "A víztükör szélessége; 0 = automatikus."
+msgstr "Ширина зеркала воды; 0 = автоматически."
+
+#: includes/Params/Definitions.php
+msgid "Medence mélysége"
+msgstr "Глубина бассейна"
+
+#: includes/Params/Definitions.php
+msgid "Medence burkolata"
+msgstr "Отделка бассейна"
+
+#: includes/Params/Definitions.php
+msgid "Kék mozaik"
+msgstr "Синяя мозаика"
+
+#: includes/Params/Definitions.php
+msgid "Szürke kő"
+msgstr "Серый камень"
+
+#: includes/Params/Definitions.php
+msgid "Homokszín"
+msgstr "Песочный"
+
+#: includes/Params/Definitions.php
+msgid "Medence lefedése"
+msgstr "Укрытие бассейна"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás fedés"
+msgstr "Ламельное покрытие"
+
+#: includes/Params/Definitions.php
+msgid "Teleszkópos lefedés"
+msgstr "Телескопический павильон"
+
+#: includes/Params/Definitions.php
+msgid "Görgős takaró"
+msgstr "Рулонное покрытие"
+
+#: includes/Params/Definitions.php
+msgid "Medence körül"
+msgstr "Вокруг бассейна"
+
+#: includes/Params/Definitions.php
+msgid "Csak szegély"
+msgstr "Только бортик"
+
+#: includes/Params/Definitions.php
+msgid "Fa terasz"
+msgstr "Деревянная терраса"
+
+#: includes/Params/Definitions.php
+msgid "WPC terasz"
+msgstr "Терраса из ДПК"
+
+#: includes/Frontend/Strings.php
+msgid "A %1$s × %2$s m-es víztükör a körülötte lévő burkolattal nem fér el a telken a ház, a garázs, a terasz és az utak mellett. Legfeljebb kb. %3$s × %4$s m fér el."
+msgstr "Бассейн %1$s × %2$s м с обходной дорожкой не помещается на участке рядом с домом, гаражом, террасой и дорожками. Помещается не более примерно %3$s × %4$s м."
+
+#: includes/Frontend/Strings.php
+msgid "A %1$s × %2$s m-es medence ekkora telken sehol nem fér el – növeld a telket, vagy válassz kisebb medencét."
+msgstr "Бассейн %1$s × %2$s м нигде не помещается на таком участке – увеличьте участок или выберите меньший."
+
+#: includes/Frontend/Strings.php
+msgid "A garázs kilóg a telekről: %1$s m széles, a ház mellett legfeljebb %2$s m fér el."
+msgstr "Гараж выходит за участок: ширина %1$s м, рядом с домом помещается не более %2$s м."
+
+#: includes/Frontend/Strings.php
+msgid "A garázs (%s m mély) a telek elején vagy végén kilóg – csökkentsd a mélységét, vagy told arrébb."
+msgstr "Гараж (глубина %s м) выходит за переднюю или заднюю границу участка – уменьшите глубину или передвиньте его."
+
+#: includes/Frontend/Strings.php
+msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
+msgstr "Дому (и гаражу) нужно %1$s м ширины, участок шириной лишь %2$s м – чертёж его расширяет."

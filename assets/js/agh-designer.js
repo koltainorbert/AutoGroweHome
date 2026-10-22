@@ -775,7 +775,17 @@
 		['errors', 'warnings', 'info'].forEach(function (k) {
 			(S.check[k] || []).forEach(function (m) { if (m.field === id) { out.push({ type: k === 'errors' ? 'error' : (k === 'warnings' ? 'warning' : 'info'), text: m.message }); } });
 		});
+		// 1.22.0: what does not fit on the plot (pool, garage), worked out by the shared plan
+		siteFits().forEach(function (m) { if (m.field === id) { out.push({ type: 'warning', text: tf.apply(null, [m.key].concat(m.args.map(function (v) { return fmt(v); }))) }); } });
 		return out;
+	}
+	var FIT = { k: null, v: [] };
+	function siteFits() {
+		var K = window.AGH_Sketch;
+		if (!K || !K._siteFit) { return []; }
+		var k = JSON.stringify(S.config);
+		if (FIT.k !== k) { FIT.k = k; FIT.v = K._siteFit(S.config); }
+		return FIT.v;
 	}
 
 	function renderField(f) {
@@ -3231,5 +3241,5 @@
 	}
 	function errToast(err) { toast((err && err.message) || t('err_network'), 'error', 7000); }
 
-	window.AGH_Designer = { open: open, close: close, version: '1.1.0', config: function () { return clone(S.config); }, schema: function () { return S.boot && S.boot.schema ? clone(S.boot.schema) : null; } };
+	window.AGH_Designer = { open: open, close: close, version: '1.1.0', config: function () { return clone(S.config); }, set: function (patch) { var ks = Object.keys(patch || {}); ks.forEach(function (k, i) { setValue(k, patch[k], i === ks.length - 1); }); }, schema: function () { return S.boot && S.boot.schema ? clone(S.boot.schema) : null; } };
 })();

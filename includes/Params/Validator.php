@@ -440,7 +440,7 @@ final class Validator {
 		$out = array();
 		foreach ( is_array( $value ) ? array_slice( $value, 0, 200, true ) : array() as $key => $pos ) {
 			$key = (string) $key;
-			if ( ! preg_match( '/^(pool|shed|playground|pergola|firepit|furniture|tfurniture|kennel|charger|chimney|(plant|vehicle|person|pet|light)#[0-9]{1,3}|(door|tdoor)@[0-9]{1,2}|win@[0-9]{1,2}:(front|right|back|left):[0-9]{1,2}:([0-9]{1,3}|g))$/', $key ) || ! is_array( $pos ) || ! isset( $pos['x'] ) || ! is_numeric( $pos['x'] ) ) {
+			if ( ! preg_match( '/^(pool|shed|playground|pergola|firepit|furniture|tfurniture|kennel|charger|chimney|garage|(plant|vehicle|person|pet|light|out)#[0-9]{1,3}|(door|tdoor)@[0-9]{1,2}|win@[0-9]{1,2}:(front|right|back|left):[0-9]{1,2}:([0-9]{1,3}|g))$/', $key ) || ! is_array( $pos ) || ! isset( $pos['x'] ) || ! is_numeric( $pos['x'] ) ) {
 				continue;
 			}
 			$out[ $key ] = array(

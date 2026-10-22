@@ -463,6 +463,8 @@ final class PromptEngine {
 		}
 		$openings = self::phrases( array( 'window_style', 'window_frame_material', 'window_frame_color', 'window_divided', 'corner_window', 'terrace_door', 'entrance_door', 'entrance_door_color', 'glazing', 'shading' ), $c );
 		$garden   = self::phrases( array( 'garden_style', 'garden_features', 'garden_density', 'tree_types', 'terrace_area', 'terrace_floor', 'driveway', 'fence', 'gate', 'garage', 'entrance_canopy', 'outdoor_covered', 'exterior_steps', 'balcony', 'neighbors', 'orientation' ), $c );
+		// 1.22.0: the pool and the garage in detail (only what applies to the chosen pool / garage)
+		$garden = self::join_phrases( $garden, self::pool_garage_phrase( $c ) );
 		$fence_p  = self::phrase( 'fence', $c );
 		if ( '' !== $fence_p && '' !== self::fence_colour( $c ) ) {
 			// the colour the 3D draws the fence in (1.15.2)
@@ -862,6 +864,33 @@ final class PromptEngine {
 			$out .= ', rendered parts in ' . $colour;
 		}
 		return self::join_phrases( self::join_phrases( $out, self::phrases( $rest, $c ) ), self::accent_places( $c ) );
+	}
+
+	/**
+	 * The pool and the garage in detail (1.22.0): shape, size, depth, lining, cover and surround of the pool;
+	 * spaces, size, rooms behind, roof, walls, door type and colour, window and side door of the garage.
+	 */
+	public static function pool_garage_phrase( array $c ): string {
+		$out = '';
+		if ( in_array( 'pool', (array) ( $c['garden_features'] ?? array() ), true ) ) {
+			$ids = array( 'pool_shape', 'pool_depth', 'pool_finish', 'pool_cover', 'pool_deck' );
+			if ( (float) ( $c['pool_length'] ?? 0 ) >= 1.5 && (float) ( $c['pool_width'] ?? 0 ) >= 1.2 ) {
+				$ids = array_merge( array( 'pool_length', 'pool_width' ), $ids );
+			}
+			$out = self::join_phrases( $out, self::phrases( $ids, $c ) );
+		}
+		$g = (string) ( $c['garage'] ?? 'none' );
+		if ( 'none' !== $g ) {
+			$ids = array( 'garage_spaces', 'garage_width', 'garage_depth' );
+			if ( 'carport' !== $g ) {
+				$ids = array_merge( $ids, array( 'garage_rooms', 'garage_roof', 'garage_facade', 'garage_door', 'garage_window', 'garage_side_door' ) );
+				if ( '' !== (string) ( $c['garage_door_color'] ?? '' ) ) {
+					$ids[] = 'garage_door_color';
+				}
+			}
+			$out = self::join_phrases( $out, self::phrases( $ids, $c ) );
+		}
+		return $out;
 	}
 
 	/**

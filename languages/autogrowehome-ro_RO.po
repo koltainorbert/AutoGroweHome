@@ -10850,3 +10850,211 @@ msgstr "Rampa scării este mai îngustă decât se recomandă"
 #: includes/Frontend/Strings.php
 msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
 msgstr "O latură stă doar parțial pe un perete – mut-o până la capătul peretelui sau complet departe de el."
+
+#: includes/Params/Definitions.php
+msgid "Beállók száma"
+msgstr "Număr de locuri"
+
+#: includes/Params/Definitions.php
+msgid "0 = a garázs típusa szerint."
+msgstr "0 = după tipul garajului."
+
+#: includes/Params/Definitions.php
+msgid "Garázs szélessége"
+msgstr "Lățimea garajului"
+
+#: includes/Params/Definitions.php
+msgid "0 = automatikus."
+msgstr "0 = automat."
+
+#: includes/Params/Definitions.php
+msgid "Garázs mélysége"
+msgstr "Adâncimea garajului"
+
+#: includes/Params/Definitions.php
+msgid "Garázs belső osztása"
+msgstr "Compartimentarea garajului"
+
+#: includes/Params/Definitions.php
+msgid "A garázs mögött külön helyiségek."
+msgstr "Încăperi separate în spatele garajului."
+
+#: includes/Params/Definitions.php
+msgid "Műhely"
+msgstr "Atelier"
+
+#: includes/Params/Definitions.php
+msgid "Tároló"
+msgstr "Magazie"
+
+#: includes/Params/Definitions.php
+msgid "Kazánház"
+msgstr "Centrală termică"
+
+#: includes/Params/Definitions.php
+msgid "Kerékpártároló"
+msgstr "Depozit pentru biciclete"
+
+#: includes/Params/Definitions.php
+msgid "Garázs teteje"
+msgstr "Acoperișul garajului"
+
+#: includes/Params/Definitions.php
+msgid "Lapos"
+msgstr "Plat"
+
+#: includes/Params/Definitions.php
+msgid "Félnyereg"
+msgstr "Într-o apă"
+
+#: includes/Params/Definitions.php
+msgid "Garázs homlokzata"
+msgstr "Fațada garajului"
+
+#: includes/Params/Definitions.php
+msgid "Mint a ház"
+msgstr "Ca a casei"
+
+#: includes/Params/Definitions.php
+msgid "Garázskapu"
+msgstr "Ușa garajului"
+
+#: includes/Params/Definitions.php
+msgid "Szekcionált"
+msgstr "Secțională"
+
+#: includes/Params/Definitions.php
+msgid "Redőnykapu"
+msgstr "Tip rulou"
+
+#: includes/Params/Definitions.php
+msgid "Billenő"
+msgstr "Basculantă"
+
+#: includes/Params/Definitions.php
+msgid "Üveges"
+msgstr "Vitrată"
+
+#: includes/Params/Definitions.php
+msgid "Garázskapu színe"
+msgstr "Culoarea ușii garajului"
+
+#: includes/Params/Definitions.php
+msgid "Üresen az ablakkeret színe."
+msgstr "Gol = culoarea tâmplăriei."
+
+#: includes/Params/Definitions.php
+msgid "Garázsablak"
+msgstr "Fereastră la garaj"
+
+#: includes/Params/Definitions.php
+msgid "Gyalogajtó a garázson"
+msgstr "Ușă de acces în garaj"
+
+#: includes/Params/Definitions.php
+msgid "Medence formája"
+msgstr "Forma piscinei"
+
+#: includes/Params/Definitions.php
+msgid "Ovális / kör"
+msgstr "Ovală / rotundă"
+
+#: includes/Params/Definitions.php
+msgid "Végtelenített (infinity)"
+msgstr "Infinity"
+
+#: includes/Params/Definitions.php
+msgid "Merülőmedence"
+msgstr "Bazin de imersie"
+
+#: includes/Params/Definitions.php
+msgid "Jakuzzi"
+msgstr "Jacuzzi"
+
+#: includes/Params/Definitions.php
+msgid "Medence hossza"
+msgstr "Lungimea piscinei"
+
+#: includes/Params/Definitions.php
+msgid "A víztükör hossza; 0 = automatikus."
+msgstr "Lungimea oglinzii apei; 0 = automat."
+
+#: includes/Params/Definitions.php
+msgid "Medence szélessége"
+msgstr "Lățimea piscinei"
+
+#: includes/Params/Definitions.php
+msgid "A víztükör szélessége; 0 = automatikus."
+msgstr "Lățimea oglinzii apei; 0 = automat."
+
+#: includes/Params/Definitions.php
+msgid "Medence mélysége"
+msgstr "Adâncimea piscinei"
+
+#: includes/Params/Definitions.php
+msgid "Medence burkolata"
+msgstr "Finisajul piscinei"
+
+#: includes/Params/Definitions.php
+msgid "Kék mozaik"
+msgstr "Mozaic albastru"
+
+#: includes/Params/Definitions.php
+msgid "Szürke kő"
+msgstr "Piatră gri"
+
+#: includes/Params/Definitions.php
+msgid "Homokszín"
+msgstr "Nisip"
+
+#: includes/Params/Definitions.php
+msgid "Medence lefedése"
+msgstr "Acoperirea piscinei"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás fedés"
+msgstr "Acoperire cu lamele"
+
+#: includes/Params/Definitions.php
+msgid "Teleszkópos lefedés"
+msgstr "Acoperire telescopică"
+
+#: includes/Params/Definitions.php
+msgid "Görgős takaró"
+msgstr "Prelată cu rulou"
+
+#: includes/Params/Definitions.php
+msgid "Medence körül"
+msgstr "În jurul piscinei"
+
+#: includes/Params/Definitions.php
+msgid "Csak szegély"
+msgstr "Doar bordură"
+
+#: includes/Params/Definitions.php
+msgid "Fa terasz"
+msgstr "Terasă din lemn"
+
+#: includes/Params/Definitions.php
+msgid "WPC terasz"
+msgstr "Terasă din WPC"
+
+#: includes/Frontend/Strings.php
+msgid "A %1$s × %2$s m-es víztükör a körülötte lévő burkolattal nem fér el a telken a ház, a garázs, a terasz és az utak mellett. Legfeljebb kb. %3$s × %4$s m fér el."
+msgstr "O piscină de %1$s × %2$s m cu bordura nu încape pe teren lângă casă, garaj, terasă și alei. Încape cel mult circa %3$s × %4$s m."
+
+#: includes/Frontend/Strings.php
+msgid "A %1$s × %2$s m-es medence ekkora telken sehol nem fér el – növeld a telket, vagy válassz kisebb medencét."
+msgstr "O piscină de %1$s × %2$s m nu încape nicăieri pe acest teren – mărește terenul sau alege una mai mică."
+
+#: includes/Frontend/Strings.php
+msgid "A garázs kilóg a telekről: %1$s m széles, a ház mellett legfeljebb %2$s m fér el."
+msgstr "Garajul iese din teren: are %1$s m lățime, lângă casă încap cel mult %2$s m."
+
+#: includes/Frontend/Strings.php
+msgid "A garázs (%s m mély) a telek elején vagy végén kilóg – csökkentsd a mélységét, vagy told arrébb."
+msgstr "Garajul (adâncime %s m) iese în față sau în spate din teren – micșorează adâncimea sau mută-l."
+
+#: includes/Frontend/Strings.php
+msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
+msgstr "Casa (și garajul) cer %1$s m lățime, terenul are doar %2$s m – desenul îl lărgește."

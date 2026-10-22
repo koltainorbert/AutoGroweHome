@@ -217,6 +217,31 @@ final class Definitions {
 				)
 			)
 		);
+		// 1.22.0: the garage in detail (the garage field above keeps its values)
+		$gshow = array( 'field' => 'garage', 'op' => '!=', 'value' => 'none' );
+		$gbody = array( 'field' => 'garage', 'op' => 'in', 'value' => array( 'garage_1', 'garage_2', 'separate' ) );
+		$f[]   = array( 'id' => 'garage_spaces', 'category' => 'massing', 'type' => 'range', 'label' => __( 'Beállók száma', 'autogrowehome' ), 'help' => __( '0 = a garázs típusa szerint.', 'autogrowehome' ), 'default' => 0, 'min' => 0, 'max' => 4, 'step' => 1, 'unit' => '', 'show_if' => $gshow, 'prompt' => 'room for {value} cars' );
+		$f[]   = array( 'id' => 'garage_width', 'category' => 'massing', 'type' => 'range', 'label' => __( 'Garázs szélessége', 'autogrowehome' ), 'help' => __( '0 = automatikus.', 'autogrowehome' ), 'default' => 0, 'min' => 0, 'max' => 16, 'step' => 0.1, 'unit' => 'm', 'show_if' => $gshow, 'advanced' => true, 'prompt' => 'garage {value} m wide' );
+		$f[]   = array( 'id' => 'garage_depth', 'category' => 'massing', 'type' => 'range', 'label' => __( 'Garázs mélysége', 'autogrowehome' ), 'help' => __( '0 = automatikus.', 'autogrowehome' ), 'default' => 0, 'min' => 0, 'max' => 14, 'step' => 0.1, 'unit' => 'm', 'show_if' => $gshow, 'advanced' => true, 'prompt' => 'garage {value} m deep' );
+		$f[]   = array_merge(
+			array( 'id' => 'garage_rooms', 'category' => 'massing', 'type' => 'multiselect', 'label' => __( 'Garázs belső osztása', 'autogrowehome' ), 'help' => __( 'A garázs mögött külön helyiségek.', 'autogrowehome' ), 'default' => array(), 'show_if' => $gbody, 'prompt' => 'garage with {value} behind' ),
+			self::opts( array( 'workshop' => array( __( 'Műhely', 'autogrowehome' ), 'a workshop' ), 'storage' => array( __( 'Tároló', 'autogrowehome' ), 'a storage room' ), 'boiler' => array( __( 'Kazánház', 'autogrowehome' ), 'a boiler room' ), 'bikes' => array( __( 'Kerékpártároló', 'autogrowehome' ), 'a bicycle store' ) ) )
+		);
+		$f[]   = array_merge(
+			array( 'id' => 'garage_roof', 'category' => 'massing', 'type' => 'select', 'label' => __( 'Garázs teteje', 'autogrowehome' ), 'help' => '', 'default' => 'flat', 'show_if' => $gbody, 'prompt' => 'garage with {value}' ),
+			self::opts( array( 'flat' => array( __( 'Lapos', 'autogrowehome' ), 'a flat roof' ), 'gable' => array( __( 'Nyeregtető', 'autogrowehome' ), 'a gable roof' ), 'shed' => array( __( 'Félnyereg', 'autogrowehome' ), 'a lean-to roof' ), 'green' => array( __( 'Zöldtető', 'autogrowehome' ), 'a green roof' ) ) )
+		);
+		$f[]   = array_merge(
+			array( 'id' => 'garage_facade', 'category' => 'massing', 'type' => 'select', 'label' => __( 'Garázs homlokzata', 'autogrowehome' ), 'help' => '', 'default' => 'same', 'show_if' => $gbody, 'prompt' => 'garage walls {value}' ),
+			self::opts( array( 'same' => array( __( 'Mint a ház', 'autogrowehome' ), 'matching the house' ), 'render' => array( __( 'Vakolt', 'autogrowehome' ), 'in render' ), 'wood' => array( __( 'Fa', 'autogrowehome' ), 'clad in timber' ), 'brick' => array( __( 'Tégla', 'autogrowehome' ), 'in brick' ), 'metal' => array( __( 'Fém', 'autogrowehome' ), 'clad in metal' ), 'stone' => array( __( 'Kő', 'autogrowehome' ), 'in natural stone' ) ) )
+		);
+		$f[]   = array_merge(
+			array( 'id' => 'garage_door', 'category' => 'massing', 'type' => 'select', 'label' => __( 'Garázskapu', 'autogrowehome' ), 'help' => '', 'default' => 'sectional', 'show_if' => $gbody, 'prompt' => '{value} garage door' ),
+			self::opts( array( 'sectional' => array( __( 'Szekcionált', 'autogrowehome' ), 'sectional' ), 'roller' => array( __( 'Redőnykapu', 'autogrowehome' ), 'roller' ), 'tilt' => array( __( 'Billenő', 'autogrowehome' ), 'up-and-over' ), 'side_hinged' => array( __( 'Kétszárnyú', 'autogrowehome' ), 'side-hinged timber' ), 'glass' => array( __( 'Üveges', 'autogrowehome' ), 'glazed aluminium' ) ) )
+		);
+		$f[]   = array( 'id' => 'garage_door_color', 'category' => 'massing', 'type' => 'color', 'label' => __( 'Garázskapu színe', 'autogrowehome' ), 'help' => __( 'Üresen az ablakkeret színe.', 'autogrowehome' ), 'default' => '', 'show_if' => $gbody, 'advanced' => true, 'prompt' => 'garage door colour {color}' );
+		$f[]   = array( 'id' => 'garage_window', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Garázsablak', 'autogrowehome' ), 'help' => '', 'default' => false, 'show_if' => $gbody, 'prompt' => 'a window in the garage side wall' );
+		$f[]   = array( 'id' => 'garage_side_door', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Gyalogajtó a garázson', 'autogrowehome' ), 'help' => '', 'default' => false, 'show_if' => $gbody, 'prompt' => 'a side door into the garage' );
 		$f[] = array( 'id' => 'terrace_area', 'category' => 'massing', 'type' => 'range', 'label' => __( 'Fedett terasz', 'autogrowehome' ), 'help' => __( 'A kert felőli fedett terasz mérete (0 = nincs).', 'autogrowehome' ), 'default' => 20, 'min' => 0, 'max' => 120, 'step' => 1, 'unit' => 'm²', 'quick' => array( 0, 12, 20, 30 ), 'prompt' => 'generous covered terrace of about {value} m2' );
 		$f[] = array( 'id' => 'balcony', 'category' => 'massing', 'type' => 'toggle', 'label' => __( 'Erkély', 'autogrowehome' ), 'help' => __( 'Emeletes háznál konzolos erkély, tetőteresnél az oromfalon, földszintesnél franciaerkély.', 'autogrowehome' ), 'default' => true, 'prompt' => 'upper floor balcony' );
 		$f[] = array_merge(
@@ -1517,6 +1542,27 @@ final class Definitions {
 					'garden_furniture' => array( __( 'Kerti bútorok', 'autogrowehome' ), 'outdoor furniture' ),
 				)
 			)
+		);
+		// 1.22.0: the pool in detail (when the garden has one)
+		$pshow = array( 'field' => 'garden_features', 'op' => 'in', 'value' => array( 'pool' ) );
+		$f[]   = array_merge(
+			array( 'id' => 'pool_shape', 'category' => 'garden', 'type' => 'select', 'label' => __( 'Medence formája', 'autogrowehome' ), 'help' => '', 'default' => 'rect', 'show_if' => $pshow, 'prompt' => '{value} swimming pool' ),
+			self::opts( array( 'rect' => array( __( 'Téglalap', 'autogrowehome' ), 'rectangular' ), 'l_shape' => array( __( 'L alakú', 'autogrowehome' ), 'L-shaped' ), 'oval' => array( __( 'Ovális / kör', 'autogrowehome' ), 'oval' ), 'infinity' => array( __( 'Végtelenített (infinity)', 'autogrowehome' ), 'infinity-edge' ), 'plunge' => array( __( 'Merülőmedence', 'autogrowehome' ), 'small plunge' ), 'jacuzzi' => array( __( 'Jakuzzi', 'autogrowehome' ), 'round raised hot tub instead of a' ) ) )
+		);
+		$f[]   = array( 'id' => 'pool_length', 'category' => 'garden', 'type' => 'range', 'label' => __( 'Medence hossza', 'autogrowehome' ), 'help' => __( 'A víztükör hossza; 0 = automatikus.', 'autogrowehome' ), 'default' => 0, 'min' => 0, 'max' => 15, 'step' => 0.1, 'unit' => 'm', 'show_if' => $pshow, 'prompt' => 'pool {value} m long' );
+		$f[]   = array( 'id' => 'pool_width', 'category' => 'garden', 'type' => 'range', 'label' => __( 'Medence szélessége', 'autogrowehome' ), 'help' => __( 'A víztükör szélessége; 0 = automatikus.', 'autogrowehome' ), 'default' => 0, 'min' => 0, 'max' => 8, 'step' => 0.1, 'unit' => 'm', 'show_if' => $pshow, 'prompt' => 'pool {value} m wide' );
+		$f[]   = array( 'id' => 'pool_depth', 'category' => 'garden', 'type' => 'range', 'label' => __( 'Medence mélysége', 'autogrowehome' ), 'help' => '', 'default' => 1.5, 'min' => 0.6, 'max' => 3, 'step' => 0.1, 'unit' => 'm', 'show_if' => $pshow, 'prompt' => 'water about {value} m deep' );
+		$f[]   = array_merge(
+			array( 'id' => 'pool_finish', 'category' => 'garden', 'type' => 'select', 'label' => __( 'Medence burkolata', 'autogrowehome' ), 'help' => '', 'default' => 'blue_tile', 'show_if' => $pshow, 'prompt' => 'pool lined with {value}' ),
+			self::opts( array( 'blue_tile' => array( __( 'Kék mozaik', 'autogrowehome' ), 'blue mosaic tiles' ), 'white' => array( __( 'Fehér', 'autogrowehome' ), 'white finish' ), 'grey_stone' => array( __( 'Szürke kő', 'autogrowehome' ), 'grey stone' ), 'sand' => array( __( 'Homokszín', 'autogrowehome' ), 'sand-coloured finish' ), 'black' => array( __( 'Fekete', 'autogrowehome' ), 'black finish' ) ) )
+		);
+		$f[]   = array_merge(
+			array( 'id' => 'pool_cover', 'category' => 'garden', 'type' => 'select', 'label' => __( 'Medence lefedése', 'autogrowehome' ), 'help' => '', 'default' => 'none', 'show_if' => $pshow, 'prompt' => 'pool {value}' ),
+			self::opts( array( 'none' => array( __( 'Nincs', 'autogrowehome' ), '' ), 'slatted' => array( __( 'Lamellás fedés', 'autogrowehome' ), 'with a slatted cover' ), 'telescopic' => array( __( 'Teleszkópos lefedés', 'autogrowehome' ), 'under a low telescopic enclosure' ), 'roller' => array( __( 'Görgős takaró', 'autogrowehome' ), 'with a roller cover' ) ) )
+		);
+		$f[]   = array_merge(
+			array( 'id' => 'pool_deck', 'category' => 'garden', 'type' => 'select', 'label' => __( 'Medence körül', 'autogrowehome' ), 'help' => '', 'default' => 'coping', 'show_if' => $pshow, 'prompt' => 'pool surrounded by {value}' ),
+			self::opts( array( 'coping' => array( __( 'Csak szegély', 'autogrowehome' ), 'a narrow coping' ), 'stone' => array( __( 'Kőburkolat', 'autogrowehome' ), 'stone paving' ), 'wood' => array( __( 'Fa terasz', 'autogrowehome' ), 'a timber deck' ), 'wpc' => array( __( 'WPC terasz', 'autogrowehome' ), 'a composite deck' ) ) )
 		);
 		$f[] = array_merge(
 			array( 'id' => 'garden_density', 'category' => 'garden', 'type' => 'select', 'label' => __( 'Növényzet sűrűsége', 'autogrowehome' ), 'help' => '', 'default' => 'normal', 'prompt' => '{value}' ),

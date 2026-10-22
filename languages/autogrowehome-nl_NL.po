@@ -10848,3 +10848,211 @@ msgstr "De trap is smaller dan aanbevolen"
 #: includes/Frontend/Strings.php
 msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
 msgstr "Eén zijde ligt maar deels tegen een muur – schuif hem tot het einde van de muur of helemaal ervan weg."
+
+#: includes/Params/Definitions.php
+msgid "Beállók száma"
+msgstr "Aantal plaatsen"
+
+#: includes/Params/Definitions.php
+msgid "0 = a garázs típusa szerint."
+msgstr "0 = volgens het garagetype."
+
+#: includes/Params/Definitions.php
+msgid "Garázs szélessége"
+msgstr "Breedte van de garage"
+
+#: includes/Params/Definitions.php
+msgid "0 = automatikus."
+msgstr "0 = automatisch."
+
+#: includes/Params/Definitions.php
+msgid "Garázs mélysége"
+msgstr "Diepte van de garage"
+
+#: includes/Params/Definitions.php
+msgid "Garázs belső osztása"
+msgstr "Indeling van de garage"
+
+#: includes/Params/Definitions.php
+msgid "A garázs mögött külön helyiségek."
+msgstr "Aparte ruimtes achter de garage."
+
+#: includes/Params/Definitions.php
+msgid "Műhely"
+msgstr "Werkplaats"
+
+#: includes/Params/Definitions.php
+msgid "Tároló"
+msgstr "Berging"
+
+#: includes/Params/Definitions.php
+msgid "Kazánház"
+msgstr "Stookruimte"
+
+#: includes/Params/Definitions.php
+msgid "Kerékpártároló"
+msgstr "Fietsenberging"
+
+#: includes/Params/Definitions.php
+msgid "Garázs teteje"
+msgstr "Garagedak"
+
+#: includes/Params/Definitions.php
+msgid "Lapos"
+msgstr "Plat"
+
+#: includes/Params/Definitions.php
+msgid "Félnyereg"
+msgstr "Lessenaarsdak"
+
+#: includes/Params/Definitions.php
+msgid "Garázs homlokzata"
+msgstr "Gevel van de garage"
+
+#: includes/Params/Definitions.php
+msgid "Mint a ház"
+msgstr "Zoals het huis"
+
+#: includes/Params/Definitions.php
+msgid "Garázskapu"
+msgstr "Garagedeur"
+
+#: includes/Params/Definitions.php
+msgid "Szekcionált"
+msgstr "Sectionaal"
+
+#: includes/Params/Definitions.php
+msgid "Redőnykapu"
+msgstr "Roldeur"
+
+#: includes/Params/Definitions.php
+msgid "Billenő"
+msgstr "Kanteldeur"
+
+#: includes/Params/Definitions.php
+msgid "Üveges"
+msgstr "Beglaasd"
+
+#: includes/Params/Definitions.php
+msgid "Garázskapu színe"
+msgstr "Kleur van de garagedeur"
+
+#: includes/Params/Definitions.php
+msgid "Üresen az ablakkeret színe."
+msgstr "Leeg = kleur van de kozijnen."
+
+#: includes/Params/Definitions.php
+msgid "Garázsablak"
+msgstr "Garageraam"
+
+#: includes/Params/Definitions.php
+msgid "Gyalogajtó a garázson"
+msgstr "Loopdeur in de garage"
+
+#: includes/Params/Definitions.php
+msgid "Medence formája"
+msgstr "Vorm van het zwembad"
+
+#: includes/Params/Definitions.php
+msgid "Ovális / kör"
+msgstr "Ovaal / rond"
+
+#: includes/Params/Definitions.php
+msgid "Végtelenített (infinity)"
+msgstr "Infinity-zwembad"
+
+#: includes/Params/Definitions.php
+msgid "Merülőmedence"
+msgstr "Dompelbad"
+
+#: includes/Params/Definitions.php
+msgid "Jakuzzi"
+msgstr "Jacuzzi"
+
+#: includes/Params/Definitions.php
+msgid "Medence hossza"
+msgstr "Lengte van het zwembad"
+
+#: includes/Params/Definitions.php
+msgid "A víztükör hossza; 0 = automatikus."
+msgstr "Lengte van het wateroppervlak; 0 = automatisch."
+
+#: includes/Params/Definitions.php
+msgid "Medence szélessége"
+msgstr "Breedte van het zwembad"
+
+#: includes/Params/Definitions.php
+msgid "A víztükör szélessége; 0 = automatikus."
+msgstr "Breedte van het wateroppervlak; 0 = automatisch."
+
+#: includes/Params/Definitions.php
+msgid "Medence mélysége"
+msgstr "Diepte van het zwembad"
+
+#: includes/Params/Definitions.php
+msgid "Medence burkolata"
+msgstr "Afwerking van het zwembad"
+
+#: includes/Params/Definitions.php
+msgid "Kék mozaik"
+msgstr "Blauw mozaïek"
+
+#: includes/Params/Definitions.php
+msgid "Szürke kő"
+msgstr "Grijze steen"
+
+#: includes/Params/Definitions.php
+msgid "Homokszín"
+msgstr "Zandkleur"
+
+#: includes/Params/Definitions.php
+msgid "Medence lefedése"
+msgstr "Zwembadafdekking"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás fedés"
+msgstr "Lamellenafdekking"
+
+#: includes/Params/Definitions.php
+msgid "Teleszkópos lefedés"
+msgstr "Telescopische overkapping"
+
+#: includes/Params/Definitions.php
+msgid "Görgős takaró"
+msgstr "Oprolbare afdekking"
+
+#: includes/Params/Definitions.php
+msgid "Medence körül"
+msgstr "Rond het zwembad"
+
+#: includes/Params/Definitions.php
+msgid "Csak szegély"
+msgstr "Alleen rand"
+
+#: includes/Params/Definitions.php
+msgid "Fa terasz"
+msgstr "Houten terras"
+
+#: includes/Params/Definitions.php
+msgid "WPC terasz"
+msgstr "Composiet terras"
+
+#: includes/Frontend/Strings.php
+msgid "A %1$s × %2$s m-es víztükör a körülötte lévő burkolattal nem fér el a telken a ház, a garázs, a terasz és az utak mellett. Legfeljebb kb. %3$s × %4$s m fér el."
+msgstr "Een zwembad van %1$s × %2$s m met rand past niet op het perceel naast huis, garage, terras en paden. Hooguit ongeveer %3$s × %4$s m past."
+
+#: includes/Frontend/Strings.php
+msgid "A %1$s × %2$s m-es medence ekkora telken sehol nem fér el – növeld a telket, vagy válassz kisebb medencét."
+msgstr "Een zwembad van %1$s × %2$s m past nergens op dit perceel – maak het perceel groter of kies een kleiner."
+
+#: includes/Frontend/Strings.php
+msgid "A garázs kilóg a telekről: %1$s m széles, a ház mellett legfeljebb %2$s m fér el."
+msgstr "De garage steekt buiten het perceel: %1$s m breed, naast het huis past hooguit %2$s m."
+
+#: includes/Frontend/Strings.php
+msgid "A garázs (%s m mély) a telek elején vagy végén kilóg – csökkentsd a mélységét, vagy told arrébb."
+msgstr "De garage (%s m diep) steekt voor of achter buiten het perceel – maak hem minder diep of verschuif hem."
+
+#: includes/Frontend/Strings.php
+msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
+msgstr "Het huis (en de garage) vragen %1$s m breedte, het perceel is maar %2$s m breed – de tekening verbreedt het."

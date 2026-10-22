@@ -1112,30 +1112,15 @@ House.prototype.extras = function () {
 			this.mover('tfurniture', tfx, tfy, tfo ? tfo.rot : 0, function () { self.furniture(tfx - 0.8, tfy - 1.0, tfx > tr.x0 && tfx < tr.x1 && tfy > tr.y0 && tfy < tr.y1 ? 0.18 : 0, okit); }, { kind: 'furniture', w: 2.0, d: 2.0, field: 'garden_features' });
 		}
 	}
-	var garage = c.garage || 'none';
-	if (garage !== 'none') {
-		var gx0 = garage === 'separate' ? maxX + 2.2 : maxX + 0.4, gW = garage === 'garage_2' ? 6.2 : 3.4, gD = 6.2;
-		var gy1 = garage === 'separate' ? D * 0.8 : Math.min(D, gD), gy0 = gy1 - gD, gh = 2.9;
-		this.garage = { x0: gx0, x1: gx0 + gW, y0: gy0, y1: gy1 };
-		var acc = c.facade_accent || [], gm = acc.length ? accentMat(c, acc[0]) : facadeMat(c, c.facade_main);
-		if (garage === 'carport') {
-			var cm = solid('#3A3D40', 0.45, 0.5);
-			[[gx0, gy1], [gx0 + gW - 0.15, gy1], [gx0, gy0 + 0.15], [gx0 + gW - 0.15, gy0 + 0.15]].forEach(function (q) { self.add(box(q[0], q[1] - 0.15, 0, q[0] + 0.15, q[1], gh, cm)); });
-			this.add(box(gx0 - 0.1, gy0, gh, gx0 + gW + 0.1, gy1 + 0.2, gh + 0.25, c.roof_surface === 'green' ? pbr('green', {}, { normal: 2 }) : solid('#5A5E62', 0.6, 0.3)));
-			// the parked car: with the garden (site) it is one of the movable vehicles there (1.18.0)
-			var pcar = SK()._vehicles(c).filter(function (k) { return k !== 'motorcycle' && k !== 'bicycle'; })[0];
-			if (pcar && this.o.mini) { this.add(life(INT.vehicle(INT.mats(c), pcar, col(c.car_color, '#3C4148')), gx0 + gW / 2, gy1 - 2.975, Math.PI / 2)); }
-		} else {
-			var doors = garage === 'garage_2' ? 2 : 1, dw = garage === 'garage_2' ? 2.5 : 2.6;
-			var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(gW, 0); s.lineTo(gW, gh); s.lineTo(0, gh); s.lineTo(0, 0);
-			for (var d = 0; d < doors; d++) { var gxx = d * (gW / doors) + (gW / doors - dw) / 2; var hp = new THREE.Path(); hp.moveTo(gxx, 0); hp.lineTo(gxx + dw, 0); hp.lineTo(gxx + dw, 2.25); hp.lineTo(gxx, 2.25); hp.lineTo(gxx, 0); s.holes.push(hp); }
-			var fw = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.3, bevelEnabled: false }), gm); fw.position.copy(X(gx0, gy1 - 0.3, 0)); fw.castShadow = true; fw.receiveShadow = true;
-			this.add(fw);
-			this.add(box(gx0, gy0, 0, gx0 + gW, gy1 - 0.3, gh, gm));
-			for (var d2 = 0; d2 < doors; d2++) { var gx2 = gx0 + d2 * (gW / doors) + (gW / doors - dw) / 2; this.add(box(gx2, gy1 - 0.22, 0, gx2 + dw, gy1 - 0.12, 2.25, pbr('garagedoor', { color: shadeHex(col(c.window_frame_color, '#2F3235'), 0.12) }, { normal: 1.4 }))); }
-			this.add(box(gx0 - 0.08, gy0 - 0.08, gh, gx0 + gW + 0.08, gy1 + 0.08, gh + 0.22, solid(shadeHex(col(c.facade_color, '#F2EFE9'), 0.05), 0.8)));
-			this.add(box(gx0 + 0.15, gy0 + 0.15, gh + 0.2, gx0 + gW - 0.15, gy1 - 0.15, gh + 0.235, c.roof_surface === 'green' ? pbr('green', {}, { normal: 2 }) : pbr('gravel', { color: '#A9A49B' }, { normal: 2 })));
-		}
+	var garage = c.garage || 'none', GR = SK()._garageRect(c, vols, pl);
+	if (GR) {
+		var gx0 = GR.x0, gW = GR.w, gD = GR.d, gy1 = GR.y1, gy0 = GR.body0, gh = 2.9;
+		this.garage = { x0: GR.x0, x1: GR.x1, y0: GR.y0, y1: GR.y1 };
+		this.garageBase = GR.base;
+		var acc = c.facade_accent || [], gm = GR.facade !== 'same' ? (GR.facade === 'render' ? facadeMat(c, 'render') : facadeMat(c, GR.facade)) : (acc.length ? accentMat(c, acc[0]) : facadeMat(c, c.facade_main));
+		// the garage can be picked up and moved as a whole (1.22.0); the plan follows it, so it is rebuilt when let go
+		var gcx = (GR.x0 + GR.x1) / 2, gcy = (GR.y0 + GR.y1) / 2;
+		this.moverFit('garage', gcx, gcy, function () { self.garageBuild(GR, gm); }, { kind: 'garage', w: GR.w, d: GR.y1 - GR.y0, field: 'garage', rebuild: true, noTurn: true });
 	}
 	// building services on the ground
 	var en = c.energy || [];
@@ -1172,6 +1157,136 @@ House.prototype.extras = function () {
 		var tank = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 1.15, 24), solid('#5C6B5A', 0.6)); tank.position.copy(X(mainV.x1 + 0.5, mainV.y1 - 0.5, 0.58)); tank.castShadow = true; this.add(tank);
 	}
 };
+// The garage or carport (1.22.0): spaces and doors, door type and colour, wall material, roof form, a window
+// and a side door, and the rooms behind it as a lower annex.
+House.prototype.garageBuild = function (GR, gm) {
+	var c = this.c, self = this, gx0 = GR.x0, gW = GR.w, gy1 = GR.y1, gy0 = GR.body0, gD = GR.d, gh = GR.h;
+	var roofTop = GR.roof === 'green' || (GR.roof === 'flat' && c.roof_surface === 'green') ? pbr('green', {}, { normal: 2 }) : pbr('gravel', { color: '#A9A49B' }, { normal: 2 });
+	if (GR.type === 'carport') {
+		var cm = solid('#3A3D40', 0.45, 0.5);
+		[[gx0, gy1], [gx0 + gW - 0.15, gy1], [gx0, gy0 + 0.15], [gx0 + gW - 0.15, gy0 + 0.15]].forEach(function (q) { self.add(box(q[0], q[1] - 0.15, 0, q[0] + 0.15, q[1], gh, cm)); });
+		this.add(box(gx0 - 0.1, gy0, gh, gx0 + gW + 0.1, gy1 + 0.2, gh + 0.25, c.roof_surface === 'green' ? pbr('green', {}, { normal: 2 }) : solid('#5A5E62', 0.6, 0.3)));
+		var pcar = SK()._vehicles(c).filter(function (k) { return k !== 'motorcycle' && k !== 'bicycle'; })[0];
+		if (pcar && this.o.mini) { this.add(life(INT.vehicle(INT.mats(c), pcar, col(c.car_color, '#3C4148')), gx0 + gW / 2, gy1 - 2.975, Math.PI / 2)); }
+		return;
+	}
+	var doors = GR.spaces, dw = GR.dw, dh = 2.25, dcol = col(c.garage_door_color, shadeHex(col(c.window_frame_color, '#2F3235'), 0.12));
+	var s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(gW, 0); s.lineTo(gW, gh); s.lineTo(0, gh); s.lineTo(0, 0);
+	for (var d = 0; d < doors; d++) { var gxx = d * (gW / doors) + (gW / doors - dw) / 2; var hp = new THREE.Path(); hp.moveTo(gxx, 0); hp.lineTo(gxx + dw, 0); hp.lineTo(gxx + dw, dh); hp.lineTo(gxx, dh); hp.lineTo(gxx, 0); s.holes.push(hp); }
+	var fw = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.3, bevelEnabled: false }), gm); fw.position.copy(X(gx0, gy1 - 0.3, 0)); fw.castShadow = true; fw.receiveShadow = true;
+	this.add(fw);
+	// side walls and back; the right side gets the side door and the window
+	this.add(box(gx0, gy0, 0, gx0 + 0.3, gy1 - 0.3, gh, gm));
+	this.add(box(gx0, gy0, 0, gx0 + gW, gy0 + 0.3, gh, gm));
+	var rs = new THREE.Shape(), sl = gD - 0.6; rs.moveTo(0, 0); rs.lineTo(sl, 0); rs.lineTo(sl, gh); rs.lineTo(0, gh); rs.lineTo(0, 0);
+	if (GR.sideDoor) { var sd = new THREE.Path(); sd.moveTo(sl - 1.9, 0); sd.lineTo(sl - 1.0, 0); sd.lineTo(sl - 1.0, 2.1); sd.lineTo(sl - 1.9, 2.1); sd.lineTo(sl - 1.9, 0); rs.holes.push(sd); }
+	if (GR.window) { var sw = new THREE.Path(); sw.moveTo(0.8, 1.1); sw.lineTo(2.0, 1.1); sw.lineTo(2.0, 2.1); sw.lineTo(0.8, 2.1); sw.lineTo(0.8, 1.1); rs.holes.push(sw); }
+	var rw = new THREE.Mesh(new THREE.ExtrudeGeometry(rs, { depth: 0.3, bevelEnabled: false }), gm); rw.rotation.y = -Math.PI / 2; rw.position.copy(X(gx0 + gW, gy0 + 0.3, 0)); rw.castShadow = true; rw.receiveShadow = true;
+	this.add(rw);
+	var fm = frameMat(c);
+	if (GR.sideDoor) { this.add(box(gx0 + gW - 0.24, gy0 + 0.3 + sl - 1.9, 0, gx0 + gW - 0.18, gy0 + 0.3 + sl - 1.0, 2.1, solid(dcol, 0.45, 0.2))); }
+	if (GR.window) { this.add(box(gx0 + gW - 0.22, gy0 + 0.3 + 0.8, 1.1, gx0 + gW - 0.18, gy0 + 0.3 + 2.0, 2.1, glassMat(c, this.night))); this.add(box(gx0 + gW - 0.24, gy0 + 0.3 + 0.8, 1.06, gx0 + gW - 0.16, gy0 + 0.3 + 2.0, 1.1, fm)); }
+	// doors: sectional (panels), roller (fine ribs and a box above), tilt (one plain leaf), side hinged (two leaves), glass
+	for (var d2 = 0; d2 < doors; d2++) {
+		var gx2 = gx0 + d2 * (gW / doors) + (gW / doors - dw) / 2;
+		if (GR.door === 'glass') {
+			this.add(box(gx2, gy1 - 0.2, 0, gx2 + dw, gy1 - 0.16, dh, glassMat(c, this.night)));
+			for (var gb = 0.45; gb < dh; gb += 0.45) { this.add(box(gx2, gy1 - 0.22, gb - 0.03, gx2 + dw, gy1 - 0.14, gb + 0.03, fm)); }
+			[gx2, gx2 + dw - 0.05].forEach(function (x) { self.add(box(x, gy1 - 0.22, 0, x + 0.05, gy1 - 0.14, dh, fm)); });
+		} else if (GR.door === 'roller') {
+			this.add(box(gx2, gy1 - 0.22, 0, gx2 + dw, gy1 - 0.12, dh, pbr('louvre', { color: dcol }, { normal: 0.8 })));
+			this.add(box(gx2 - 0.06, gy1 - 0.3, dh, gx2 + dw + 0.06, gy1 - 0.02, dh + 0.3, solid(shadeHex(dcol, 0.1), 0.45, 0.3)));
+		} else if (GR.door === 'side_hinged') {
+			var wm = pbr('wood', { color: c.garage_door_color ? dcol : '#8A5A36' }, { normal: 1 });
+			this.add(box(gx2, gy1 - 0.22, 0, gx2 + dw / 2 - 0.01, gy1 - 0.12, dh, wm)); this.add(box(gx2 + dw / 2 + 0.01, gy1 - 0.22, 0, gx2 + dw, gy1 - 0.12, dh, wm));
+		} else if (GR.door === 'tilt') {
+			this.add(box(gx2, gy1 - 0.22, 0, gx2 + dw, gy1 - 0.12, dh, solid(dcol, 0.4, 0.4)));
+			this.add(box(gx2 + 0.08, gy1 - 0.12, 0.08, gx2 + dw - 0.08, gy1 - 0.11, dh - 0.08, solid(shadeHex(dcol, -0.12), 0.45, 0.4)));
+		} else {
+			this.add(box(gx2, gy1 - 0.22, 0, gx2 + dw, gy1 - 0.12, dh, pbr('garagedoor', { color: dcol }, { normal: 1.4 })));
+		}
+	}
+	// roof: flat with a parapet (gravel or green), a gable or a lean-to
+	if (GR.roof === 'gable' || GR.roof === 'shed') {
+		var rm = roofMat(c), rise = GR.roof === 'gable' ? Math.min(1.6, gW * 0.32) : 0.8, ov = 0.25;
+		if (GR.roof === 'gable') {
+			[[gy1, 1], [gy0, -1]].forEach(function (q) { self.add(polyMesh([X(gx0, q[0], gh), X(gx0 + gW, q[0], gh), X(gx0 + gW / 2, q[0], gh + rise)], [gm, gm], { thick: 0.05, normal: new THREE.Vector3(0, 0, q[1]) })); });
+			this.add(polyMesh([X(gx0 - ov, gy0 - ov, gh - 0.1), X(gx0 - ov, gy1 + ov, gh - 0.1), X(gx0 + gW / 2, gy1 + ov, gh + rise), X(gx0 + gW / 2, gy0 - ov, gh + rise)], [rm, rm], { thick: 0.12 }));
+			this.add(polyMesh([X(gx0 + gW / 2, gy0 - ov, gh + rise), X(gx0 + gW / 2, gy1 + ov, gh + rise), X(gx0 + gW + ov, gy1 + ov, gh - 0.1), X(gx0 + gW + ov, gy0 - ov, gh - 0.1)], [rm, rm], { thick: 0.12 }));
+		} else {
+			this.add(box(gx0, gy0, gh, gx0 + gW, gy0 + 0.3, gh + rise, gm));
+			this.add(polyMesh([X(gx0 - ov, gy0 - ov, gh + rise + 0.05), X(gx0 + gW + ov, gy0 - ov, gh + rise + 0.05), X(gx0 + gW + ov, gy1 + ov, gh - 0.05), X(gx0 - ov, gy1 + ov, gh - 0.05)], [rm, rm], { thick: 0.12 }));
+		}
+	} else {
+		this.add(box(gx0 - 0.08, gy0 - 0.08, gh, gx0 + gW + 0.08, gy1 + 0.08, gh + 0.22, solid(shadeHex(col(c.facade_color, '#F2EFE9'), 0.05), 0.8)));
+		this.add(box(gx0 + 0.15, gy0 + 0.15, gh + 0.2, gx0 + gW - 0.15, gy1 - 0.15, gh + 0.235, roofTop));
+	}
+	// the rooms behind the garage (workshop, storage, boiler room): a lower annex with a small window
+	if (GR.annex) {
+		var ah = gh - 0.3;
+		this.add(box(gx0, GR.y0, 0, gx0 + gW, gy0, ah, gm));
+		this.add(box(gx0 - 0.06, GR.y0 - 0.06, ah, gx0 + gW + 0.06, gy0, ah + 0.18, solid(shadeHex(col(c.facade_color, '#F2EFE9'), 0.05), 0.8)));
+		this.add(box(gx0 + gW + 0.005, GR.y0 + 0.6, 1.2, gx0 + gW + 0.02, GR.y0 + 1.4, 1.9, glassMat(c, this.night)));
+	}
+	// the inside, seen through the door: shelves and a workbench along the back wall
+	var inside = Array.isArray(c.garage_rooms) ? c.garage_rooms : [];
+	if (inside.indexOf('workshop') !== -1 || inside.indexOf('storage') !== -1) {
+		var sh = pbr('wood', { color: '#A98458' }, { normal: 1 });
+		for (var yy = 0.5; yy < 2.2; yy += 0.55) { this.add(box(gx0 + 0.4, gy0 + 0.32, yy, gx0 + gW - 0.4, gy0 + 0.75, yy + 0.04, sh)); }
+	}
+};
+// A movable piece that belongs to the framed part of the house (the garage): same as `mover`, in `fit`.
+House.prototype.moverFit = function (key, cx, cy, build, info) {
+	if (this.o.mini || this.o.noMove) { build(); return null; }
+	var outer = new THREE.Group(), inner = new THREE.Group(), prev = this.addTo;
+	this.addTo = inner;
+	try { build(); } finally { this.addTo = prev; }
+	inner.position.set(-cx, 0, -cy); outer.position.set(cx, 0, cy); outer.add(inner);
+	outer.userData.slot = key; outer.userData.move = Object.assign({ kind: 'site', cx: cx, cy: cy, turn: 0 }, info || {});
+	if (!this.moversFit) { this.moversFit = new THREE.Group(); this.moversFit.name = 'moversFit'; this.fit.add(this.moversFit); }
+	this.moversFit.add(outer);
+	return outer;
+};
+// The pool (1.22.0): shape, water colour by finish and depth, the surround (coping, stone, deck) and the cover.
+House.prototype.poolBuild = function (x0, y0, w, d, flat) {
+	var c = this.c, self = this, P = SK()._poolSpec(c), e = Math.max(0.25, P.deck - 0.05), ww = w - 2 * e, wd = d - 2 * e;
+	var deckM = P.deckKind === 'wood' ? pbr('deck', { color: '#A97B52' }, { normal: 1.2 }) : (P.deckKind === 'wpc' ? pbr('deck', { color: '#7A6E64' }, { normal: 1.2 }) : (P.deckKind === 'stone' ? pbr('slabs', { color: '#D9D2C4' }, { normal: 1 }) : groundKind(c, 'slabs')));
+	var water = cached('water' + P.water, function () { return stdMat({ color: P.water, roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
+	var wz = 0.07;
+	if (P.shape === 'jacuzzi') {
+		// a raised round tub with a wide rim
+		var r0 = Math.min(ww, wd) / 2, cx = x0 + w / 2, cy = y0 + d / 2;
+		flat(x0, y0, x0 + w, y0 + d, 0.04, deckM);
+		var tub = new THREE.Mesh(new THREE.CylinderGeometry(r0 + 0.2, r0 + 0.25, 0.6, 32), deckM); tub.position.copy(X(cx, cy, 0.3)); tub.castShadow = true; tub.receiveShadow = true; this.add(tub, false);
+		var wtr = new THREE.Mesh(new THREE.CylinderGeometry(r0, r0, 0.02, 32), water); wtr.position.copy(X(cx, cy, 0.56)); this.add(wtr, false);
+	} else if (P.shape === 'oval') {
+		flat(x0, y0, x0 + w, y0 + d, 0.06, deckM);
+		var ov = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.02, 40), water); ov.scale.set(ww, 1, wd); ov.position.copy(X(x0 + w / 2, y0 + d / 2, wz)); this.add(ov, false);
+	} else if (P.shape === 'l_shape') {
+		flat(x0, y0, x0 + w, y0 + d, 0.06, deckM);
+		this.add(polyMesh([X(x0 + e, y0 + e, wz), X(x0 + w - e, y0 + e, wz), X(x0 + w - e, y0 + e + wd * 0.45, wz), X(x0 + e + ww * 0.4, y0 + e + wd * 0.45, wz), X(x0 + e + ww * 0.4, y0 + d - e, wz), X(x0 + e, y0 + d - e, wz)], [water, water], { thick: 0.01 }), false);
+	} else {
+		flat(x0, y0, x0 + w, y0 + d, 0.06, deckM);
+		flat(x0 + e, y0 + e, x0 + w - e, y0 + d - e, wz, water);
+		// infinity edge: the water runs over the far side into a dark channel, no coping there
+		if (P.shape === 'infinity') { this.add(box(x0 + e, y0 + d - e, -0.05, x0 + w - e, y0 + d - e * 0.4, wz - 0.03, solid(shadeHex(P.water, -0.35), 0.1)), false); }
+	}
+	// cover
+	if (P.cover === 'slatted') {
+		var sm = solid('#D8D5CF', 0.5, 0.1);
+		for (var sx = x0 + e; sx < x0 + e + ww * 0.8; sx += 0.16) { this.add(box(sx, y0 + e, wz, sx + 0.13, y0 + d - e, wz + 0.03, sm), false); }
+	} else if (P.cover === 'roller') {
+		this.add(box(x0 + e, y0 + e, wz, x0 + w - e, y0 + e + wd * 0.6, wz + 0.01, solid('#3D6E8A', 0.4)), false);
+		var rl = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, ww + 0.2, 20), solid('#B9BDC1', 0.3, 0.7)); rl.rotation.z = Math.PI / 2; rl.position.copy(X(x0 + w / 2, y0 + e - 0.2, 0.25)); this.add(rl, false);
+	} else if (P.cover === 'telescopic') {
+		var gm2 = cached('poolEncl', function () { return new THREE.MeshPhysicalMaterial({ color: '#DDEBF0', roughness: 0.15, metalness: 0, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }); });
+		var n = 3, segW = (ww + 0.2) / n;
+		for (var k = 0; k < n; k++) {
+			var hR = 0.9 - k * 0.06, arc = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, segW - 0.04, 24, 1, true, Math.PI / 2, Math.PI), gm2);
+			arc.rotation.z = Math.PI / 2; arc.scale.set(hR, 1, (wd + 0.3) / 2); arc.position.copy(X(x0 + e - 0.1 + segW * (k + 0.5), y0 + d / 2, 0.05)); this.add(arc, false);
+		}
+	}
+};
 House.prototype.furniture = function (x, y, z, kitchen) {
 	var wm = pbr('wood', { color: '#8A6A4C' }, { normal: 1 }), cush = solid('#E7E1D6', 0.95);
 	if (kitchen) { this.add(box(x, y, z, x + 2.2, y + 0.7, z + 0.9, pbr('concrete', { color: '#8E8B86' }, { normal: 1 }))); this.add(box(x - 0.02, y - 0.02, z + 0.9, x + 2.22, y + 0.72, z + 0.95, solid('#2B2E31', 0.3, 0.2))); return; }
@@ -1186,7 +1301,7 @@ House.prototype.site = function () {
 	var W = pl.W, D = pl.D, bbx = K._siteBox(vols), maxY = bbx.y1, maxX = bbx.x1;
 	var garage = c.garage || 'none', gf = c.garden_features || [], gs = c.garden_style || 'natural';
 	var front = maxY + 6.5, back = bbx.y0 - 6, left = bbx.x0 - 6.5, right = (this.garage ? this.garage.x1 : maxX) + 6;
-	var plot = K._plot(c, vols, this.garage ? this.garage.x1 : maxX + 3.8);
+	var plot = K._plot(c, vols, this.garage ? this.garageBase : maxX + 3.8);
 	if (plot) {
 		left = Math.min(left, plot.x0 - 1.2); right = Math.max(right, plot.x1 + 1.2); front = Math.max(front, plot.yF + 1.2);
 		if (plot.yB !== null) { back = Math.min(back, plot.yB - 1.2); }
@@ -1210,11 +1325,7 @@ House.prototype.site = function () {
 	var unturned = function (r) { return { x0: r.cx - r.w / 2, y0: r.cy - r.d / 2, x1: r.cx + r.w / 2, y1: r.cy + r.d / 2 }; };
 	if (G.pool) {
 		var pr = unturned(G.pool), px0 = pr.x0, py0 = pr.y0, poolW = pr.x1 - pr.x0, pdp = pr.y1 - pr.y0;
-		this.mover('pool', G.pool.cx, G.pool.cy, G.pool.rot, function () {
-			flat(px0, py0, px0 + poolW, py0 + pdp, 0.06, groundKind(c, 'slabs'));
-			var water = cached('water', function () { return stdMat({ color: '#2D8FB0', roughness: 0.05, metalness: 0, clearcoat: 1, envMapIntensity: 1.6 }); });
-			flat(px0 + 0.3, py0 + 0.3, px0 + poolW - 0.3, py0 + pdp - 0.3, 0.07, water);
-		}, { kind: 'pool', w: poolW, d: pdp, field: 'garden_features' });
+		this.mover('pool', G.pool.cx, G.pool.cy, G.pool.rot, function () { self.poolBuild(px0, py0, poolW, pdp, flat); }, { kind: 'pool', w: poolW, d: pdp, field: 'garden_features' });
 	}
 	G.flats.forEach(function (f) {
 		if (f.kind === 'sand' && G.playground) { return; }
@@ -1777,10 +1888,11 @@ Viewer.prototype.update = function (cfg, mode) {
 		// that is what keeps each piece grabbable, while the number of draw calls stays low. The movable
 		// pieces of the garden (1.18.0) are handled the same way.
 		var itemsG = !this.thumb && this.house.items && this.house.items.children.length ? this.house.items : null;
-		var moversG = this.house.movers && this.house.movers.children.length ? this.house.movers : null;
+		var moversG = this.house.movers && this.house.movers.children.length ? this.house.movers : null, moversF = this.house.moversFit || null;
 		if (itemsG) { itemsG.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
 		if (moversG) { moversG.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
-		mergeStatic(this.house.fit || this.house.root, [itemsG, moversG]);
+		if (moversF) { moversF.children.slice().forEach(function (o) { try { mergeStatic(o); } catch (e) {} }); }
+		mergeStatic(this.house.fit || this.house.root, [itemsG, moversG, moversF]);
 		if (this.house.fit && this.house.fit !== this.house.root) { mergeStatic(this.house.root, [this.house.fit, moversG]); }
 	}
 	this.scene.add(this.house.root);
@@ -2247,7 +2359,7 @@ Viewer.prototype.itemAt = function (cx, cy) {
 // wall, the roof, the lawn or the sky: nothing to grab, the view turns as before.
 Viewer.prototype.extAt = function (cx, cy) {
 	var hs = this.house;
-	if (!hs || hs.room || hs.phases || !(hs.movers || (this.ops && this.ops.length))) { return null; }
+	if (!hs || hs.room || hs.phases || !(hs.movers || hs.moversFit || (this.ops && this.ops.length))) { return null; }
 	var ray = this.rayFrom(cx, cy);
 	if (!ray) { return null; }
 	var hits = ray.intersectObject(hs.root, true);
@@ -2255,7 +2367,7 @@ Viewer.prototype.extAt = function (cx, cy) {
 		var h = hits[i], o = h.object;
 		if (!o.visible || o.isLine || o.isPoints || (o.userData && o.userData.noPick)) { continue; }
 		for (var q = o; q && q !== hs.root; q = q.parent) {
-			if (hs.movers && q.parent === hs.movers) { return { type: 'mover', obj: q, point: h.point }; }
+			if ((hs.movers && q.parent === hs.movers) || (hs.moversFit && q.parent === hs.moversFit)) { return { type: 'mover', obj: q, point: h.point }; }
 		}
 		var op = opAt(this.ops, h.point);
 		return op ? { type: 'op', op: op.op, point: h.point } : null;
@@ -2447,7 +2559,7 @@ Viewer.prototype.markBox = function (b) {
 };
 Viewer.prototype.extDragTo = function (e) {
 	var d = this.drag, hs = this.house, hit = new THREE.Vector3();
-	if (d.kind === 'mover' && (e.ctrlKey || e.metaKey)) {
+	if (d.kind === 'mover' && (e.ctrlKey || e.metaKey) && !d.info.noTurn) {
 		d.obj.rotation.y += (e.clientX - d.lastX) * 0.6 * D2R;
 		d.lastX = e.clientX;
 		if (e.shiftKey) { d.obj.rotation.y = snap90(d.obj.rotation.y); }
@@ -2462,7 +2574,7 @@ Viewer.prototype.extDragTo = function (e) {
 		var pb = hs.plotBox, nx = hit.x + d.dx, nz = hit.z + d.dz;
 		if (pb) { nx = clamp(nx, pb.left + 0.3, pb.right - 0.3); nz = clamp(nz, pb.back + 0.3, pb.front - 0.3); }
 		d.obj.position.x = nx; d.obj.position.z = nz;
-		if (e.shiftKey) { d.obj.rotation.y = snap90(d.obj.rotation.y); }
+		if (e.shiftKey && !d.info.noTurn) { d.obj.rotation.y = snap90(d.obj.rotation.y); }
 	} else if (d.kind === 'op') {
 		// on the plane of the wall's outer face; it never leaves its own wall
 		var m = d.op.m, n = new THREE.Vector3().setFromMatrixColumn(m, 2).normalize(), o0 = new THREE.Vector3(0, 0, 0.3).applyMatrix4(m);
@@ -2485,7 +2597,7 @@ Viewer.prototype.turnDrag = function (deg) {
 	var d = this.drag;
 	if (!d || d.wall || d.build) { return; }
 	if (d.ext) {
-		if (d.kind !== 'mover') { return; }
+		if (d.kind !== 'mover' || d.info.noTurn) { return; }
 		d.obj.rotation.y = Math.round((d.obj.rotation.y / D2R + deg) / 15) * 15 * D2R;
 		d.moved = true; this.updateMark(); this.requestRender();
 		return;
@@ -2541,7 +2653,7 @@ Viewer.prototype.extDrop = function (cancel) {
 		this.movePicks(d.obj);
 		this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
 		this.select({ kind: 'mover', obj: d.obj, slot: d.slot, info: d.info, field: d.field });
-		if (!cancel && d.moved && this.onSite) { this.onSite(d.slot, { x: r3(d.obj.position.x), y: r3(d.obj.position.z), rot: degOf(d.obj.rotation.y) }, false); }
+		if (!cancel && d.moved && this.onSite) { this.onSite(d.slot, { x: r3(d.obj.position.x), y: r3(d.obj.position.z), rot: degOf(d.obj.rotation.y) }, !!d.info.rebuild); }
 	} else if (!cancel && d.moved && this.onSite) {
 		// the wall's hole (or the roof's opening) moves too: the designer saves and the house is rebuilt
 		this.selKey = d.slot;
@@ -2562,7 +2674,7 @@ Viewer.prototype.select = function (s, keepKey) {
 Viewer.prototype.reselect = function () {
 	var k = this.selKey, hs = this.house;
 	if (!k || !hs || hs.room || hs.phases) { this.select(null); return; }
-	var mv = hs.movers ? hs.movers.children.filter(function (q) { return q.userData.slot === k; })[0] : null;
+	var mv = [].concat(hs.movers ? hs.movers.children : [], hs.moversFit ? hs.moversFit.children : []).filter(function (q) { return q.userData.slot === k; })[0] || null;
 	if (mv) { this.select({ kind: 'mover', obj: mv, slot: k, info: mv.userData.move || {}, field: (mv.userData.move || {}).field || fieldOf(mv) }); return; }
 	var op = (this.ops || []).filter(function (q) { return q.op.key === k; })[0];
 	if (op) { this.select({ kind: op.op.kind === 'chimney' ? 'chimney' : 'op', op: op.op, slot: k }); return; }
@@ -2579,11 +2691,11 @@ Viewer.prototype.nudge = function (dx, dz, turn) {
 		var o = s.obj, pb = this.house && this.house.plotBox;
 		o.position.x += mx; o.position.z += mz;
 		if (pb) { o.position.x = clamp(o.position.x, pb.left + 0.3, pb.right - 0.3); o.position.z = clamp(o.position.z, pb.back + 0.3, pb.front - 0.3); }
-		if (turn) { o.rotation.y = turn === 90 ? snap90(o.rotation.y) + Math.PI / 2 : Math.round((o.rotation.y / D2R + turn) / 15) * 15 * D2R; }
+		if (turn && !(s.info && s.info.noTurn)) { o.rotation.y = turn === 90 ? snap90(o.rotation.y) + Math.PI / 2 : Math.round((o.rotation.y / D2R + turn) / 15) * 15 * D2R; }
 		this.movePicks(o);
 		this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = true;
 		this.updateMark(); this.requestRender();
-		if (this.onSite) { this.onSite(s.slot, { x: r3(o.position.x), y: r3(o.position.z), rot: degOf(o.rotation.y) }, false); }
+		if (this.onSite) { this.onSite(s.slot, { x: r3(o.position.x), y: r3(o.position.z), rot: degOf(o.rotation.y) }, !!(s.info && s.info.rebuild)); }
 		return;
 	}
 	if (turn || !this.onSite) { return; }
@@ -2615,7 +2727,7 @@ Viewer.prototype.checkPlace = function (d) {
 		if (vols.some(function (v) { return rectsOver(fp, volRect(v), 0.02); })) { return bad('place_on_house'); }
 		var soft = k === 'person' || k === 'pet' || k === 'furniture' || k === 'light';
 		if (!soft && hs.terrace && rectsOver(fp, hs.terrace, 0.05)) { return bad('place_on_terrace'); }
-		if (hs.garage && k !== 'vehicle' && k !== 'person' && k !== 'pet' && rectsOver(fp, hs.garage, 0.05)) { return bad('place_on_garage'); }
+		if (hs.garage && k !== 'garage' && k !== 'vehicle' && k !== 'person' && k !== 'pet' && rectsOver(fp, hs.garage, 0.05)) { return bad('place_on_garage'); }
 		var dh = vols.reduce(function (m, v) { return Math.min(m, rectDist(fp, volRect(v))); }, 1e9);
 		if (k === 'pool' && dh < P.pool_house - 1e-6) { return bad('place_pool_house', P.pool_house); }
 		if (k === 'tree') { var lim = (d.info.size || 0) >= 6 ? P.tree_big_house : P.tree_house; if (dh < lim - 1e-6) { return bad('place_tree_house', lim); } }

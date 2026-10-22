@@ -10850,3 +10850,211 @@ msgstr "Krak stubišta uži je od preporučenog"
 #: includes/Frontend/Strings.php
 msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
 msgstr "Jedna strana samo djelomično naliježe na zid – pomaknite je do kraja zida ili potpuno od zida."
+
+#: includes/Params/Definitions.php
+msgid "Beállók száma"
+msgstr "Broj mjesta"
+
+#: includes/Params/Definitions.php
+msgid "0 = a garázs típusa szerint."
+msgstr "0 = prema vrsti garaže."
+
+#: includes/Params/Definitions.php
+msgid "Garázs szélessége"
+msgstr "Širina garaže"
+
+#: includes/Params/Definitions.php
+msgid "0 = automatikus."
+msgstr "0 = automatski."
+
+#: includes/Params/Definitions.php
+msgid "Garázs mélysége"
+msgstr "Dubina garaže"
+
+#: includes/Params/Definitions.php
+msgid "Garázs belső osztása"
+msgstr "Unutarnja podjela garaže"
+
+#: includes/Params/Definitions.php
+msgid "A garázs mögött külön helyiségek."
+msgstr "Zasebne prostorije iza garaže."
+
+#: includes/Params/Definitions.php
+msgid "Műhely"
+msgstr "Radionica"
+
+#: includes/Params/Definitions.php
+msgid "Tároló"
+msgstr "Spremište"
+
+#: includes/Params/Definitions.php
+msgid "Kazánház"
+msgstr "Kotlovnica"
+
+#: includes/Params/Definitions.php
+msgid "Kerékpártároló"
+msgstr "Spremište za bicikle"
+
+#: includes/Params/Definitions.php
+msgid "Garázs teteje"
+msgstr "Krov garaže"
+
+#: includes/Params/Definitions.php
+msgid "Lapos"
+msgstr "Ravni"
+
+#: includes/Params/Definitions.php
+msgid "Félnyereg"
+msgstr "Jednostrešni"
+
+#: includes/Params/Definitions.php
+msgid "Garázs homlokzata"
+msgstr "Pročelje garaže"
+
+#: includes/Params/Definitions.php
+msgid "Mint a ház"
+msgstr "Kao kuća"
+
+#: includes/Params/Definitions.php
+msgid "Garázskapu"
+msgstr "Garažna vrata"
+
+#: includes/Params/Definitions.php
+msgid "Szekcionált"
+msgstr "Sekcijska"
+
+#: includes/Params/Definitions.php
+msgid "Redőnykapu"
+msgstr "Rolo vrata"
+
+#: includes/Params/Definitions.php
+msgid "Billenő"
+msgstr "Podizna"
+
+#: includes/Params/Definitions.php
+msgid "Üveges"
+msgstr "Ostakljena"
+
+#: includes/Params/Definitions.php
+msgid "Garázskapu színe"
+msgstr "Boja garažnih vrata"
+
+#: includes/Params/Definitions.php
+msgid "Üresen az ablakkeret színe."
+msgstr "Prazno = boja okvira prozora."
+
+#: includes/Params/Definitions.php
+msgid "Garázsablak"
+msgstr "Prozor garaže"
+
+#: includes/Params/Definitions.php
+msgid "Gyalogajtó a garázson"
+msgstr "Pješačka vrata garaže"
+
+#: includes/Params/Definitions.php
+msgid "Medence formája"
+msgstr "Oblik bazena"
+
+#: includes/Params/Definitions.php
+msgid "Ovális / kör"
+msgstr "Ovalni / okrugli"
+
+#: includes/Params/Definitions.php
+msgid "Végtelenített (infinity)"
+msgstr "Infinity bazen"
+
+#: includes/Params/Definitions.php
+msgid "Merülőmedence"
+msgstr "Bazen za uranjanje"
+
+#: includes/Params/Definitions.php
+msgid "Jakuzzi"
+msgstr "Jacuzzi"
+
+#: includes/Params/Definitions.php
+msgid "Medence hossza"
+msgstr "Duljina bazena"
+
+#: includes/Params/Definitions.php
+msgid "A víztükör hossza; 0 = automatikus."
+msgstr "Duljina vodene površine; 0 = automatski."
+
+#: includes/Params/Definitions.php
+msgid "Medence szélessége"
+msgstr "Širina bazena"
+
+#: includes/Params/Definitions.php
+msgid "A víztükör szélessége; 0 = automatikus."
+msgstr "Širina vodene površine; 0 = automatski."
+
+#: includes/Params/Definitions.php
+msgid "Medence mélysége"
+msgstr "Dubina bazena"
+
+#: includes/Params/Definitions.php
+msgid "Medence burkolata"
+msgstr "Obloga bazena"
+
+#: includes/Params/Definitions.php
+msgid "Kék mozaik"
+msgstr "Plavi mozaik"
+
+#: includes/Params/Definitions.php
+msgid "Szürke kő"
+msgstr "Sivi kamen"
+
+#: includes/Params/Definitions.php
+msgid "Homokszín"
+msgstr "Boja pijeska"
+
+#: includes/Params/Definitions.php
+msgid "Medence lefedése"
+msgstr "Pokrivanje bazena"
+
+#: includes/Params/Definitions.php
+msgid "Lamellás fedés"
+msgstr "Lamelni pokrov"
+
+#: includes/Params/Definitions.php
+msgid "Teleszkópos lefedés"
+msgstr "Teleskopski pokrov"
+
+#: includes/Params/Definitions.php
+msgid "Görgős takaró"
+msgstr "Rolo pokrivač"
+
+#: includes/Params/Definitions.php
+msgid "Medence körül"
+msgstr "Oko bazena"
+
+#: includes/Params/Definitions.php
+msgid "Csak szegély"
+msgstr "Samo rub"
+
+#: includes/Params/Definitions.php
+msgid "Fa terasz"
+msgstr "Drvena terasa"
+
+#: includes/Params/Definitions.php
+msgid "WPC terasz"
+msgstr "WPC terasa"
+
+#: includes/Frontend/Strings.php
+msgid "A %1$s × %2$s m-es víztükör a körülötte lévő burkolattal nem fér el a telken a ház, a garázs, a terasz és az utak mellett. Legfeljebb kb. %3$s × %4$s m fér el."
+msgstr "Bazen %1$s × %2$s m s okolnim opločenjem ne stane na parcelu uz kuću, garažu, terasu i staze. Stane najviše oko %3$s × %4$s m."
+
+#: includes/Frontend/Strings.php
+msgid "A %1$s × %2$s m-es medence ekkora telken sehol nem fér el – növeld a telket, vagy válassz kisebb medencét."
+msgstr "Bazen %1$s × %2$s m nigdje ne stane na ovoj parceli – povećajte parcelu ili odaberite manji."
+
+#: includes/Frontend/Strings.php
+msgid "A garázs kilóg a telekről: %1$s m széles, a ház mellett legfeljebb %2$s m fér el."
+msgstr "Garaža izlazi iz parcele: široka je %1$s m, uz kuću stane najviše %2$s m."
+
+#: includes/Frontend/Strings.php
+msgid "A garázs (%s m mély) a telek elején vagy végén kilóg – csökkentsd a mélységét, vagy told arrébb."
+msgstr "Garaža (dubina %s m) izlazi na prednjoj ili stražnjoj strani parcele – smanjite dubinu ili je pomaknite."
+
+#: includes/Frontend/Strings.php
+msgid "A ház (és a garázs) %1$s m szélességet kér, a telek csak %2$s m széles – a rajz a telket ennyire kiszélesíti."
+msgstr "Kuća (i garaža) traže %1$s m širine, parcela je široka samo %2$s m – crtež je proširuje."

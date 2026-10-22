@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.22.0 – 2026-10-22
+
+Norbi: „medencetípusok és méret, a garázs részletei (m², belső osztás, tető, anyag, kapu, ablak)” – és „minden el kell férjen, ki kell tudnod számolni, hogyan fér el”. (`docs/FELADAT-1.18.0.md`, `docs/FELADAT-1.21.0.md`)
+
+- **Medence (Kert, ha van medence):** forma (téglalap, L, ovális/kör, végtelenített, merülő, jakuzzi), a víztükör hossza × szélessége (0 = automatikus), mélysége (a vízszín ettől mélyül), burkolata (kék mozaik, fehér, szürke kő, homokszín, fekete), lefedése (lamellás, teleszkópos, görgős), körülötte (szegély, kő, fa vagy WPC terasz). 2D, 3D és prompt.
+- **Garázs (a mai `garage` mező marad):** beállók száma, szélesség, mélység (0 = a típus szerint), belső osztás (műhely, tároló, kazánház, kerékpártároló – alacsonyabb toldalék a garázs mögött), tető (lapos, nyereg, félnyereg, zöld), homlokzat (mint a ház, vakolt, fa, tégla, fém, kő), kapu (szekcionált, redőny, billenő, kétszárnyú, üveges) és színe, ablak, gyalogajtó; a polcok a kapun át látszanak. A garázs a 3D-ben megfogható és arrébb húzható (a ház újraépül, a 2D terv is követi).
+- **Elfér?** A közös terv kiszámolja: a kért méretű medence elfér-e a telken a ház, garázs, terasz és utak mellett – ha nem, a mező alatt kiírja a legnagyobbat, ami elfér (ugyanazzal az aránnyal); a garázs és a ház szélessége a megadott telekszélességhez mérve (ha nem fér el, kiírja, mekkora fér el).
+- Mérve: új `e2e/detail.js` 9/9 (12 változat mind felépül és mind más a 3D-ben, a garázs megfogva mozog, mentve, újraépítve, a 2D is ott; túl nagy medence és túl széles garázs jelez; konzolhiba 0) · `sketch-test` 1281 rajz, 34 új változat mind látszik, elfér-ellenőrzés 3/3, hiba 0 · `match-test` 33/33 (medence- és garázsrészletek a promptban) · `move.js` 21/21 · `layout.js` 15/15 · `pick.js` 122 rész · `cards.js` 55 mező 0 hiba · `guide.js` zöld · guide 62/62 · photo 28/28 · vision 55/55 · `build-test` 6975/6975 · `build-test.php` 2235/2235 · autoloader 125/125 · 15 nyelv × 2666 szöveg, 0 hiba.
+
 ## 1.21.0 – 2026-10-22
 
 Norbi: „a rendszernek tudnia kell, hogy levonja a falvastagságokat … mindig meghatározza, hogy még pontosan hány m² osztható ki … a lépcső elhelyezése rendkívül fontos … ugyanez vonatkozik mindenre”; és a díszítőanyag helye a házon. Munkaprompt: `docs/FELADAT-1.21.0.md`.

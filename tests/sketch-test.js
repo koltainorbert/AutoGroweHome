@@ -140,5 +140,26 @@ for (let i = 0; i < 600; i++) {
   if (bad.length) err('kert: ' + bad.length + ' hibás elhelyezés, pl. ' + bad.slice(0, 3).join('; '));
   gardenSummary = n + ' kert, ' + plants + ' növény';
 }
-console.log(`vázlat: ${n} rajz, ${tested} paraméterváltozat (${changed} változott), átlag ${(total / 800).toFixed(1)} ms, max ${maxMs.toFixed(1)} ms, ${gardenSummary}, hiba ${fail}`);
+// 5) 1.22.0: pool and garage in detail – every new value changes the drawing, and what does not fit is said
+let detailN = 0, fitN = 0;
+{
+  const B2 = Object.assign({}, BASE, { garage: 'garage_2', garden_features: BASE.garden_features.concat(['pool']), plot_width: 34, plot_length: 52 });
+  const base2 = K.render(B2, { id: 'b' });
+  const V2 = { pool_shape: ['l_shape', 'oval', 'infinity', 'plunge', 'jacuzzi'], pool_finish: ['white', 'grey_stone', 'sand', 'black'], pool_cover: ['slatted', 'telescopic', 'roller'], pool_deck: ['stone', 'wood', 'wpc'], pool_depth: [2.6],
+    garage_spaces: [3], garage_width: [8.5], garage_depth: [7.5], garage_roof: ['gable', 'shed', 'green'], garage_facade: ['wood', 'brick', 'metal', 'stone'], garage_door: ['roller', 'tilt', 'side_hinged', 'glass'], garage_door_color: ['#8A2E2E'], garage_window: [true], garage_side_door: [true], garage_rooms: [['workshop']] };
+  for (const k in V2) for (const v of V2[k]) {
+    const c = Object.assign({}, B2, { [k]: v });
+    if (!K.visibleFor(k, c, null)) { err('1.22: ' + k + ' nem látszik a vázlaton'); continue; }
+    const svg = K.render(c, { id: 'b' }); check(svg, k + '=' + JSON.stringify(v)); detailN++;
+    if (svg === base2) err('1.22: nem változik a vázlat: ' + k + ' = ' + JSON.stringify(v));
+  }
+  // the pool size: as asked when it fits (water inside the surround), a message with the largest that fits when not
+  const pc = Object.assign({}, B2, { pool_length: 8, pool_width: 4 });
+  const pc1 = K._siteFit(pc); if (pc1.some(m => m.field === 'pool_length')) err('1.22: a 8 × 4 m-es medence elfér, mégis jelez'); else fitN++;
+  const big = Object.assign({}, B2, { pool_length: 15, pool_width: 8, plot_width: 18, plot_length: 30 });
+  const pb = K._siteFit(big).filter(m => m.field === 'pool_length')[0]; if (!pb) err('1.22: a 15 × 8 m-es medence kis telken nem jelez'); else fitN++;
+  const gbig = Object.assign({}, B2, { garage_width: 16, plot_width: 18 });
+  if (!K._siteFit(gbig).some(m => m.field === 'garage')) err('1.22: a 16 m-es garázs 18 m-es telken nem jelez'); else fitN++;
+}
+console.log(`vázlat: ${n} rajz, ${tested} paraméterváltozat (${changed} változott), átlag ${(total / 800).toFixed(1)} ms, max ${maxMs.toFixed(1)} ms, ${gardenSummary}, medence/garázs ${detailN} változat, elfér-ellenőrzés ${fitN}/3, hiba ${fail}`);
 process.exit(fail ? 1 : 0);

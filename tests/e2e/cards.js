@@ -51,6 +51,6 @@ const URL = process.env.AGH_URL || 'http://127.0.0.1:8899/tervezo/';
   if (res.same.length) { console.error('alapjelenet:', res.same.slice(0, 10)); }
   if (res.empty.length) { console.error('hiba:', res.empty.slice(0, 5)); }
   if (errs.length) { console.error(errs.slice(0, 4)); }
-  console.log(`kártyaképek: ${res.fields} mező, ${res.options} opció, alapjelenetre esik ${res.same.length}, hibás ${res.empty.length}, figyelmeztetés ${warns.length}, konzolhiba ${errs.length}`);
+  console.log(`kártyaképek: ${res.fields} mező, ${res.options} opció, alapjelenetre esik ${res.same.length}, hibás ${res.empty.length}, figyelmeztetés ${warns.length}${warns.length ? " " + JSON.stringify(warns.slice(0, 3)) : ""}, konzolhiba ${errs.length}`);
   process.exit(res.same.length || res.empty.length || errs.length ? 1 : 0);
 })();
