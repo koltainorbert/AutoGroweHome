@@ -861,7 +861,39 @@ final class PromptEngine {
 		if ( '' !== $colour ) {
 			$out .= ', rendered parts in ' . $colour;
 		}
-		return self::join_phrases( $out, self::phrases( $rest, $c ) );
+		return self::join_phrases( self::join_phrases( $out, self::phrases( $rest, $c ) ), self::accent_places( $c ) );
+	}
+
+	/**
+	 * Where the visitor put the accent material (1.21.0, accent_layout): "accent materials exactly where
+	 * shown: warm oak timber on the front gable, natural stone on the plinth of the right side". '' if none.
+	 */
+	public static function accent_places( array $c ): string {
+		$lay = $c['accent_layout'] ?? array();
+		$acc = array_values( (array) ( $c['facade_accent'] ?? array() ) );
+		if ( ! is_array( $lay ) || ! $lay || ! $acc ) {
+			return '';
+		}
+		$def   = Registry::get( 'facade_accent' );
+		$map   = is_array( $def ) ? ( $def['prompt_map'] ?? array() ) : array();
+		$faces = array( 'front' => 'front', 'back' => 'rear', 'left' => 'left side', 'right' => 'right side' );
+		$parts = array();
+		foreach ( $lay as $key => $i ) {
+			if ( ! preg_match( '/^(\d+):(front|right|back|left):(wall|upper|gable|plinth|door)$/', (string) $key, $mm ) || (int) $i < 0 || ! isset( $acc[ (int) $i ] ) ) {
+				continue;
+			}
+			$mat   = (string) ( $map[ $acc[ (int) $i ] ] ?? $acc[ (int) $i ] );
+			$where = $faces[ $mm[2] ] . ( (int) $mm[1] > 0 ? ' of the side wing' : '' );
+			$zone  = array(
+				'wall'   => 'the whole ' . $where . ' wall',
+				'upper'  => 'the upper floor of the ' . $where . ' wall',
+				'gable'  => 'the ' . $where . ' gable',
+				'plinth' => 'the plinth of the ' . $where . ' wall',
+				'door'   => 'the entrance bay',
+			)[ $mm[3] ];
+			$parts[] = $mat . ' on ' . $zone;
+		}
+		return $parts ? 'accent materials exactly where the client placed them: ' . implode( ', ', array_slice( $parts, 0, 8 ) ) : '';
 	}
 
 	/**

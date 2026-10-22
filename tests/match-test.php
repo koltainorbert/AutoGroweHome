@@ -126,5 +126,15 @@ $k1 = $urls[1] ?? array( '', array() );
 $t( 'kötött nézet: Mystic, structure + a hero stílusmintának', false !== strpos( $k0[0], '/v1/ai/mystic' ) && ! empty( $k0[1]['structure_reference'] ) && ! empty( $k0[1]['style_reference'] ) && 75 === ( $k0[1]['structure_strength'] ?? 0 ) );
 $t( 'nem kötött nézet: a mai Flux-út', false !== strpos( $k1[0], 'flux-2-pro' ) );
 
+/* ---------------------------------------------------------------- 1.21.0: a díszítőanyag helye */
+$lay = \AutoGroweHome\Params\Validator::accent_layout( array( '0:front:gable' => 0, '0:right:plinth' => 1, '0:back:wall' => -1, 'x:front:wall' => 0, '1:left:roof' => 1, '0:front:door' => 7 ) );
+$t( 'accent_layout: csak érvényes kulcs, index −1…2', array( '0:front:gable' => 0, '0:right:plinth' => 1, '0:back:wall' => -1, '0:front:door' => 2 ) === $lay );
+$ac  = PromptEngine::accent_places( array( 'facade_accent' => array( 'wood', 'stone' ), 'accent_layout' => array( '0:front:gable' => 0, '0:right:plinth' => 1, '0:back:wall' => -1 ) ) );
+$t( 'prompt: a fa az első oromzaton, a kő a jobb oldali lábazaton, a „nincs” kimarad', false !== strpos( $ac, 'warm oak timber on the front gable' ) && false !== strpos( $ac, 'on the plinth of the right side wall' ) && false === strpos( $ac, 'rear' ) );
+$t( 'prompt: üres kijelölésnél semmi', '' === PromptEngine::accent_places( array( 'facade_accent' => array( 'wood' ), 'accent_layout' => array() ) ) );
+$cfgA = array_merge( $cfg, array( 'facade_accent' => array( 'wood' ), 'accent_layout' => array( '0:front:upper' => 0 ) ) );
+$pA   = PromptEngine::build( $cfgA, $con, 'hero', null, $ver )['prompt'];
+$t( 'a teljes promptban is benne van a hely', false !== strpos( $pA, 'the upper floor of the front wall' ) );
+
 echo "3D-egyezés: {$ok}/" . ( $ok + $fail ) . ( $fail ? " – {$fail} HIBA" : '' ) . "\n";
 exit( $fail ? 1 : 0 );

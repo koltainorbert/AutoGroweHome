@@ -10592,3 +10592,259 @@ msgstr "%s nouvelles cloisons dessinées."
 #: includes/Frontend/Strings.php
 msgid "Koppints egy helyiségre a hozzáadáshoz:"
 msgstr "Touche une pièce pour l'ajouter :"
+
+#: includes/Params/Definitions.php
+msgid "A díszítőanyag helye"
+msgstr "Emplacement du matériau d'accent"
+
+#: includes/Params/Definitions.php
+msgid "A 3D nézetben a falra kattintva kijelölt helyek, ahová a kiegészítő anyag kerül."
+msgstr "Les zones marquées en touchant le mur dans la vue 3D, où va le matériau d'accent."
+
+#: includes/Frontend/Strings.php
+msgid "Díszítőanyag helye"
+msgstr "Placer le matériau d'accent"
+
+#: includes/Frontend/Strings.php
+msgid "Kattints a ház falára: oda kerül a kiegészítő anyag. Újra kattintva a következő anyag, végül egyik sem."
+msgstr "Touche un mur de la maison : le matériau d'accent y va. Touche encore pour le suivant, puis aucun."
+
+#: includes/Frontend/Strings.php
+msgid "Előbb válassz kiegészítő anyagot (Homlokzat → Kiegészítő anyagok)."
+msgstr "Choisis d'abord un matériau d'accent (Façade → Matériaux d'accent)."
+
+#: includes/Frontend/Strings.php
+msgid "%1$s: %2$s"
+msgstr "%1$s: %2$s"
+
+#: includes/Frontend/Strings.php
+msgid "%s: nincs díszítőanyag"
+msgstr "%s : aucun matériau d'accent"
+
+#: includes/Frontend/Strings.php
+msgid "Díszítőanyagok helyének visszaállítása"
+msgstr "Réinitialiser l'emplacement des matériaux d'accent"
+
+#: includes/Frontend/Strings.php
+msgid "elöl"
+msgstr "devant"
+
+#: includes/Frontend/Strings.php
+msgid "hátul"
+msgstr "derrière"
+
+#: includes/Frontend/Strings.php
+msgid "bal oldal"
+msgstr "côté gauche"
+
+#: includes/Frontend/Strings.php
+msgid "jobb oldal"
+msgstr "côté droit"
+
+#: includes/Frontend/Strings.php
+msgid "szárny"
+msgstr "aile"
+
+#: includes/Frontend/Strings.php
+msgid "teljes fal"
+msgstr "mur entier"
+
+#: includes/Frontend/Strings.php
+msgid "emeleti sáv"
+msgstr "étage"
+
+#: includes/Frontend/Strings.php
+msgid "oromzat"
+msgstr "pignon"
+
+#: includes/Frontend/Strings.php
+msgid "lábazat"
+msgstr "soubassement"
+
+#: includes/Frontend/Strings.php
+msgid "bejárat környéke"
+msgstr "autour de l'entrée"
+
+#: includes/Frontend/Strings.php
+msgid "Előbb zárd körbe a házat a főfalakkal – a területmérleg a belső körvonalból számol."
+msgstr "Fermez d'abord la maison avec les murs principaux : le bilan des surfaces part du contour intérieur."
+
+#: includes/Frontend/Strings.php
+msgid "Bruttó alapterület (külső méret)"
+msgstr "Surface brute (dimensions extérieures)"
+
+#: includes/Frontend/Strings.php
+msgid "Külső falak"
+msgstr "Murs extérieurs"
+
+#: includes/Frontend/Strings.php
+msgid "Belső vakolat a külső falon (%s cm)"
+msgstr "Enduit intérieur sur les murs extérieurs (%s cm)"
+
+#: includes/Frontend/Strings.php
+msgid "Lépcső (becslés, még nincs megtervezve)"
+msgstr "Escalier (estimation, pas encore conçu)"
+
+#: includes/Frontend/Strings.php
+msgid "Megmaradó belső falak (vakolattal)"
+msgstr "Murs intérieurs conservés (avec enduit)"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak a helyiségek között (vakolattal)"
+msgstr "Cloisons entre les pièces (avec enduit)"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak (becslés, amíg nincs elhelyezve)"
+msgstr "Cloisons (estimation tant que les pièces ne sont pas placées)"
+
+#: includes/Frontend/Strings.php
+msgid "Kiosztható nettó terület"
+msgstr "Surface nette à répartir"
+
+#: includes/Frontend/Strings.php
+msgid "A programban"
+msgstr "Dans le programme"
+
+#: includes/Frontend/Strings.php
+msgid "Még kiosztható"
+msgstr "Encore à répartir"
+
+#: includes/Frontend/Strings.php
+msgid "Túllépés: %s m² – a falakkal együtt nem fér el."
+msgstr "Dépassement : %s m² – avec les murs, cela ne tient pas."
+
+#: includes/Frontend/Strings.php
+msgid "Még egy helyiség (a saját falaival): legfeljebb kb. %s m²."
+msgstr "Une pièce de plus (avec ses murs) : au plus environ %s m²."
+
+#: includes/Frontend/Strings.php
+msgid "Legnagyobb szabad hely a házban: %1$s × %2$s m."
+msgstr "Plus grand espace libre dans la maison : %1$s × %2$s m."
+
+#: includes/Frontend/Strings.php
+msgid "A m² a kész, vakolt falsíkok között mért nettó terület. Az ajtónyílás a nettó területet nem változtatja."
+msgstr "Les m² sont la surface nette mesurée entre les faces finies et enduites des murs. Les baies de porte ne changent pas la surface nette."
+
+#: includes/Frontend/Strings.php
+msgid "Nincs közlekedő vagy előtér a programban – jellemzően a nettó %1$s százaléka (kb. %2$s m²)."
+msgstr "Pas de couloir ni d'entrée dans le programme : en général %1$s pour cent de la surface nette (environ %2$s m²)."
+
+#: includes/Frontend/Strings.php
+msgid "Elfér: %1$s × %2$s m"
+msgstr "Tient : %1$s × %2$s m"
+
+#: includes/Frontend/Strings.php
+msgid "Nem fér el – kisebb terület vagy más méret kell"
+msgstr "Ne tient pas : il faut une surface plus petite ou une autre taille"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s: legalább %2$s m² és %3$s m szélesség javasolt"
+msgstr "%1$s : au moins %2$s m² et %3$s m de largeur recommandés"
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból (a vakolattal együtt)."
+msgstr "Dépasse de la maison (avec l'enduit)."
+
+#: includes/Frontend/Strings.php
+msgid "Túl közel van egy másik helyiséghez – közte válaszfal és vakolat kell."
+msgstr "Trop près d'une autre pièce : il faut une cloison et de l'enduit entre les deux."
+
+#: includes/Frontend/Strings.php
+msgid "Teherhordó falra került."
+msgstr "Se trouve sur un mur porteur."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőre vagy a födémáttörésre került."
+msgstr "Se trouve sur l'escalier ou la trémie."
+
+#: includes/Frontend/Strings.php
+msgid "Elzárja a lépcső induló vagy érkező szabad helyét."
+msgstr "Bloque l'espace libre au départ ou à l'arrivée de l'escalier."
+
+#: includes/Frontend/Strings.php
+msgid "Negyedfordulós (L)"
+msgstr "Quart tournant (L)"
+
+#: includes/Frontend/Strings.php
+msgid "Fordulós (U)"
+msgstr "Demi-tournant (U)"
+
+#: includes/Frontend/Strings.php
+msgid "Karszélesség"
+msgstr "Largeur de volée"
+
+#: includes/Frontend/Strings.php
+msgid "Elforgatás 90°"
+msgstr "Pivoter de 90°"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s fok · fokmagasság %2$s cm · belépő %3$s cm · 2m + b = %4$s cm"
+msgstr "%1$s marches · hauteur %2$s cm · giron %3$s cm · 2h + g = %4$s cm"
+
+#: includes/Frontend/Strings.php
+msgid "Alaprajzi méret %1$s × %2$s m · födémáttörés %3$s m² · szabad belmagasság a lépcső felett ≥ %4$s m"
+msgstr "Emprise %1$s × %2$s m · trémie %3$s m² · échappée ≥ %4$s m"
+
+#: includes/Frontend/Strings.php
+msgid "A fokmagasság nagyobb a javasoltnál."
+msgstr "La hauteur de marche dépasse la valeur recommandée."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőképlet (2m + b) a 60–65 cm-es tartományon kívül esik."
+msgstr "La loi de Blondel (2h + g) sort de la plage 60–65 cm."
+
+#: includes/Frontend/Strings.php
+msgid "A belépő túl kicsi."
+msgstr "Le giron est trop petit."
+
+#: includes/Frontend/Strings.php
+msgid "A karszélesség kisebb a javasolt legkisebbnél (0,9 m)."
+msgstr "La largeur de volée est inférieure au minimum recommandé (0,9 m)."
+
+#: includes/Frontend/Strings.php
+msgid "Ekkora lépcső nem fér el – válassz fordulós vagy csigalépcsőt."
+msgstr "Un escalier de cette taille ne tient pas : choisissez un demi-tournant ou un hélicoïdal."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső kilóg a házból."
+msgstr "L'escalier dépasse de la maison."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső induló vagy érkező szabad helye nincs a házon belül."
+msgstr "L'espace libre au départ ou à l'arrivée n'est pas dans la maison."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső vagy a födémáttörés teherhordó falra esik."
+msgstr "L'escalier ou la trémie tombe sur un mur porteur."
+
+#: includes/Frontend/Strings.php
+msgid "Lépcső elhelyezése"
+msgstr "Placer l'escalier"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső sehol nem fér el ebben a típusban – próbálj másik típust vagy keskenyebb kart."
+msgstr "Un escalier de ce type ne tient nulle part : essayez un autre type ou une volée plus étroite."
+
+#: includes/Frontend/Strings.php
+msgid "Válaszd ki a lépcső típusát: a rendszer a szintmagasságból kiszámolja a fokokat, a méretét és a födémáttörést, és elhelyezi a házban."
+msgstr "Choisissez le type d'escalier : à partir de la hauteur d'étage, le système calcule les marches, la taille et la trémie, puis le place dans la maison."
+
+#: includes/Frontend/Strings.php
+msgid "Födémáttörés"
+msgstr "Trémie"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső fokmagassága nagyobb a javasoltnál"
+msgstr "La hauteur de marche dépasse la valeur recommandée"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőképlet (2m + b) a 60–65 cm-es tartományon kívül"
+msgstr "Loi de Blondel (2h + g) hors de 60–65 cm"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső karszélessége keskenyebb a javasoltnál"
+msgstr "La volée d'escalier est plus étroite que recommandé"
+
+#: includes/Frontend/Strings.php
+msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
+msgstr "Un côté n'est que partiellement contre un mur : poussez-le jusqu'au bout du mur ou éloignez-le complètement."

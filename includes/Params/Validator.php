@@ -137,6 +137,9 @@ final class Validator {
 				if ( 'site' === ( $def['layout'] ?? '' ) ) {
 					return self::site_layout( $value );
 				}
+				if ( 'accent' === ( $def['layout'] ?? '' ) ) {
+					return self::accent_layout( $value );
+				}
 				// room id => slot ("key#index") => hand placed position and angle in the room
 				$out = array();
 				foreach ( is_array( $value ) ? array_slice( $value, 0, 60, true ) : array() as $room => $slots ) {
@@ -415,6 +418,18 @@ final class Validator {
 				'levels'   => $levels,
 			),
 		);
+	}
+
+	/** Where the accent material goes (1.21.0): "<volume>:<face>:<zone>" => index into facade_accent (−1: none). */
+	public static function accent_layout( $value ): array {
+		$out = array();
+		foreach ( is_array( $value ) ? array_slice( $value, 0, 120, true ) : array() as $key => $i ) {
+			$key = (string) $key;
+			if ( preg_match( '/^[0-9]{1,2}:(front|right|back|left):(wall|upper|gable|plinth|door)$/', $key ) && is_numeric( $i ) ) {
+				$out[ $key ] = max( -1, min( 2, (int) round( (float) $i ) ) );
+			}
+		}
+		return $out;
 	}
 
 	/**

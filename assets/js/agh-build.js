@@ -39,6 +39,7 @@
 	function C(v) { return Math.round(v * 1000); }         // metres → whole millimetres (inputs are snapped to 1 cm)
 	function M(c) { return c / 1000; }                     // millimetres → metres
 	function oneOf(v, list, d) { return list.indexOf(v) !== -1 ? v : d; }
+	var STAIR_TYPES = ['straight', 'l', 'u', 'spiral'];
 	function isObj(v) { return v && typeof v === 'object' && !Array.isArray(v); }
 	function text(v, max) { return typeof v === 'string' ? v.replace(/[<>\u0000-\u001f]/g, '').slice(0, max) : ''; }
 	function nOrNull(v, a, b) { var n = num(v, NaN); return isFinite(n) ? r2(clamp(n, a, b)) : null; }
@@ -110,6 +111,12 @@
 		if (isObj(sl.stair)) {
 			var st = sl.stair;
 			o.slab.stair = { x: r2(num(st.x, 0)), y: r2(num(st.y, 0)), w: r2(clamp(num(st.w, 1), 0.6, 6)), d: r2(clamp(num(st.d, 3), 0.6, 8)) };
+			// 1.21.0: a designed stair – type, flight width, quarter turns; w × d is then its computed footprint
+			if (STAIR_TYPES.indexOf(st.type) !== -1) {
+				o.slab.stair.type = st.type;
+				o.slab.stair.width = r2(clamp(num(st.width, 1), 0.6, 2));
+				o.slab.stair.rot = [0, 90, 180, 270].indexOf(Math.round(num(st.rot, 0))) !== -1 ? Math.round(num(st.rot, 0)) : 0;
+			}
 		}
 		if (isObj(b.done)) { Object.keys(b.done).forEach(function (k) { if (/^\d{1,2}$/.test(k) && +k < STEPS.length && typeof b.done[k] === 'string') { o.done[k] = b.done[k].slice(0, 40); } }); }
 		if (isObj(rules.custom)) {
@@ -394,7 +401,9 @@
 		// face around it still spans the whole floor. That face loses the rooms that lie inside it (direct
 		// children only), so the rest of the floor shrinks as rooms are added (1.16.3: the kitchen-living
 		// room kept the full floor area, 487 m² instead of the ~286 left over).
-		var inside = function (o, r) { return o.key !== r.key && o.gross < r.gross && inPoly(r.poly, o.cx, o.cy); };
+		// 1.21.0: really inside – every corner of the smaller room in (or on the edge of) the bigger one; a
+		// non-convex neighbour whose corner average happens to fall in the bigger room is not inside it
+		var inside = function (o, r) { return o.key !== r.key && o.gross < r.gross && inPoly(r.poly, o.cx, o.cy) && o.poly.every(function (q) { return inPoly(r.poly, q[0], q[1]) || onBoundary(r.poly, q[0], q[1]); }); };
 		var kidsOf = out.map(function (r) { return out.filter(function (o) { return inside(o, r) && !out.some(function (m) { return m !== o && inside(o, m) && inside(m, r); }); }); });
 		out.forEach(function (r, ri) {
 			var kids = kidsOf[ri];
@@ -713,7 +722,7 @@
 		var slabA = 0, sd = (d.slabs || {})[b.slab.type] || {};
 		for (var lv3 = 0; lv3 < n; lv3++) {
 			var A3 = M(M(ol.innerArea)) + extArea / 2; // the slab sits on half the external wall
-			if (b.slab.stair && lv3 < n - 1) { A3 -= b.slab.stair.w * b.slab.stair.d; }
+			if (b.slab.stair && lv3 < n - 1) { var sr3 = stairRects(b); A3 -= sr3 ? sr3.holeArea : b.slab.stair.w * b.slab.stair.d; }
 			slabA += Math.max(0, A3);
 		}
 		if (b.slab.type === 'rc') { add(8, 'concrete_slab', slabA * b.slab.t, 'm3', 'concrete'); add(8, 'rebar_slab', slabA * b.slab.t * (sd.rebar_kg_m3 || 0), 'kg', 'rebar'); }
@@ -802,10 +811,129 @@
 		});
 		m.bearing_unsupported = uns;
 		m.stair_missing = n > 1 && !b.slab.stair ? 1 : 0;
+		// 1.21.0: the designed stair against the step rules
+		var sc = n > 1 && b.slab.stair && b.slab.stair.type ? stairCalc(b, b.slab.stair.type, b.slab.stair.width) : null;
+		m.stair_rise = sc ? sc.rise : null;
+		m.stair_step = sc ? sc.blondel : null;
+		m.stair_going = sc ? sc.going : null;
+		m.stair_width = sc ? sc.width : null;
 		return m;
 	}
 	function cmp(v, op, lim) { return op === '>=' ? v >= lim - 1e-9 : (op === '<=' ? v <= lim + 1e-9 : true); }
 	// General good practice (always on; these are not legal rules).
+	/* ------------------------------------------------------------------ the stair (1.21.0)
+	 * Sized from the storey height (floor to floor): risers n (rise ≤ rise_max, nearest the preferred),
+	 * going from the step rule 2·rise + going ≈ 0.63 m, flights and landing by type, the slab opening that
+	 * keeps the headroom, and the free landing in front of the first and above the last step. Local frame
+	 * of the footprint: x across (w), y along (d); the bottom step at the front (y = d), climbing to y = 0.
+	 * rot (0/90/180/270, clockwise on the plan) turns the footprint; stairRects() gives plan rectangles. */
+	function stairRules() {
+		var s = DF().stair || {};
+		return { riseMax: num(s.rise_max, 0.19), risePref: num(s.rise_pref, 0.175), gMin: num(s.going_min, 0.26), gMax: num(s.going_max, 0.32), step: num(s.step_rule, 0.63),
+			bl: Array.isArray(s.blondel) ? s.blondel : [0.6, 0.65], wMin: num(s.width_min, 0.9), head: num(s.headroom, 2.1), spMin: num(s.spiral_d_min, 1.6), well: num(s.well, 0.1), walk: num(s.spiral_walk_going_min, 0.2) };
+	}
+	function stairCalc(b0, type, width) {
+		var b = b0 && b0.levels ? b0 : normalize(b0), R = stairRules();
+		if (b.levels.length < 2) { return null; }
+		type = oneOf(type, STAIR_TYPES, 'straight');
+		width = r2(clamp(num(width, 1), 0.6, 2));
+		var H = b.levels[0].h, ts = b.slab.t, n = Math.max(2, Math.round(H / R.risePref));
+		while (H / n > R.riseMax + 1e-9) { n++; }
+		var h = H / n, g = r2(clamp(R.step - 2 * h, R.gMin, R.gMax)), tr = n - 1;
+		// steps under the slab opening, counted from the top: below them the stair is far enough under the slab
+		var kHole = Math.min(tr, Math.ceil((R.head + ts) / h - 1e-9) - 1);
+		var o = { type: type, width: width, H: r3(H), n: n, rise: r3(h), going: g, treads: tr, blondel: r3(2 * h + g), headroom: R.head, flights: [tr] };
+		if (type === 'straight') {
+			o.w = width; o.d = r2(tr * g);
+			o.hole = { x: 0, y: 0, w: width, d: r2(Math.min(o.d, Math.max(0, kHole) * g)) };
+			o.bottom = { x: 0, y: o.d, w: width, d: width }; o.top = { x: 0, y: -width, w: width, d: width };
+		} else if (type === 'l') {
+			// lower flight along y (front to back) on the left, a square landing at the back left, the upper flight along x
+			// the landing takes one tread position: lower flight + landing + upper flight = n − 1 treads
+			var a = Math.ceil((tr - 1) / 2), c = tr - 1 - a;
+			o.flights = [a, c]; o.w = r2(width + c * g); o.d = r2(a * g + width);
+			var under = Math.max(0, kHole - c - 1), hd = r2(Math.min(o.d, width + under * g));
+			o.hole = { x: 0, y: 0, w: o.w, d: hd };
+			// the opening itself is L-shaped: over the landing and the upper flight, and down the lower flight
+			o.holePoly = hd > width + 1e-6 ? [[0, 0], [o.w, 0], [o.w, width], [width, width], [width, hd], [0, hd]] : [[0, 0], [o.w, 0], [o.w, width], [0, width]];
+			o.bottom = { x: 0, y: o.d, w: width, d: width }; o.top = { x: o.w, y: 0, w: width, d: width };
+		} else if (type === 'u') {
+			var a2 = Math.ceil((tr - 1) / 2), c2 = tr - 1 - a2;
+			o.flights = [a2, c2]; o.w = r2(2 * width + R.well); o.d = r2(Math.max(a2, c2) * g + width);
+			o.hole = { x: 0, y: 0, w: o.w, d: o.d };
+			o.bottom = { x: 0, y: o.d, w: width, d: width }; o.top = { x: r2(width + R.well), y: r2(width + c2 * g), w: width, d: width };
+		} else {
+			// spiral: diameter from the flight width round a 0.2 m newel; going checked on the walking line
+			var D = r2(Math.max(R.spMin, 2 * width + 0.2)), rw = 0.1 + width / 2, gw = r2(clamp(R.step - 2 * h, R.walk, R.gMax));
+			o.w = D; o.d = D; o.going = gw; o.blondel = r3(2 * h + gw); o.turn = Math.round(tr * gw / rw * 180 / Math.PI);
+			o.hole = { x: 0, y: 0, w: D, d: D };
+			o.bottom = { x: 0, y: D, w: width, d: width }; o.top = { x: D - width, y: D, w: width, d: width };
+		}
+		o.checks = {
+			rise: h <= R.riseMax + 1e-9,
+			step: o.blondel >= R.bl[0] - 1e-9 && o.blondel <= R.bl[1] + 1e-9,
+			going: type === 'spiral' ? o.going >= R.walk - 1e-9 : g >= R.gMin - 1e-9,
+			width: width >= R.wMin - 1e-9,
+			fits: o.w <= 6 && o.d <= 8
+		};
+		o.ok = Object.keys(o.checks).every(function (k) { return o.checks[k]; });
+		return o;
+	}
+	// The treads of a designed stair as plan polygons (local footprint frame) with their top height above the
+	// lower floor: [{ pts: [[u, v], ...], z }], bottom step first. Used by the 3D view and the drawings.
+	function stairSteps(cal) {
+		if (!cal) { return []; }
+		var out = [], h = cal.rise, g = cal.going, W = cal.width, i, k = 0;
+		function rect(x0, y0, x1, y1) { k++; out.push({ pts: [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], z: r3(k * h) }); }
+		if (cal.type === 'straight') { for (i = 1; i <= cal.treads; i++) { rect(0, r3(cal.d - i * g), W, r3(cal.d - (i - 1) * g)); } }
+		else if (cal.type === 'l') {
+			var a = cal.flights[0], c = cal.flights[1];
+			for (i = 1; i <= a; i++) { rect(0, r3(cal.d - i * g), W, r3(cal.d - (i - 1) * g)); }
+			rect(0, 0, W, W);
+			for (i = 1; i <= c; i++) { rect(r3(W + (i - 1) * g), 0, r3(W + i * g), W); }
+		} else if (cal.type === 'u') {
+			var a2 = cal.flights[0], c2 = cal.flights[1], xr = r3(cal.w - W);
+			for (i = 1; i <= a2; i++) { rect(0, r3(cal.d - i * g), W, r3(cal.d - (i - 1) * g)); }
+			rect(0, 0, cal.w, W);
+			for (i = 1; i <= c2; i++) { rect(xr, r3(W + (i - 1) * g), cal.w, r3(W + i * g)); }
+		} else {
+			var R = cal.w / 2, n = cal.treads, da = (cal.turn || 360) / n * Math.PI / 180;
+			for (i = 0; i < n; i++) {
+				var a0 = Math.PI / 2 + i * da, a1 = a0 + da, pts = [[R, R]];
+				for (var s2 = 0; s2 <= 4; s2++) { var an = a0 + (a1 - a0) * s2 / 4; pts.push([r3(R + Math.cos(an) * R), r3(R + Math.sin(an) * R)]); }
+				k++; out.push({ pts: pts, z: r3(k * h) });
+			}
+		}
+		return out;
+	}
+	// The plan rectangles of a placed stair: footprint, slab opening, free landings (bottom / top), turned by rot.
+	function stairRects(b0, st) {
+		var b = b0 && b0.levels ? b0 : normalize(b0);
+		st = st || b.slab.stair;
+		if (!st) { return null; }
+		var cal = st.type ? stairCalc(b, st.type, st.width) : null, rot = st.rot || 0;
+		var lw = cal ? cal.w : (rot % 180 ? st.d : st.w), ld = cal ? cal.d : (rot % 180 ? st.w : st.d);
+		var W = rot % 180 ? ld : lw, Dd = rot % 180 ? lw : ld;
+		function tp(q) {
+			var u = q[0], v = q[1];
+			if (rot === 90) { return [ld - v, u]; }
+			if (rot === 180) { return [lw - u, ld - v]; }
+			if (rot === 270) { return [v, lw - u]; }
+			return [u, v];
+		}
+		function turn(r) {
+			if (!r) { return null; }
+			var pts = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.d], [r.x, r.y + r.d]].map(tp);
+			var xs = pts.map(function (q) { return q[0]; }), ys = pts.map(function (q) { return q[1]; });
+			return { x: r2(st.x + Math.min.apply(null, xs)), y: r2(st.y + Math.min.apply(null, ys)), w: r2(Math.max.apply(null, xs) - Math.min.apply(null, xs)), d: r2(Math.max.apply(null, ys) - Math.min.apply(null, ys)) };
+		}
+		var hole = cal ? turn(cal.hole) : { x: st.x, y: st.y, w: st.w, d: st.d };
+		var poly = cal && cal.holePoly ? cal.holePoly.map(function (q) { var p = tp(q); return [r2(st.x + p[0]), r2(st.y + p[1])]; }) : [[hole.x, hole.y], [hole.x + hole.w, hole.y], [hole.x + hole.w, hole.y + hole.d], [hole.x, hole.y + hole.d]];
+		// the opening's area (shoelace)
+		var ar = 0; poly.forEach(function (p, i) { var q = poly[(i + 1) % poly.length]; ar += p[0] * q[1] - q[0] * p[1]; });
+		var steps = stairSteps(cal).map(function (q) { return { z: q.z, pts: q.pts.map(function (p0) { var p = tp(p0); return [r3(st.x + p[0]), r3(st.y + p[1])]; }) }; });
+		return { calc: cal, steps: steps, foot: { x: st.x, y: st.y, w: r2(W), d: r2(Dd) }, hole: hole, holePoly: poly, holeArea: r2(Math.abs(ar) / 2), bottom: cal ? turn(cal.bottom) : null, top: cal ? turn(cal.top) : null };
+	}
 	function practice(b0, cfg, m) {
 		m = m || metrics(b0, cfg);
 		return (DF().practice || []).map(function (p) {
@@ -1064,7 +1192,7 @@
 		masonryH: masonryH, clearH: clearH, levelBase: levelBase, snap: snap, nextId: nextId, rectWalls: rectWalls, polyWalls: polyWalls,
 		fromHouse: fromHouse, randomHouse: randomHouse,
 		// geometry internals (tests and the PHP parity check)
-		_edges: edgesOf, _faces: faces, _decompose: decompose, _strips: strips, _offset: offset, _union: unionLoop, _area2: area2, _inPoly: inPoly
+		_edges: edgesOf, _faces: faces, _decompose: decompose, _strips: strips, _offset: offset, _union: unionLoop, _area2: area2, _inPoly: inPoly, stairCalc: stairCalc, stairRects: stairRects, stairTypes: STAIR_TYPES
 	};
 	return api;
 }));

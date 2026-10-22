@@ -411,7 +411,7 @@ House.prototype.volume = function (v, idx, type, vpl) {
 	var rise = rd ? rd.info.rise : 0;
 	var acc = c.facade_accent || [], r = SK()._round(c, v), fp = SK()._front(c, v, this.vols);
 	var BL = SK()._balconies(c, v, pl, this.vols);
-	var wallMat = v.glass ? glassMat(c, this.night) : ((v.wing || v.second || v.accent) && acc.length ? accentMat(c, acc[0]) : facadeMat(c, c.facade_main));
+	var wallMat = v.glass ? glassMat(c, this.night) : ((v.wing || v.second || v.accent) && acc.length && !SK()._accentVol(c, v) ? accentMat(c, acc[0]) : facadeMat(c, c.facade_main));
 	var faces = [
 		{ name: 'front', o: [v.x0 + r, v.y1], u: [1, 0], n: X(0, 1, 0), len: v.x1 - v.x0 - 2 * r },
 		{ name: 'right', o: [v.x1, v.y1 - r], u: [0, -1], n: X(1, 0, 0), len: v.y1 - v.y0 - 2 * r },
@@ -426,6 +426,8 @@ House.prototype.volume = function (v, idx, type, vpl) {
 		m.setPosition(org);
 		g.matrixAutoUpdate = false; g.matrix.copy(m);
 		var top = gableTop(F.name, v, type, rise);
+		// where the accent material can be put (1.21.0): this face, in its own coordinates
+		if (!v.glass) { g.userData.face = { vi: v.vi || 0, face: F.name, m: m, len: F.len, h: v.h, z0: z0, plinth: pl.plinth, FH: pl.FH, floors: pl.floors, top: top || null, door: F.name === 'front' && fp && fp.door ? { x: fp.door.x, w: fp.door.w, h: fp.door.h } : null, T: T }; }
 		F.fp = F.name === 'front' ? fp : null;
 		F.balc = BL;
 		var ops = faceOpenings(c, v, pl, F, F.fp, rise, top && type !== 'shed' && type !== 'saw' ? type : false);
@@ -574,6 +576,9 @@ House.prototype.wallDetails = function (g, v, F, ops, top, T, st, wallMat) {
 	};
 	var opsIn = function (x0, x1, y1) { return ops.filter(function (o) { return o.x < x1 && o.x + o.w > x0 && o.y < (y1 === undefined ? 1e9 : y1); }); };
 	var door = F.fp && F.fp.door;
+	// the zones marked by the visitor on this face (1.21.0) replace the automatic accent bays
+	var ez = SK()._accentZones(c, v, F.name, { len: F.len, h: v.h, z0: v.z0 || 0, plinth: pl.plinth, FH: pl.FH, top: top, door: door ? { x: door.x, w: door.w, h: door.h } : null });
+	if (ez) { ez.forEach(function (z) { proud(z.poly, accentMat(c, z.mat), opsIn(0, F.len)); }); acc = []; }
 	if (door && acc[0] && (main || v.risalit)) {
 		var dp = door, ax0 = Math.max(0, dp.x - 0.75), ax1 = Math.min(F.len, dp.x + dp.w + 0.75);
 		proud([[ax0, 0], [ax1, 0], [ax1, v.h], [ax0, v.h]], accentMat(c, acc[0]), opsIn(ax0, ax1));
@@ -1616,6 +1621,7 @@ function Viewer(opts) {
 			// a hand over a piece that can be picked up (mouse only, a few times a second)
 			if (e.pointerType === 'mouse' && !e.buttons && self.house && Date.now() - hoverAt > 90) {
 				hoverAt = Date.now();
+				if (self.paint) { var fh = self.faceAt(e.clientX, e.clientY); self.paintMark(fh); self.el.style.cursor = fh ? 'pointer' : ''; return; }
 				var over = self.house.room ? self.itemAt(e.clientX, e.clientY) : self.extAt(e.clientX, e.clientY);
 				self.el.style.cursor = over ? 'grab' : '';
 			}
@@ -1629,6 +1635,7 @@ function Viewer(opts) {
 			dn = null;
 			// a grab that did not move is a tap: the settings still jump to the piece's field
 			if (moved > 6 || slow) { return; }
+			if (self.paint && self.onPaint) { var ph = self.faceAt(e.clientX, e.clientY); if (ph) { self.onPaint(ph); } return; }
 			var hit = self.pickAt(e.clientX, e.clientY);
 			if (hit) { self.onPick(hit); }
 		});
@@ -1765,6 +1772,7 @@ Viewer.prototype.update = function (cfg, mode) {
 		this.picks = this.thumb ? null : collectPicks(this.house.root);   // before the merge, while the pieces are still apart
 		// openings and the chimney: their place on the wall / roof, kept before the merge (1.18.0)
 		this.ops = this.thumb ? null : collectOps(this.house.root);
+		this.faces = this.thumb ? null : collectFaces(this.house.root);
 		// In a room every piece is merged on its own and the furniture group is left out of the big merge:
 		// that is what keeps each piece grabbable, while the number of draw calls stays low. The movable
 		// pieces of the garden (1.18.0) are handled the same way.
@@ -2115,6 +2123,13 @@ function collectOps(root) {
 	});
 	return out;
 }
+// The faces of the walls (1.21.0): where a tap in the paint mode puts the accent material.
+function collectFaces(root) {
+	var out = [];
+	root.updateMatrixWorld(true);
+	root.traverse(function (o) { var f = o.userData && o.userData.face; if (f && f.m) { out.push({ f: f, inv: new THREE.Matrix4().copy(f.m).invert() }); } });
+	return out;
+}
 function opAt(list, p) {
 	var best = null, bv = 1e9;
 	(list || []).forEach(function (q) {
@@ -2273,7 +2288,52 @@ Viewer.prototype.grabAt = function (cx, cy, ev) {
 	this.requestRender();
 	return true;
 };
+// Paint mode (1.21.0): the face and zone under the pointer – whole wall, upper floors, gable, plinth or
+// the entrance bay, from where the pointer meets the wall.
+Viewer.prototype.faceAt = function (cx, cy) {
+	var hs = this.house;
+	if (!hs || hs.room || hs.phases || !this.faces || !this.faces.length) { return null; }
+	var ray = this.rayFrom(cx, cy);
+	if (!ray) { return null; }
+	var hits = ray.intersectObject(hs.root, true).filter(function (h) { return h.object.visible && !h.object.isLine && !(h.object.userData && h.object.userData.noPick); });
+	for (var i = 0; i < hits.length && i < 4; i++) {
+		var best = null, bd = 0.2;
+		for (var k = 0; k < this.faces.length; k++) {
+			var F = this.faces[k], f = F.f, lp = hits[i].point.clone().applyMatrix4(F.inv), dz = Math.abs(lp.z - f.T - 0.015);
+			if (lp.x < -0.05 || lp.x > f.len + 0.05 || lp.y < f.z0 - 0.05 || dz > bd) { continue; }
+			bd = dz; best = { f: f, x: lp.x, y: lp.y };
+		}
+		if (best) {
+			var f2 = best.f, y = best.y, zone = 'wall';
+			if (f2.top && y > f2.h + 0.02) { zone = 'gable'; }
+			else if (y < Math.max(f2.plinth + 0.35, 0.6)) { zone = 'plinth'; }
+			else if (f2.door && best.x > f2.door.x - 0.75 && best.x < f2.door.x + f2.door.w + 0.75 && y < f2.plinth + f2.door.h + 0.6) { zone = 'door'; }
+			else if (f2.floors > 1 && y > f2.plinth + f2.FH) { zone = 'upper'; }
+			return { vi: f2.vi, face: f2.face, zone: zone, key: f2.vi + ':' + f2.face + ':' + zone, f: f2 };
+		}
+		if (hits[i].object.userData && hits[i].object.userData.noPick) { continue; }
+		return null;
+	}
+	return null;
+};
+// The frame of the zone under the pointer in paint mode (on the wall, over everything).
+Viewer.prototype.paintMark = function (hit) {
+	if (!hit) { if (this.mark && this.paintOn) { this.mark.visible = false; this.paintOn = false; this.requestRender(); } return; }
+	var f = hit.f, x0 = 0, x1 = f.len, y0 = 0, y1 = f.h;
+	if (hit.zone === 'gable') { y0 = f.h; y1 = f.top ? Math.max.apply(null, f.top.map(function (q) { return q[1]; })) : f.h + 1; }
+	else if (hit.zone === 'plinth') { y1 = Math.max(f.plinth + 0.35, 0.6); }
+	else if (hit.zone === 'upper') { y0 = f.plinth + f.FH; }
+	else if (hit.zone === 'door' && f.door) { x0 = Math.max(0, f.door.x - 0.75); x1 = Math.min(f.len, f.door.x + f.door.w + 0.75); }
+	var g = this.markGroup();
+	this.markFill.color.set('#3A7BD5'); this.markLine.color.set('#3A7BD5');
+	g.position.copy(new THREE.Vector3((x0 + x1) / 2, (y0 + y1) / 2, f.T + 0.06).applyMatrix4(f.m));
+	g.rotation.set(0, 0, 0); g.quaternion.setFromRotationMatrix(f.m);
+	g.scale.set(Math.max(0.1, x1 - x0), Math.max(0.1, y1 - y0), 1);
+	g.visible = true; this.paintOn = true;
+	this.requestRender();
+};
 Viewer.prototype.grabExt = function (cx, cy, ev) {
+	if (this.paint) { return false; }
 	var it = this.extAt(cx, cy);
 	if (!it) { if (this.sel) { this.select(null); this.requestRender(); } return false; }
 	var d = { ext: true, lastX: cx, moved: false };

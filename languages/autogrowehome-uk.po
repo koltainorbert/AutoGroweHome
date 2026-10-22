@@ -10594,3 +10594,259 @@ msgstr "Накреслено нових перегородок: %s."
 #: includes/Frontend/Strings.php
 msgid "Koppints egy helyiségre a hozzáadáshoz:"
 msgstr "Торкніться приміщення, щоб додати його:"
+
+#: includes/Params/Definitions.php
+msgid "A díszítőanyag helye"
+msgstr "Місце оздоблювального матеріалу"
+
+#: includes/Params/Definitions.php
+msgid "A 3D nézetben a falra kattintva kijelölt helyek, ahová a kiegészítő anyag kerül."
+msgstr "Місця, позначені натисканням на стіну в 3D-виді, куди йде оздоблювальний матеріал."
+
+#: includes/Frontend/Strings.php
+msgid "Díszítőanyag helye"
+msgstr "Розмістити оздоблення"
+
+#: includes/Frontend/Strings.php
+msgid "Kattints a ház falára: oda kerül a kiegészítő anyag. Újra kattintva a következő anyag, végül egyik sem."
+msgstr "Натисніть на стіну будинку: туди піде оздоблення. Ще раз — наступний матеріал, наприкінці жодного."
+
+#: includes/Frontend/Strings.php
+msgid "Előbb válassz kiegészítő anyagot (Homlokzat → Kiegészítő anyagok)."
+msgstr "Спершу виберіть оздоблювальний матеріал (Фасад → Додаткові матеріали)."
+
+#: includes/Frontend/Strings.php
+msgid "%1$s: %2$s"
+msgstr "%1$s: %2$s"
+
+#: includes/Frontend/Strings.php
+msgid "%s: nincs díszítőanyag"
+msgstr "%s: без оздоблення"
+
+#: includes/Frontend/Strings.php
+msgid "Díszítőanyagok helyének visszaállítása"
+msgstr "Скинути місця оздоблення"
+
+#: includes/Frontend/Strings.php
+msgid "elöl"
+msgstr "спереду"
+
+#: includes/Frontend/Strings.php
+msgid "hátul"
+msgstr "ззаду"
+
+#: includes/Frontend/Strings.php
+msgid "bal oldal"
+msgstr "ліва сторона"
+
+#: includes/Frontend/Strings.php
+msgid "jobb oldal"
+msgstr "права сторона"
+
+#: includes/Frontend/Strings.php
+msgid "szárny"
+msgstr "крило"
+
+#: includes/Frontend/Strings.php
+msgid "teljes fal"
+msgstr "уся стіна"
+
+#: includes/Frontend/Strings.php
+msgid "emeleti sáv"
+msgstr "поверх"
+
+#: includes/Frontend/Strings.php
+msgid "oromzat"
+msgstr "фронтон"
+
+#: includes/Frontend/Strings.php
+msgid "lábazat"
+msgstr "цоколь"
+
+#: includes/Frontend/Strings.php
+msgid "bejárat környéke"
+msgstr "біля входу"
+
+#: includes/Frontend/Strings.php
+msgid "Előbb zárd körbe a házat a főfalakkal – a területmérleg a belső körvonalból számol."
+msgstr "Спершу замкніть будинок основними стінами – баланс площ рахується за внутрішнім контуром."
+
+#: includes/Frontend/Strings.php
+msgid "Bruttó alapterület (külső méret)"
+msgstr "Площа брутто (за зовнішнім обміром)"
+
+#: includes/Frontend/Strings.php
+msgid "Külső falak"
+msgstr "Зовнішні стіни"
+
+#: includes/Frontend/Strings.php
+msgid "Belső vakolat a külső falon (%s cm)"
+msgstr "Внутрішня штукатурка зовнішніх стін (%s см)"
+
+#: includes/Frontend/Strings.php
+msgid "Lépcső (becslés, még nincs megtervezve)"
+msgstr "Сходи (оцінка, ще не запроєктовані)"
+
+#: includes/Frontend/Strings.php
+msgid "Megmaradó belső falak (vakolattal)"
+msgstr "Внутрішні стіни, що лишаються (зі штукатуркою)"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak a helyiségek között (vakolattal)"
+msgstr "Перегородки між приміщеннями (зі штукатуркою)"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak (becslés, amíg nincs elhelyezve)"
+msgstr "Перегородки (оцінка, доки не розміщені)"
+
+#: includes/Frontend/Strings.php
+msgid "Kiosztható nettó terület"
+msgstr "Площа нетто для розподілу"
+
+#: includes/Frontend/Strings.php
+msgid "A programban"
+msgstr "У програмі"
+
+#: includes/Frontend/Strings.php
+msgid "Még kiosztható"
+msgstr "Ще можна розподілити"
+
+#: includes/Frontend/Strings.php
+msgid "Túllépés: %s m² – a falakkal együtt nem fér el."
+msgstr "Перевищення: %s м² – зі стінами не вміщується."
+
+#: includes/Frontend/Strings.php
+msgid "Még egy helyiség (a saját falaival): legfeljebb kb. %s m²."
+msgstr "Ще одне приміщення (зі своїми стінами): не більше приблизно %s м²."
+
+#: includes/Frontend/Strings.php
+msgid "Legnagyobb szabad hely a házban: %1$s × %2$s m."
+msgstr "Найбільше вільне місце в будинку: %1$s × %2$s м."
+
+#: includes/Frontend/Strings.php
+msgid "A m² a kész, vakolt falsíkok között mért nettó terület. Az ajtónyílás a nettó területet nem változtatja."
+msgstr "м² – площа нетто між готовими оштукатуреними поверхнями стін. Дверні прорізи площу нетто не змінюють."
+
+#: includes/Frontend/Strings.php
+msgid "Nincs közlekedő vagy előtér a programban – jellemzően a nettó %1$s százaléka (kb. %2$s m²)."
+msgstr "У програмі немає коридору чи передпокою – зазвичай %1$s відсотків площі нетто (близько %2$s м²)."
+
+#: includes/Frontend/Strings.php
+msgid "Elfér: %1$s × %2$s m"
+msgstr "Вміщується: %1$s × %2$s м"
+
+#: includes/Frontend/Strings.php
+msgid "Nem fér el – kisebb terület vagy más méret kell"
+msgstr "Не вміщується – потрібна менша площа або інший розмір"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s: legalább %2$s m² és %3$s m szélesség javasolt"
+msgstr "%1$s: рекомендовано щонайменше %2$s м² і ширина %3$s м"
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból (a vakolattal együtt)."
+msgstr "Виходить за межі будинку (зі штукатуркою)."
+
+#: includes/Frontend/Strings.php
+msgid "Túl közel van egy másik helyiséghez – közte válaszfal és vakolat kell."
+msgstr "Занадто близько до іншого приміщення – потрібна перегородка зі штукатуркою."
+
+#: includes/Frontend/Strings.php
+msgid "Teherhordó falra került."
+msgstr "Потрапляє на несучу стіну."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőre vagy a födémáttörésre került."
+msgstr "Потрапляє на сходи або проріз перекриття."
+
+#: includes/Frontend/Strings.php
+msgid "Elzárja a lépcső induló vagy érkező szabad helyét."
+msgstr "Перекриває вільне місце на початку чи в кінці сходів."
+
+#: includes/Frontend/Strings.php
+msgid "Negyedfordulós (L)"
+msgstr "Г-подібні (L)"
+
+#: includes/Frontend/Strings.php
+msgid "Fordulós (U)"
+msgstr "П-подібні (U)"
+
+#: includes/Frontend/Strings.php
+msgid "Karszélesség"
+msgstr "Ширина маршу"
+
+#: includes/Frontend/Strings.php
+msgid "Elforgatás 90°"
+msgstr "Повернути на 90°"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s fok · fokmagasság %2$s cm · belépő %3$s cm · 2m + b = %4$s cm"
+msgstr "%1$s сходинок · висота %2$s см · проступ %3$s см · 2h + b = %4$s см"
+
+#: includes/Frontend/Strings.php
+msgid "Alaprajzi méret %1$s × %2$s m · födémáttörés %3$s m² · szabad belmagasság a lépcső felett ≥ %4$s m"
+msgstr "План %1$s × %2$s м · проріз перекриття %3$s м² · висота проходу ≥ %4$s м"
+
+#: includes/Frontend/Strings.php
+msgid "A fokmagasság nagyobb a javasoltnál."
+msgstr "Висота сходинки більша за рекомендовану."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőképlet (2m + b) a 60–65 cm-es tartományon kívül esik."
+msgstr "Формула кроку (2h + b) поза межами 60–65 см."
+
+#: includes/Frontend/Strings.php
+msgid "A belépő túl kicsi."
+msgstr "Проступ занадто малий."
+
+#: includes/Frontend/Strings.php
+msgid "A karszélesség kisebb a javasolt legkisebbnél (0,9 m)."
+msgstr "Ширина маршу менша за рекомендований мінімум (0,9 м)."
+
+#: includes/Frontend/Strings.php
+msgid "Ekkora lépcső nem fér el – válassz fordulós vagy csigalépcsőt."
+msgstr "Такі сходи не вміщуються – оберіть П-подібні або гвинтові."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső kilóg a házból."
+msgstr "Сходи виходять за межі будинку."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső induló vagy érkező szabad helye nincs a házon belül."
+msgstr "Вільне місце на початку чи в кінці сходів поза будинком."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső vagy a födémáttörés teherhordó falra esik."
+msgstr "Сходи або проріз перекриття потрапляють на несучу стіну."
+
+#: includes/Frontend/Strings.php
+msgid "Lépcső elhelyezése"
+msgstr "Розмістити сходи"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső sehol nem fér el ebben a típusban – próbálj másik típust vagy keskenyebb kart."
+msgstr "Сходи цього типу ніде не вміщуються – спробуйте інший тип або вужчий марш."
+
+#: includes/Frontend/Strings.php
+msgid "Válaszd ki a lépcső típusát: a rendszer a szintmagasságból kiszámolja a fokokat, a méretét és a födémáttörést, és elhelyezi a házban."
+msgstr "Оберіть тип сходів: за висотою поверху система розрахує сходинки, розміри і проріз перекриття та розмістить їх у будинку."
+
+#: includes/Frontend/Strings.php
+msgid "Födémáttörés"
+msgstr "Проріз перекриття"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső fokmagassága nagyobb a javasoltnál"
+msgstr "Висота сходинок більша за рекомендовану"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőképlet (2m + b) a 60–65 cm-es tartományon kívül"
+msgstr "Формула кроку (2h + b) поза 60–65 см"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső karszélessége keskenyebb a javasoltnál"
+msgstr "Марш сходів вужчий за рекомендований"
+
+#: includes/Frontend/Strings.php
+msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
+msgstr "Одна сторона лише частково прилягає до стіни – посуньте її до кінця стіни або повністю від неї."

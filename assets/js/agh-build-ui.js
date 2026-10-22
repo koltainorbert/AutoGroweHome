@@ -56,6 +56,7 @@
 	}
 	function commit(opts) {
 		opts = opts || {};
+		syncStair(st.b);
 		(st.b.prog || []).forEach(function (r) { r.placed = progState(st.b, r) === 'ok'; });
 		st.b = B.normalize(st.b);
 		st.b.step = st.step;
@@ -67,7 +68,7 @@
 	}
 	function undo() { if (!st.undo.length) { return; } st.redo.push(snapshot()); st.b = JSON.parse(st.undo.pop()); commit({ noUndo: true }); }
 	function redo() { if (!st.redo.length) { return; } st.undo.push(snapshot()); st.b = JSON.parse(st.redo.pop()); commit({ noUndo: true }); }
-	function find(sel) { if (!sel) { return null; } var list = sel.k === 'op' ? st.b.openings : (sel.k === 'room' ? (st.b.prog || []) : st.b.walls); for (var i = 0; i < list.length; i++) { if (list[i].id === sel.id) { return list[i]; } } return null; }
+	function find(sel) { if (!sel) { return null; } if (sel.k === 'stair') { return st.b.slab.stair || null; } var list = sel.k === 'op' ? st.b.openings : (sel.k === 'room' ? (st.b.prog || []) : st.b.walls); for (var i = 0; i < list.length; i++) { if (list[i].id === sel.id) { return list[i]; } } return null; }
 	function bbox(p) { var b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }; p.forEach(function (q) { b.x0 = Math.min(b.x0, q[0]); b.y0 = Math.min(b.y0, q[1]); b.x1 = Math.max(b.x1, q[0]); b.y1 = Math.max(b.y1, q[1]); }); return b; }
 	function plot() { var c = cfg(); return { w: num(c.plot_width, 20) || 20, d: num(c.plot_length, 40) || 40 }; }
 
@@ -242,7 +243,6 @@
 			if (fails.length) { kids.push(ul2); }
 			kids.push(el('p', { class: 'agh-bld-note is-small', text: tf('b_pack_info', rl.pack, rl.checked) }));
 		}
-		kids.push(el('p', { class: 'agh-bld-note is-legal' }, [A.icon('info', 'agh-ico-s'), el('span', { text: t('b_not_static') })]));
 		return group(t('b_checks'), kids, 'agh-bld-checks');
 	}
 	function ruleRow(r) {
@@ -360,6 +360,7 @@
 		},
 		function parts(box) {
 			box.appendChild(levelSwitch());
+			var sb = stairBox(); if (sb) { box.appendChild(sb); }
 			box.appendChild(programBox());
 			box.appendChild(toolsBox(['select', 'wall', 'rect'], false));
 			box.appendChild(selectionBox());
@@ -495,6 +496,14 @@
 		var o = find(st.sel);
 		if (!o) { return group(t('b_selection'), [el('p', { class: 'agh-bld-note', text: t('b_sel_none') })]); }
 		var kids = [];
+		if (st.sel.k === 'stair') {
+			var sc6 = o.type ? B.stairCalc(st.b, o.type, o.width) : null, sst = stairState(st.b);
+			kids.push(el('p', { class: 'agh-bld-sel-h' }, [el('b', { text: t('b_stair') + (o.type ? ' · ' + t('b_stair_' + o.type) : '') }), ' · ' + fmt(o.w, 2) + ' × ' + fmt(o.d, 2) + ' m']));
+			if (sc6) { kids.push(el('p', { class: 'agh-bld-note', text: tf('b_stair_spec', sc6.n, fmt(sc6.rise * 100, 1), fmt(sc6.going * 100, 0), fmt(sc6.blondel * 100, 1)) })); }
+			kids.push(el('div', { class: 'agh-bld-row' }, [el('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { stairTurn(); } }, [A.icon('refresh', 'agh-ico-s'), t('b_stair_rot')])]));
+			if (sst !== 'ok' && sst !== 'rules') { kids.push(el('p', { class: 'agh-bld-note is-warn', text: t('b_stair_state_' + sst) })); }
+			return group(t('b_selection'), kids);
+		}
 		if (st.sel.k === 'room') {
 			var rp = function (k) { return 'prog.' + st.b.prog.indexOf(o) + '.' + k; }, ps = progState(st.b, o);
 			kids.push(el('p', { class: 'agh-bld-sel-h' }, [el('b', { text: o.name || progName(o.type) }), ' · ' + fmt(o.w * o.d, 1) + ' m²']));
@@ -504,7 +513,9 @@
 				field(t('b_w'), numIn(rp('w'), { min: 0.8, max: 30, step: 0.1 }), 'm'),
 				field(t('b_d'), numIn(rp('d'), { min: 0.8, max: 30, step: 0.1 }), 'm')
 			]));
-			if (ps !== 'ok') { kids.push(el('p', { class: 'agh-bld-note is-warn', text: t(ps === 'overlap' ? 'b_prog_overlap' : 'b_prog_out') })); }
+			if (ps !== 'ok') { kids.push(el('p', { class: 'agh-bld-note is-warn', text: t('b_prog_state_' + ps) })); }
+			var mn6 = progMin(o.type);
+			if (mn6 && (o.w * o.d < mn6.area - 0.01 || Math.min(o.w, o.d) < mn6.side - 0.01)) { kids.push(el('p', { class: 'agh-bld-note is-warn', text: tf('b_prog_min', progName(o.type), fmt(mn6.area, 1), fmt(mn6.side, 2)) })); }
 		} else if (st.sel.k === 'wall') {
 			var w = o, len = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), path = function (k) { return 'walls.' + st.b.walls.indexOf(w) + '.' + k; };
 			kids.push(el('p', { class: 'agh-bld-sel-h' }, [el('b', { text: t('b_kind_' + w.kind) }), ' · ' + w.id]));
@@ -557,6 +568,7 @@
 		change(function (b) {
 			if (sel.k === 'wall') { b.walls = b.walls.filter(function (w) { return w.id !== sel.id; }); b.openings = b.openings.filter(function (o) { return o.wall !== sel.id; }); }
 			else if (sel.k === 'room') { b.prog = (b.prog || []).filter(function (r) { return r.id !== sel.id; }); }
+			else if (sel.k === 'stair') { b.slab.stair = null; }
 			else { b.openings = b.openings.filter(function (o) { return o.id !== sel.id; }); }
 		});
 		st.sel = null; renderPanel(); renderSelBar();
@@ -574,7 +586,6 @@
 		D.nav.innerHTML = '';
 		var s = B.stepState(st.b, st.step, cfg());
 		D.nav.appendChild(el('button', { type: 'button', class: 'agh-btn agh-btn-ghost agh-bld-exit', title: t('b_to_designer'), onclick: function () { A.close(false); } }, [A.icon('home', 'agh-ico-s'), el('span', { class: 'agh-btn-label', text: t('b_to_designer') })]));
-		D.nav.appendChild(el('p', { class: 'agh-bld-legal', text: t('b_not_static_short') }));
 		D.nav.appendChild(el('span', { class: 'agh-wiz-spacer' }));
 		D.nav.appendChild(el('button', { type: 'button', class: 'agh-btn agh-btn-ghost agh-bld-back', title: t('back'), disabled: st.step === 0 ? true : null, onclick: function () { goStep(st.step - 1); } }, [A.icon('left', 'agh-ico-s'), el('span', { class: 'agh-btn-label', text: t('back') })]));
 		var last = st.step === B.ACTIVE_STEPS - 1;
@@ -694,6 +705,9 @@
 		var gr = sv('g', { class: 'agh-bld-rooms' });
 		rs.forEach(function (r, i) {
 			gr.appendChild(sv('polygon', { points: r.net.map(function (q) { return r3(q[0] / 1000) + ',' + r3(q[1] / 1000); }).join(' '), class: 'agh-bld-room r' + (i % 6) }));
+			// while planning with the programme, a placed rectangle carries the name and m² of its room
+			var lpx = (r.lx !== undefined ? r.lx : r.cx) / 1000, lpy = (r.ly !== undefined ? r.ly : r.cy) / 1000;
+			if (st.step === 6 && (b.prog || []).some(function (q) { return q.lv === lv && lpx > q.x && lpx < q.x + q.w && lpy > q.y && lpy < q.y + q.d; })) { return; }
 			var fs = Math.max(12, Math.min(15, Math.sqrt(r.area / 1e6) * 3));
 			var lb = label((r.lx !== undefined ? r.lx : r.cx) / 1000, (r.ly !== undefined ? r.ly : r.cy) / 1000, lw, { class: 'agh-bld-rlabel', 'font-size': fs, 'text-anchor': 'middle' });
 			var nm = names[r.type || defs[i]] || '', roomPx = (r.bbox.x1 - r.bbox.x0) / 1000 * k - 8;
@@ -716,6 +730,20 @@
 				lb.t.appendChild(t1); lb.t.appendChild(t2); gp.appendChild(lb.g);
 			});
 			s.appendChild(gp);
+		}
+		// the stair while planning the rooms (1.21.0): footprint and treads below the top level, the opening on it
+		if (st.step === 6 && b.slab.stair && b.levels.length > 1) {
+			var so6 = stairOn(b, lv), ss6 = stairState(b), son = st.sel && st.sel.k === 'stair', gs = sv('g', { class: 'agh-bld-stairg' + (ss6 === 'ok' ? '' : ' is-bad') + (son ? ' is-sel' : '') });
+			so6.rects.forEach(function (q) { gs.appendChild(sv('rect', { x: q.x, y: q.y, width: q.w, height: q.d, class: 'agh-bld-stair6', 'stroke-width': (son ? 3 : 1.5) * lw })); });
+			if (!so6.top && so6.s.steps && so6.s.steps.length) {
+				so6.s.steps.forEach(function (q) { gs.appendChild(sv('polygon', { points: q.pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' '), class: 'agh-bld-tread', 'stroke-width': lw })); });
+				var f0 = so6.s.steps[0], fl = so6.s.steps[so6.s.steps.length - 1], cen = function (q) { var x = 0, y = 0; q.pts.forEach(function (p) { x += p[0] / q.pts.length; y += p[1] / q.pts.length; }); return [x, y]; };
+				var a0 = cen(f0), a1 = cen(fl); gs.appendChild(sv('path', { d: 'M' + a0[0] + ' ' + a0[1] + 'L' + a1[0] + ' ' + a1[1], class: 'agh-bld-stairarrow', 'stroke-width': 1.5 * lw }));
+				gs.appendChild(sv('circle', { cx: a0[0], cy: a0[1], r: 0.09, class: 'agh-bld-stairdot' }));
+			}
+			var lb6 = label(so6.s.foot.x + so6.s.foot.w / 2, so6.s.foot.y + so6.s.foot.d / 2, lw, { class: 'agh-bld-rlabel', 'font-size': 11, 'text-anchor': 'middle' });
+			var tl = sv('tspan', { x: 0, dy: 0 }); tl.textContent = so6.top ? t('b_stair_hole6') : t('b_stair'); lb6.t.appendChild(tl); gs.appendChild(lb6.g);
+			s.appendChild(gs);
 		}
 		// stair hole
 		if (b.slab.stair && b.levels.length > 1 && st.step >= 8) { var sh = b.slab.stair; s.appendChild(sv('rect', { x: sh.x, y: sh.y, width: sh.w, height: sh.d, class: 'agh-bld-stair', 'stroke-width': lw })); }
@@ -879,10 +907,10 @@
 				var hit = hitTest(p, 8 / k), now = Date.now(), lt = st.lastTap;
 				// a second tap on the same programme rectangle turns it by 90° (the plan is redrawn between the
 				// taps, so the browser's own dblclick does not reach it)
-				if (hit && hit.k === 'room' && lt && lt.id === hit.id && now - lt.t < 450 && Math.hypot(e.clientX - lt.x, e.clientY - lt.y) < 10) {
-					st.lastTap = null; st.sel = hit; progTurn(hit.id); renderPanel(); renderPlan(); return;
+				if (hit && (hit.k === 'room' || hit.k === 'stair') && lt && lt.id === hit.id && now - lt.t < 450 && Math.hypot(e.clientX - lt.x, e.clientY - lt.y) < 10) {
+					st.lastTap = null; st.sel = hit; if (hit.k === 'stair') { stairTurn(); } else { progTurn(hit.id); } renderPanel(); renderPlan(); return;
 				}
-				st.lastTap = hit && hit.k === 'room' ? { id: hit.id, t: now, x: e.clientX, y: e.clientY } : null;
+				st.lastTap = hit && (hit.k === 'room' || hit.k === 'stair') ? { id: hit.id, t: now, x: e.clientX, y: e.clientY } : null;
 				st.sel = hit; renderPanel(); renderPlan();
 				if (hit) { var o = find(hit); st.drag = { move: hit, p0: p, orig: JSON.parse(JSON.stringify(o)), snap: snapshot() }; }
 				else { st.drag = { pan: true, x: e.clientX, y: e.clientY, vb: Object.assign({}, st.vb) }; }
@@ -978,33 +1006,148 @@
 		var a = Math.max(1, area || 12), ww = Math.round(Math.sqrt(a * 1.25) * 10) / 10;
 		return [ww, r2(a / ww)];
 	}
-	// 'ok' (inside the house, on no other rectangle), 'out' or 'overlap'
-	function progState(b, r) {
-		var ol = B.outline(b);
-		if (!ol.closed) { return 'out'; }
-		var e = 0.01, pts = [[r.x + e, r.y + e], [r.x + r.w - e, r.y + e], [r.x + r.w - e, r.y + r.d - e], [r.x + e, r.y + r.d - e], [r.x + r.w / 2, r.y + r.d / 2]];
-		if (pts.some(function (q) { return !B._inPoly(ol.inner, Math.round(q[0] * 1000), Math.round(q[1] * 1000)); })) { return 'out'; }
-		var hit = (b.prog || []).some(function (q) { return q !== r && q.id !== r.id && q.lv === r.lv && r.x < q.x + q.w - e && r.x + r.w > q.x + e && r.y < q.y + q.d - e && r.y + r.d > q.y + e; });
-		return hit ? 'overlap' : 'ok';
+	// the outline of the outer walls, memoised (the programme asks for it thousands of times while placing)
+	// cheap checksums of the walls and of the stair: the memos below are keyed by them
+	function wallSig(b, extOnly) {
+		var h = b.walls.length * 7919;
+		b.walls.forEach(function (w, i) { if (extOnly && w.kind !== 'ext') { return; } h += (w.a[0] * 7 + w.a[1] * 13 + w.b[0] * 17 + w.b[1] * 19 + w.t * 23 + (w.kind === 'ext' ? 1 : w.kind === 'int' ? 2 : 3) * 29 + w.lv * 31) * (i + 1); });
+		return h;
 	}
-	// the inner faces of the walls of the level (axis-aligned), for snapping a rectangle's edges to them
-	function faceLines(lv) {
-		var xs = [], ys = [];
+	function stairSig(b) { var s = b.slab && b.slab.stair; return s ? [s.x, s.y, s.w, s.d, s.type, s.width, s.rot, b.levels.length, b.levels[0].h, b.slab.t].join('|') : 'none|' + b.levels.length; }
+	var MEMO = {};
+	function memo(name, key, fn) { var m = MEMO[name]; if (!m || m.k !== key) { m = MEMO[name] = { k: key, v: fn() }; } return m.v; }
+	function olOf(b) { return memo('ol', wallSig(b, true), function () { return B.outline(b); }); }
+	/* ------------------------------------------------------------------ the programme's geometry (1.21.0)
+	 * A programme rectangle is the room's net size between finished (plastered) faces. Between two rooms
+	 * there is a partition plus plaster on both sides (gap), against a kept wall only the plaster. Bearing
+	 * inner walls stay; the stair (footprint below, opening above) and its free landings are kept clear. */
+	function progCfg() {
+		var d = B.defaults().programme || {}, md = (B.defaults().model || {}).wall || {}, pt = num((md.part || {}).t, 0.1), p = num(d.plaster, 0.015);
+		return { p: p, pt: pt, gap: Math.round((pt + 2 * p) * 1000) / 1000, half: pt / 2 + p, stair: d.stair || { w: 1.1, d: 3.2 }, mins: d.rooms_min || {}, circ: d.circulation_pct || [8, 12], door: num(d.door_side_min, 1.1) };
+	}
+	var CIRC = { hall: 1, corridor: 1, stairs: 1, living: 1, living_kitchen: 1, dining: 1 };
+	function rr(x, y, w, d) { return { x: x, y: y, w: w, d: d }; }
+	function hitRect(a, b, m) { m = m || 0; return a.x < b.x + b.w + m - 0.004 && a.x + a.w > b.x - m + 0.004 && a.y < b.y + b.d + m - 0.004 && a.y + a.d > b.y - m + 0.004; }
+	// the stair's rectangles on a level: its footprint below the top level, its opening on the top level
+	function stairOn(b, lv) { return memo('so' + lv, stairSig(b), function () { return stairOn0(b, lv); }); }
+	function stairOn0(b, lv) {
+		var s = B.stairRects(b);
+		if (!s || b.levels.length < 2) { return null; }
+		var top = lv >= b.levels.length - 1, hole = s.hole, list = [];
+		if (top) {
+			// an L-shaped opening as two rectangles
+			if (s.holePoly && s.holePoly.length === 6) { var xs = s.holePoly.map(function (q) { return q[0]; }), ys = s.holePoly.map(function (q) { return q[1]; }); list = progPolyRects(s.holePoly, xs, ys); } else { list = [hole]; }
+		} else { list = [s.foot]; }
+		return { s: s, top: top, rects: list, zone: top ? s.top : s.bottom, zone2: top ? null : null };
+	}
+	function progPolyRects(poly) {
+		// an axis-aligned L hexagon → two rectangles (cut at the inner corner, horizontally)
+		var ys = poly.map(function (q) { return q[1]; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, c) { return a - c; }), out = [];
+		for (var i = 0; i + 1 < ys.length; i++) {
+			var ym = (ys[i] + ys[i + 1]) / 2, xs = [];
+			poly.forEach(function (p, k) { var q = poly[(k + 1) % poly.length]; if (p[0] === q[0] && (p[1] - ym) * (q[1] - ym) < 0) { xs.push(p[0]); } });
+			xs.sort(function (a, c) { return a - c; });
+			for (var j = 0; j + 1 < xs.length; j += 2) { out.push(rr(xs[j], ys[i], r2(xs[j + 1] - xs[j]), r2(ys[i + 1] - ys[i]))); }
+		}
+		return out;
+	}
+	// bearing inner walls and kept partitions of the level as rectangles (centre line ± t/2)
+	function wallRects(b, lv, kinds) { return memo('wr' + lv + kinds.join(), wallSig(b), function () { return wallRects0(b, lv, kinds); }); }
+	function wallRects0(b, lv, kinds) {
+		var out = [];
+		b.walls.forEach(function (w) {
+			if (kinds.indexOf(w.kind) === -1 || (w.kind !== 'ext' && w.lv !== lv)) { return; }
+			if (w.a[0] !== w.b[0] && w.a[1] !== w.b[1]) { return; }
+			var x0 = Math.min(w.a[0], w.b[0]) - w.t / 2, x1 = Math.max(w.a[0], w.b[0]) + w.t / 2, y0 = Math.min(w.a[1], w.b[1]) - w.t / 2, y1 = Math.max(w.a[1], w.b[1]) + w.t / 2;
+			out.push({ x: x0, y: y0, w: x1 - x0, d: y1 - y0, id: w.id, kind: w.kind });
+		});
+		return out;
+	}
+	// 'ok', 'out' (not inside the house), 'overlap' (on another room or too close), 'wall' (on a bearing
+	// wall), 'stair' (on the stair or its opening), 'landing' (blocks the free landing of the stair)
+	function progState(b, r) {
+		var C = progCfg(), ol = olOf(b);
+		if (!ol.closed) { return 'out'; }
+		var p = C.p, e = 0.004, x0 = r.x - p + e, x1 = r.x + r.w + p - e, y0 = r.y - p + e, y1 = r.y + r.d + p - e;
+		var pts = [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [(x0 + x1) / 2, y0], [(x0 + x1) / 2, y1], [x0, (y0 + y1) / 2], [x1, (y0 + y1) / 2], [(x0 + x1) / 2, (y0 + y1) / 2]];
+		if (pts.some(function (q) { return !B._inPoly(ol.inner, Math.round(q[0] * 1000), Math.round(q[1] * 1000)); })) { return 'out'; }
+		if ((b.prog || []).some(function (q) { return q !== r && q.id !== r.id && q.lv === r.lv && hitRect(r, q, C.gap); })) { return 'overlap'; }
+		if (wallRects(b, r.lv, ['int']).some(function (w) { return hitRect(r, w, p); })) { return 'wall'; }
+		if (partialSide(b, r, C)) { return 'partial'; }
+		var so = stairOn(b, r.lv);
+		if (so) {
+			if (so.rects.some(function (q) { return hitRect(r, q, so.top ? p : C.gap); })) { return 'stair'; }
+			if (so.zone && !CIRC[r.type] && hitRect(r, so.zone, 0)) { return 'landing'; }
+		}
+		return 'ok';
+	}
+	// A side lying partly against a kept wall (outer or bearing) and partly open: the partition along the open
+	// part would end in the wall's body without meeting its centre line, so the room would not close.
+	function partialSide(b, r, C) {
+		var ws = wallRects(b, r.lv, ['ext', 'int']);
+		var sides = [['v', r.x, -1, r.y, r.y + r.d], ['v', r.x + r.w, 1, r.y, r.y + r.d], ['h', r.y, -1, r.x, r.x + r.w], ['h', r.y + r.d, 1, r.x, r.x + r.w]];
+		return sides.some(function (sd) {
+			var cov = [], bad = false, line = sd[1] + sd[2] * C.half;
+			ws.forEach(function (w) {
+				var vert = w.d > w.w;
+				if ((sd[0] === 'v') !== vert) { return; }
+				var t = vert ? w.w : w.d, c = vert ? w.x + w.w / 2 : w.y + w.d / 2;
+				// the partition of this side would be cut by this wall (same reach as the drawing of the walls)
+				if (Math.abs(line - c) > t / 2 + C.pt + 0.02) { return; }
+				var a0 = vert ? w.y : w.x, a1 = vert ? w.y + w.d : w.x + w.w, o0 = Math.max(a0, sd[3]), o1 = Math.min(a1, sd[4]);
+				// the wall reaches only the partition's end beyond the corner: the partition would be cut short there
+				// and end in the air, so the room could not close
+				if (o1 <= o0) { if (Math.min(a1, sd[4] + C.half) > Math.max(a0, sd[3] - C.half) + 0.001) { bad = true; } return; }
+				cov.push([o0, o1]);
+				// then the side must lie on the wall's face (plus plaster), not a few cm off it
+				var face = c - sd[2] * t / 2, want = sd[1] + sd[2] * C.p;
+				if (Math.abs(face - want) > 0.02) { bad = true; }
+			});
+			if (bad) { return true; }
+			if (!cov.length) { return false; }
+			cov.sort(function (p2, q) { return p2[0] - q[0]; });
+			var tot = 0, end = -1e9;
+			cov.forEach(function (q) { var a2 = Math.max(q[0], end); if (q[1] > a2) { tot += q[1] - a2; } end = Math.max(end, q[1]); });
+			return tot < (sd[4] - sd[3]) - 0.005;
+		});
+	}
+	// is the stair itself in a good place: inside the house (footprint and opening on every level), off the
+	// bearing walls, its free landings inside the house too
+	function stairState(b) {
+		var s = B.stairRects(b);
+		if (!s || b.levels.length < 2) { return 'ok'; }
+		var ol = olOf(b), C = progCfg();
+		if (!ol.closed) { return 'out'; }
+		function inside(q, m) { var x0 = q.x - m, x1 = q.x + q.w + m, y0 = q.y - m, y1 = q.y + q.d + m; return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].every(function (k) { return B._inPoly(ol.inner, Math.round(k[0] * 1000), Math.round(k[1] * 1000)); }); }
+		if (!inside(rr(s.foot.x + 0.004, s.foot.y + 0.004, s.foot.w - 0.008, s.foot.d - 0.008), C.p)) { return 'out'; }
+		if (s.bottom && !inside(rr(s.bottom.x + 0.004, s.bottom.y + 0.004, s.bottom.w - 0.008, s.bottom.d - 0.008), 0)) { return 'landing'; }
+		if (s.top && s.calc && s.calc.type !== 'spiral' && !inside(rr(s.top.x + 0.004, s.top.y + 0.004, s.top.w - 0.008, s.top.d - 0.008), 0)) { return 'landing'; }
+		for (var lv = 0; lv < b.levels.length; lv++) {
+			var walls = wallRects(b, lv, ['int']), so = stairOn(b, lv);
+			if (so.rects.some(function (q) { return walls.some(function (w) { return hitRect(q, w, C.p); }); })) { return 'wall'; }
+		}
+		return s.calc && !s.calc.ok ? 'rules' : 'ok';
+	}
+	// the inner faces of the walls (+ plaster), the neighbours' edges (+ gap) and the stair: snapping lines
+	function faceLines(lv, skipId) {
+		var C = progCfg(), xs = [], ys = [];
 		st.b.walls.forEach(function (w) {
 			if (!(w.kind === 'ext' || w.lv === lv)) { return; }
-			if (w.a[0] === w.b[0]) { xs.push(w.a[0] - w.t / 2, w.a[0] + w.t / 2); }
-			else if (w.a[1] === w.b[1]) { ys.push(w.a[1] - w.t / 2, w.a[1] + w.t / 2); }
+			var m = w.t / 2 + C.p;
+			if (w.a[0] === w.b[0]) { xs.push(w.a[0] - m, w.a[0] + m); } else if (w.a[1] === w.b[1]) { ys.push(w.a[1] - m, w.a[1] + m); }
 		});
-		(st.b.prog || []).forEach(function (q) { if (q.lv === lv && (!st.drag || !st.drag.move || q.id !== st.drag.move.id)) { xs.push(q.x, q.x + q.w); ys.push(q.y, q.y + q.d); } });
+		(st.b.prog || []).forEach(function (q) { if (q.lv === lv && q.id !== skipId) { xs.push(q.x - C.gap, q.x + q.w + C.gap); ys.push(q.y - C.gap, q.y + q.d + C.gap); } });
+		var so = skipId === 'stair' ? null : stairOn(st.b, lv);
+		if (so) { so.rects.forEach(function (q) { xs.push(q.x - C.gap, q.x + q.w + C.gap); ys.push(q.y - C.gap, q.y + q.d + C.gap); }); }
 		return { xs: xs, ys: ys };
 	}
-	function progSnap(x, y, w, d) {
-		var L = faceLines(st.lv), tol = 0.25;
+	function progSnap(x, y, w, d, skipId) {
+		var L = faceLines(st.lv, skipId), tol = 0.25;
 		function near(v, list) { var best = null, bd = tol; list.forEach(function (c) { var dd = Math.abs(c - v); if (dd < bd) { bd = dd; best = c; } }); return best; }
 		var a = near(x, L.xs), b2 = near(x + w, L.xs), c = near(y, L.ys), e = near(y + d, L.ys);
 		if (a !== null && (b2 === null || Math.abs(a - x) <= Math.abs(b2 - x - w))) { x = a; } else if (b2 !== null) { x = b2 - w; }
 		if (c !== null && (e === null || Math.abs(c - y) <= Math.abs(e - y - d))) { y = c; } else if (e !== null) { y = e - d; }
-		return [x, y];
+		return [r2(x), r2(y)];
 	}
 	// new rectangles wait in a column to the right of the house
 	function progPark(b) {
@@ -1013,66 +1156,285 @@
 		(b.prog || []).forEach(function (r) { if (!r.placed && r.x >= x0 - 0.01) { y = Math.max(y, r.y + r.d + 0.5); } });
 		return [r2(x0), r2(y)];
 	}
-	// Automatic placement: rows inside the house's inner outline, the biggest rooms first.
+	// sizes a room of `area` can take: the asked one first, then the same area with other proportions,
+	// never narrower than the good-practice minimum of its type
+	function progShapes(r) {
+		var C = progCfg(), mn = C.mins[r.type] || [0, 0], side = Math.max(num(mn[1], 0), 0.9), A = r.w * r.d, out = [[r.w, r.d]];
+		if (!r.keepWD) {
+			for (var w = Math.max(side, 0.9); w * w <= A * 3 + 1e-6; w = r2(w + 0.1)) {
+				var d = r2(A / w);
+				if (d < side - 1e-6) { continue; }
+				out.push([r2(w), d], [d, r2(w)]);
+			}
+			// closest to the asked proportion first
+			var q0 = r.w / r.d;
+			out = [out[0]].concat(out.slice(1).sort(function (p, q) { return Math.abs(Math.log(p[0] / p[1] / q0)) - Math.abs(Math.log(q[0] / q[1] / q0)); }));
+		} else { out.push([r.d, r.w]); }
+		return out;
+	}
+	// The house's free space as a grid (5 cm): a cell is free where a room's net face may lie. A cell is
+	// blocked when any part of it touches a forbidden place (outside the house with the plaster, a bearing
+	// wall, the stair, another room with its gap), so a rectangle whose inner cells are all free may fit
+	// (the exact test decides) and one with a blocked inner cell never does.
+	function progGridBase(b, lv) {
+		return memo('gb' + lv, wallSig(b) + '|' + stairSig(b), function () {
+			var C = progCfg(), ol = olOf(b);
+			if (!ol.closed) { return null; }
+			var xs = ol.inner.map(function (q) { return q[0] / 1000; }), ys = ol.inner.map(function (q) { return q[1] / 1000; });
+			var cs = 0.05, X0 = Math.min.apply(null, xs), Y0 = Math.min.apply(null, ys), nx = Math.max(1, Math.ceil((Math.max.apply(null, xs) - X0) / cs - 1e-6)), ny = Math.max(1, Math.ceil((Math.max.apply(null, ys) - Y0) / cs - 1e-6));
+			var free = new Uint8Array(nx * ny), h = C.p;
+			for (var j = 0; j < ny; j++) {
+				for (var i = 0; i < nx; i++) {
+					var x0 = X0 + i * cs - h, y0 = Y0 + j * cs - h, x1 = X0 + (i + 1) * cs + h, y1 = Y0 + (j + 1) * cs + h;
+					free[j * nx + i] = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].every(function (k) { return B._inPoly(ol.inner, Math.round(k[0] * 1000), Math.round(k[1] * 1000)); }) ? 1 : 0;
+				}
+			}
+			var G = { X0: X0, Y0: Y0, cs: cs, nx: nx, ny: ny, free: free };
+			wallRects(b, lv, ['int']).forEach(function (w) { gridBlock(G, w, C.p); });
+			var so = stairOn(b, lv);
+			if (so) { so.rects.forEach(function (q) { gridBlock(G, q, so.top ? C.p : C.gap); }); }
+			return G;
+		});
+	}
+	function gridCopy(G) { return G ? { X0: G.X0, Y0: G.Y0, cs: G.cs, nx: G.nx, ny: G.ny, free: new Uint8Array(G.free) } : null; }
+	function gridBlock(G, q, m) {
+		var i0 = Math.max(0, Math.floor((q.x - m - G.X0) / G.cs + 1e-9)), i1 = Math.min(G.nx, Math.ceil((q.x + q.w + m - G.X0) / G.cs - 1e-9));
+		var j0 = Math.max(0, Math.floor((q.y - m - G.Y0) / G.cs + 1e-9)), j1 = Math.min(G.ny, Math.ceil((q.y + q.d + m - G.Y0) / G.cs - 1e-9));
+		for (var j = j0; j < j1; j++) { for (var i = i0; i < i1; i++) { G.free[j * G.nx + i] = 0; } }
+		G.S = null;
+	}
+	function gridSums(G) {
+		var W = G.nx + 1, S = new Int32Array(W * (G.ny + 1));
+		for (var j = 0; j < G.ny; j++) { for (var i = 0; i < G.nx; i++) { S[(j + 1) * W + i + 1] = (G.free[j * G.nx + i] ? 0 : 1) + S[j * W + i + 1] + S[(j + 1) * W + i] - S[j * W + i]; } }
+		G.S = S; G.W = W;
+	}
+	// may a rectangle lie here (its inner cells all free)?
+	function gridMay(G, x, y, w, d) {
+		if (x < G.X0 - 0.03 || y < G.Y0 - 0.03 || x + w > G.X0 + G.nx * G.cs + 0.03 || y + d > G.Y0 + G.ny * G.cs + 0.03) { return false; }
+		if (!G.S) { gridSums(G); }
+		var i0 = Math.max(0, Math.ceil((x - G.X0) / G.cs - 1e-6)), i1 = Math.min(G.nx, Math.floor((x + w - G.X0) / G.cs + 1e-6));
+		var j0 = Math.max(0, Math.ceil((y - G.Y0) / G.cs - 1e-6)), j1 = Math.min(G.ny, Math.floor((y + d - G.Y0) / G.cs + 1e-6));
+		if (i1 <= i0 || j1 <= j0) { return true; }
+		var S = G.S, W = G.W;
+		return S[j1 * W + i1] - S[j0 * W + i1] - S[j1 * W + i0] + S[j0 * W + i0] === 0;
+	}
+	function progGrid(b, lv, skipId, anyType) {
+		var G = gridCopy(progGridBase(b, lv)), C = progCfg();
+		if (!G) { return null; }
+		// for a room of any type the stair's free landing stays clear too
+		if (anyType) { var so = stairOn(b, lv); if (so && so.zone) { gridBlock(G, so.zone, 0); } }
+		(b.prog || []).forEach(function (q) { if (q.lv === lv && q.id !== skipId && q.x > -900 && progState(b, q) === 'ok') { gridBlock(G, q, C.gap); } });
+		return G;
+	}
+	// the largest free rectangle (histogram method); dims in metres, rounded down to the grid
+	function progLargest(G) {
+		if (!G) { return null; }
+		var hgt = new Int32Array(G.nx), best = { a: 0 };
+		for (var j = 0; j < G.ny; j++) {
+			for (var i = 0; i < G.nx; i++) { hgt[i] = G.free[j * G.nx + i] ? hgt[i] + 1 : 0; }
+			var stack = [];
+			for (var i2 = 0; i2 <= G.nx; i2++) {
+				var hh = i2 < G.nx ? hgt[i2] : 0, start = i2;
+				while (stack.length && stack[stack.length - 1][1] >= hh) {
+					var top = stack.pop(), a = top[1] * (i2 - top[0]);
+					if (a > best.a) { best = { a: a, i0: top[0], i1: i2, j1: j + 1, j0: j + 1 - top[1] }; }
+					start = top[0];
+				}
+				stack.push([start, hh]);
+			}
+		}
+		if (!best.a) { return null; }
+		return { x: G.X0 + best.i0 * G.cs, y: G.Y0 + best.j0 * G.cs, w: (best.i1 - best.i0) * G.cs, d: (best.j1 - best.j0) * G.cs };
+	}
+	// The largest room that really fits: the free cells' rectangle, its sides moved onto the nearby wall
+	// faces (+ plaster) and neighbour gaps – a room never leaves a few-cm slot to a wall – and checked exactly.
+	function progLargestFit(b, lv) {
+		var G = progGrid(b, lv, null, true), R = progLargest(G);
+		if (!R) { return null; }
+		var L = linesOf(b, lv, null), xs = L.xs.map(r2), ys = L.ys.map(r2);
+		function lo(v, list) { var best = null; list.forEach(function (c) { if (c <= v + 0.001 && v - c <= 0.4 && (best === null || c > best)) { best = c; } }); return best; }
+		function hi(v, list) { var best = null; list.forEach(function (c) { if (c >= v - 0.001 && c - v <= 0.4 && (best === null || c < best)) { best = c; } }); return best; }
+		var x0 = lo(R.x, xs), x1 = hi(R.x + R.w, xs), y0 = lo(R.y, ys), y1 = hi(R.y + R.d, ys);
+		// every side either on its line or just inside the free cells (rounded inwards), then 10 cm steps in
+		var ax = [x0, Math.ceil(R.x * 100 - 1e-6) / 100], bx = [x1, Math.floor((R.x + R.w) * 100 + 1e-6) / 100], ay = [y0, Math.ceil(R.y * 100 - 1e-6) / 100], by = [y1, Math.floor((R.y + R.d) * 100 + 1e-6) / 100], tries = [];
+		for (var k = 0; k <= 3; k++) {
+			ax.forEach(function (q0) { bx.forEach(function (q1) { ay.forEach(function (q2) { by.forEach(function (q3) {
+				if (q0 === null || q1 === null || q2 === null || q3 === null) { return; }
+				tries.push([r2(q0 + 0.1 * k * (q0 === ax[1] ? 1 : 0)), r2(q1 - 0.1 * k * (q1 === bx[1] ? 1 : 0)), r2(q2 + 0.1 * k * (q2 === ay[1] ? 1 : 0)), r2(q3 - 0.1 * k * (q3 === by[1] ? 1 : 0))]);
+			}); }); }); });
+		}
+		tries.sort(function (p2, q) { return (q[1] - q[0]) * (q[3] - q[2]) - (p2[1] - p2[0]) * (p2[3] - p2[2]); });
+		for (var i = 0; i < tries.length; i++) {
+			var t2 = tries[i], r = { id: '__free', type: 'office', lv: lv, x: t2[0], y: t2[2], w: r2(t2[1] - t2[0]), d: r2(t2[3] - t2[2]) };
+			if (r.w >= 0.8 && r.d >= 0.8 && progState(b, r) === 'ok') { return r; }
+			if (window.__pgdbg) { window.__pgdbg.push([r.x, r.y, r.w, r.d, progState(b, r)]); }
+		}
+		return null;
+	}
+	// Places the rectangles of a level: the stair first (when it has no good place yet), then the rooms,
+	// biggest first, each in the first free place (rows from the back), trying its other proportions.
+	// Returns the number that did not fit (they wait beside the house).
+	function progPlace(b, lv, ids) {
+		var C = progCfg(), ol = olOf(b);
+		if (!ol.closed) { return (b.prog || []).length; }
+		if (b.levels.length > 1 && b.slab.stair && b.slab.stair.type && stairState(b) !== 'ok') { stairPlace(b); }
+		var list = (b.prog || []).filter(function (r) { return r.lv === lv && (!ids || ids.indexOf(r.id) !== -1); }).sort(function (p, q) { return q.w * q.d - p.w * p.d; }), miss = 0;
+		list.forEach(function (r) { r.x = -999; r.y = -999; });
+		var G = progGrid(b, lv, null);
+		list.forEach(function (r) {
+			var shapes = progShapes(r), done = false, w0 = r.w, d0 = r.d;
+			for (var si = 0; si < shapes.length && !done; si++) {
+				r.w = shapes[si][0]; r.d = shapes[si][1];
+				var L = linesOf(b, lv, r.id), cx = cands(L.xs, r.w, L.x0, L.x1), cy = cands(L.ys, r.d, L.y0, L.y1);
+				for (var iy = 0; iy < cy.length && !done; iy++) {
+					for (var ix = 0; ix < cx.length && !done; ix++) {
+						if (!gridMay(G, cx[ix], cy[iy], r.w, r.d)) { continue; }
+						r.x = cx[ix]; r.y = cy[iy];
+						if (progState(b, r) === 'ok') { done = true; }
+					}
+				}
+			}
+			if (!done) { r.w = w0; r.d = d0; r.x = -999; r.y = -999; miss++; } else { gridBlock(G, r, C.gap); }
+			r.placed = done;
+		});
+		// the ones that did not fit wait beside the house
+		list.forEach(function (r) { if (!r.placed) { var pk = progPark(b); r.x = pk[0]; r.y = pk[1]; } });
+		return miss;
+	}
+	// candidate edges on one axis: the snapping lines (as a start, and as an end) and a 10 cm grid
+	function linesOf(b, lv, skipId) {
+		var C = progCfg(), ol = olOf(b), xs0 = ol.inner.map(function (q) { return q[0] / 1000; }), ys0 = ol.inner.map(function (q) { return q[1] / 1000; });
+		var xs = [], ys = [];
+		b.walls.forEach(function (w) {
+			if (!(w.kind === 'ext' || (w.lv === lv && w.kind === 'int'))) { return; }
+			var m = w.t / 2 + C.p;
+			if (w.a[0] === w.b[0]) { xs.push(w.a[0] - m, w.a[0] + m); } else if (w.a[1] === w.b[1]) { ys.push(w.a[1] - m, w.a[1] + m); }
+		});
+		(b.prog || []).forEach(function (q) { if (q.lv === lv && q.id !== skipId && q.x > -900) { xs.push(q.x - C.gap, q.x + q.w + C.gap); ys.push(q.y - C.gap, q.y + q.d + C.gap); } });
+		var so = stairOn(b, lv);
+		if (so) { so.rects.forEach(function (q) { var m2 = so.top ? C.p : C.gap; xs.push(q.x - m2, q.x + q.w + m2); ys.push(q.y - m2, q.y + q.d + m2); }); }
+		return { xs: xs, ys: ys, x0: Math.min.apply(null, xs0) + C.p, x1: Math.max.apply(null, xs0) - C.p, y0: Math.min.apply(null, ys0) + C.p, y1: Math.max.apply(null, ys0) - C.p };
+	}
+	function cands(lines, size, lo, hi) {
+		var out = [], v;
+		lines.forEach(function (e) { [e, e - size].forEach(function (q) { q = r2(q); if (q >= lo - 0.006 && q + size <= hi + 0.006) { out.push(q); } }); });
+		for (v = lo; v + size <= hi + 1e-6; v = r2(v + 0.1)) { out.push(r2(v)); }
+		return out.sort(function (a, c) { return a - c; }).filter(function (q, i, a) { return !i || q - a[i - 1] > 0.004; });
+	}
+	// The stair's place: along an outer wall, near the entrance, footprint, opening and landings inside the
+	// house and off the bearing walls; every quarter turn is tried.
+	function stairPlace(b) {
+		var s0 = b.slab.stair;
+		if (!s0 || !s0.type) { return false; }
+		var ol = olOf(b), C = progCfg();
+		if (!ol.closed) { return false; }
+		var xs0 = ol.inner.map(function (q) { return q[0] / 1000; }), ys0 = ol.inner.map(function (q) { return q[1] / 1000; });
+		var X0 = Math.min.apply(null, xs0) + C.p, X1 = Math.max.apply(null, xs0) - C.p, Y0 = Math.min.apply(null, ys0) + C.p, Y1 = Math.max.apply(null, ys0) - C.p;
+		var ent = b.openings.filter(function (o) { return o.type === 'entrance' && o.lv === 0; })[0], ew = ent ? b.walls.filter(function (w) { return w.id === ent.wall; })[0] : null, ex = (X0 + X1) / 2, ey = Y1;
+		if (ent && ew) { var L = Math.hypot(ew.b[0] - ew.a[0], ew.b[1] - ew.a[1]) || 1, u = ent.at + ent.w / 2; ex = ew.a[0] + (ew.b[0] - ew.a[0]) / L * u; ey = ew.a[1] + (ew.b[1] - ew.a[1]) / L * u; }
+		var keep = JSON.stringify(s0), list = [], best = null;
+		// every place and quarter turn, scored (near the entrance, its back to an outer wall), checked best first
+		[0, 90, 180, 270].forEach(function (rot) {
+			s0.rot = rot; syncStair(b);
+			var w = s0.w, d = s0.d;
+			for (var y = Y0; y + d <= Y1 + 1e-6; y = r2(y + 0.1)) {
+				for (var x = X0; x + w <= X1 + 1e-6; x = r2(x + 0.1)) {
+					var touch = Math.abs(x - X0) < 0.02 || Math.abs(x + w - X1) < 0.02 || Math.abs(y - Y0) < 0.02 || Math.abs(y + d - Y1) < 0.02;
+					list.push([Math.hypot(x + w / 2 - ex, y + d / 2 - ey) + (touch ? 0 : 3), r2(x), r2(y), rot]);
+				}
+			}
+		});
+		list.sort(function (p, q) { return p[0] - q[0]; });
+		for (var i = 0; i < list.length && i < 6000; i++) {
+			s0.rot = list[i][3]; syncStair(b); s0.x = list[i][1]; s0.y = list[i][2];
+			var ss = stairState(b);
+			if (ss === 'ok' || ss === 'rules') { best = { x: s0.x, y: s0.y, rot: s0.rot }; break; }
+		}
+		if (best) { s0.x = best.x; s0.y = best.y; s0.rot = best.rot; syncStair(b); return true; }
+		var k = JSON.parse(keep); s0.x = k.x; s0.y = k.y; s0.rot = k.rot; syncStair(b);
+		return false;
+	}
+	// a designed stair keeps its footprint (w × d) in step with its calculation and quarter turn
+	function syncStair(b) {
+		var s = b.slab && b.slab.stair;
+		if (!s || !s.type || b.levels.length < 2) { return; }
+		var c = B.stairCalc(b, s.type, s.width);
+		if (!c) { return; }
+		var rot = s.rot || 0;
+		s.w = r2(rot % 180 ? c.d : c.w); s.d = r2(rot % 180 ? c.w : c.d);
+	}
+	// The area balance of a level (m²): from the gross footprint to what is left for the next room.
+	function progBudget(b, lv, rows) {
+		var C = progCfg(), ol = olOf(b);
+		if (!ol.closed) { return null; }
+		var Ain = Math.abs(B._area2(ol.inner)) / 2e6, Aout = Math.abs(B._area2(ol.outer)) / 2e6, per = 0;
+		ol.inner.forEach(function (p, i) { var q = ol.inner[(i + 1) % ol.inner.length]; per += Math.hypot(q[0] - p[0], q[1] - p[1]) / 1000; });
+		var out = { gross: Aout, ext: Aout - Ain, inner: Ain, plaster: per * C.p, stair: 0, stairEst: false, kept: 0, parts: 0, partsEst: false, net: 0, rows: [] };
+		// the stair: footprint below the top level, the opening on the top level
+		if (b.levels.length > 1) {
+			var so = stairOn(b, lv);
+			if (so) { out.stair = so.top ? so.s.holeArea : so.s.foot.w * so.s.foot.d; } else { out.stair = num(C.stair.w, 1.1) * num(C.stair.d, 3.2); out.stairEst = true; }
+		}
+		// placed rooms: which of their sides face a kept (outer / bearing) wall – there only plaster
+		var list = rows || (b.prog || []).filter(function (r) { return r.lv === lv; });
+		var touching = function (w) { return list.some(function (r) { return r.placed !== false && r.x > -900 && hitRect(rr(Math.min(w.a[0], w.b[0]), Math.min(w.a[1], w.b[1]), Math.abs(w.b[0] - w.a[0]), Math.abs(w.b[1] - w.a[1])), r, w.t / 2 + C.pt + 0.05); }); };
+		b.walls.forEach(function (w) {
+			if (w.kind === 'ext' || w.lv !== lv) { return; }
+			if (w.kind === 'part' && touching(w)) { return; }
+			out.kept += Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) * (w.t + 2 * C.p);
+		});
+		list.forEach(function (r) {
+			var A = r.w * r.d, sides = [[r.x, r.y, r.w, 0], [r.x, r.y + r.d, r.w, 0], [r.x, r.y, 0, r.d], [r.x + r.w, r.y, 0, r.d]], share = 0, est = !(r.placed && r.x > -900);
+			sides.forEach(function (sd) {
+				var len = sd[2] || sd[3];
+				if (!est) {
+					// a side against an outer or bearing wall (within plaster + 2 cm) needs no partition
+					var m = C.p + 0.02, line = rr(sd[0] - (sd[2] ? 0 : m), sd[1] - (sd[3] ? 0 : m), sd[2] || 2 * m, sd[3] || 2 * m);
+					if (wallRects(b, lv, ['ext', 'int']).some(function (w) { return hitRect(line, w, 0); })) { return; }
+				}
+				share += len * C.half;
+			});
+			if (est) { out.partsEst = true; }
+			out.parts += share; out.net += A;
+			out.rows.push({ id: r.id, area: A, share: share });
+		});
+		out.avail = out.inner - out.plaster - out.stair - out.kept - out.parts;
+		out.rest = out.avail - out.net;
+		// the next room: its own partitions come off too (a square room of area a takes 4·√a·half)
+		var m2 = C.half, q = Math.max(0, out.rest);
+		out.next = q > 0 ? Math.pow((-4 * m2 + Math.sqrt(16 * m2 * m2 + 4 * q)) / 2, 2) : 0;
+		Object.keys(out).forEach(function (k) { if (typeof out[k] === 'number') { out[k] = Math.round(out[k] * 100) / 100; } });
+		return out;
+	}
+	// good practice per room type: { area, side } minimums, or null
+	function progMin(type) { var mn = progCfg().mins[type]; return mn ? { area: num(mn[0], 0), side: num(mn[1], 0) } : null; }
 	function progAuto() {
 		var miss = 0;
-		change(function (b) {
-			var ol = B.outline(b), lv = st.lv;
-			if (!ol.closed) { miss = (b.prog || []).length; return; }
-			var xs = ol.inner.map(function (q) { return q[0] / 1000; }), ys = ol.inner.map(function (q) { return q[1] / 1000; });
-			var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
-			var list = (b.prog || []).filter(function (r) { return r.lv === lv; }).sort(function (p, q) { return q.w * q.d - p.w * p.d; });
-			list.forEach(function (r) { r.x = -999; });
-			// candidate places: a 10 cm grid plus the edges of the rooms already placed (so neighbours share
-			// an edge exactly and one partition goes between them, never two a few cm apart)
-			function cands(lo, hi, size, edges) {
-				var out = [], v;
-				for (v = lo; v + size <= hi + 1e-6; v = r2(v + 0.1)) { out.push(r2(v)); }
-				edges.forEach(function (e) { [e, e - size].forEach(function (q) { q = r2(q); if (q >= lo - 1e-6 && q + size <= hi + 1e-6) { out.push(q); } }); });
-				return out.sort(function (a, c) { return a - c; }).filter(function (q, i, a) { return !i || q - a[i - 1] > 0.004; });
-			}
-			list.forEach(function (r) {
-				var done = false, placed = list.filter(function (q) { return q !== r && q.x > -900; });
-				var ex = [x0, x1].concat(placed.map(function (q) { return q.x; }), placed.map(function (q) { return q.x + q.w; })), ey = [y0, y1].concat(placed.map(function (q) { return q.y; }), placed.map(function (q) { return q.y + q.d; }));
-				for (var pass = 0; pass < 2 && !done; pass++) {
-					if (pass) { var w0 = r.w; r.w = r.d; r.d = w0; }
-					var cy = cands(y0, y1, r.d, ey), cx = cands(x0, x1, r.w, ex);
-					for (var iy = 0; iy < cy.length && !done; iy++) {
-						for (var ix = 0; ix < cx.length && !done; ix++) {
-							r.x = cx[ix]; r.y = cy[iy];
-							if (progState(b, r) === 'ok') { done = true; }
-						}
-					}
-					if (!done && pass) { var w1 = r.w; r.w = r.d; r.d = w1; }
-				}
-				if (!done) { var pk = progPark(b); r.x = pk[0]; r.y = pk[1]; miss++; }
-			});
-		});
+		change(function (b) { miss = progPlace(b, st.lv); });
 		if (miss && A.toast) { A.toast(tf('b_prog_nofit', miss), 'warn'); }
 	}
-	// Partitions along the edges of the placed rectangles: collinear edges are joined, the parts where a
-	// wall already stands (within its thickness) are left out, the ends reach the wall they touch.
+	// Partitions round the placed rooms: each wall in the middle of the gap between two rooms (partition +
+	// plaster on both sides), collinear pieces joined, none where a kept wall already stands, the ends
+	// reaching the wall they meet. Earlier partitions (not bearing walls) through or along a room go.
 	function progWalls() {
-		var made = 0;
+		var made = 0, C = progCfg();
 		change(function (b) {
-			var lv = st.lv, md = (B.defaults().model || {}).wall || {}, pt = (md.part || {}).t || 0.1, pm = (md.part || {}).mat;
+			var lv = st.lv, md = (B.defaults().model || {}).wall || {}, pt = C.pt, pm = (md.part || {}).mat, m = C.half;
 			var rs = (b.prog || []).filter(function (r) { return r.lv === lv && progState(b, r) === 'ok'; });
 			if (!rs.length) { return; }
-			// the programme draws the partitions of the rooms it covers: earlier partitions of this level that run
-			// through or along a placed room go (with their doors), so no old wall splits a room or leaves a gap
-			var inner = function (w) {
-				if (w.kind === 'ext' || w.lv !== lv) { return false; }
-				var m = w.t / 2 + pt + 0.05;
-				return rs.some(function (r) {
-					var ax = Math.min(w.a[0], w.b[0]), bx2 = Math.max(w.a[0], w.b[0]), ay = Math.min(w.a[1], w.b[1]), by = Math.max(w.a[1], w.b[1]);
-					return bx2 > r.x - m && ax < r.x + r.w + m && by > r.y - m && ay < r.y + r.d + m;
-				});
-			};
-			var gone = b.walls.filter(inner).map(function (w) { return w.id; });
+			var gone = b.walls.filter(function (w) {
+				if (w.kind !== 'part' || w.lv !== lv) { return false; }
+				var mm = w.t / 2 + pt + 0.05, ax = Math.min(w.a[0], w.b[0]), bx2 = Math.max(w.a[0], w.b[0]), ay = Math.min(w.a[1], w.b[1]), by = Math.max(w.a[1], w.b[1]);
+				return rs.some(function (r) { return bx2 > r.x - mm && ax < r.x + r.w + mm && by > r.y - mm && ay < r.y + r.d + mm; });
+			}).map(function (w) { return w.id; });
 			if (gone.length) { b.walls = b.walls.filter(function (w) { return gone.indexOf(w.id) === -1; }); b.openings = b.openings.filter(function (o) { return gone.indexOf(o.wall) === -1; }); }
 			var lines = {};
-			function addSeg(dir, c, s0, s1) { var k = dir + ':' + r2(c).toFixed(2); (lines[k] = lines[k] || { dir: dir, c: r2(c), iv: [] }).iv.push([s0, s1]); }
-			rs.forEach(function (r) { addSeg('h', r.y, r.x, r.x + r.w); addSeg('h', r.y + r.d, r.x, r.x + r.w); addSeg('v', r.x, r.y, r.y + r.d); addSeg('v', r.x + r.w, r.y, r.y + r.d); });
+			var mmR = function (v) { return Math.round(v * 1000) / 1000; };
+			function addSeg(dir, c, s0, s1) { c = r2(mmR(c)); var k = dir + ':' + c.toFixed(2); (lines[k] = lines[k] || { dir: dir, c: c, iv: [] }).iv.push([mmR(s0), mmR(s1)]); }
+			rs.forEach(function (r) {
+				addSeg('h', r.y - m, r.x - m, r.x + r.w + m); addSeg('h', r.y + r.d + m, r.x - m, r.x + r.w + m);
+				addSeg('v', r.x - m, r.y - m, r.y + r.d + m); addSeg('v', r.x + r.w + m, r.y - m, r.y + r.d + m);
+			});
 			var walls = b.walls.filter(function (w) { return w.kind === 'ext' || w.lv === lv; });
 			function union(iv) { iv.sort(function (p, q) { return p[0] - q[0]; }); var out = []; iv.forEach(function (q) { var l = out[out.length - 1]; if (l && q[0] <= l[1] + 0.02) { l[1] = Math.max(l[1], q[1]); } else { out.push(q.slice()); } }); return out; }
 			function minus(iv, cut) { var out = []; iv.forEach(function (q) { var parts = [q.slice()]; cut.forEach(function (c) { parts = parts.reduce(function (acc, p) { if (c[1] <= p[0] || c[0] >= p[1]) { acc.push(p); return acc; } if (c[0] > p[0]) { acc.push([p[0], c[0]]); } if (c[1] < p[1]) { acc.push([c[1], p[1]]); } return acc; }, []); }); out = out.concat(parts); }); return out; }
@@ -1086,13 +1448,10 @@
 				});
 				minus(union(L.iv), cut).forEach(function (q) {
 					if (q[1] - q[0] < 0.3) { return; }
-					// the ends: onto the centre line of the wall they reach
 					[0, 1].forEach(function (e) {
 						var v = q[e];
 						walls.concat(newW).forEach(function (w) {
-							var hz = w.a[1] === w.b[1];
-							// a rectangle a few cm short of a wall still closes against it (same reach as the cut above)
-							var reach = w.t / 2 + pt + 0.03;
+							var hz = w.a[1] === w.b[1], reach = w.t / 2 + pt + 0.03;
 							if (L.dir === 'h' && !hz && w.a[0] === w.b[0] && Math.abs(w.a[0] - v) <= reach && L.c >= Math.min(w.a[1], w.b[1]) - 0.01 && L.c <= Math.max(w.a[1], w.b[1]) + 0.01) { q[e] = w.a[0]; }
 							if (L.dir === 'v' && hz && Math.abs(w.a[1] - v) <= reach && L.c >= Math.min(w.a[0], w.b[0]) - 0.01 && L.c <= Math.max(w.a[0], w.b[0]) + 0.01) { q[e] = w.a[1]; }
 						});
@@ -1105,15 +1464,70 @@
 			});
 			b.walls = b.walls.concat(newW);
 			made = newW.length;
-			// the rooms that come out take the chosen types (the rectangle holding their middle)
+			// each rectangle names the room that holds its middle (the room's own polygon decides)
 			var rooms = B.rooms(B.normalize(b), lv);
-			rooms.forEach(function (rm) {
-				var cx = rm.cx / 1000, cy = rm.cy / 1000, own = rs.filter(function (r) { return cx > r.x && cx < r.x + r.w && cy > r.y && cy < r.y + r.d; })[0];
-				if (own) { b.rooms[rm.key] = own.type === 'other' ? 'living' : own.type; }
+			rs.forEach(function (r) {
+				var mx = Math.round((r.x + r.w / 2) * 1000), my = Math.round((r.y + r.d / 2) * 1000);
+				var rm = rooms.filter(function (q) { return B._inPoly(q.net, mx, my); }).sort(function (p, q) { return p.area - q.area; })[0];
+				if (rm) { b.rooms[rm.key] = r.type === 'other' ? 'living' : r.type; }
 			});
 		});
 		if (A.toast) { A.toast(tf('b_prog_walls_done', made), 'ok'); }
 	}
+	// The balance as a small table: from the gross footprint to what is left (the dialog and step 6)
+	function budgetBox(bud, free) {
+		if (!bud) { return el('p', { class: 'agh-bld-note is-warn', text: t('b_prog_no_outline') }); }
+		var row = function (label, v, cls) { return el('div', { class: 'agh-bld-budrow' + (cls ? ' ' + cls : '') }, [el('span', { text: label }), el('b', { text: v })]); };
+		var minus = function (v) { return '− ' + fmt(v, 2) + ' m²'; };
+		var kids = [
+			row(t('b_prog_gross'), fmt(bud.gross, 2) + ' m²'),
+			row(t('b_prog_extwalls'), minus(bud.ext)),
+			row(tf('b_prog_plaster', fmt(progCfg().p * 100, 1)), minus(bud.plaster))
+		];
+		if (bud.stair) { kids.push(row(t(bud.stairEst ? 'b_prog_stair_est' : 'b_prog_stair'), minus(bud.stair), bud.stairEst ? 'is-est' : '')); }
+		if (bud.kept) { kids.push(row(t('b_prog_walls_kept'), minus(bud.kept))); }
+		kids.push(row(t(bud.partsEst ? 'b_prog_parts_est' : 'b_prog_parts'), minus(bud.parts), bud.partsEst ? 'is-est' : ''));
+		kids.push(row(t('b_prog_avail'), fmt(bud.avail, 2) + ' m²', 'is-sum'));
+		kids.push(row(t('b_prog_sum'), minus(bud.net)));
+		kids.push(row(t('b_prog_rest'), fmt(bud.rest, 2) + ' m²', 'is-sum' + (bud.rest < -0.005 ? ' is-bad' : ' is-ok')));
+		if (bud.rest < -0.005) { kids.push(el('p', { class: 'agh-bld-note is-warn', text: tf('b_prog_over', fmt(-bud.rest, 2)) })); }
+		else { kids.push(el('p', { class: 'agh-bld-note', text: tf('b_prog_next', fmt(bud.next, 1)) })); }
+		if (free) { kids.push(el('p', { class: 'agh-bld-note agh-bld-progfree', 'data-w': String(free.w), 'data-d': String(free.d), text: tf('b_prog_free', fmt(free.w, 2), fmt(free.d, 2)) })); }
+		kids.push(el('p', { class: 'agh-bld-note is-small', text: t('b_prog_net_note') }));
+		return el('div', { class: 'agh-bld-budget', 'data-avail': String(bud.avail), 'data-net': String(bud.net), 'data-rest': String(bud.rest) }, kids);
+	}
+	// The stair (multi-level houses): type, flight width, the sizes worked out from the storey height, its state
+	function stairBox() {
+		var b = st.b;
+		if (b.levels.length < 2) { return null; }
+		var s = b.slab.stair, type = s && s.type ? s.type : null, kids = [];
+		var pills = el('div', { class: 'agh-bld-pills' }, B.stairTypes.map(function (ty) {
+			return el('button', { type: 'button', class: 'agh-pill agh-bld-pill agh-bld-stairtype' + (ty === type ? ' is-on' : ''), 'data-type': ty, 'aria-pressed': ty === type ? 'true' : 'false', onclick: function () {
+				change(function (b2) {
+					var cur = b2.slab.stair, olx = olOf(b2), bb = olx.closed ? bbox(olx.inner) : { x0: 0, y0: 0 };
+					b2.slab.stair = { x: cur ? cur.x : r2(bb.x0 / 1000 + 0.3), y: cur ? cur.y : r2(bb.y0 / 1000 + 0.3), w: 1, d: 3, type: ty, width: cur && cur.width ? cur.width : 1.0, rot: cur && cur.rot ? cur.rot : 0 };
+					syncStair(b2);
+					if (stairState(b2) !== 'ok' && stairState(b2) !== 'rules') { stairPlace(b2); }
+				});
+			} }, t('b_stair_' + ty));
+		}));
+		kids.push(pills);
+		if (type) {
+			var c = B.stairCalc(b, type, s.width), ss = stairState(b);
+			kids.push(el('div', { class: 'agh-bld-grid2' }, [
+				field(t('b_stair_width'), numIn('slab.stair.width', { min: 0.6, max: 2, step: 0.05, set: function (v) { change(function (b2) { b2.slab.stair.width = r2(Math.max(0.6, Math.min(2, v))); syncStair(b2); }); } }), 'm'),
+				field(t('b_stair_rot'), el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-bld-stairrot', onclick: function () { stairTurn(); } }, [A.icon('refresh', 'agh-ico-s'), (s.rot || 0) + '°']))
+			]));
+			kids.push(el('p', { class: 'agh-bld-note agh-bld-stairspec', text: tf('b_stair_spec', c.n, fmt(c.rise * 100, 1), fmt(c.going * 100, 0), fmt(c.blondel * 100, 1)) }));
+			var sr = B.stairRects(b);
+			kids.push(el('p', { class: 'agh-bld-note is-small', text: tf('b_stair_size', fmt(sr.foot.w, 2), fmt(sr.foot.d, 2), fmt(sr.holeArea, 2), fmt(c.headroom, 2)) }));
+			Object.keys(c.checks).forEach(function (k) { if (!c.checks[k]) { kids.push(el('p', { class: 'agh-bld-note is-warn', text: t('b_stair_bad_' + k) })); } });
+			if (ss !== 'ok' && ss !== 'rules') { kids.push(el('p', { class: 'agh-bld-note is-warn agh-bld-stairstate', text: t('b_stair_state_' + ss) })); }
+			kids.push(el('div', { class: 'agh-bld-row' }, [el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-bld-stairauto', onclick: function () { var okp = false; change(function (b2) { okp = stairPlace(b2); }); if (!okp && A.toast) { A.toast(t('b_stair_nofit'), 'warn'); } } }, [A.icon('fit', 'agh-ico-s'), t('b_stair_place')])]));
+		} else { kids.push(el('p', { class: 'agh-bld-note', text: t('b_stair_pick') })); }
+		return group(t('b_stair'), kids, 'agh-bld-stairbox');
+	}
+	function stairTurn() { change(function (b) { var s = b.slab.stair; if (!s || !s.type) { return; } var c = B.stairRects(b), cx = c.foot.x + c.foot.w / 2, cy = c.foot.y + c.foot.d / 2; s.rot = ((s.rot || 0) + 90) % 360; syncStair(b); s.x = r2(cx - s.w / 2); s.y = r2(cy - s.d / 2); }); }
 	function programBox() {
 		var list = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }), ok = list.filter(function (r) { return progState(st.b, r) === 'ok'; }).length;
 		var kids = [el('div', { class: 'agh-bld-row' }, [el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-primary agh-bld-progbtn', onclick: progDialog }, [A.icon('plus', 'agh-ico-s'), t('b_prog_open')])])];
@@ -1126,56 +1540,95 @@
 			]));
 			kids.push(el('p', { class: 'agh-bld-note is-small', text: t('b_prog_hint') }));
 		}
+		var placed = list.length && ok === list.length;
+		kids.push(budgetBox(progBudget(st.b, st.lv), placed || !list.length ? progLargestFit(st.b, st.lv) : null));
 		return group(t('b_prog'), kids);
 	}
-	// The dialog: room pills to add, then one row per room (name, area, optional width × depth).
+	// The dialog: room pills to add, then one row per room (name, area, optional width × depth), the area
+	// balance live above the list, and per room where and how it fits (worked out on a copy of the plan).
 	function progDialog() {
 		var old = D.root.querySelector('.agh-bld-modal');
 		if (old) { old.remove(); }
-		var rows = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }).map(function (r) { return { id: r.id, type: r.type, name: r.name, area: r.area, w: r.w, d: r.d, x: r.x, y: r.y, keepWD: true }; });
-		var list = el('div', { class: 'agh-bld-proglist' });
+		var rows = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }).map(function (r) { return { id: r.id, type: r.type, name: r.name, area: r.area, w: r.w, d: r.d, x: r.x, y: r.y, keepWD: true, placed: r.placed }; });
+		var list = el('div', { class: 'agh-bld-proglist' }), budget = el('div', { class: 'agh-bld-progbudget' }), fitAt = {};
+		// a trial run on a copy: the rows as rectangles, placed like the automatic placement does
+		function trial() {
+			var b = JSON.parse(JSON.stringify(st.b)), lv = st.lv, ids = [];
+			b.prog = (b.prog || []).filter(function (r) { return r.lv !== lv; });
+			rows.forEach(function (r, i) {
+				var dims = r.keepWD ? [r.w, r.d] : progDims(r.area), id = r.id || ('t' + i);
+				b.prog.push({ id: id, type: r.type, name: r.name, area: r2(dims[0] * dims[1]), w: dims[0], d: dims[1], x: r.x || 0, y: r.y || 0, lv: lv, keepWD: !!r.keepWD, placed: false });
+				ids.push(id);
+			});
+			// rows already placed keep their place when still good; the others are placed now
+			var keep = b.prog.filter(function (r) { return r.lv === lv && rows.some(function (q) { return q.id === r.id && q.placed && q.keepWD; }) && progState(b, r) === 'ok'; }).map(function (r) { return r.id; });
+			progPlace(b, lv, ids.filter(function (id) { return keep.indexOf(id) === -1; }));
+			keep.forEach(function (id) { b.prog.forEach(function (r) { if (r.id === id) { r.placed = true; } }); });
+			fitAt = {};
+			b.prog.forEach(function (r, i) { if (r.lv === lv) { fitAt[r.id] = r; } });
+			return { b: b, ids: ids };
+		}
 		function draw() {
+			var T = trial();
+			budget.innerHTML = '';
+			var bud = progBudget(T.b, st.lv), all = T.ids.every(function (id) { return fitAt[id] && fitAt[id].placed; });
+			budget.appendChild(budgetBox(bud, all ? progLargestFit(T.b, st.lv) : null));
 			list.innerHTML = '';
 			if (!rows.length) { list.appendChild(el('p', { class: 'agh-bld-note', text: t('b_prog_empty') })); return; }
+			if (rows.length >= 3 && !rows.some(function (r) { return r.type === 'hall' || r.type === 'corridor'; }) && bud) {
+				var C = progCfg();
+				list.appendChild(el('p', { class: 'agh-bld-note is-small', text: tf('b_prog_circ', C.circ[0] + '–' + C.circ[1], fmt(bud.avail * C.circ[0] / 100, 1)) }));
+			}
 			rows.forEach(function (r, i) {
+				var id = T.ids[i], f = fitAt[id], mn = progMin(r.type), ra = r.keepWD ? r.w * r.d : r.area;
 				var nm = el('input', { type: 'text', class: 'agh-input', value: r.name || progName(r.type), maxlength: '40', 'aria-label': t('b_prog_name') });
 				nm.addEventListener('input', function () { r.name = nm.value; });
 				var ar = el('input', { type: 'number', class: 'agh-input agh-bld-num', value: String(r.area), min: '1', max: '500', step: '0.5', inputmode: 'decimal', 'aria-label': t('b_prog_area') });
 				var ww = el('input', { type: 'number', class: 'agh-input agh-bld-num', value: r.keepWD ? String(r.w) : '', min: '0.8', max: '30', step: '0.1', inputmode: 'decimal', placeholder: '–', 'aria-label': t('b_w') });
 				var dd = el('input', { type: 'number', class: 'agh-input agh-bld-num', value: r.keepWD ? String(r.d) : '', min: '0.8', max: '30', step: '0.1', inputmode: 'decimal', placeholder: '–', 'aria-label': t('b_d') });
-				ar.addEventListener('input', function () { r.area = num(ar.value, r.area); r.keepWD = false; ww.value = ''; dd.value = ''; });
-				var wd = function () { var w = num(ww.value, 0), d = num(dd.value, 0); if (w > 0.7 && d > 0.7) { r.w = w; r.d = d; r.area = r2(w * d); ar.value = String(r.area); r.keepWD = true; } };
-				ww.addEventListener('input', wd); dd.addEventListener('input', wd);
-				list.appendChild(el('div', { class: 'agh-bld-progrow', 'data-type': r.type }, [
+				ar.addEventListener('change', function () { r.area = num(ar.value, r.area); r.keepWD = false; r.placed = false; draw(); });
+				var wd = function () { var w = num(ww.value, 0), d = num(dd.value, 0); if (w > 0.7 && d > 0.7) { r.w = w; r.d = d; r.area = r2(w * d); r.keepWD = true; r.placed = false; draw(); } };
+				ww.addEventListener('change', wd); dd.addEventListener('change', wd);
+				var fit = f && f.placed ? el('span', { class: 'agh-bld-progfit is-ok', text: tf('b_prog_fits', fmt(f.w, 2), fmt(f.d, 2)) }) : el('span', { class: 'agh-bld-progfit is-bad', text: t('b_prog_nofit_row') });
+				var warn = mn && (ra < mn.area - 0.01 || Math.min(f ? f.w : 99, f ? f.d : 99) < mn.side - 0.01) ? el('span', { class: 'agh-bld-progfit is-warn', text: tf('b_prog_min', progName(r.type), fmt(mn.area, 1), fmt(mn.side, 2)) }) : null;
+				list.appendChild(el('div', { class: 'agh-bld-progrow' + (f && f.placed ? '' : ' is-bad'), 'data-type': r.type, 'data-fit': f && f.placed ? '1' : '0' }, [
 					el('div', { class: 'agh-bld-progname' }, [nm]),
 					el('label', { class: 'agh-bld-progarea' }, [ar, el('span', { text: 'm²' })]),
 					el('div', { class: 'agh-bld-progwd', title: t('b_prog_wd') }, [ww, el('span', { text: '×' }), dd, el('span', { text: 'm' })]),
-					el('button', { type: 'button', class: 'agh-iconbtn', title: t('b_prog_remove'), 'aria-label': t('b_prog_remove'), onclick: function () { rows.splice(i, 1); draw(); } }, A.icon('trash'))
+					el('button', { type: 'button', class: 'agh-iconbtn', title: t('b_prog_remove'), 'aria-label': t('b_prog_remove'), onclick: function () { rows.splice(i, 1); draw(); } }, A.icon('trash')),
+					el('div', { class: 'agh-bld-progfits' }, [fit, warn])
 				]));
 			});
 		}
-		var defaults = { living_kitchen: 40, living: 28, kitchen: 12, dining: 14, master: 16, bedroom: 12, kids: 11, guest: 11, bathroom: 7, wc: 2, hall: 8, office: 10, laundry: 5, wardrobe: 5, pantry: 3 };
+		var defaults = { living_kitchen: 40, living: 28, kitchen: 12, dining: 14, master: 16, bedroom: 12, kids: 11, guest: 11, bathroom: 7, wc: 2, hall: 8, office: 10, laundry: 5, wardrobe: 5, pantry: 3, corridor: 6, technical: 5, utility: 5 };
 		var pills = el('div', { class: 'agh-bld-pills' }, A.roomTypes().map(function (o) {
 			return el('button', { type: 'button', class: 'agh-pill agh-bld-pill', 'data-type': o[0], onclick: function () { rows.push({ type: o[0], name: o[1], area: defaults[o[0]] || 12 }); draw(); list.lastChild && list.lastChild.scrollIntoView && list.lastChild.scrollIntoView({ block: 'nearest' }); } }, o[1]);
 		}).concat([el('button', { type: 'button', class: 'agh-pill agh-bld-pill is-custom', 'data-type': 'other', onclick: function () { rows.push({ type: 'other', name: t('b_prog_custom'), area: 10 }); draw(); } }, [A.icon('plus', 'agh-ico-s'), t('b_prog_custom')])]));
 		var close = function () { modal.remove(); };
+		// Done: the rows become rectangles placed in the base where they fit (the trial's places and sizes),
+		// the others wait beside the house
 		var done = function () {
+			var T = trial(), miss = 0;
 			change(function (b) {
-				var keep = rows.map(function (r) { return r.id; });
-				b.prog = (b.prog || []).filter(function (r) { return r.lv !== st.lv || keep.indexOf(r.id) !== -1; });
-				rows.forEach(function (r) {
-					var dims = r.keepWD ? [r.w, r.d] : progDims(r.area), cur = r.id ? b.prog.filter(function (q) { return q.id === r.id; })[0] : null;
-					if (cur) { cur.name = r.name; cur.type = r.type; cur.area = r2(dims[0] * dims[1]); if (!r.keepWD || cur.w !== dims[0] || cur.d !== dims[1]) { cur.w = dims[0]; cur.d = dims[1]; } return; }
-					var pk = progPark(b);
-					b.prog.push({ id: B.nextId(b.prog, 'r'), type: r.type, name: r.name, area: r2(dims[0] * dims[1]), w: dims[0], d: dims[1], x: pk[0], y: pk[1], lv: st.lv, placed: false });
+				var lv = st.lv;
+				b.prog = (b.prog || []).filter(function (r) { return r.lv !== lv; });
+				rows.forEach(function (r, i) {
+					var f = fitAt[T.ids[i]], id = r.id || B.nextId(b.prog, 'r');
+					if (f && f.placed) { b.prog.push({ id: id, type: r.type, name: r.name, area: r2(f.w * f.d), w: f.w, d: f.d, x: f.x, y: f.y, lv: lv, placed: true }); return; }
+					var dims = r.keepWD ? [r.w, r.d] : progDims(r.area), pk = progPark(b);
+					b.prog.push({ id: id, type: r.type, name: r.name, area: r2(dims[0] * dims[1]), w: dims[0], d: dims[1], x: pk[0], y: pk[1], lv: lv, placed: false });
+					miss++;
 				});
+				if (T.b.slab.stair && b.slab.stair) { b.slab.stair = T.b.slab.stair; }
 			});
 			close(); fitView(); renderPlan();
+			if (miss && A.toast) { A.toast(tf('b_prog_nofit', miss), 'warn'); }
 		};
 		var modal = el('div', { class: 'agh-bld-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('b_prog') }, [
 			el('div', { class: 'agh-bld-modal-box' }, [
 				el('div', { class: 'agh-bld-modal-head' }, [el('h3', { class: 'agh-bld-h', text: t('b_prog_title') }), el('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('b_prog_done'), title: t('b_prog_done'), onclick: close }, A.icon('close'))]),
 				el('p', { class: 'agh-bld-note', text: t('b_prog_lead') }),
+				budget,
 				el('p', { class: 'agh-bld-note is-small', text: t('b_prog_add_hint') }),
 				pills, list,
 				el('div', { class: 'agh-bld-modal-foot' }, [el('button', { type: 'button', class: 'agh-btn agh-btn-primary agh-bld-progdone', onclick: done }, t('b_prog_done'))])
@@ -1192,8 +1645,14 @@
 	function moveSel(p) {
 		var o = find(st.drag.move), dx = p[0] - st.drag.p0[0], dy = p[1] - st.drag.p0[1], g = B.defaults().grid || 0.1;
 		if (!o) { return false; }
+		if (st.drag.move.k === 'stair') {
+			var sx = Math.round((st.drag.orig.x + dx) / g) * g, sy = Math.round((st.drag.orig.y + dy) / g) * g, sn2 = progSnap(sx, sy, o.w, o.d, 'stair');
+			o.x = r2(sn2[0]); o.y = r2(sn2[1]);
+			st.drag.moved = true;
+			return true;
+		}
 		if (st.drag.move.k === 'room') {
-			var rx = Math.round((st.drag.orig.x + dx) / g) * g, ry = Math.round((st.drag.orig.y + dy) / g) * g, sn = progSnap(rx, ry, o.w, o.d);
+			var rx = Math.round((st.drag.orig.x + dx) / g) * g, ry = Math.round((st.drag.orig.y + dy) / g) * g, sn = progSnap(rx, ry, o.w, o.d, o.id);
 			o.x = r2(sn[0]); o.y = r2(sn[1]);
 			st.drag.moved = true;
 			return true;
@@ -1218,6 +1677,7 @@
 		if (!dir) { return false; }
 		change(function (b) {
 			if (st.sel.k === 'room') { var rr = (b.prog || []).filter(function (q) { return q.id === o.id; })[0]; if (rr) { rr.x = r2(rr.x + dir[0] * d); rr.y = r2(rr.y + dir[1] * d); } return; }
+			if (st.sel.k === 'stair') { if (b.slab.stair) { b.slab.stair.x = r2(b.slab.stair.x + dir[0] * d); b.slab.stair.y = r2(b.slab.stair.y + dir[1] * d); } return; }
 			if (st.sel.k === 'wall') {
 				var w = b.walls.filter(function (q) { return q.id === o.id; })[0], dx = dir[0] * d, dy = dir[1] * d;
 				if (w.a[1] === w.b[1]) { dx = 0; } else if (w.a[0] === w.b[0]) { dy = 0; }
@@ -1333,8 +1793,8 @@
 		var o = find(st.sel);
 		D.selBar.hidden = !o;
 		if (!o) { return; }
-		var name = st.sel.k === 'wall' ? t('b_kind_' + o.kind) : (st.sel.k === 'room' ? (o.name || progName(o.type)) + ' · ' + fmt(o.w * o.d, 1) + ' m²' : t('b_op_' + o.type));
-		D.selBar.appendChild(el('span', { class: 'agh-bld-selname', text: st.sel.k === 'room' ? name : name + ' · ' + o.id }));
+		var name = st.sel.k === 'stair' ? t('b_stair') + (o.type ? ' · ' + t('b_stair_' + o.type) : '') + ' · ' + fmt(o.w, 2) + ' × ' + fmt(o.d, 2) + ' m' : (st.sel.k === 'wall' ? t('b_kind_' + o.kind) : (st.sel.k === 'room' ? (o.name || progName(o.type)) + ' · ' + fmt(o.w * o.d, 1) + ' m²' : t('b_op_' + o.type)));
+		D.selBar.appendChild(el('span', { class: 'agh-bld-selname', text: st.sel.k === 'room' || st.sel.k === 'stair' ? name : name + ' · ' + o.id }));
 		D.selBar.appendChild(el('button', { type: 'button', class: 'agh-iconbtn agh-bld-seldel', title: t('b_delete') + ' (Del)', 'aria-label': t('b_delete') }, A.icon('trash')));
 		D.selBar.lastChild.addEventListener('click', function () { delSel(); });
 		mark3D();
@@ -1343,6 +1803,7 @@
 		var lv = st.lv, best = null;
 		(st.step === 6 ? st.b.prog || [] : []).forEach(function (r) { if (r.lv === lv && p[0] >= r.x && p[0] <= r.x + r.w && p[1] >= r.y && p[1] <= r.y + r.d) { best = { k: 'room', id: r.id }; } });
 		if (best) { return best; }
+		if (st.step === 6 && st.b.slab.stair && st.b.levels.length > 1) { var so = stairOn(st.b, lv); if (so && so.rects.some(function (q) { return p[0] >= q.x && p[0] <= q.x + q.w && p[1] >= q.y && p[1] <= q.y + q.d; })) { return { k: 'stair', id: 'stair' }; } }
 		st.b.openings.forEach(function (o) {
 			if (o.lv !== lv || best) { return; }
 			var w = st.b.walls.filter(function (q) { return q.id === o.wall; })[0];
@@ -1360,6 +1821,8 @@
 		var tag = (e.target && e.target.tagName) || '', typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag);
 		if (e.key === 'Escape') {
 			if (document.querySelector('.agh-dialog-wrap')) { return false; }
+			var md = D.root && D.root.querySelector('.agh-bld-modal');
+			if (md) { md.remove(); e.preventDefault(); return true; }
 			if (st.draw) { st.draw = null; renderPlan(); e.preventDefault(); return true; }
 			if (st.sel) { st.sel = null; renderPanel(); renderPlan(); renderSelBar(); e.preventDefault(); return true; }
 			return false; // the designer leaves the full screen (and never closes itself in build mode)
@@ -1374,5 +1837,5 @@
 
 	// load a whole drawing (a saved one, a template or a test house) as one undoable change
 	function load(b) { change(function () { st.b = B.normalize(b); }); st.sel = null; fitView(); renderAll(); }
-	root.AGH_BuildUI = { version: '1.0.0', open: open, close: close, onKey: onKey, load: load, state: function () { return st; }, pick3D: function (ray) { return st ? rayPick(ray) : null; }, goStep: function (i) { goStep(i); }, closeStep: function () { closeStep(); }, setView: function (v) { setView(v); }, setPhase: function (p) { setPhase(p); } };
+	root.AGH_BuildUI = { version: '1.0.0', open: open, close: close, onKey: onKey, load: load, state: function () { return st; }, pick3D: function (ray) { return st ? rayPick(ray) : null; }, _prog: { budget: function (lv) { return progBudget(st.b, lv === undefined ? st.lv : lv); }, state: function (r) { return progState(st.b, r); }, stairState: function () { return stairState(st.b); }, largest: function (lv) { return progLargestFit(st.b, lv === undefined ? st.lv : lv); }, cfg: progCfg, raw: function (lv) { return progLargest(progGrid(st.b, lv || 0, null, true)); } }, goStep: function (i) { goStep(i); }, closeStep: function () { closeStep(); }, setView: function (v) { setView(v); }, setPhase: function (p) { setPhase(p); } };
 }(window));

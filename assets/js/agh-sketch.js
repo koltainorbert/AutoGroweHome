@@ -546,6 +546,56 @@
 		if (out.playground && out.playground.moved) { out.flats.forEach(function (fl) { if (fl.kind === 'sand') { fl.x0 = out.playground.x0; fl.x1 = out.playground.x1; fl.y0 = out.playground.y0; fl.y1 = out.playground.y1; } }); }
 		return out;
 	}
+	/* ------------------------------------------------------------------ where the accent material goes (1.21.0)
+	 * `accent_layout`: "<volume>:<face>:<zone>" → index into facade_accent (−1: none on purpose). A face with
+	 * any key of its own shows exactly those zones; the other faces keep the automatic placement. Zones:
+	 * wall (the whole face), upper (the floors above the ground floor), gable, plinth, door (the entrance bay).
+	 * `g`: the face in its own coordinates – len, h (wall top), plinth, FH, top (gable outline), door. */
+	var ACC_KEY = /^\d{1,2}:(front|right|back|left):(wall|upper|gable|plinth|door)$/, ACC_ZONES = ['wall', 'upper', 'gable', 'plinth', 'door'];
+	function accLay(c) { var v = c && c.accent_layout; return v && typeof v === 'object' && !Array.isArray(v) ? v : null; }
+	function accentVol(c, v) { var L = accLay(c), p = (v.vi || 0) + ':'; return !!L && Object.keys(L).some(function (k) { return k.indexOf(p) === 0 && ACC_KEY.test(k); }); }
+	function accentZones(c, v, face, g) {
+		var L = accLay(c), acc = c.facade_accent || [], p = (v.vi || 0) + ':' + face + ':', out = [], any = false;
+		if (!L) { return null; }
+		ACC_ZONES.forEach(function (z) {
+			if (!Object.prototype.hasOwnProperty.call(L, p + z)) { return; }
+			any = true;
+			var i = Math.round(num(L[p + z], -1)), mat = i >= 0 ? acc[i] : null, h = g.h, b0 = g.z0 || 0, poly = null;
+			if (!mat) { return; }
+			if (z === 'wall') { poly = [[0, b0], [g.len, b0], [g.len, h], [0, h]]; }
+			else if (z === 'upper') { var y0 = Math.max(b0, g.plinth + g.FH); if (y0 < h - 0.3) { poly = [[0, y0], [g.len, y0], [g.len, h], [0, h]]; } }
+			else if (z === 'gable') { if (g.top && g.top.length) { poly = [[0, h], [g.len, h]].concat(g.top); } }
+			else if (z === 'plinth') { if (b0 > 0.05) { return; } var ph = Math.min(h, Math.max(g.plinth + 0.35, 0.6)); poly = [[0, 0], [g.len, 0], [g.len, ph], [0, ph]]; }
+			else if (g.door) { var x0 = Math.max(0, g.door.x - 0.75), x1 = Math.min(g.len, g.door.x + g.door.w + 0.75); poly = [[x0, b0], [x1, b0], [x1, h], [x0, h]]; }
+			if (poly) { out.push({ zone: z, mat: mat, poly: poly }); }
+		});
+		return any ? out : null;
+	}
+	/* ------------------------------------------------------------------ where the accent material goes (1.21.0)
+	 * `accent_layout`: "<volume>:<face>:<zone>" → index into facade_accent (−1: none on purpose). A face with
+	 * any key of its own shows exactly those zones; the other faces keep the automatic placement. Zones:
+	 * wall (the whole face), upper (the floors above the ground floor), gable, plinth, door (the entrance bay).
+	 * `g`: the face in its own coordinates – len, h (wall top), plinth, FH, top (gable outline), door. */
+	var ACC_KEY = /^\d{1,2}:(front|right|back|left):(wall|upper|gable|plinth|door)$/, ACC_ZONES = ['wall', 'upper', 'gable', 'plinth', 'door'];
+	function accLay(c) { var v = c && c.accent_layout; return v && typeof v === 'object' && !Array.isArray(v) ? v : null; }
+	function accentVol(c, v) { var L = accLay(c), p = (v.vi || 0) + ':'; return !!L && Object.keys(L).some(function (k) { return k.indexOf(p) === 0 && ACC_KEY.test(k); }); }
+	function accentZones(c, v, face, g) {
+		var L = accLay(c), acc = c.facade_accent || [], p = (v.vi || 0) + ':' + face + ':', out = [], any = false;
+		if (!L) { return null; }
+		ACC_ZONES.forEach(function (z) {
+			if (!Object.prototype.hasOwnProperty.call(L, p + z)) { return; }
+			any = true;
+			var i = Math.round(num(L[p + z], -1)), mat = i >= 0 ? acc[i] : null, h = g.h, poly = null;
+			if (!mat) { return; }
+			if (z === 'wall') { poly = [[0, 0], [g.len, 0], [g.len, h], [0, h]]; }
+			else if (z === 'upper') { var y0 = g.plinth + g.FH; if (y0 < h - 0.3) { poly = [[0, y0], [g.len, y0], [g.len, h], [0, h]]; } }
+			else if (z === 'gable') { if (g.top && g.top.length) { poly = [[0, h], [g.len, h]].concat(g.top); } }
+			else if (z === 'plinth') { var ph = Math.min(h, Math.max(g.plinth + 0.35, 0.6)); poly = [[0, 0], [g.len, 0], [g.len, ph], [0, ph]]; }
+			else if (g.door) { var x0 = Math.max(0, g.door.x - 0.75), x1 = Math.min(g.len, g.door.x + g.door.w + 0.75); poly = [[x0, 0], [x1, 0], [x1, h], [x0, h]]; }
+			if (poly) { out.push({ zone: z, mat: mat, poly: poly }); }
+		});
+		return any ? out : null;
+	}
 	// A moved opening: the visitor's x along the wall, kept inside the face.
 	function openingAt(c, key, x, w, len) {
 		var o = siteGet(c, key);
@@ -1010,7 +1060,7 @@
 		var c = sc.c, mat = c.facade_main || 'render';
 		var acc = c.facade_accent || [];
 		// Accent material on the secondary volume (wing / garage side) or on the gable.
-		if (acc.length && (v.wing || v.second) && face === 'front') { mat = acc[0]; }
+		if (acc.length && (v.wing || v.second) && face === 'front' && !accentVol(c, v)) { mat = acc[0]; }
 		if (acc.length && mat === acc[0] && mat !== c.facade_main) { return accentFill(sc, mat); }
 		if (mat === 'render') { return sc.mat({ fine: 'renderfine', coarse: 'rendercoarse' }[c.facade_texture || 'fine'] || 'render', col(c.facade_color, '#F2EFE9')); }
 		return sc.mat(mat, facadeBase(c, mat));
@@ -1080,7 +1130,10 @@
 			}
 			var inner = '', st = styleOf(c), acc = c.facade_accent || [], main = v.main;
 			var fcol = col(c.facade_color, '#F2EFE9');
-			// accent zones: 1st = entrance bay, 2nd = gable (or the front part of the side wall), 3rd = side wall ground floor
+			// accent zones: 1st = entrance bay, 2nd = gable (or the front part of the side wall), 3rd = side wall ground floor;
+			// zones the visitor marked on this face (1.21.0) replace them
+			var ez = accentZones(c, v, F.name, { len: F.len, h: v.h, plinth: pl.plinth, FH: pl.FH, top: top, door: F.name === 'front' ? fp.door : null });
+			if (ez) { ez.forEach(function (z) { inner += '<polygon points="' + pts(z.poly) + '" fill="' + accentFill(sc, z.mat) + '"/>'; }); acc = []; }
 			if (F.name === 'front' && acc[0] && fp.door && (main || v.risalit)) {
 				var dp = fp.door;
 				inner += '<rect x="' + f(Math.max(0, dp.x - 0.75)) + '" y="0" width="' + f(Math.min(F.len, dp.w + 1.5)) + '" height="' + f(v.h) + '" fill="' + accentFill(sc, acc[0]) + '"/>';
@@ -2392,7 +2445,7 @@
 		// shared with the 3D preview (assets/js/agh-3d.js): same plan, volumes and roof geometry
 		_volumes: volumes, _style: styleOf, _door: doorPos, _win: windowSpec, _fenceSegs: fenceSegs, _facadeBase: facadeBase, _roof: roofFor,
 		_shutter: shutterColor, _roofLayout: roofLayout, _solar: solarSpec, _solarFaces: solarFaces, _balconies: balconies, _balcMark: balcMark, _vehicles: vehicleList, _roomsOf: roomsOf, _roomItems: roomItems, _mainRoom: mainRoom, _balconyType: balconyType, _chimney: chimneySpec, _ridge: ridgeSpec, _pool: poolRect,
-		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _vehSize: function (t) { return VEH[t] || VEH.sedan; }, _site: siteGet, _siteKey: SITE_KEY, _turnRect: turnRect, _openingAt: openingAt, _chimneyAt: chimneyAt, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
+		_vtype: vtype, _vplan: vplan, _round: roundR, _front: frontPlan, _siteBox: siteBox, _entrance: entranceAt, _terrace: terraceRect, _avoid: siteAvoid, _siteEdge: siteEdge, _plot: plotRect, _garden: gardenLayout, _accentZones: accentZones, _accentVol: accentVol, _accKey: ACC_KEY, _vehSize: function (t) { return VEH[t] || VEH.sedan; }, _site: siteGet, _siteKey: SITE_KEY, _turnRect: turnRect, _openingAt: openingAt, _chimneyAt: chimneyAt, _trim: trimColor, _interior: INTERIOR, _roundPts: roundPts, massing: MASSING };
 	root.AGH_Sketch = api;
 	if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
 }(typeof window !== 'undefined' ? window : this));

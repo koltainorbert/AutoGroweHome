@@ -342,6 +342,14 @@ final class Build {
 				'w' => self::r2( self::clamp( self::num( self::at( $st, 'w' ), 1.0 ), 0.6, 6 ) ),
 				'd' => self::r2( self::clamp( self::num( self::at( $st, 'd' ), 3.0 ), 0.6, 8 ) ),
 			);
+			// 1.21.0: a designed stair (port of the JS normalize)
+			$stype = self::at( $st, 'type' );
+			if ( is_string( $stype ) && in_array( $stype, array( 'straight', 'l', 'u', 'spiral' ), true ) ) {
+				$rot                             = self::js_round( (float) self::num( self::at( $st, 'rot' ), 0.0 ) );
+				$o['slab']['stair']['type']  = $stype;
+				$o['slab']['stair']['width'] = self::r2( self::clamp( self::num( self::at( $st, 'width' ), 1.0 ), 0.6, 2 ) );
+				$o['slab']['stair']['rot']   = in_array( (int) $rot, array( 0, 90, 180, 270 ), true ) ? (int) $rot : 0;
+			}
 		}
 		// done: also accepted as a list (an object with keys "0", "1" … decoded by PHP)
 		$done = self::at( $b, 'done' );
@@ -967,7 +975,18 @@ final class Build {
 			$out[] = array( 'lv' => $lv, 'key' => $key, 'poly' => $mg[0], 'net' => $net, 'area' => max( 0, self::area2( $net ) / 2 ), 'gross' => $a, 'bbox' => self::bbox_of( $net ), 'cx' => $cx, 'cy' => $cy, 'type' => (string) ( $rooms[ $key ] ?? '' ) );
 		}
 		// 1.16.3, same as agh-build.js roomsOf(): a face loses the rooms that lie inside it (direct children)
-		$inside = static fn( array $o, array $r ): bool => $o['key'] !== $r['key'] && $o['gross'] < $r['gross'] && self::in_poly( $r['poly'], (float) $o['cx'], (float) $o['cy'] );
+		// 1.21.0: every corner of the smaller room in (or on the edge of) the bigger one, as in agh-build.js
+		$inside = static function ( array $o, array $r ): bool {
+			if ( $o['key'] === $r['key'] || $o['gross'] >= $r['gross'] || ! self::in_poly( $r['poly'], (float) $o['cx'], (float) $o['cy'] ) ) {
+				return false;
+			}
+			foreach ( $o['poly'] as $q ) {
+				if ( ! self::in_poly( $r['poly'], (float) $q[0], (float) $q[1] ) && ! self::on_boundary( $r['poly'], (float) $q[0], (float) $q[1] ) ) {
+					return false;
+				}
+			}
+			return true;
+		};
 		$minus  = array();
 		foreach ( $out as $i => $r ) {
 			$m = 0.0;

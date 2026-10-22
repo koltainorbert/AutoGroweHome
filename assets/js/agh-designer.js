@@ -100,6 +100,7 @@
 		plus: '<path d="M12 5v14M5 12h14"/>',
 		restart: '<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4.5v4h4"/>',
 		trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+		brush: '<path d="M14.5 4.5l5 5-7.5 7.5h-5v-5z"/><path d="M4 20c1.5 0 3-1 3-3"/>',
 		chev: '<path d="M9 6l6 6-6 6"/>',
 		left: '<path d="M15 6l-6 6 6 6"/>',
 		grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
@@ -1019,7 +1020,8 @@
 	}
 	function undoSite() {
 		if (!siteUndo.length) { return; }
-		setSite(siteUndo.pop());
+		var last = siteUndo.pop();
+		if (last && last.__acc) { setAccent(last.v); } else { setSite(last); }
 		renderPreviewOnly();
 		toast(t('layout_undone'), 'ok', 1400);
 	}
@@ -1030,6 +1032,33 @@
 		setSite({});
 		renderPreviewOnly();
 		toast(t('site_reset_done'), 'ok', 1600);
+	}
+	/* ---------------------------------------------------------------- where the accent material goes (1.21.0)
+	 * „Díszítőanyag helye” switches the outside view to a paint mode: a tap on a wall puts the first accent
+	 * material on that zone (whole wall, upper floors, gable, plinth, entrance bay), the next tap the next
+	 * material, then none. Kept in `accent_layout`; Ctrl+Z takes back the last tap. */
+	S.paint = false;
+	function accAll() { var v = S.config.accent_layout; return v && typeof v === 'object' && !Array.isArray(v) ? clone(v) : {}; }
+	function setAccent(all) { S.config.accent_layout = all; S.explicit.accent_layout = true; S.dirty = true; persist(); renderSummary(); }
+	function zoneName(hit) { return t('face_' + hit.face) + (hit.vi > 0 ? ' (' + t('face_wing') + ')' : '') + ' · ' + t('zone_' + hit.zone); }
+	function paintAt(hit) {
+		var acc = S.config.facade_accent || [];
+		if (!acc.length) { toast(t('paint_no_accent'), 'warn', 2600); return; }
+		var all = accAll(), cur = all[hit.key], n = acc.length, nx;
+		if (cur === undefined || cur === null) { nx = 0; } else if (cur >= 0 && cur < n - 1) { nx = cur + 1; } else if (cur === n - 1) { nx = -1; } else { nx = 0; }
+		siteUndo.push({ __acc: true, v: accAll() });
+		if (siteUndo.length > 30) { siteUndo.shift(); }
+		all[hit.key] = nx;
+		setAccent(all);
+		renderPreviewOnly();
+		toast(nx >= 0 ? tf('paint_set', zoneName(hit), optLabel(S.fields.facade_accent || {}, acc[nx])) : tf('paint_cleared', zoneName(hit)), 'ok', 1600);
+	}
+	function paintTools() {
+		var on = !!S.paint, has = Object.keys(accAll()).length > 0;
+		return h('div', { class: 'agh-3d-paint' + (on ? ' is-on' : ''), role: 'group', 'aria-label': t('paint_mode') },
+			h('button', { type: 'button', class: 'agh-3d-paintbtn', 'aria-pressed': on ? 'true' : 'false', title: t('paint_mode'), onclick: function () { S.paint = !S.paint; var v = A3 && A3.viewer(); if (v) { v.paint = S.paint; if (!S.paint) { v.paintMark(null); } } renderPreviewOnly(); } }, icon('brush', 'agh-ico-s'), h('span', { text: t('paint_mode') })),
+			on && has ? h('button', { type: 'button', class: 'agh-3d-laybtn agh-3d-paintreset', title: t('paint_reset'), 'aria-label': t('paint_reset'), onclick: function () { siteUndo.push({ __acc: true, v: accAll() }); setAccent({}); renderPreviewOnly(); } }, icon('refresh', 'agh-ico-s')) : null,
+			on ? h('span', { class: 'agh-3d-painthint', text: t('paint_hint') }) : null);
 	}
 	// While a piece is held or selected: a short line in the view says whether the place is good.
 	function moveState(st, slot, dragging) {
@@ -1744,9 +1773,9 @@
 		if (A3) {
 			// keep the live 3D canvas, replace everything else
 			Array.prototype.slice.call(box.children).forEach(function (ch) { if (!ch.classList.contains('agh-3d')) { box.removeChild(ch); } });
-			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); var vw = A3.viewer(); vw.onPick = jumpToField; vw.onLayout = saveLayout; vw.onGrab = grabNote; vw.onSite = saveSite; vw.onMoveState = moveState; vw.place = S.boot.place || null; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
+			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); var vw = A3.viewer(); vw.onPick = jumpToField; vw.onLayout = saveLayout; vw.onGrab = grabNote; vw.onSite = saveSite; vw.onMoveState = moveState; vw.place = S.boot.place || null; vw.onPaint = paintAt; vw.paint = S.view !== 'int' && !!S.paint; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
 			if (A3 && S.view === 'int') { box.appendChild(roomChips()); box.appendChild(layoutTools()); }
-			else if (A3) { box.appendChild(siteTools()); }
+			else if (A3) { box.appendChild(siteTools()); if ((S.config.facade_accent || []).length || S.paint) { box.appendChild(paintTools()); } }
 			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), S.view === 'int' ? h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }) : h('span', { class: 'agh-3d-hint', title: t('site_hint'), text: t('site_hint_short') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
 		} else if (A3wait) {
 			clear(box);

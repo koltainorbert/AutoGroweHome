@@ -10594,3 +10594,259 @@ msgstr "Au fost desenați %s pereți despărțitori noi."
 #: includes/Frontend/Strings.php
 msgid "Koppints egy helyiségre a hozzáadáshoz:"
 msgstr "Atinge o încăpere pentru a o adăuga:"
+
+#: includes/Params/Definitions.php
+msgid "A díszítőanyag helye"
+msgstr "Locul materialului decorativ"
+
+#: includes/Params/Definitions.php
+msgid "A 3D nézetben a falra kattintva kijelölt helyek, ahová a kiegészítő anyag kerül."
+msgstr "Locurile marcate atingând peretele în vizualizarea 3D, unde merge materialul decorativ."
+
+#: includes/Frontend/Strings.php
+msgid "Díszítőanyag helye"
+msgstr "Plasează materialul decorativ"
+
+#: includes/Frontend/Strings.php
+msgid "Kattints a ház falára: oda kerül a kiegészítő anyag. Újra kattintva a következő anyag, végül egyik sem."
+msgstr "Atinge un perete al casei: acolo merge materialul decorativ. Atinge din nou pentru următorul, la final niciunul."
+
+#: includes/Frontend/Strings.php
+msgid "Előbb válassz kiegészítő anyagot (Homlokzat → Kiegészítő anyagok)."
+msgstr "Alege mai întâi un material decorativ (Fațadă → Materiale complementare)."
+
+#: includes/Frontend/Strings.php
+msgid "%1$s: %2$s"
+msgstr "%1$s: %2$s"
+
+#: includes/Frontend/Strings.php
+msgid "%s: nincs díszítőanyag"
+msgstr "%s: fără material decorativ"
+
+#: includes/Frontend/Strings.php
+msgid "Díszítőanyagok helyének visszaállítása"
+msgstr "Resetează locul materialelor decorative"
+
+#: includes/Frontend/Strings.php
+msgid "elöl"
+msgstr "în față"
+
+#: includes/Frontend/Strings.php
+msgid "hátul"
+msgstr "în spate"
+
+#: includes/Frontend/Strings.php
+msgid "bal oldal"
+msgstr "partea stângă"
+
+#: includes/Frontend/Strings.php
+msgid "jobb oldal"
+msgstr "partea dreaptă"
+
+#: includes/Frontend/Strings.php
+msgid "szárny"
+msgstr "aripă"
+
+#: includes/Frontend/Strings.php
+msgid "teljes fal"
+msgstr "peretele întreg"
+
+#: includes/Frontend/Strings.php
+msgid "emeleti sáv"
+msgstr "etaj"
+
+#: includes/Frontend/Strings.php
+msgid "oromzat"
+msgstr "fronton"
+
+#: includes/Frontend/Strings.php
+msgid "lábazat"
+msgstr "soclu"
+
+#: includes/Frontend/Strings.php
+msgid "bejárat környéke"
+msgstr "zona intrării"
+
+#: includes/Frontend/Strings.php
+msgid "Előbb zárd körbe a házat a főfalakkal – a területmérleg a belső körvonalból számol."
+msgstr "Mai întâi închide casa cu pereții principali – bilanțul suprafețelor pornește de la conturul interior."
+
+#: includes/Frontend/Strings.php
+msgid "Bruttó alapterület (külső méret)"
+msgstr "Suprafață brută (dimensiuni exterioare)"
+
+#: includes/Frontend/Strings.php
+msgid "Külső falak"
+msgstr "Pereți exteriori"
+
+#: includes/Frontend/Strings.php
+msgid "Belső vakolat a külső falon (%s cm)"
+msgstr "Tencuială interioară pe pereții exteriori (%s cm)"
+
+#: includes/Frontend/Strings.php
+msgid "Lépcső (becslés, még nincs megtervezve)"
+msgstr "Scară (estimare, încă neproiectată)"
+
+#: includes/Frontend/Strings.php
+msgid "Megmaradó belső falak (vakolattal)"
+msgstr "Pereți interiori păstrați (cu tencuială)"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak a helyiségek között (vakolattal)"
+msgstr "Pereți despărțitori între încăperi (cu tencuială)"
+
+#: includes/Frontend/Strings.php
+msgid "Válaszfalak (becslés, amíg nincs elhelyezve)"
+msgstr "Pereți despărțitori (estimare până la amplasare)"
+
+#: includes/Frontend/Strings.php
+msgid "Kiosztható nettó terület"
+msgstr "Suprafață netă de împărțit"
+
+#: includes/Frontend/Strings.php
+msgid "A programban"
+msgstr "În program"
+
+#: includes/Frontend/Strings.php
+msgid "Még kiosztható"
+msgstr "Încă de împărțit"
+
+#: includes/Frontend/Strings.php
+msgid "Túllépés: %s m² – a falakkal együtt nem fér el."
+msgstr "Depășire: %s m² – împreună cu pereții nu încape."
+
+#: includes/Frontend/Strings.php
+msgid "Még egy helyiség (a saját falaival): legfeljebb kb. %s m²."
+msgstr "Încă o încăpere (cu pereții ei): cel mult circa %s m²."
+
+#: includes/Frontend/Strings.php
+msgid "Legnagyobb szabad hely a házban: %1$s × %2$s m."
+msgstr "Cel mai mare spațiu liber din casă: %1$s × %2$s m."
+
+#: includes/Frontend/Strings.php
+msgid "A m² a kész, vakolt falsíkok között mért nettó terület. Az ajtónyílás a nettó területet nem változtatja."
+msgstr "m² este suprafața netă măsurată între fețele finite, tencuite ale pereților. Golurile de uși nu schimbă suprafața netă."
+
+#: includes/Frontend/Strings.php
+msgid "Nincs közlekedő vagy előtér a programban – jellemzően a nettó %1$s százaléka (kb. %2$s m²)."
+msgstr "În program nu există hol sau antreu – de obicei %1$s la sută din suprafața netă (circa %2$s m²)."
+
+#: includes/Frontend/Strings.php
+msgid "Elfér: %1$s × %2$s m"
+msgstr "Încape: %1$s × %2$s m"
+
+#: includes/Frontend/Strings.php
+msgid "Nem fér el – kisebb terület vagy más méret kell"
+msgstr "Nu încape – e nevoie de o suprafață mai mică sau altă dimensiune"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s: legalább %2$s m² és %3$s m szélesség javasolt"
+msgstr "%1$s: se recomandă cel puțin %2$s m² și lățime de %3$s m"
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból (a vakolattal együtt)."
+msgstr "Iese din casă (cu tencuială cu tot)."
+
+#: includes/Frontend/Strings.php
+msgid "Túl közel van egy másik helyiséghez – közte válaszfal és vakolat kell."
+msgstr "Prea aproape de altă încăpere – între ele trebuie perete despărțitor și tencuială."
+
+#: includes/Frontend/Strings.php
+msgid "Teherhordó falra került."
+msgstr "Se află pe un perete portant."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőre vagy a födémáttörésre került."
+msgstr "Se află pe scară sau pe golul planșeului."
+
+#: includes/Frontend/Strings.php
+msgid "Elzárja a lépcső induló vagy érkező szabad helyét."
+msgstr "Blochează spațiul liber de la pornirea sau sosirea scării."
+
+#: includes/Frontend/Strings.php
+msgid "Negyedfordulós (L)"
+msgstr "Cu sfert de întoarcere (L)"
+
+#: includes/Frontend/Strings.php
+msgid "Fordulós (U)"
+msgstr "Cu întoarcere (U)"
+
+#: includes/Frontend/Strings.php
+msgid "Karszélesség"
+msgstr "Lățimea rampei"
+
+#: includes/Frontend/Strings.php
+msgid "Elforgatás 90°"
+msgstr "Rotește cu 90°"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s fok · fokmagasság %2$s cm · belépő %3$s cm · 2m + b = %4$s cm"
+msgstr "%1$s trepte · înălțime %2$s cm · lățime %3$s cm · 2h + l = %4$s cm"
+
+#: includes/Frontend/Strings.php
+msgid "Alaprajzi méret %1$s × %2$s m · födémáttörés %3$s m² · szabad belmagasság a lépcső felett ≥ %4$s m"
+msgstr "Plan %1$s × %2$s m · gol în planșeu %3$s m² · înălțime liberă ≥ %4$s m"
+
+#: includes/Frontend/Strings.php
+msgid "A fokmagasság nagyobb a javasoltnál."
+msgstr "Înălțimea treptei depășește valoarea recomandată."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőképlet (2m + b) a 60–65 cm-es tartományon kívül esik."
+msgstr "Regula pasului (2h + l) este în afara intervalului 60–65 cm."
+
+#: includes/Frontend/Strings.php
+msgid "A belépő túl kicsi."
+msgstr "Lățimea treptei este prea mică."
+
+#: includes/Frontend/Strings.php
+msgid "A karszélesség kisebb a javasolt legkisebbnél (0,9 m)."
+msgstr "Lățimea rampei este sub minimul recomandat (0,9 m)."
+
+#: includes/Frontend/Strings.php
+msgid "Ekkora lépcső nem fér el – válassz fordulós vagy csigalépcsőt."
+msgstr "O asemenea scară nu încape – alege una cu întoarcere sau în spirală."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső kilóg a házból."
+msgstr "Scara iese din casă."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső induló vagy érkező szabad helye nincs a házon belül."
+msgstr "Spațiul liber de la pornirea sau sosirea scării nu este în casă."
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső vagy a födémáttörés teherhordó falra esik."
+msgstr "Scara sau golul planșeului cade pe un perete portant."
+
+#: includes/Frontend/Strings.php
+msgid "Lépcső elhelyezése"
+msgstr "Amplasează scara"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső sehol nem fér el ebben a típusban – próbálj másik típust vagy keskenyebb kart."
+msgstr "O scară de acest tip nu încape nicăieri – încearcă alt tip sau o rampă mai îngustă."
+
+#: includes/Frontend/Strings.php
+msgid "Válaszd ki a lépcső típusát: a rendszer a szintmagasságból kiszámolja a fokokat, a méretét és a födémáttörést, és elhelyezi a házban."
+msgstr "Alege tipul scării: din înălțimea nivelului sistemul calculează treptele, dimensiunile și golul din planșeu și o amplasează în casă."
+
+#: includes/Frontend/Strings.php
+msgid "Födémáttörés"
+msgstr "Gol în planșeu"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső fokmagassága nagyobb a javasoltnál"
+msgstr "Înălțimea treptelor depășește valoarea recomandată"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcsőképlet (2m + b) a 60–65 cm-es tartományon kívül"
+msgstr "Regula pasului (2h + l) în afara 60–65 cm"
+
+#: includes/Frontend/Strings.php
+msgid "A lépcső karszélessége keskenyebb a javasoltnál"
+msgstr "Rampa scării este mai îngustă decât se recomandă"
+
+#: includes/Frontend/Strings.php
+msgid "Az egyik oldala csak részben fekszik falon – told a fal végéig, vagy teljesen el a faltól."
+msgstr "O latură stă doar parțial pe un perete – mut-o până la capătul peretelui sau complet departe de el."
