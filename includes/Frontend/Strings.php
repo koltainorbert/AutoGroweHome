@@ -384,6 +384,8 @@ final class Strings {
 			'b_view_3d' => __( '3D építési állás', 'autogrowehome' ),
 			'b_view_plan' => __( 'Alaprajz', 'autogrowehome' ),
 			'b_w' => __( 'Szélesség', 'autogrowehome' ),
+			'b_w_range' => __( '4–40 m', 'autogrowehome' ),
+			'b_d_range' => __( '4–30 m', 'autogrowehome' ),
 			'b_warn_ext_multi' => __( 'A külső falak több zárt hurkot alkotnak; a legnagyobb a ház kontúrja.', 'autogrowehome' ),
 			'b_warn_no_entrance' => __( 'Még nincs bejárati ajtó.', 'autogrowehome' ),
 			'b_warn_roof_ortho' => __( 'Ferde külső falhoz a tetőgenerátor nem tud tetőt építeni: csak derékszögű alaprajz kaphat tetőt.', 'autogrowehome' ),

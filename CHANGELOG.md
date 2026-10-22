@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.16.2 – 2026-10-22
+
+Norbi: a kitűzés, a földmunka, az alap és az alapvezetékek csak akkor látszottak a 3D-ben, ha a lépések végére ment és visszalépett; a „földdarab” nem változott; a téglalap csak L ↔ téglalap váltás után ugrott méretre; más alak is kell. Munkaprompt: `docs/FELADAT-1.16.2.md`.
+
+- **A ház körvonala a 0. lépésben (Telek, kitűzés):** Szélesség, Mélység, Téglalap, L alakú, A mostani házból – az 1–4. lépésben is, amíg nincs fal. Gyökérok: a körvonalat csak az 5. lépésben lehetett megadni, a 0–4. lépés abból rajzol, ezért üres volt. Mérve: a 0. lépésben lerakott 12 × 9 m-es ház után az 1. lépés 3D-je azonnal 14 × 11 m földmunkát és 12 × 9 m alapot mutat.
+- **A földfolt:** fal nélkül eddig rögzített 4 × 4 m volt; most a beírt méret + munkatér (14 × 11,5 → 16 × 13,5 m), gépelés közben frissül. Fallal a rajzolt körvonalat követi, nem a befoglaló téglalapot (L alak: 248 m² a 280 helyett). Saját alak: a Fal eszközzel bármilyen zárt kontúr.
+- **Méret-tartomány:** a 4–40 / 4–30 m-en kívüli szám eddig csendben 40-re vágódott, a mező 100-at mutatott; most a használt értéket mutatja, alatta a tartomány.
+- Mérve böngészőben (tesztoldal): a körvonal a 0–4. lépésben megjelenik, fal után az 1–4. lépésből eltűnik; a földfolt és az alap mérete azonnal követi; konzolhiba 0 · sketch 0 hiba · autoloader 125/125 · 15 nyelv × 2513 szöveg, 0 hiba.
+
 ## 1.16.1 – 2026-10-22
 
 Norbi: „a pro változat kerüljön az arculati menübe”, saját kóddal. Munkaprompt: `docs/FELADAT-1.16.1.md`.

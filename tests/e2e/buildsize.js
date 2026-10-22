@@ -32,6 +32,21 @@ const toggle = on => execFileSync('php', [path.join(__dirname, '..', 'build-togg
     w.value = '14'; w.dispatchEvent(new Event('input', { bubbles: true }));
     d.value = '11.5'; d.dispatchEvent(new Event('input', { bubbles: true }));
     U.goStep(4); U.goStep(5);   // the panel is rebuilt
+    // 1.16.2: with no walls the 3D ground patch is the typed size + the working margin
+    U.setView('3d');
+    let patch = null;
+    for (let k = 0; k < 40 && !patch; k++) {
+      await new Promise(r => setTimeout(r, 500));
+      const v = window.AGH_3D && window.AGH_3D.viewer && window.AGH_3D.viewer();
+      const ph = v && v.house && v.house.phases && v.house.phases[1];
+      if (ph && ph.children.length) {
+        const THREE = window.AGH_3D.helpers ? window.AGH_3D.helpers().THREE : null;
+        const box = THREE ? new THREE.Box3().setFromObject(ph) : null;
+        if (box) { const sz = box.getSize(new THREE.Vector3()); patch = [Math.round(sz.x * 100) / 100, Math.round(sz.z * 100) / 100]; }
+      }
+    }
+    const margin = Number((U.state().b.earth || {}).margin);
+    U.setView('plan');
     const kept = [document.querySelector('[data-k="tpl.w"]').value, document.querySelector('[data-k="tpl.d"]').value];
     const btn = Array.from(document.querySelectorAll('.agh-bld-tpl button'))[0];
     btn.click();
@@ -41,11 +56,12 @@ const toggle = on => execFileSync('php', [path.join(__dirname, '..', 'build-togg
     const xs = [], ys = [];
     walls.forEach(function (wl) { xs.push(wl.a[0], wl.b[0]); ys.push(wl.a[1], wl.b[1]); });
     const t = walls.length ? (walls[0].t || 0.38) : 0;
-    return { found: true, kept, walls: walls.length, w: xs.length ? Math.max.apply(null, xs) - Math.min.apply(null, xs) + t : 0, d: ys.length ? Math.max.apply(null, ys) - Math.min.apply(null, ys) + t : 0 };
+    return { found: true, kept, patch, margin, walls: walls.length, w: xs.length ? Math.max.apply(null, xs) - Math.min.apply(null, xs) + t : 0, d: ys.length ? Math.max.apply(null, ys) - Math.min.apply(null, ys) + t : 0 };
   });
   await browser.close();
   toggle(false);
-  const ok = out.found && out.kept[0] === '14' && out.kept[1] === '11.5' && Math.abs(out.w - 14) < 0.05 && Math.abs(out.d - 11.5) < 0.05 && !errors.length;
-  console.log(`kezdő méret: mezők újrarajzolás után ${out.kept ? out.kept.join(' × ') : '–'} m, a téglalap ${out.w ? out.w.toFixed(2) : '–'} × ${out.d ? out.d.toFixed(2) : '–'} m (${out.walls || 0} fal), konzolhiba ${errors.length}${errors.length ? ' ' + errors[0] : ''}`);
+  const pOk = out.patch && Math.abs(out.patch[0] - (14 + 2 * out.margin)) < 0.05 && Math.abs(out.patch[1] - (11.5 + 2 * out.margin)) < 0.05;
+  const ok = pOk && out.found && out.kept[0] === '14' && out.kept[1] === '11.5' && Math.abs(out.w - 14) < 0.05 && Math.abs(out.d - 11.5) < 0.05 && !errors.length;
+  console.log(`kezdő méret: mezők újrarajzolás után ${out.kept ? out.kept.join(' × ') : '–'} m, a téglalap ${out.w ? out.w.toFixed(2) : '–'} × ${out.d ? out.d.toFixed(2) : '–'} m (${out.walls || 0} fal), 3D földfolt fal nélkül ${out.patch ? out.patch.join(' × ') : '–'} m (munkatér ${out.margin} m), konzolhiba ${errors.length}${errors.length ? ' ' + errors[0] : ''}`);
   process.exit(ok ? 0 : 1);
 })();

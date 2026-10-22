@@ -10408,3 +10408,11 @@ msgstr ""
 #: includes/Admin/Pages.php
 msgid "Bekapcsolás"
 msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "4–40 m"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "4–30 m"
+msgstr ""

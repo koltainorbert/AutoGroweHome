@@ -38,7 +38,10 @@ export function buildScene(c, H) {
 	try { draw(c, H, A, phases); } catch (e) { res.error = String(e && e.message); if (window.console) { console.warn('AGH build 3D:', res.error); } }
 	// an empty drawing still gets a patch of ground, so the camera has something to frame
 	if (!phases.some(function (q, k) { return k > 0 && k < 9 && q.children.length; })) {
-		phases[1].add(H.box(-2, -2, 0, 2, 2, 0.012, H.pbr('soil', {}, { normal: 1 }), { noCast: true }));
+		// the size typed under "Kezdés" plus the working margin (1.16.2), else a 4 × 4 m patch
+		var pv = c._bld_preview, pw0 = pv && pv.w > 0 ? pv.w : 4, pd0 = pv && pv.d > 0 ? pv.d : 4, pm0 = pv && pv.m >= 0 ? pv.m : 0;
+		var ox0 = pv ? 0 : -2, oy0 = pv ? 0 : -2;
+		phases[1].add(H.box(ox0 - pm0, oy0 - pm0, 0, ox0 + pw0 + pm0, oy0 + pd0 + pm0, 0.012, H.pbr('soil', {}, { normal: 1 }), { noCast: true }));
 	}
 	return res.setPhase(start);
 }
@@ -194,7 +197,11 @@ function draw(c, H, A, P) {
 	var under = b.walls.filter(function (w) { return w.lv === 0 && (w.kind !== 'part' || f.partitions === 'strip' || (f.partitions === 'auto' && heavy(w))); });
 	if (bb) {
 		var mg = b.earth.margin;
-		add(1, H.box(bb.x0 - mg, bb.y0 - mg, 0, bb.x1 + mg, bb.y1 + mg, 0.012, M.soil, { noCast: true }));
+		// the stripped ground follows the drawn outline (L, T, any closed shape) plus the working margin
+		// (1.16.2: it was the bounding rectangle, so an L-shaped house sat on a rectangular patch)
+		var dug = null;
+		try { dug = slab(poly(A._offset(ol.outer, ol.outer.map(function () { return -Math.round(mg * 1000); }))), 0, 0.012, M.soil, null, true); } catch (e) { dug = null; }
+		add(1, dug || H.box(bb.x0 - mg, bb.y0 - mg, 0, bb.x1 + mg, bb.y1 + mg, 0.012, M.soil, { noCast: true }));
 		if (f.type === 'slab') { add(1, slab(poly(A._offset(ol.outer, ol.outer.map(function () { return -300; }))), 0.012, 0.018, M.trench, null, true)); }
 	}
 	if (f.type !== 'slab') {

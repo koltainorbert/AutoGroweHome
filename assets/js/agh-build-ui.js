@@ -308,8 +308,13 @@
 				field(t('b_soil'), selIn('site.soil', (B.defaults().soils || []).map(function (s) { return [s, t('b_soil_' + s)]; })))
 			])]));
 			box.appendChild(rulesBox());
+			// 1.16.2: the house outline is marked out here (kitűzés) – the stakes, the strings, the earthworks,
+			// the foundation and the services of steps 1–4 are drawn from it right away, not only after the
+			// walls of step 5 were drawn and the visitor came back
+			box.insertBefore(templatesBox(), box.children[1] || null);
 		},
 		function earth(box) {
+			if (!st.b.walls.length) { box.appendChild(templatesBox()); }   // nothing to build on yet: mark out the house first (1.16.2)
 			box.appendChild(group(null, [el('div', { class: 'agh-bld-grid2' }, [
 				field(t('b_topsoil'), numIn('earth.topsoil', { min: 0, max: 1, step: 0.05 }), 'm'),
 				field(t('b_margin'), numIn('earth.margin', { min: 0, max: 5, step: 0.1 }), 'm', t('b_margin_help')),
@@ -318,6 +323,7 @@
 			])]));
 		},
 		function found(box) {
+			if (!st.b.walls.length) { box.appendChild(templatesBox()); }   // nothing to build on yet: mark out the house first (1.16.2)
 			var types = Object.keys(B.defaults().foundations || {});
 			box.appendChild(group(t('b_found_type'), [cards(types.map(function (k) { return [k, t('b_found_' + k)]; }), st.b.found.type, function (v) { change(function (b) { b.found.type = v; }); })]));
 			var slab = st.b.found.type === 'slab';
@@ -329,11 +335,13 @@
 			])]));
 		},
 		function ducts(box) {
+			if (!st.b.walls.length) { box.appendChild(templatesBox()); }   // nothing to build on yet: mark out the house first (1.16.2)
 			box.appendChild(group(null, [togIn('ducts.sewer', t('b_duct_sewer')), togIn('ducts.water', t('b_duct_water')), togIn('ducts.earth', t('b_duct_earth')),
 				field(t('b_duct_conduits'), numIn('ducts.conduits', { min: 0, max: 30, step: 1 }), t('b_u_db'))]));
 			box.appendChild(el('p', { class: 'agh-bld-note', text: t('b_ducts_note') }));
 		},
 		function ground(box) {
+			if (!st.b.walls.length) { box.appendChild(templatesBox()); }   // nothing to build on yet: mark out the house first (1.16.2)
 			box.appendChild(group(null, [el('div', { class: 'agh-bld-grid2' }, [
 				field(t('b_fill'), numIn('ground.fill', { min: 0, max: 1, step: 0.05 }), 'm'),
 				field(t('b_gconcrete'), numIn('ground.concrete', { min: 0, max: 0.4, step: 0.01 }), 'm'),
@@ -442,10 +450,13 @@
 		st.tpl = st.tpl || { w: 10, d: 8 };
 		var W = el('input', { type: 'number', class: 'agh-input agh-bld-num', 'data-k': 'tpl.w', value: String(st.tpl.w), min: '4', max: '40', step: '0.1', inputmode: 'decimal', 'aria-label': t('b_w') });
 		var Dd = el('input', { type: 'number', class: 'agh-input agh-bld-num', 'data-k': 'tpl.d', value: String(st.tpl.d), min: '4', max: '30', step: '0.1', inputmode: 'decimal', 'aria-label': t('b_d') });
-		W.addEventListener('input', function () { var n = parseFloat(String(W.value).replace(',', '.')); if (isFinite(n)) { st.tpl.w = Math.max(4, Math.min(40, n)); } });
-		Dd.addEventListener('input', function () { var n = parseFloat(String(Dd.value).replace(',', '.')); if (isFinite(n)) { st.tpl.d = Math.max(4, Math.min(30, n)); } });
+		W.addEventListener('input', function () { var n = parseFloat(String(W.value).replace(',', '.')); if (isFinite(n)) { st.tpl.w = Math.max(4, Math.min(40, n)); schedule3D(); } });
+		Dd.addEventListener('input', function () { var n = parseFloat(String(Dd.value).replace(',', '.')); if (isFinite(n)) { st.tpl.d = Math.max(4, Math.min(30, n)); schedule3D(); } });
+		// out of range: the field shows the value that is really used (100 → 40), not one that is silently ignored
+		W.addEventListener('change', function () { W.value = String(st.tpl.w); });
+		Dd.addEventListener('change', function () { Dd.value = String(st.tpl.d); });
 		var row = el('div', { class: 'agh-bld-tpl' }, [
-			field(t('b_w'), W, 'm'), field(t('b_d'), Dd, 'm'),
+			field(t('b_w'), W, 'm', t('b_w_range')), field(t('b_d'), Dd, 'm', t('b_d_range')),
 			el('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { var w = Math.max(4, Math.min(40, num(W.value, st.tpl.w))), d = Math.max(4, Math.min(30, num(Dd.value, st.tpl.d))), o = place(w, d); apply(function () { return { walls: B.rectWalls(o[0] + et / 2, o[1] + et / 2, w - et, d - et, et) }; }); } }, [A.icon('plus', 'agh-ico-s'), t('b_tpl_rect')]),
 			el('button', { type: 'button', class: 'agh-btn agh-btn-s', onclick: function () { var w = Math.max(4, Math.min(40, num(W.value, st.tpl.w))), d = Math.max(4, Math.min(30, num(Dd.value, st.tpl.d))), o = place(w, d + 3), x = o[0] + et / 2, y = o[1] + et / 2, ww = w - et, dd = d - et, w2 = Math.max(3, Math.round(ww * 0.4 * 10) / 10); apply(function () { return { walls: B.polyWalls([[x, y], [x + ww, y], [x + ww, y + dd + 3], [x + ww - w2, y + dd + 3], [x + ww - w2, y + dd], [x, y + dd]], et) }; }); } }, [A.icon('plus', 'agh-ico-s'), t('b_tpl_l')])
 		]);
@@ -593,7 +604,11 @@
 	var t3 = 0;
 	function schedule3D() { clearTimeout(t3); t3 = setTimeout(function () { if (st && st.view === '3d') { show3D(); } }, 250); }
 	function show3D() {
-		var ok = A.preview3D(D.view3, cfg(), st.phase);
+		// 1.16.2: no walls yet → the ground patch shows the size typed under "Kezdés" (it was a fixed 4 × 4 m
+		// piece of soil that nothing could change)
+		var c3 = cfg();
+		if (!st.b.walls.length) { st.tpl = st.tpl || { w: 10, d: 8 }; c3 = Object.assign({}, c3, { _bld_preview: { w: st.tpl.w, d: st.tpl.d, m: num((st.b.earth || {}).margin, 1) } }); }
+		var ok = A.preview3D(D.view3, c3, st.phase);
 		D.view3.classList.toggle('is-2d', !ok);
 		if (!ok) { D.view3.innerHTML = A.sketch(cfg()); D.view3.appendChild(el('p', { class: 'agh-bld-note agh-bld-no3d', text: t('b_no3d') })); }
 	}

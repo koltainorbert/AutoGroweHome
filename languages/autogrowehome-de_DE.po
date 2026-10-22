@@ -10436,3 +10436,11 @@ msgstr "Pro-Code"
 #: includes/Admin/Pages.php
 msgid "Bekapcsolás"
 msgstr "Einschalten"
+
+#: includes/Frontend/Strings.php
+msgid "4–40 m"
+msgstr "4–40 m"
+
+#: includes/Frontend/Strings.php
+msgid "4–30 m"
+msgstr "4–30 m"
