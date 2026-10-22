@@ -101,6 +101,16 @@ final class Frontend {
 		}
 		echo '<script id="agh-loader-cfg" type="application/json">' . wp_json_encode( self::loader_config( $floating ), JSON_HEX_TAG | JSON_HEX_AMP ) . '</script>';
 		echo '<script src="' . esc_url( AGH_URL . 'assets/js/agh-loader.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-loader.js' ) ) ) . '" defer></script>'; // phpcs:ignore WordPress.WP.EnqueuedResources
+		// 1.26.0: ?agh_bench=1 on a designer page – the built-in 3D benchmark (Norbi measures phones with it)
+		if ( isset( $_GET['agh_bench'] ) && '1' === $_GET['agh_bench'] ) { // phpcs:ignore WordPress.Security.NonceVerification
+			self::bench_tags();
+		}
+	}
+
+	/** The benchmark's configuration and script (admin page and ?agh_bench=1). */
+	public static function bench_tags(): void {
+		echo '<script id="agh-bench-cfg" type="application/json">' . wp_json_encode( self::bench_config(), JSON_HEX_TAG | JSON_HEX_AMP ) . '</script>';
+		echo '<script src="' . esc_url( self::asset_url( 'assets/js/agh-bench.js' ) ) . '" defer></script>'; // phpcs:ignore WordPress.WP.EnqueuedResources
 	}
 
 	/**
@@ -124,6 +134,9 @@ final class Frontend {
 		// The interiors and the surroundings are imported with the same version query as agh-3d.js.
 		$out[] = AGH_URL . 'assets/js/agh-3d-int.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) );
 		$out[] = AGH_URL . 'assets/js/agh-3d-land.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) );
+		// 1.26.0: quality levels and the photographed skies (same version query)
+		$out[] = AGH_URL . 'assets/js/agh-3d-quality.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) );
+		$out[] = AGH_URL . 'assets/js/agh-3d-sky.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) );
 		return $out;
 	}
 
@@ -144,8 +157,61 @@ final class Frontend {
 			'ctaIcon'  => self::cta_icon(),
 			'ctaCss'   => self::cta_css(),
 			'vars'     => self::css_vars(),
+			// 1.26.0: the quality menu of the 3D preview (agh-3d.js reads it from window.AGH_LOADER)
+			'q3d'      => self::quality_strings(),
 		);
 		// build mode („Építés az alapoktól”): the core module, only while the admin switch is on
+		if ( Build::enabled() ) {
+			$cfg['build'] = self::asset_url( 'assets/js/agh-build.js' );
+		}
+		return $cfg;
+	}
+
+	/** Texts of the 3D quality menu (1.26.0). */
+	public static function quality_strings(): array {
+		return array(
+			'label'  => __( 'Minőség', 'autogrowehome' ),
+			'auto'   => __( 'automatikus', 'autogrowehome' ),
+			'low'    => __( 'alacsony', 'autogrowehome' ),
+			'medium' => __( 'közepes', 'autogrowehome' ),
+			'high'   => __( 'magas', 'autogrowehome' ),
+			'ultra'  => __( 'ultra', 'autogrowehome' ),
+		);
+	}
+
+	/**
+	 * The built-in 3D benchmark (1.26.0): what assets/js/agh-bench.js needs – the module URLs, the REST base
+	 * (the sample house is the plugin's default configuration from /bootstrap) and its texts.
+	 */
+	public static function bench_config(): array {
+		$cfg = array(
+			'three'   => AGH_URL . 'assets/js/agh-3d.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-3d.js' ) ),
+			'sketch'  => AGH_URL . 'assets/js/agh-sketch.js?ver=' . rawurlencode( self::asset_ver( 'assets/js/agh-sketch.js' ) ),
+			'rest'    => esc_url_raw( rest_url( AGH_REST_NS . '/' ) ),
+			'wpNonce' => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
+			'q3d'     => self::quality_strings(),
+			'i18n'    => array(
+				'title'    => __( '3D teljesítményteszt', 'autogrowehome' ),
+				'lead'     => __( 'Ugyanaz a mintaház minden minőségi szinten: első kép ideje, képkocka/s, képkockaidő (p50/p95), háromszögek, rajzhívások. Futtasd azon a gépen vagy telefonon, amelyet mérni szeretnél; a teszt alatt ne válts lapot.', 'autogrowehome' ),
+				'start'    => __( 'Teszt indítása', 'autogrowehome' ),
+				'running'  => __( 'Mérés: %1$s (%2$s / %3$s)…', 'autogrowehome' ),
+				'done'     => __( 'Kész. Javasolt szint ezen a gépen: %s', 'autogrowehome' ),
+				'copy'     => __( 'Másolás', 'autogrowehome' ),
+				'copied'   => __( 'Vágólapra másolva.', 'autogrowehome' ),
+				'gpu'      => __( 'Grafikus kártya', 'autogrowehome' ),
+				'unknown'  => __( 'a böngésző nem adja meg', 'autogrowehome' ),
+				'level'    => __( 'Szint', 'autogrowehome' ),
+				'first'    => __( 'Első kép', 'autogrowehome' ),
+				'fps'      => __( 'Képkocka/s', 'autogrowehome' ),
+				'p50'      => __( 'Képkockaidő p50', 'autogrowehome' ),
+				'p95'      => __( 'Képkockaidő p95', 'autogrowehome' ),
+				'tris'     => __( 'Háromszög', 'autogrowehome' ),
+				'calls'    => __( 'Rajzhívás', 'autogrowehome' ),
+				'memory'   => __( 'Memória (JS)', 'autogrowehome' ),
+				'no_webgl' => __( 'Ez a böngésző nem támogatja a WebGL2-t, a 3D előnézet itt nem fut.', 'autogrowehome' ),
+				'error'    => __( 'A teszt megszakadt:', 'autogrowehome' ),
+			),
+		);
 		if ( Build::enabled() ) {
 			$cfg['build'] = self::asset_url( 'assets/js/agh-build.js' );
 		}

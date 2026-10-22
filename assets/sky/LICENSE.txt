@@ -1,0 +1,13 @@
+The sky pictures in this folder (sky-*.webp) are converted from HDRIs of Poly Haven
+(https://polyhaven.com), published under CC0 1.0 Universal (public domain dedication):
+https://creativecommons.org/publicdomain/zero/1.0/
+
+sky-morning.webp: "Qwantani Morning (Pure Sky)" by Jarod Guest – https://polyhaven.com/a/qwantani_morning_puresky
+sky-midday.webp: "Kloofendal 48d Partly Cloudy (Pure Sky)" by Greg Zaal, Jarod Guest – https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+sky-midday_clear.webp: "Kloofendal 43d Clear (Pure Sky)" by Greg Zaal – https://polyhaven.com/a/kloofendal_43d_clear_puresky
+sky-golden.webp: "Hilly Terrain 01 (Pure Sky)" by Jarod Guest, Sergej Majboroda – https://polyhaven.com/a/hilly_terrain_01_puresky
+sky-blue.webp: "Qwantani Dusk 2 (Pure Sky)" by Greg Zaal, Jarod Guest – https://polyhaven.com/a/qwantani_dusk_2_puresky
+sky-night.webp: "Kloppenheim 02 (Pure Sky)" by Greg Zaal, Jarod Guest – https://polyhaven.com/a/kloppenheim_02_puresky
+sky-overcast.webp: "Kloofendal Overcast (Pure Sky)" by Greg Zaal – https://polyhaven.com/a/kloofendal_overcast_puresky
+
+No attribution is required by the licence; it is given here as a courtesy.

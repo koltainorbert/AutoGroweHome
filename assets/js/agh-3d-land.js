@@ -218,6 +218,20 @@ export function woods(c, k, thumb) {
 	}
 	var list = [];
 	Object.keys(by).forEach(function (t) { by[t].forEach(function (q5) { list.push([q5[0], q5[1], q5[2], t, q5[3], q5[4]]); }); });
+	// 1.26.0: undergrowth – shrubs along the edges of the woods nearest the plot (not in the open fields,
+	// not on water); a separate random stream, so the trees themselves stand where they always stood
+	if (DETAIL && !thumb && (c.season || 'summer') !== 'winter') {
+		var rb = rng(5003 + k.length * 7), nb = 0;
+		list.slice().forEach(function (q) {
+			var d = Math.sqrt(q[0] * q[0] + q[2] * q[2]);
+			if (d > TREE_NEAR + 60 || rb() > 0.42 || nb > 420) { rb(); rb(); return; }
+			var a = rb() * Math.PI * 2, o = 2.5 + rb() * 3.5, x = q[0] + Math.cos(a) * o, z = q[2] + Math.sin(a) * o;
+			if (Math.abs(z - ROAD - 6) < 14 || (z > ROAD - 10 && Math.abs(x) < 140)) { return; }
+			var h = heightAt(k, x, z);
+			if (h < WATER_Y + 0.6) { return; }
+			list.push([x, h, z, 'bush', rb(), rb()]); nb++;
+		});
+	}
 	g.add(treeSet(c, list));
 	if (p.blocks) { g.add(townBlocks(c, k, thumb)); }
 	return g;
@@ -254,32 +268,131 @@ function townBlocks(c, k, thumb) {
 }
 // Light trees for the distance, the street and the neighbours' gardens: a leaf-card crown and a trunk,
 // instanced – one draw call per species. list: [x, ground y, z, species, size 0–1, turn 0–1] (three.js).
-var TRUNK = null;
+//
+// 1.26.0 – three levels of detail, by distance from the plot (the camera orbits the house):
+//   near (< TREE_NEAR, set by the quality level; 150 m as before): a crown of several leaf-card clumps
+//     (broadleaves), tiers of drooping whorls (conifers), a trunk with its first limbs;
+//   mid (up to ~2.6 × TREE_NEAR): a lumpy, self-shaded solid – the silhouette of a crown, not a ball;
+//   far: the same lumpy solid with a quarter of the triangles.
+var TREE_NEAR = 150;
+export function setTreeNear(n) { TREE_NEAR = n > 0 ? n : 150; }
+// Until the first picture is on screen the woods are built as in 1.24.0 (the same shader programs, the
+// first picture is not delayed); the viewer switches the detail on right after it (agh-3d.js upgrade()).
+var DETAIL = false;
+export function setDetail(on) { DETAIL = !!on; }
+var TRUNK = null, LIMBS = null;
 var FARGEO = {};
-function farGeo(shape) {
-	if (!FARGEO[shape]) {
-		var g = shape === 'cone' ? new THREE.ConeGeometry(0.55, 2, 7, 1) : (shape === 'column' ? new THREE.CylinderGeometry(0.22, 0.3, 2, 7, 1) : new THREE.IcosahedronGeometry(0.85, 1));
-		g.userData.shared = true; FARGEO[shape] = g;
+// Lumpy crown solids (mid and far): the vertices pushed in and out by a smooth hash of their direction,
+// darker underneath (vertex colour) – a crown's self-shadow without any lighting cost.
+function farGeo(shape, lod) {
+	var key = shape + (lod || 0);
+	if (!FARGEO[key]) {
+		var g = shape === 'cone' ? new THREE.ConeGeometry(0.55, 2, lod ? 6 : 9, lod ? 1 : 3) : (shape === 'column' ? new THREE.CylinderGeometry(0.22, 0.3, 2, lod ? 6 : 8, lod ? 1 : 3) : new THREE.IcosahedronGeometry(0.85, lod ? 0 : 1));
+		var pos = g.attributes.position, n = pos.count, col = new Float32Array(n * 3), v = new THREE.Vector3();
+		for (var i = 0; i < n; i++) {
+			v.fromBufferAttribute(pos, i);
+			var len = v.length() || 1, dx = v.x / len, dy = v.y / len, dz = v.z / len;
+			var bump = shape === 'sphere' ? 1 + (vnoise(dx * 2.3 + 5, dz * 2.3 + dy * 1.7, 41) - 0.5) * 0.55 : 1 + (vnoise(dx * 3 + 2, dz * 3 + v.y, 43) - 0.5) * 0.3;
+			if (shape === 'sphere') { v.multiplyScalar(bump); } else { v.x *= bump; v.z *= bump; }
+			pos.setXYZ(i, v.x, v.y, v.z);
+			var sh = 0.55 + 0.45 * smooth(-0.9, 0.7, v.y / (shape === 'sphere' ? 0.85 : 1));
+			col[i * 3] = sh; col[i * 3 + 1] = sh; col[i * 3 + 2] = sh;
+		}
+		g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+		if (shape === 'sphere') {
+			// the icosahedron is not indexed: smooth normals from the (lumpy) direction, mixed with the faces'
+			// own for a little relief
+			g.computeVertexNormals();
+			var nr = g.attributes.normal;
+			for (var k = 0; k < n; k++) { v.fromBufferAttribute(pos, k).normalize(); var fx = nr.getX(k) * 0.35 + v.x * 0.65, fy = nr.getY(k) * 0.35 + v.y * 0.65, fz = nr.getZ(k) * 0.35 + v.z * 0.65, fl = Math.sqrt(fx * fx + fy * fy + fz * fz) || 1; nr.setXYZ(k, fx / fl, fy / fl, fz / fl); }
+		} else { g.computeVertexNormals(); }
+		g.userData.shared = true; FARGEO[key] = g;
 	}
-	return FARGEO[shape];
+	return FARGEO[key];
+}
+// Near crowns: leaf-card clumps merged into one geometry per species (unit size; the instance scales it).
+// The clump normals are blended with the crown's own, so the crown is lit as one mass with soft lumps.
+var CROWN = {};
+function crownGeo(t) {
+	if (CROWN[t]) { return CROWN[t]; }
+	var parts = [];   // [shape, cards, x, y, z, sx, sy, sz, seed]
+	if (t === 'conifer') {
+		parts = [['cone', 22, 0, -0.42, 0, 1, 0.58, 1, 1], ['cone', 18, 0.02, 0.08, -0.02, 0.78, 0.5, 0.78, 2], ['cone', 14, -0.02, 0.52, 0.01, 0.52, 0.48, 0.52, 3]];
+	} else if (t === 'poplar' || t === 'columnar' || t === 'cypress') {
+		parts = [['column', 34, 0, 0, 0, 1, 1, 1, 1], ['sphere', 8, 0.12, -0.35, 0.05, 0.16, 0.22, 0.16, 2], ['sphere', 8, -0.1, 0.25, -0.06, 0.15, 0.2, 0.15, 3]];
+	} else if (t === 'bush') {
+		parts = [['sphere', 14, 0, 0, 0, 0.72, 0.62, 0.72, 1], ['sphere', 9, 0.42, -0.12, 0.1, 0.5, 0.45, 0.5, 2], ['sphere', 9, -0.36, -0.1, -0.18, 0.48, 0.42, 0.48, 3]];
+	} else {
+		// broadleaves (and olive, birch, street trees): a central mass and five clumps around and above it
+		parts = [['sphere', 20, 0, -0.12, 0, 0.74, 0.66, 0.74, 1]];
+		for (var i = 0; i < 5; i++) { var a = i / 5 * Math.PI * 2 + 0.4; parts.push(['sphere', 10, Math.cos(a) * 0.5, (i % 2 ? 0.28 : -0.05), Math.sin(a) * 0.5, 0.48, 0.44, 0.48, 2 + i]); }
+		parts.push(['sphere', 8, 0.05, 0.52, -0.04, 0.42, 0.36, 0.42, 7]);
+	}
+	var pos = [], nor = [], uv = [], v = new THREE.Vector3(), nn = new THREE.Vector3(), cn = new THREE.Vector3();
+	parts.forEach(function (q) {
+		var src = L.canopyGeo(q[0], q[1], q[8] % 5), P = src.attributes.position, N = src.attributes.normal, U = src.attributes.uv;
+		for (var j = 0; j < P.count; j++) {
+			v.set(P.getX(j) * q[5] + q[2], P.getY(j) * q[6] + q[3], P.getZ(j) * q[7] + q[4]);
+			nn.set(N.getX(j), N.getY(j), N.getZ(j));
+			cn.copy(v); if (t === 'conifer' || t === 'poplar' || t === 'columnar' || t === 'cypress') { cn.y = 0.35; }
+			nn.multiplyScalar(0.55).addScaledVector(cn.normalize(), 0.45).normalize();
+			pos.push(v.x, v.y, v.z); nor.push(nn.x, nn.y, nn.z); uv.push(U.getX(j), U.getY(j));
+		}
+	});
+	var g = new THREE.BufferGeometry();
+	g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+	g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+	g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+	g.computeBoundingSphere();
+	g.userData.shared = true;
+	CROWN[t] = g;
+	return g;
+}
+// A trunk with its first three limbs (unit height): one geometry, so a near tree still costs one instance.
+function limbsGeo() {
+	if (LIMBS) { return LIMBS; }
+	var parts = [new THREE.CylinderGeometry(0.16, 0.26, 1, 6)];
+	for (var i = 0; i < 3; i++) {
+		var a = i / 3 * Math.PI * 2 + 0.5, b = new THREE.CylinderGeometry(0.05, 0.09, 0.42, 5);
+		b.translate(0, 0.21, 0); b.rotateZ(0.75); b.rotateY(a); b.translate(0, 0.42, 0);
+		parts.push(b);
+	}
+	var pos = [], nor = [];
+	parts.forEach(function (p) { var q = p.index ? p.toNonIndexed() : p; var P = q.attributes.position.array, N = q.attributes.normal.array; for (var j = 0; j < P.length; j++) { pos.push(P[j]); nor.push(N[j]); } });
+	var g = new THREE.BufferGeometry();
+	g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+	g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+	g.computeBoundingSphere();
+	g.userData.shared = true;
+	LIMBS = g;
+	return g;
 }
 // distant crowns: plain foliage colour of the season (leaf cards turn to noise at that distance)
 var FARCOL = {
 	summer: { broad: '#4A6331', conifer: '#2E4229', olive: '#6C7856' }, spring: { broad: '#5D8638', conifer: '#33492C', olive: '#728058' },
 	autumn: { broad: ['#9A7A33', '#A25A2A', '#6F6E31', '#8C6A2B'], conifer: '#33452C', olive: '#6C7856' }, winter: { broad: '#6B6157', conifer: '#3A4A35', olive: '#6C7856' }
 };
-export function treeSet(c, list) {
+// The trees of 1.24.0 (before the detail is switched on): one leaf-card crown near, a plain solid far.
+var FARLITE = {};
+function farGeoLite(shape) {
+	if (!FARLITE[shape]) {
+		var g = shape === 'cone' ? new THREE.ConeGeometry(0.55, 2, 7, 1) : (shape === 'column' ? new THREE.CylinderGeometry(0.22, 0.3, 2, 7, 1) : new THREE.IcosahedronGeometry(0.85, 1));
+		g.userData.shared = true; FARLITE[shape] = g;
+	}
+	return FARLITE[shape];
+}
+function treeSetLite(c, list) {
 	var g = new THREE.Group(), by = {}, m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), V = THREE.Vector3, season = c.season || 'summer';
-	if (!TRUNK) { TRUNK = new THREE.CylinderGeometry(0.16, 0.26, 1, 6); TRUNK.userData.shared = true; }
-	list.forEach(function (t) { var far = t[0] * t[0] + t[2] * t[2] > 150 * 150; (by[t[3] + (far ? '|far' : '')] = by[t[3] + (far ? '|far' : '')] || []).push(t); });
+	list.forEach(function (t) { if (t[3] === 'bush') { return; } var far = t[0] * t[0] + t[2] * t[2] > 150 * 150; (by[t[3] + (far ? '|far' : '')] = by[t[3] + (far ? '|far' : '')] || []).push(t); });
 	var bark = L.solid('#4A3B2E', 1), winter = season === 'winter', col = new THREE.Color();
 	Object.keys(by).forEach(function (key) {
 		var items = by[key], t = key.split('|')[0], far = key.indexOf('|far') !== -1;
 		var shape = t === 'conifer' ? 'cone' : (t === 'cypress' || t === 'poplar' || t === 'columnar' ? 'column' : 'sphere');
 		var leaf = t === 'conifer' || t === 'cypress' ? 'conifer' : (t === 'olive' ? 'olive' : 'broad'), fc = (FARCOL[season] || FARCOL.summer)[leaf];
-		var crowns = far ? new THREE.InstancedMesh(farGeo(shape), L.cached('farleaf', function () { return L.stdMat({ color: '#FFFFFF', roughness: 0.95 }); }), items.length)
+		var crowns = far ? new THREE.InstancedMesh(farGeoLite(shape), L.cached('farleaf', function () { return L.stdMat({ color: '#FFFFFF', roughness: 0.95 }); }), items.length)
 			: new THREE.InstancedMesh(L.canopyGeo(shape, t === 'conifer' ? 64 : 48, t.length), L.leafMat(c, leaf, false), items.length);
 		var trunks = far ? null : new THREE.InstancedMesh(TRUNK, t === 'birch' ? L.solid('#D9D6CF', 0.8) : bark, items.length);
+		crowns.userData.lod = far ? 'mid' : 'near'; crowns.userData.species = t;
 		items.forEach(function (q5, j) {
 			var sz = q5[4], H = { conifer: 15 + sz * 13, broad: 9 + sz * 9, birch: 10 + sz * 7, poplar: 16 + sz * 9, olive: 4.5 + sz * 3, cypress: 9 + sz * 6, columnar: 7 + sz * 4, street: 7 + sz * 3 }[t] || 9 + sz * 6, w, cy, ch, tk;
 			if (t === 'conifer') { w = H * (0.62 + q5[5] * 0.16); cy = H * 0.55; ch = H * 0.47; tk = 0.25; }
@@ -287,7 +400,6 @@ export function treeSet(c, list) {
 			else if (t === 'poplar' || t === 'columnar') { w = H * 0.62; cy = H * 0.58; ch = H * 0.42; tk = 0.3; }
 			else if (t === 'olive') { w = H * (0.42 + q5[5] * 0.1); cy = H * 0.62; ch = H * 0.32; tk = 0.45; }
 			else { w = H * (0.3 + q5[5] * 0.14); cy = H * 0.62; ch = H * 0.36; tk = 0.5; }
-			// leafless broadleaves in winter: thinner crowns read as bare branches
 			if (winter && leaf === 'broad') { w *= 0.8; ch *= 0.85; }
 			q.setFromAxisAngle(new V(0, 1, 0), q5[5] * 6.28);
 			m4.compose(new V(q5[0], q5[1] + cy, q5[2]), q, new V(w, ch, w)); crowns.setMatrixAt(j, m4);
@@ -299,10 +411,74 @@ export function treeSet(c, list) {
 	});
 	return g;
 }
+export function treeSet(c, list) {
+	var g = new THREE.Group(), by = {}, m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), V = THREE.Vector3, season = c.season || 'summer';
+	if (!TRUNK) { TRUNK = new THREE.CylinderGeometry(0.16, 0.26, 1, 6); TRUNK.userData.shared = true; }
+	if (!DETAIL) { return treeSetLite(c, list); }
+	var mid2 = Math.pow(Math.max(TREE_NEAR * 2.6, 380), 2);
+	list.forEach(function (t) {
+		var d2 = t[0] * t[0] + t[2] * t[2], tier = d2 > TREE_NEAR * TREE_NEAR ? (d2 > mid2 ? '|xfar' : '|far') : '';
+		(by[t[3] + tier] = by[t[3] + tier] || []).push(t);
+	});
+	var bark = L.solid('#4A3B2E', 1), winter = season === 'winter', col = new THREE.Color();
+	var farMat = L.cached('farleaf2', function () { return L.stdMat({ color: '#FFFFFF', roughness: 0.95, vertexColors: true }); });
+	Object.keys(by).forEach(function (key) {
+		var items = by[key], t = key.split('|')[0], far = key.indexOf('|far') !== -1 || key.indexOf('|xfar') !== -1, xfar = key.indexOf('|xfar') !== -1;
+		var shape = t === 'conifer' ? 'cone' : (t === 'cypress' || t === 'poplar' || t === 'columnar' ? 'column' : 'sphere');
+		var leaf = t === 'conifer' || t === 'cypress' ? 'conifer' : (t === 'olive' ? 'olive' : 'broad'), fc = (FARCOL[season] || FARCOL.summer)[leaf];
+		var bush = t === 'bush';
+		var crowns = far ? new THREE.InstancedMesh(farGeo(shape, xfar ? 1 : 0), farMat, items.length)
+			: new THREE.InstancedMesh(crownGeo(t), L.leafMat(c, leaf, false), items.length);
+		// near trees: the trunk carries its first limbs (broadleaves); conifers and columns a plain trunk
+		var trunks = far || bush ? null : new THREE.InstancedMesh(shape === 'sphere' ? limbsGeo() : TRUNK, t === 'birch' ? L.solid('#D9D6CF', 0.8) : bark, items.length);
+		crowns.userData.lod = far ? (xfar ? 'xfar' : 'mid') : 'near'; crowns.userData.species = t;
+		items.forEach(function (q5, j) {
+			var sz = q5[4], H = { conifer: 15 + sz * 13, broad: 9 + sz * 9, birch: 10 + sz * 7, poplar: 16 + sz * 9, olive: 4.5 + sz * 3, cypress: 9 + sz * 6, columnar: 7 + sz * 4, street: 7 + sz * 3, bush: 1.1 + sz * 1.3 }[t] || 9 + sz * 6, w, cy, ch, tk;
+			if (t === 'conifer') { w = H * (0.62 + q5[5] * 0.16); cy = H * 0.55; ch = H * 0.47; tk = 0.25; }
+			else if (t === 'cypress') { w = H * 0.5; cy = H * 0.52; ch = H * 0.47; tk = 0.2; }
+			else if (t === 'poplar' || t === 'columnar') { w = H * 0.62; cy = H * 0.58; ch = H * 0.42; tk = 0.3; }
+			else if (t === 'olive') { w = H * (0.42 + q5[5] * 0.1); cy = H * 0.62; ch = H * 0.32; tk = 0.45; }
+			else if (bush) { w = H * (0.55 + q5[5] * 0.25); cy = H * 0.42; ch = H * 0.45; tk = 0; }
+			else { w = H * (0.3 + q5[5] * 0.14); cy = H * 0.62; ch = H * 0.36; tk = 0.5; }
+			// leafless broadleaves in winter: thinner crowns read as bare branches
+			if (winter && leaf === 'broad') { w *= 0.8; ch *= 0.85; }
+			q.setFromAxisAngle(new V(0, 1, 0), q5[5] * 6.28);
+			m4.compose(new V(q5[0], q5[1] + cy, q5[2]), q, new V(w, ch, w)); crowns.setMatrixAt(j, m4);
+			if (far) { col.set(Array.isArray(fc) ? fc[j % fc.length] : fc).multiplyScalar((0.85 + q5[5] * 0.3) * (bush ? 0.8 : 1)); crowns.setColorAt(j, col); }
+			else if (trunks) { m4.compose(new V(q5[0], q5[1] + H * tk * 0.5 - 0.3, q5[2]), q, new V(t === 'olive' ? 1.6 : 1, H * tk + 0.6, t === 'olive' ? 1.6 : 1)); trunks.setMatrixAt(j, m4); }
+		});
+		crowns.computeBoundingSphere(); g.add(crowns);
+		if (trunks) { trunks.computeBoundingSphere(); g.add(trunks); }
+	});
+	return g;
+}
 
 /* ------------------------------------------------------------------ street */
 // Where the street runs: its near edge just beyond the plot (sketch y), so the terrain stays level there.
 export function setRoad(y) { ROAD = y; }
+// 1.26.0 street furniture (sketch metres; merged with the house afterwards, so their cost is a few
+// triangles, not draw calls). A street lamp: tapered round post on a base, a curved arm, a lantern head.
+function streetLamp(g, x, y, post, lamp) {
+	var V = THREE.Vector3, P = function (a, b, r0, r1, m, seg) { var d = b.clone().sub(a), l = d.length(), o = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, l, seg || 8, 1), m); o.position.copy(a).addScaledVector(d, 0.5); o.quaternion.setFromUnitVectors(new V(0, 1, 0), d.normalize()); g.add(o); };
+	g.add(L.box(x - 0.13, y - 0.13, 0, x + 0.13, y + 0.13, 0.5, post, { noCast: true }));
+	P(new V(x, 0.5, y), new V(x, 5.3, y), 0.075, 0.05, post);
+	// the arm bends out over the carriageway in three straight pieces
+	var a0 = new V(x, 5.0, y), a1 = new V(x, 5.45, y + 0.25), a2 = new V(x, 5.55, y + 0.75), a3 = new V(x, 5.5, y + 1.15);
+	P(a0, a1, 0.04, 0.035, post, 6); P(a1, a2, 0.035, 0.03, post, 6); P(a2, a3, 0.03, 0.03, post, 6);
+	var head = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.24, 0.16, 10), post); head.position.set(x, 5.5, y + 1.2); g.add(head);
+	var glow = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.02, 10), lamp); glow.position.set(x, 5.41, y + 1.2); g.add(glow);
+}
+function bench(g, x, y) {
+	var wood = L.cached('benchwood', function () { return L.solid('#8A6446', 0.75); }), iron = L.cached('benchiron', function () { return L.solid('#2B2E31', 0.45, 0.6); });
+	for (var s = 0; s < 3; s++) { g.add(L.box(x, y + s * 0.13, 0.44, x + 1.8, y + s * 0.13 + 0.1, 0.48, wood, { noCast: true })); }
+	for (var b = 0; b < 2; b++) { g.add(L.box(x, y + 0.42, 0.56 + b * 0.16, x + 1.8, y + 0.46, 0.66 + b * 0.16, wood, { noCast: true })); }
+	[x + 0.1, x + 1.64].forEach(function (lx) { g.add(L.box(lx, y - 0.02, 0, lx + 0.06, y + 0.42, 0.44, iron, { noCast: true })); g.add(L.box(lx, y + 0.4, 0, lx + 0.06, y + 0.46, 0.86, iron, { noCast: true })); });
+}
+function bin(g, x, y, post) {
+	var body = L.cached('streetbin', function () { return L.solid('#3B4A3E', 0.5, 0.35); });
+	g.add(L.box(x - 0.04, y - 0.04, 0, x + 0.04, y + 0.04, 0.95, post, { noCast: true }));
+	var b = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.2, 0.55, 12), body); b.position.set(x, 0.62, y + 0.24); g.add(b);
+}
 // The street in front of the plot: pavements, kerbs, the carriageway with markings, street trees and
 // lamp posts in town; a narrower country lane with verges elsewhere. A paved apron joins the driveway.
 export function street(c, pb, gp, k, night) {
@@ -325,12 +501,10 @@ export function street(c, pb, gp, k, night) {
 			if (!facing) { trees.push([sx + 7.5, 0, y0 + 10.3, i % 4 === 1 ? 'columnar' : 'street', ((i + 3) * 7 % 10) / 10, ((i + 5) * 3 % 10) / 10]); }
 			if (i % 2 === 0) {
 				var px = sx + 3.5;
-				if (!(px > pb.left - 1 && px < pb.right + 1) || i % 4 === 0) {
-					g.add(L.box(px - 0.06, y0 + 1.7, 0, px + 0.06, y0 + 1.82, 5.2, post, { noCast: true }));
-					g.add(L.box(px - 0.06, y0 + 1.82, 5.1, px + 0.06, y0 + 2.7, 5.2, post, { noCast: true }));
-					g.add(L.box(px - 0.12, y0 + 2.5, 4.98, px + 0.12, y0 + 2.9, 5.1, lamp, { noCast: true }));
-				}
+				if (!(px > pb.left - 1 && px < pb.right + 1) || i % 4 === 0) { streetLamp(g, px, y0 + 1.76, post, lamp); }
 			}
+			// 1.26.0: benches and litter bins on the far pavement, away from the house's own frontage
+			if (i % 3 === 1 && !facing) { bench(g, sx + 4, y0 + 10.7); bin(g, sx + 6.2, y0 + 10.55, post); }
 		}
 		if (urban) {
 			// town street: a zebra crossing and cars parked along the kerb
@@ -352,6 +526,40 @@ export function street(c, pb, gp, k, night) {
 		flat(xa, y0 + 1.2, xb, y0 + 1.6, 0.012, L.groundKind(c, 'gravel'));
 		flat(xa, y0 + 1.6, xb, y0 + 6.4, -0.01, asph);
 		flat(xa, y0 + 6.4, xb, y0 + 6.8, 0.012, L.groundKind(c, 'gravel'));
+		// 1.26.0: a country lane has reflector posts along the verge and a line of wooden utility poles
+		var white2 = L.cached('refpost', function () { return L.solid('#ECEBE6', 0.6); }), refl = L.cached('reflector', function () { return L.solid('#C43A20', 0.35); });
+		var wood = L.cached('polewood', function () { return L.solid('#5B4A3A', 0.95); }), wire = L.cached('polewire', function () { return L.solid('#26282A', 0.6); });
+		for (var rx = -200; rx <= 200; rx += 25) {
+			if (rx > pb.left - 3 && rx < pb.right + 3) { continue; }
+			g.add(L.box(rx - 0.06, y0 + 0.95, 0, rx + 0.06, y0 + 1.07, 1.0, white2, { noCast: true }));
+			g.add(L.box(rx - 0.065, y0 + 1.071, 0.78, rx + 0.065, y0 + 1.075, 0.88, refl, { noCast: true }));
+		}
+		var poles = [];
+		for (var ux = -240; ux <= 240; ux += 42) { var on = ux + 9; if (on > pb.left - 2 && on < pb.right + 2) { on = pb.right + 3; } poles.push(on); }
+		poles.forEach(function (ux2, pi) {
+			var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 8.5, 7), wood); pole.position.set(ux2, 4.25, y0 + 7.6); g.add(pole);
+			g.add(L.box(ux2 - 0.9, y0 + 7.54, 7.7, ux2 + 0.9, y0 + 7.66, 7.82, wood, { noCast: true }));
+			if (pi > 0) {
+				// two sagging wires to the previous pole
+				var px0 = poles[pi - 1];
+				[-0.75, 0.75].forEach(function (off) {
+					var a = new THREE.Vector3(px0 + off, 7.84, y0 + 7.6), b = new THREE.Vector3(ux2 + off, 7.84, y0 + 7.6);
+					for (var s = 0; s < 4; s++) {
+						var t0 = s / 4, t1 = (s + 1) / 4, sag = function (t) { return -1.1 * 4 * t * (1 - t); };
+						var p0 = a.clone().lerp(b, t0), p1 = a.clone().lerp(b, t1); p0.y += sag(t0); p1.y += sag(t1);
+						var d = p1.clone().sub(p0), L1 = d.length(), m = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, L1, 3, 1), wire);
+						m.position.copy(p0).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); g.add(m);
+					}
+				});
+			}
+		});
+	}
+	// 1.26.0: the house's own mailbox at the street edge, beside the path (or the drive)
+	if (gp && (gp.path || gp.drive)) {
+		var mx = gp.path ? gp.path.x1 + 0.45 : gp.drive.x0 - 0.45, my = y0 + 0.35, mpost = L.solid('#2E3135', 0.45, 0.4), mbox = L.cached('mailbox', function () { return L.solid('#3A3F44', 0.35, 0.55); });
+		g.add(L.box(mx - 0.04, my - 0.04, 0, mx + 0.04, my + 0.04, 1.0, mpost));
+		g.add(L.box(mx - 0.2, my - 0.14, 1.0, mx + 0.2, my + 0.14, 1.32, mbox));
+		g.add(L.box(mx - 0.12, my + 0.141, 1.2, mx + 0.12, my + 0.145, 1.23, L.solid('#1C1E20', 0.5)));
 	}
 	// the driveway and the garden path reach the street
 	if (gp && gp.drive) { flat(gp.drive.x0, gp.drive.y1 - 0.05, gp.drive.x1, y0 + (town ? 2.05 : 1.65), 0.025, L.groundKind(c, { gravel: 'gravel', grass: 'grasspavers', asphalt: 'asphalt' }[c.driveway] || 'pavers')); }

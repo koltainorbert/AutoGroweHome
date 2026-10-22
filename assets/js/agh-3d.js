@@ -22,6 +22,10 @@ import { texture, setAnisotropy, onTexture, texturesReady, TINT, NEUTRAL, imageT
 const INT = await import('./agh-3d-int.js' + new URL(import.meta.url).search);
 // surroundings: terrain, landscape, street, neighbours
 const LAND = await import('./agh-3d-land.js' + new URL(import.meta.url).search);
+// 1.26.0: quality levels (low … ultra, automatic) and the photographed skies shipped in assets/sky/
+const QL = await import('./agh-3d-quality.js' + new URL(import.meta.url).search);
+const SKY = await import('./agh-3d-sky.js' + new URL(import.meta.url).search);
+SKY.setup(new URL(import.meta.url).search);
 
 var D2R = Math.PI / 180;
 var SK = function () { return window.AGH_Sketch; };
@@ -64,8 +68,99 @@ function pbr(kind, opts, params) {
 		if (params.clearcoat && params.roughness === undefined) { m.roughness = 0.85; }
 		if (tint) { m.color = new THREE.Color(opts.color).multiplyScalar(1 / NEUTRAL_LIN); }
 		if (params.color) { m.color = new THREE.Color(params.color); }
+		if (!t.alpha && !t.noTile && (STOCH[kind] || params.grime)) {
+			// the surface detail comes after the first picture (detailFlags): that picture keeps the shader
+			// programs of 1.24.0 and is not delayed by new ones
+			m.userData.surf = [!!STOCH[kind], !!params.grime];
+			if (DETAIL_ON) { surfaceDetail(m, !!STOCH[kind], !!params.grime); m.userData.surfOn = 1; }
+		}
 		return m;
 	});
+}
+/* 1.26.0 – staged detail. Until the live preview has drawn its first picture, the scene is the one of
+ * 1.24.0 (same materials, same woods); the new detail – grass, undergrowth, the detailed far trees and
+ * the shader surface detail – is switched on right after it (Viewer.upgrade), its shaders compiled in the
+ * background while the first picture stays. Guide pictures and option cards wait for it (detailReady). */
+var DETAIL_ON = false;
+function detailFlags() {
+	if (DETAIL_ON) { return; }
+	DETAIL_ON = true;
+	LAND.setDetail(true);
+	Object.keys(MATS).forEach(function (k) { var m = MATS[k], s = m.userData.surf; if (s && !m.userData.surfOn) { surfaceDetail(m, s[0], s[1]); m.userData.surfOn = 1; m.needsUpdate = true; } });
+}
+// The stochastic tiling costs about a seventh of a frame (measured on SwiftShader): only on high/ultra,
+// and there it is compiled in; on low/medium the shader is built without it.
+var SURF_STOCH = true;
+function setSurfStoch(on) {
+	if (SURF_STOCH === !!on) { return; }
+	SURF_STOCH = !!on;
+	Object.keys(MATS).forEach(function (k) { var m = MATS[k], s = m.userData.surf; if (s && s[0] && m.userData.surfOn) { m.needsUpdate = true; } });
+}
+/* 1.26.0 – surface detail in the shader, no extra textures:
+ * - stochastic tiling (isotropic patterns: render, stone, gravel, lawn, soil …): every fragment picks two
+ *   hashed variants of the tile – shifted and turned by a quarter – along a smooth noise and blends them,
+ *   so a large wall or lawn shows no repeating pattern. The normals are turned back with the sample.
+ * - on facades: a slow, faint variation of the tone over the wall and a little dirt splashed up on the
+ *   plinth (world height under ~0.6 m).
+ * Both follow the quality profile through shared uniforms (no shader recompiles when the level changes). */
+var STOCH = { render: 1, stone: 1, gravel: 1, grass: 1, snow: 1, soil: 1, asphalt: 1, sand: 1, green: 1, hedge: 1 };
+var SHQ = { aghStoch: { value: 1 }, aghDetail: { value: 1 } };
+var AGH_FRAG = [
+	'uniform float aghStoch;', 'uniform float aghDetail;', 'varying vec3 vAghW;',
+	'float aghH1( vec2 p ) { return fract( sin( dot( p, vec2( 127.1, 311.7 ) ) ) * 43758.5453 ); }',
+	'float aghVN( vec2 p ) { vec2 i = floor( p ), f = fract( p ); f = f * f * ( 3.0 - 2.0 * f );',
+	'	return mix( mix( aghH1( i ), aghH1( i + vec2( 1.0, 0.0 ) ), f.x ), mix( aghH1( i + vec2( 0.0, 1.0 ) ), aghH1( i + vec2( 1.0, 1.0 ) ), f.x ), f.y ); }',
+	'struct AghV { vec2 oa; vec2 ob; mat2 ra; mat2 rb; float w; };',
+	'mat2 aghRot( float i ) { float k = floor( aghH1( vec2( i, 7.31 ) ) * 4.0 );',
+	'	return k < 1.0 ? mat2( 1.0, 0.0, 0.0, 1.0 ) : ( k < 2.0 ? mat2( 0.0, 1.0, -1.0, 0.0 ) : ( k < 3.0 ? mat2( -1.0, 0.0, 0.0, -1.0 ) : mat2( 0.0, -1.0, 1.0, 0.0 ) ) ); }',
+	'AghV aghVar( vec2 uv ) { AghV v; float l = aghVN( uv * 0.37 ) * 6.0, ia = floor( l );',
+	'	v.oa = vec2( aghH1( vec2( ia, 1.3 ) ), aghH1( vec2( ia, 2.7 ) ) ); v.ob = vec2( aghH1( vec2( ia + 1.0, 1.3 ) ), aghH1( vec2( ia + 1.0, 2.7 ) ) );',
+	'	v.ra = aghRot( ia ); v.rb = aghRot( ia + 1.0 ); v.w = smoothstep( 0.25, 0.75, fract( l ) ); return v; }',
+	'vec4 aghTex( sampler2D t, vec2 uv, AghV v ) {',
+	'#ifdef AGH_STOCH',
+	'	if ( aghStoch > 0.5 ) { vec2 dx = dFdx( uv ), dy = dFdy( uv );',
+	'		vec4 a = textureGrad( t, v.ra * uv + v.oa, v.ra * dx, v.ra * dy ), b = textureGrad( t, v.rb * uv + v.ob, v.rb * dx, v.rb * dy );',
+	'		return mix( a, b, v.w ); }',
+	'#endif',
+	'	return texture2D( t, uv ); }',
+	'vec3 aghNrm( sampler2D t, vec2 uv, AghV v ) {',
+	'#ifdef AGH_STOCH',
+	'	if ( aghStoch > 0.5 ) { vec2 dx = dFdx( uv ), dy = dFdy( uv );',
+	'		vec3 a = textureGrad( t, v.ra * uv + v.oa, v.ra * dx, v.ra * dy ).xyz * 2.0 - 1.0, b = textureGrad( t, v.rb * uv + v.ob, v.rb * dx, v.rb * dy ).xyz * 2.0 - 1.0;',
+	'		a.xy = transpose( v.ra ) * a.xy; b.xy = transpose( v.rb ) * b.xy; return normalize( mix( a, b, v.w ) ); }',
+	'#endif',
+	'	return texture2D( t, uv ).xyz * 2.0 - 1.0; }',
+	'vec3 aghTone() {',
+	'#ifdef AGH_GRIME',
+	'	float n = aghVN( vec2( vAghW.x + vAghW.z, vAghW.y ) * 0.35 ), n2 = aghVN( vec2( vAghW.x - vAghW.z, vAghW.y ) * 3.1 );',
+	'	float g = 1.0 - smoothstep( 0.04, 0.5 + 0.22 * n2, vAghW.y );',
+	'	return mix( vec3( 1.0 + ( n - 0.5 ) * 0.09 * aghDetail ), vec3( 0.8, 0.76, 0.7 ), g * 0.55 * aghDetail );',
+	'#else',
+	'	return vec3( 1.0 );',
+	'#endif',
+	'}'
+].join('\n');
+function surfaceDetail(m, stoch0, grime) {
+	m.onBeforeCompile = function (sh) {
+		var stoch = stoch0 && SURF_STOCH;
+		sh.uniforms.aghStoch = SHQ.aghStoch; sh.uniforms.aghDetail = SHQ.aghDetail;
+		sh.defines = sh.defines || {};
+		if (stoch) { sh.defines.AGH_STOCH = ''; }
+		if (grime) { sh.defines.AGH_GRIME = ''; }
+		sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vAghW;').replace('#include <project_vertex>', [
+			'#include <project_vertex>', 'vec4 aghWp = vec4( transformed, 1.0 );', '#ifdef USE_INSTANCING', 'aghWp = instanceMatrix * aghWp;', '#endif', 'vAghW = ( modelMatrix * aghWp ).xyz;'
+		].join('\n'));
+		sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + AGH_FRAG)
+			.replace('#include <map_fragment>', [
+				'AghV aghv = aghVar( vMapUv );',
+				'vec4 sampledDiffuseColor = aghTex( map, vMapUv, aghv );',
+				'diffuseColor *= sampledDiffuseColor;',
+				'diffuseColor.rgb *= aghTone();'
+			].join('\n'))
+			.replace('#include <roughnessmap_fragment>', THREE.ShaderChunk.roughnessmap_fragment.replace('texture2D( roughnessMap, vRoughnessMapUv )', 'aghTex( roughnessMap, vRoughnessMapUv, aghv )'))
+			.replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', 'vec3 mapN = aghNrm( normalMap, vNormalMapUv, aghv );'));
+	};
+	m.customProgramCacheKey = function () { return 'aghSurf' + (stoch0 && SURF_STOCH ? 's' : '') + (grime ? 'g' : ''); };
 }
 function glassMat(c, night) {
 	if (night && c.night_lighting !== false) { return solid('#2A2218', 0.2, 0, { emissive: '#FFC27A', emissiveIntensity: 1.6 }); }
@@ -84,22 +179,24 @@ function facadeMat(c, m, tint) {
 	m = m || 'render';
 	var base = SK()._facadeBase(c, m);
 	if (tint) { base = tint; }
+	// 1.26.0: walls get the faint tone variation and the plinth dirt of surfaceDetail() (grime)
+	var fpbr = function (kind, opts, params) { return pbr(kind, opts, Object.assign({ grime: 1 }, params)); };
 	switch (m) {
-		case 'brick': return pbr('brick', { color: base }, { normal: 1.6 });
-		case 'clinker': return pbr('brick', { color: base, kind: 'clinker', mortar: '#3B302B' }, { normal: 1.4 });
-		case 'stone': return pbr('stone', { color: base }, { normal: 2 });
-		case 'wood': return pbr('wood', { color: base }, { normal: 1.2 });
-		case 'metal': return pbr('seam', { color: base }, { metalness: 0.55, roughness: 1, normal: 1 });
-		case 'concrete': return pbr('concrete', { color: base }, { normal: 1 });
-		case 'panel': return pbr('panel', { color: base }, { normal: 1 });
-		case 'render_dark': return pbr('render', { color: base, texture: 'fine' }, { normal: 0.6 });
-		case 'wood_horizontal': return pbr('woodh', { color: base }, { normal: 1.4 });
-		case 'board_batten': return pbr('batten', { color: base }, { normal: 1.2 });
-		case 'charred_wood': return pbr('charred', { color: base }, { normal: 1.8 });
-		case 'limestone': return pbr('limestone', { color: base }, { normal: 0.9 });
-		case 'brick_white': return pbr('brick', { color: base, kind: 'lime', mortar: '#E4DFD6' }, { normal: 1.3 });
-		case 'fiber_cement': return pbr('fibercement', { color: base }, { normal: 0.8 });
-		default: return pbr('render', { color: col(c.facade_color, '#F2EFE9'), texture: c.facade_texture || 'fine' }, { normal: c.facade_texture === 'coarse' ? 1.2 : 0.6 });
+		case 'brick': return fpbr('brick', { color: base }, { normal: 1.6 });
+		case 'clinker': return fpbr('brick', { color: base, kind: 'clinker', mortar: '#3B302B' }, { normal: 1.4 });
+		case 'stone': return fpbr('stone', { color: base }, { normal: 2 });
+		case 'wood': return fpbr('wood', { color: base }, { normal: 1.2 });
+		case 'metal': return fpbr('seam', { color: base }, { metalness: 0.55, roughness: 1, normal: 1 });
+		case 'concrete': return fpbr('concrete', { color: base }, { normal: 1 });
+		case 'panel': return fpbr('panel', { color: base }, { normal: 1 });
+		case 'render_dark': return fpbr('render', { color: base, texture: 'fine' }, { normal: 0.6 });
+		case 'wood_horizontal': return fpbr('woodh', { color: base }, { normal: 1.4 });
+		case 'board_batten': return fpbr('batten', { color: base }, { normal: 1.2 });
+		case 'charred_wood': return fpbr('charred', { color: base }, { normal: 1.8 });
+		case 'limestone': return fpbr('limestone', { color: base }, { normal: 0.9 });
+		case 'brick_white': return fpbr('brick', { color: base, kind: 'lime', mortar: '#E4DFD6' }, { normal: 1.3 });
+		case 'fiber_cement': return fpbr('fibercement', { color: base }, { normal: 0.8 });
+		default: return fpbr('render', { color: col(c.facade_color, '#F2EFE9'), texture: c.facade_texture || 'fine' }, { normal: c.facade_texture === 'coarse' ? 1.2 : 0.6 });
 	}
 }
 function accentMat(c, m) {
@@ -1555,15 +1652,33 @@ House.prototype.plant = function (kind, x, y, size, seed) {
 	}
 	if (kind === 'conifer' || kind === 'cypress') {
 		var tr = rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, H * 0.3, 0), H * 0.025, bark, 8); g.add(tr);
-		if (kind === 'cypress') { canopy('column', 0, H * 0.52, 0, H * 0.55, H * 0.48, H * 0.55, 260, 'conifer'); }
-		else { canopy('cone', 0, H * 0.55, 0, H * 0.75, H * 0.45, H * 0.75, 420, 'conifer'); }
+		if (kind === 'cypress') {
+			canopy('column', 0, H * 0.52, 0, H * 0.55, H * 0.48, H * 0.55, 200, 'conifer');
+			// 1.26.0: a few loose sprays break the column's outline
+			for (var cs2 = 0; cs2 < 3; cs2++) { var ca2 = rnd() * Math.PI * 2; canopy('sphere', Math.cos(ca2) * H * 0.07, H * (0.35 + cs2 * 0.18), Math.sin(ca2) * H * 0.07, H * 0.1, H * 0.13, H * 0.1, 28, 'conifer'); }
+		} else {
+			// 1.26.0: whorls of branches – tiers of drooping cones, smaller towards the top, slightly off axis
+			var tiers = 4, base0 = H * 0.18;
+			for (var ti = 0; ti < tiers; ti++) {
+				var q0 = ti / tiers, tw0 = H * 0.75 * (1 - q0 * 0.62), th0 = H * 0.36 * (1 - q0 * 0.3), ty = base0 + (H - base0) * q0 * 0.86 + th0 * 0.5;
+				canopy('cone', (rnd() - 0.5) * H * 0.03, ty, (rnd() - 0.5) * H * 0.03, tw0, th0, tw0, Math.round(150 - ti * 25), 'conifer');
+			}
+		}
 	} else if (kind === 'shrub' || kind === 'topiary' || kind === 'lavender' || kind === 'flower') {
 		if (kind === 'topiary') {
 			var tm = winter ? pbr('snow', {}, { normal: 0.4 }) : pbr('hedge', { season: season }, { normal: 2.5 });
 			var sp = new THREE.Mesh(new THREE.SphereGeometry(H * 0.42, 24, 16), tm); sp.position.y = H * 0.45; sp.castShadow = true; sp.receiveShadow = true; g.add(sp);
+		} else if (kind === 'shrub') {
+			// 1.26.0: a shrub of three or four overlapping clumps – an irregular, living outline
+			var bl = c.garden_style === 'cottage', nb = 3 + (seed % 2);
+			canopy('sphere', 0, H * 0.36, 0, H * 0.42, H * 0.33, H * 0.42, 70, 'broad', bl);
+			for (var sb2 = 0; sb2 < nb; sb2++) {
+				var sa2 = sb2 / nb * Math.PI * 2 + rnd() * 0.8, sr2 = H * (0.18 + rnd() * 0.1), ss2 = H * (0.24 + rnd() * 0.1);
+				canopy('sphere', Math.cos(sa2) * sr2, H * (0.26 + rnd() * 0.16), Math.sin(sa2) * sr2, ss2, ss2 * 0.8, ss2, 34, 'broad', bl);
+			}
 		} else {
 			var kk = kind === 'lavender' ? 'lavender' : 'broad';
-			canopy('sphere', 0, H * 0.38, 0, H * 0.48, H * 0.36, H * 0.48, kind === 'flower' ? 40 : 120, kk, (kind === 'shrub' && c.garden_style === 'cottage') || kind === 'flower');
+			canopy('sphere', 0, H * 0.38, 0, H * 0.48, H * 0.36, H * 0.48, kind === 'flower' ? 40 : 120, kk, kind === 'flower');
 		}
 	} else if (kind === 'palm') {
 		// curved ringed trunk and a crown of drooping fronds
@@ -1602,26 +1717,44 @@ House.prototype.plant = function (kind, x, y, size, seed) {
 		for (var b = 0; b < 14; b++) { var a = b / 14 * Math.PI * 2, lean = 0.25 + rnd() * 0.2; g.add(rod(new THREE.Vector3(0, 0, 0), new THREE.Vector3(Math.cos(a) * H * lean, H * (0.7 + rnd() * 0.3), Math.sin(a) * H * lean), 0.012, gm, 4)); }
 	} else {
 		// deciduous / multistem / fruit / olive
-		var stems = kind === 'multistem' ? 3 : 1;
+		var stems = kind === 'multistem' ? 3 : 1, fork = H * (kind === 'fruit' || kind === 'olive' ? 0.36 : 0.46);
 		for (var s = 0; s < stems; s++) {
 			var ox = (s - (stems - 1) / 2) * H * 0.06;
 			g.add(rod(new THREE.Vector3(ox, 0, 0), new THREE.Vector3(ox * 2.5, H * 0.52, ox * 0.5), H * (stems > 1 ? 0.018 : (kind === 'olive' ? 0.04 : 0.03)), bark, 8));
 		}
-		// main branches
-		for (var br = 0; br < 5; br++) {
-			var ang = br / 5 * Math.PI * 2 + rnd(), len = H * (0.25 + rnd() * 0.12);
-			g.add(rod(new THREE.Vector3(0, H * 0.48, 0), new THREE.Vector3(Math.cos(ang) * len, H * (0.62 + rnd() * 0.2), Math.sin(ang) * len), H * 0.012, bark, 6));
-		}
+		// 1.26.0: root flare at the foot of a single trunk
+		if (stems === 1) { var fl0 = new THREE.Mesh(new THREE.CylinderGeometry(H * 0.032, H * 0.06, H * 0.06, 8), bark); fl0.position.y = H * 0.03; fl0.castShadow = true; fl0.receiveShadow = true; g.add(fl0); }
 		if (!winter || kind === 'olive') {
 			var R = H * (kind === 'multistem' ? 0.3 : (kind === 'olive' ? 0.32 : 0.36)), k2 = kind === 'olive' ? 'olive' : 'broad';
 			var blossom = kind === 'fruit' || (season === 'spring' && rnd() > 0.4);
-			canopy('sphere', 0, H - R * 0.95, 0, R * 0.95, R * 0.75, R * 0.95, 420, k2, blossom);
-			for (var cl = 0; cl < 6; cl++) {
-				var ca = cl / 6 * Math.PI * 2 + rnd(), cr = R * (0.45 + rnd() * 0.25), cs = R * (0.45 + rnd() * 0.25);
-				canopy('sphere', Math.cos(ca) * cr, H - R * (0.8 + rnd() * 0.7), Math.sin(ca) * cr, cs, cs * 0.8, cs, 150, k2, blossom);
+			// 1.26.0: the crown grows on its branches: main limbs from the fork, each forking once, and a
+			// clump of leaves at every tip – gaps between the clumps let the sky and the limbs show through
+			var tips = [], nLimb = kind === 'olive' ? 4 : 5;
+			for (var br = 0; br < nLimb; br++) {
+				var ang = br / nLimb * Math.PI * 2 + rnd() * 0.9, rise = 0.55 + rnd() * 0.35, len = H * (0.24 + rnd() * 0.1);
+				var from = new THREE.Vector3(0, fork + rnd() * H * 0.06, 0), dir = new THREE.Vector3(Math.cos(ang) * (1 - rise * 0.5), rise, Math.sin(ang) * (1 - rise * 0.5)).normalize();
+				var mid = from.clone().addScaledVector(dir, len);
+				g.add(rod(from, mid, H * 0.014, bark, 6));
+				for (var bf = 0; bf < 2; bf++) {
+					var d2 = dir.clone().add(new THREE.Vector3(rnd() - 0.5, rnd() * 0.4, rnd() - 0.5).multiplyScalar(0.9)).normalize(), tip = mid.clone().addScaledVector(d2, len * (0.5 + rnd() * 0.25));
+					g.add(rod(mid, tip, H * 0.007, bark, 5));
+					tips.push(tip);
+				}
 			}
-			canopy('sphere', R * 0.1, H - R * 0.45, -R * 0.1, R * 0.5, R * 0.42, R * 0.5, 120, k2, blossom);
+			// a central mass keeps the crown dense from below; the tips carry the outline
+			canopy('sphere', 0, H - R * 1.0, 0, R * 0.78, R * 0.6, R * 0.78, 240, k2, blossom);
+			tips.forEach(function (tp, ti2) {
+				var cs = R * (0.38 + rnd() * 0.2);
+				// keep the crown inside its height: tips that grew too high are pulled in
+				var cy = Math.min(tp.y + cs * 0.15, H - cs * 0.7);
+				canopy('sphere', tp.x * 1.05, cy, tp.z * 1.05, cs, cs * 0.78, cs, ti2 % 3 === 0 ? 120 : 95, k2, blossom);
+			});
 		} else {
+			// main branches (bare crown)
+			for (var brw = 0; brw < 5; brw++) {
+				var angw = brw / 5 * Math.PI * 2 + rnd(), lenw = H * (0.25 + rnd() * 0.12);
+				g.add(rod(new THREE.Vector3(0, H * 0.48, 0), new THREE.Vector3(Math.cos(angw) * lenw, H * (0.62 + rnd() * 0.2), Math.sin(angw) * lenw), H * 0.012, bark, 6));
+			}
 			// bare crown: recursive branching
 			var grow = function (from, dir, len, rad, depth) {
 				var to = from.clone().addScaledVector(dir, len);
@@ -1708,9 +1841,23 @@ function Env(renderer) {
 	this.renderer = renderer;
 	this.pmrem = new THREE.PMREMGenerator(renderer);
 	this.key = ''; this.envRT = null; this.bg = null;
+	this.photo = '';      // name of the photographed sky in use ('' = the painted sky)
+	this.skyRes = 2048;   // width of the photographed sky (quality profile)
+	this.want = '';       // the photographed sky this view asked for (loading or failed)
+	this.onSky = null;    // called when a sky that was asked for has arrived
+	this.hz = null;       // horizon colour of the photographed sky (for the haze)
 }
+// 1.26.0: the photographed sky (assets/sky, CC0) when it is loaded, otherwise the painted one. Indoors
+// and for single items nothing changes. `noPhoto` keeps the painted sky (benchmark comparison, tests).
 Env.prototype.apply = function (scene, c, inner) {
-	var key = [c.time_of_day, c.weather, c.orientation, inner ? 'in' : ''].join('|');
+	var name = inner || c._item || c._paintedSky || NO_PHOTO ? '' : SKY.pick(c), st = name ? SKY.status(name) : 'none', self = this;
+	var key = [c.time_of_day, c.weather, c.orientation, inner ? 'in' : '', st === 'ready' ? name + '@' + this.skyRes : ''].join('|');
+	if (name && st !== 'ready' && st !== 'failed' && this.want !== name) {
+		// not here yet: the painted sky now, the photograph as soon as it has arrived
+		this.want = name;
+		SKY.load(name).then(function (ok) { if (ok && self.want === name && self.onSky) { self.onSky(name); } });
+	}
+	if (!name) { this.want = ''; }
 	if (key === this.key) { return; }
 	this.key = key;
 	var sd = c._item ? new THREE.Vector3(-0.42, 0.82, 0.62).normalize() : sunDir(c);
@@ -1722,10 +1869,30 @@ Env.prototype.apply = function (scene, c, inner) {
 	if (this.bg) { this.bg.dispose(); }
 	if (this.envRT) { this.envRT.dispose(); }
 	this.bg = skyTexture(c, sd);
+	this.photo = ''; this.hz = null;
+	if (st === 'ready') {
+		// the photograph's sun goes where the scene's sun stands (same azimuth, orientation included), and
+		// its brightness is matched to the painted sky of the same hour: exposure and lamps stay balanced
+		var tex = null;
+		try {
+			var s = SKY.info(name), mean = SKY.canvasMean(this.bg.image), k = s && s.mean > 0 ? mean / s.mean : 1;
+			tex = SKY.texture(name, this.skyRes, Math.atan2(sd.z, sd.x) / (2 * Math.PI) + 0.5, k);
+			if (tex) { this.hz = SKY.horizon(name, k); }
+		} catch (e) { tex = null; }
+		if (tex) { this.bg.dispose(); this.bg = tex; this.photo = name; }
+	}
 	this.envRT = inner ? this.pmrem.fromScene(roomEnv(c), 0.04) : this.pmrem.fromEquirectangular(this.bg);
 	scene.background = this.bg;
 	scene.environment = this.envRT.texture;
 };
+// Tests and the benchmark can switch the photographs off (the painted sky of 1.24.0).
+var NO_PHOTO = false;
+// Resolves once the photographed sky of a configuration has arrived (or failed): option cards and guide
+// pictures wait for it, so a kept picture never has the painted sky by accident.
+function skyReady(c) {
+	var name = c && !c._int && !c._item && !c._paintedSky && !NO_PHOTO ? SKY.pick(c) : '';
+	return name ? SKY.load(name) : Promise.resolve(false);
+}
 // Reflections and soft light indoors: a plain room with a bright window and a ceiling light (no lawn,
 // no sky below the horizon – ceilings and the undersides of furniture stay neutral).
 function roomEnv(c) {
@@ -1745,7 +1912,12 @@ function Viewer(opts) {
 	this.o = opts;
 	this.thumb = !!opts.thumb;
 	var coarse = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
-	this.quality = opts.quality || (this.thumb ? 'thumb' : (coarse ? 'medium' : 'high'));
+	// 1.26.0: the live preview follows the quality levels (agh-3d-quality.js); option cards stay 'thumb'.
+	// The canvas is made the way the starting level needs it ('high'/'ultra': effect composer, 'medium'/'low':
+	// antialiased canvas – the two pictures of 1.24.0); a later change of level adapts what it can.
+	this.levels = !this.thumb && !opts.quality;
+	var lvl = this.levels ? QL.initial(coarse) : '';
+	this.quality = opts.quality || (this.thumb ? 'thumb' : (lvl ? (lvl === 'high' || lvl === 'ultra' ? 'high' : 'medium') : (coarse ? 'medium' : 'high')));
 	// Option cards borrow the renderer of the live preview: one WebGL context, so every shader is
 	// compiled and every texture uploaded once (a second context did all of it again).
 	this.shared = !!opts.renderer;
@@ -1763,6 +1935,7 @@ function Viewer(opts) {
 	this.scene = new THREE.Scene();
 	this.camera = new THREE.PerspectiveCamera(40, 1.5, 0.3, 3000);
 	this.env = new Env(r);
+	if (this.thumb) { this.env.skyRes = 1024; }   // option cards and guide pictures: half the sky is plenty
 	this.sun = new THREE.DirectionalLight('#ffffff', 3); this.sun.castShadow = true;
 	var ms = this.quality === 'high' ? 4096 : (this.quality === 'medium' ? 2048 : 1536);
 	this.sun.shadow.mapSize.set(ms, ms); this.sun.shadow.bias = -0.0003; this.sun.shadow.normalBias = 0.03; this.sun.shadow.radius = 3;
@@ -1843,25 +2016,88 @@ function Viewer(opts) {
 			self.nudge(dx, dz, turn);
 		};
 		document.addEventListener('keydown', this.onKey, true);
-		if (this.quality === 'high') {
-			this.composer = new EffectComposer(r, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
-			this.composer.addPass(new RenderPass(this.scene, this.camera));
-			this.gtao = new GTAOPass(this.scene, this.camera, 1, 1);
-			this.gtao.output = GTAOPass.OUTPUT.Default;
-			this.gtao.updateGtaoMaterial({ radius: 0.45, distanceExponent: 1.5, thickness: 0.6, scale: 1, samples: 16 });
-			this.gtao.blendIntensity = 0.6;
-			this.composer.addPass(this.gtao);
-
-			this.composer.addPass(new OutputPass());
+		this.aa = this.quality !== 'high';
+		if (this.quality === 'high') { this.makeComposer(); }
+		// 1.26.0: the quality profile of the level, and the photographed sky when it arrives
+		var selfQ = this;
+		// a sky that arrives after the first picture: applied at once; before it, the upgrade takes it along
+		this.env.onSky = function () { if (!selfQ.disposed && selfQ.c && (DETAIL_ON || selfQ.thumb)) { selfQ.envApply(); selfQ.requestRender(); } };
+		if (this.levels) {
+			this.gpu = QL.gpuInfo(r.getContext());
+			QL.setGpu(this.gpu.renderer);
+			this.applyQuality(QL.state().level);
+			QL.onChange(function (l) { if (!selfQ.disposed) { selfQ.applyQuality(l); selfQ.requestRender(); } });
 		}
 	}
 }
+// The effect composer with ambient occlusion (the 'high' picture of 1.24.0). Kept for later effects: a
+// post pass is inserted before the OutputPass (this.composer.insertPass(pass, this.composer.passes.length - 1)).
+Viewer.prototype.makeComposer = function () {
+	var r = this.renderer;
+	this.composer = new EffectComposer(r, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
+	this.composer.addPass(new RenderPass(this.scene, this.camera));
+	this.gtao = new GTAOPass(this.scene, this.camera, 1, 1);
+	this.gtao.output = GTAOPass.OUTPUT.Default;
+	this.gtao.updateGtaoMaterial({ radius: 0.45, distanceExponent: 1.5, thickness: 0.6, scale: 1, samples: 16 });
+	this.gtaoSamples = 16;
+	this.gtao.blendIntensity = 0.6;
+	this.composer.addPass(this.gtao);
+
+	this.composer.addPass(new OutputPass());
+	if (this.w) { this.composer.setPixelRatio(r.getPixelRatio()); this.composer.setSize(this.w, this.h); }
+};
+// Puts a quality level into effect (only the live preview): pixel ratio, shadow map, ambient occlusion,
+// grass, the sky's resolution, the stochastic tiling, the reach of the detailed trees.
+Viewer.prototype.applyQuality = function (l) {
+	var P = QL.profile(l), prev = this.qp;
+	this.qp = P;
+	this.dprHi = Math.min(window.devicePixelRatio || 1, P.dpr);
+	if (this.w) { this.setDPR(this.lowDPR ? this.prLo() : this.prHi()); }
+	if (this.sun.shadow.mapSize.x !== P.shadow) {
+		this.sun.shadow.mapSize.set(P.shadow, P.shadow);
+		if (this.sun.shadow.map) { this.sun.shadow.map.dispose(); this.sun.shadow.map = null; }
+		this.shadowDirty = true;
+	}
+	this.sun.shadow.radius = P.shadowRadius;
+	// the composer is needed for ambient occlusion – and always on a canvas made without antialiasing
+	this.useComposer = P.gtao || !this.aa;
+	if (this.useComposer && !this.composer) { this.makeComposer(); }
+	this.gtaoOn = P.gtao;
+	if (this.gtao && P.gtao && this.gtaoSamples !== P.gtaoSamples) { this.gtao.updateGtaoMaterial({ samples: P.gtaoSamples }); this.gtaoSamples = P.gtaoSamples; }
+	SHQ.aghStoch.value = P.stochastic ? 1 : 0;
+	setSurfStoch(P.stochastic);
+	SHQ.aghDetail.value = l === 'low' ? 0.5 : 1;
+	this.env.skyRes = P.sky;
+	if (this.c && prev) {
+		this.envApply();
+		this.grassFor();
+		if (this.woodsNear !== undefined && this.woodsNear !== P.treeNear && this.house && !this.innerNow) { this.woodsFor(this.c); }
+		this.shadowDirty = true;
+	}
+};
+// (Re)applies the environment of the current view: called when a photographed sky arrived or the level
+// changed (its resolution) – nothing else of the scene is rebuilt.
+Viewer.prototype.envApply = function () {
+	this.env.apply(this.scene, this.c, !!this.innerNow);
+	this.applyHaze();
+};
+// The haze takes the colour of the sky at the horizon: the painted sky's (as before) or, with a
+// photographed sky, its own hue at the painted sky's brightness.
+Viewer.prototype.applyHaze = function () {
+	if (!this.scene.fog || !this.hz0) { return; }
+	this.scene.fog.color.set(this.hz0);
+	var h = this.env.photo && this.env.hz;
+	if (h) {
+		var c0 = this.scene.fog.color, l0 = 0.2126 * c0.r + 0.7152 * c0.g + 0.0722 * c0.b, l1 = 0.2126 * h[0] + 0.7152 * h[1] + 0.0722 * h[2];
+		if (l1 > 1e-6) { var k = l0 / l1; c0.setRGB(Math.min(1, h[0] * k), Math.min(1, h[1] * k), Math.min(1, h[2] * k), THREE.LinearSRGBColorSpace); }
+	}
+};
 // Compiles the shaders of a scene for the target this viewer really draws into (the effect
 // composer's buffer or an option card's buffer: tone mapping and colour space are part of a shader).
 Viewer.prototype.compileFor = function (scene, target) {
 	var r = this.renderer, prev = r.getRenderTarget();
 	if (!r.compileAsync) { return Promise.resolve(); }
-	r.setRenderTarget(target || (this.composer ? this.composer.renderTarget1 : null));
+	r.setRenderTarget(target || (this.composer && this.useComposer !== false ? this.composer.renderTarget1 : null));
 	var p = r.compileAsync(scene, this.camera);
 	r.setRenderTarget(prev);
 	return p.catch(function () {});
@@ -1912,6 +2148,7 @@ Viewer.prototype.update = function (cfg, mode) {
 	// option cards with a single item: always the same bright daylight studio
 	if (c._item) { c = Object.assign({}, c, { time_of_day: 'midday', weather: 'clear', season: 'summer' }); }
 	this.c = c;
+	this.innerNow = !!c._int || !!c._item || mode === 'interior'; this.modeNow = mode;
 	var night = c.time_of_day === 'night', t = TOD[c.time_of_day] || TOD.golden, overcast = c.weather === 'overcast';
 	this.env.apply(this.scene, c, !!c._int || !!c._item || mode === 'interior');
 	this.exposure = this.renderer.toneMappingExposure = t.exp * (overcast ? 1.15 : 1);
@@ -1931,6 +2168,7 @@ Viewer.prototype.update = function (cfg, mode) {
 	var inner = !!c._int || !!c._item || mode === 'interior';
 	// indoors practically no haze – but the same kind of fog, so the shaders stay the same
 	this.scene.fog = new THREE.FogExp2(hz, inner ? 0.000001 : (overcast ? 0.0032 : 0.0017));
+	this.hz0 = hz; this.applyHaze();
 	this.ground.visible = !inner; this.treeline.visible = !inner; this.hood.visible = !inner && !c._item && mode !== 'facade' && mode !== 'floor';
 	// a clean guide picture for the image model: no tree line of simple cones and no haze behind the
 	// house – the model paints the surroundings for real from the prompt instead of copying the shapes
@@ -1945,6 +2183,7 @@ Viewer.prototype.update = function (cfg, mode) {
 	else if (mode === 'build' && BUILD_SCENE) { this.house = BUILD_SCENE(c, H3); }
 	else { this.house = new House(c, { mini: this.o.mini || mode === 'mini', noMove: !!this.thumb }).build(); }
 	if (!inner) { this.landFor(c, mode); }
+	this.grassFor();
 	this.lampsToPool(this.house.root);
 	this.sel = null; this.drag = null;
 	if (this.bmark) { this.bmark.visible = false; }
@@ -2012,15 +2251,17 @@ Viewer.prototype.setPhase = function (p) {
 Viewer.prototype.landFor = function (c, mode) {
 	var k = LAND.landKind(c), hs = this.house, pb = hs && hs.plotBox, night = c.time_of_day === 'night' || c.time_of_day === 'blue';
 	if (pb) { LAND.setRoad(pb.front); }
-	var key = [k, c.season || 'summer', pb ? Math.round(pb.front / 10) : 2, this.thumb ? 't' : ''].join('|');
+	// 1.26.0: how far the detailed trees reach follows the quality level (150 m = 1.24.0; option cards too)
+	var near = this.qp ? this.qp.treeNear : 150;
+	var key = [k, c.season || 'summer', pb ? Math.round(pb.front / 10) : 2, this.thumb ? 't' : '', DETAIL_ON ? 'd' : '', near].join('|');
 	this.ground.material = LAND.terrainMat(c);
 	if (key !== this.landKey) {
 		this.landKey = key;
+		this.woodsNear = near;
 		this.ground.geometry = LAND.terrainGeo(k, c.season);
 		if (this.water) { this.scene.remove(this.water); this.water.geometry.dispose(); this.water = null; }
 		this.water = LAND.water(k); if (this.water) { this.scene.add(this.water); }
-		while (this.treeline.children.length) { this.treeline.remove(this.treeline.children[0]); }
-		this.treeline.add(LAND.woods(c, k, this.thumb));
+		this.woodsFor(c);
 	}
 	// the street belongs to this house (built and disposed with it); not under the close-up option cards
 	var full = pb && !(this.o.mini || mode === 'mini' || mode === 'facade' || mode === 'floor');
@@ -2035,6 +2276,165 @@ Viewer.prototype.landFor = function (c, mode) {
 	}
 	// what was built around the house, in numbers (the merge swallows the groups, this survives)
 	this.siteInfo = { street: full ? ('town' === k ? 'urban' : ('suburb' === k ? 'town' : 'country')) : '', hood: this.hood.children.length };
+};
+/* 1.26.0 – the lawn in blades: clumps of grass blades as one InstancedMesh (one draw call) on the lawn of
+ * the plot and, thinner, on the meadow around it; dense near the house, thinning out with the distance.
+ * How many clumps: the quality level (low: none – the lawn texture of 1.24.0 alone). Nothing grows on
+ * paved or built surfaces, the pool, beds, or under the outbuildings. Not in winter (snow). */
+var GRASSGEO = null, GRASS_TRIS = 0;
+function grassGeo() {
+	if (GRASSGEO) { return GRASSGEO; }
+	var pos = [], nor = [], colr = [], rnd = (function (s) { return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; })(4242), n = 5;
+	for (var i = 0; i < n; i++) {
+		var a = i / n * Math.PI * 2 + rnd() * 0.8, r0 = 0.02 + rnd() * 0.05, h = 0.07 + rnd() * 0.07, w = 0.008 + rnd() * 0.006, lean = 0.025 + rnd() * 0.05;
+		var bx = Math.cos(a) * r0, bz = Math.sin(a) * r0, sx = -Math.sin(a) * w, sz = Math.cos(a) * w, tx = bx + Math.cos(a) * lean, tz = bz + Math.sin(a) * lean;
+		var mx = (bx + tx) / 2 + Math.cos(a) * lean * 0.15, mz = (bz + tz) / 2 + Math.sin(a) * lean * 0.15;
+		// a blade: wide base, narrower middle, a point – two triangles, lit like the lawn (normal up, leaning out)
+		var P = [[bx - sx, 0, bz - sz], [bx + sx, 0, bz + sz], [mx + sx * 0.6, h * 0.55, mz + sz * 0.6], [mx - sx * 0.6, h * 0.55, mz - sz * 0.6], [tx, h, tz]];
+		var T = [[0, 1, 2], [0, 2, 3], [3, 2, 4]], C = [0.42, 0.42, 0.72, 0.72, 1.0];
+		var nx = Math.cos(a) * 0.35, nz = Math.sin(a) * 0.35, nl = Math.sqrt(1 + nx * nx + nz * nz);
+		T.forEach(function (t) { t.forEach(function (k) { pos.push(P[k][0], P[k][1], P[k][2]); nor.push(nx / nl, 1 / nl, nz / nl); colr.push(C[k], C[k], C[k]); }); });
+	}
+	var g = new THREE.BufferGeometry();
+	g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+	g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+	g.setAttribute('color', new THREE.Float32BufferAttribute(colr, 3));
+	g.computeBoundingSphere();
+	g.userData.shared = true;
+	GRASS_TRIS = pos.length / 9;
+	GRASSGEO = g;
+	return g;
+}
+var GRASSCOL = { spring: ['#5E7C33', '#7E9A43'], summer: ['#4F6A2B', '#738A3F'], autumn: ['#6F7136', '#97894A'] };
+Viewer.prototype.grassFor = function () {
+	var P = this.qp, hs = this.house, c = this.c || {}, season = c.season || 'summer';
+	var off = !DETAIL_ON || !P || !P.grass || !hs || !hs.gardenPlan || !hs.plotBox || this.innerNow || this.thumb || season === 'winter' || (this.modeNow && this.modeNow !== 'guide');
+	// the same plot, garden and level: the grass of the last build stays as it is (no rebuild)
+	var gkey = off ? '' : JSON.stringify([P.level, season, hs.plotBox, hs.gardenPlan, (hs.vols || []).map(function (v) { return [v.x0, v.y0, v.x1, v.y1]; }), hs.terrace || null, hs.garage || null, c.garden_features || null, hs.movers ? hs.movers.children.map(function (o) { var m = o.userData.move || {}; return [o.userData.slot, m.cx, m.cy, m.turn]; }) : null]);
+	if (gkey && gkey === this.grassKey && this.grass) { if (!this.grass.parent) { this.scene.add(this.grass); } return; }
+	if (this.grass) { this.scene.remove(this.grass); this.grass.dispose(); this.grass = null; }
+	this.grassKey = gkey;
+	this.grassInfo = { level: P ? P.level : '', count: 0, tris: 0 };
+	if (off) { return; }
+	var G = hs.gardenPlan, pb = hs.plotBox, lawnOn = (c.garden_features || []).indexOf('lawn') !== -1 || !c.garden_features;
+	var hard = [], R = function (r, m) { if (r) { hard.push([r.x0 - (m || 0), r.y0 - (m || 0), r.x1 + (m || 0), r.y1 + (m || 0)]); } };
+	var U = function (q, m) { if (q && q.w !== undefined) { var hw = Math.max(q.w, q.d) / 2 + (m || 0); hard.push([q.cx - hw, q.cy - hw, q.cx + hw, q.cy + hw]); } };
+	(hs.vols || []).forEach(function (v) { var e = (v.ext || 0) + 0.3; hard.push([v.x0 - e, v.y0 - e, v.x1 + e, v.y1 + e]); });
+	R(G.path, 0.05); R(G.drive, 0.05); R(G.gravel, 0.05); R(hs.terrace, 0.1); R(hs.garage, 0.1); R(G.hedge, 0.2);
+	(G.flats || []).forEach(function (f) { R(f, 0.05); });
+	U(G.pool, 0.3); U(G.playground, 0.1); U(G.shed, 0.1); U(G.pergola, 0); (G.outs || []).forEach(function (q) { U(q, 0.2); });
+	if (G.firepit) { hard.push([G.firepit.x - 0.8, G.firepit.y - 0.8, G.firepit.x + 0.8, G.firepit.y + 0.8]); }
+	// whatever stands on the site now (moved by hand included) is kept free as it is placed
+	if (hs.movers) {
+		var bx = new THREE.Box3();
+		hs.movers.children.forEach(function (o) { var k = (o.userData.move || {}).kind; if (k === 'tree' || k === 'plant' || k === 'person' || k === 'pet' || k === 'light') { return; } bx.setFromObject(o); if (!bx.isEmpty()) { hard.push([bx.min.x - 0.1, bx.min.z - 0.1, bx.max.x + 0.1, bx.max.z + 0.1]); } });
+	}
+	var free = function (x, y) { for (var i = 0; i < hard.length; i++) { var h = hard[i]; if (x > h[0] && x < h[2] && y > h[1] && y < h[3]) { return false; } } return true; };
+	var bb = new THREE.Box3().setFromObject(hs.fit), cx = (bb.min.x + bb.max.x) / 2, cy = (bb.min.z + bb.max.z) / 2;
+	var L0 = G.lawn, ring = 18;
+	var area = Math.max(1, (L0.x1 - L0.x0) * (L0.y1 - L0.y0)) + ((L0.x1 - L0.x0) + 2 * ring) * ring * 0.9;
+	var dens = Math.min(P.grassDensity, P.grass / area * 2.2);
+	var rnd = (function (s) { return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; })(97 + Math.round(Math.abs(cx * 13 + cy * 7)));
+	var pts = [], step = 1 / Math.sqrt(Math.max(0.05, dens));
+	var x0 = L0.x0 - ring, x1 = L0.x1 + ring, y0 = L0.y0 - ring, y1 = Math.min(L0.y1, pb.front);
+	for (var y = y0; y < y1 && pts.length < P.grass; y += step) {
+		for (var x = x0; x < x1 && pts.length < P.grass; x += step) {
+			var px = x + (rnd() - 0.5) * step, py = y + (rnd() - 0.5) * step, inLawn = px > L0.x0 && px < L0.x1 && py > L0.y0 && py < L0.y1;
+			var d = Math.hypot(px - cx, py - cy), keep = (inLawn ? (lawnOn ? 1 : 0.55) : 0.3) * (1 - 0.72 * Math.min(1, Math.max(0, (d - 10) / 30)));
+			if (rnd() > keep || !free(px, py)) { continue; }
+			pts.push([px, py, rnd(), rnd(), inLawn]);
+		}
+	}
+	if (!pts.length) { return; }
+	var pal = GRASSCOL[season] || GRASSCOL.summer, c0 = new THREE.Color(pal[0]), c1 = new THREE.Color(pal[1]), dry = new THREE.Color('#9A8E58'), col = new THREE.Color();
+	var mat = cached('grassblades', function () { return new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.92 }); });
+	var im = new THREE.InstancedMesh(grassGeo(), mat, pts.length), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), V3 = THREE.Vector3, up = new V3(0, 1, 0);
+	pts.forEach(function (p, i) {
+		var s = (p[4] && lawnOn ? 0.8 : 1.25) * (0.75 + p[2] * 0.6);
+		q.setFromAxisAngle(up, p[3] * 6.283);
+		m4.compose(X(p[0], p[1], 0.005), q, new V3(s * 1.15, s, s * 1.15));
+		im.setMatrixAt(i, m4);
+		col.copy(c0).lerp(c1, p[3]); if (!p[4] || !lawnOn) { col.lerp(dry, 0.25 + p[2] * 0.25); }
+		im.setColorAt(i, col);
+	});
+	im.castShadow = false; im.receiveShadow = true;
+	im.userData.noPick = true; im.raycast = function () {};
+	im.computeBoundingSphere();
+	im.name = 'grass';
+	this.grass = im; this.scene.add(im);
+	this.grassInfo = { level: P.level, count: pts.length, tris: pts.length * GRASS_TRIS };
+};
+// The woods of the landscape alone (a new quality level changes how far the detailed trees reach).
+// After the first picture (1.26.0): the detail is switched on in time slices – the new shaders are compiled
+// in the background (compileAsync where the driver can), then woods, grass and sky are put in and drawn once.
+// Until it is done, the first picture stays on screen. Resolves when the full scene is there.
+var DETAIL_P = null, DETAIL_RES = null;
+function detailReady() { return DETAIL_ON && !DETAIL_P ? Promise.resolve() : (DETAIL_P || (DETAIL_P = new Promise(function (r) { DETAIL_RES = r; }))); }
+// The full scene, now: guide pictures (the image model gets the whole scene) and option cards wait for it.
+// If the live preview has not drawn yet (hidden box), the upgrade is started here; option cards without a
+// live picture after `wait` ms switch the detail on themselves (they have no grass).
+function fullDetail(wait) {
+	if (DETAIL_ON && !DETAIL_P) { return Promise.resolve(); }
+	if (live && live.house && live.levels && !live.disposed) { if (!live.upgrading) { live.upgrade(); } return detailReady(); }
+	if (!wait) { detailFlags(); return Promise.resolve(); }
+	return Promise.race([detailReady(), new Promise(function (r) { setTimeout(r, wait); })]).then(function () { detailFlags(); });
+}
+Viewer.prototype.upgrade = function () {
+	var self = this;
+	if (this.upgrading || DETAIL_ON || this.thumb || !this.house) { return; }
+	this.upgrading = true;
+	detailReady();
+	var idle = function (fn) { (window.requestIdleCallback || function (f) { return setTimeout(f, 30); })(function () { try { fn(); } catch (e) { finish(); } }, { timeout: 400 }); };
+	var finish = function () { self.upgrading = false; if (DETAIL_RES) { var r = DETAIL_RES; DETAIL_RES = null; DETAIL_P = null; r(); } };
+	idle(function () {
+		if (self.disposed) { finish(); return; }
+		// 1) the materials get their surface detail; their programs are compiled before they are used
+		detailFlags();
+		var scene = self.scene, c = self.c || {};
+		idle(function () {
+			// 2) the detailed woods and the grass, built off the visible scene
+			var inner = self.innerNow, woods = null;
+			if (!inner && self.house && self.house.plotBox) {
+				var near = self.qp ? self.qp.treeNear : 150;
+				LAND.setTreeNear(near);
+				try { woods = LAND.woods(c, LAND.landKind(c), self.thumb); } finally { LAND.setTreeNear(150); }
+			}
+			idle(function () {
+				var tmp = new THREE.Group(); if (woods) { tmp.add(woods); }
+				self.grassFor(); if (self.grass) { scene.remove(self.grass); tmp.add(self.grass); }
+				// compiled with the live scene's lights, fog and environment (targetScene), into the buffer the
+				// viewer really draws to; meanwhile the first picture stays (no redraw with half-made shaders).
+				// The house's own materials are in the scene: compileAsync(scene) prepares their new programs.
+				var job = self.compileJob = {};
+				var r = self.renderer, prevRT = r.getRenderTarget();
+				var done = function () {
+					if (self.compileJob === job) { self.compileJob = null; }
+					if (woods) { while (self.treeline.children.length) { self.treeline.remove(self.treeline.children[0]); } self.treeline.add(woods); self.woodsNear = self.qp ? self.qp.treeNear : 150; self.landKey = self.landKey.replace(/\|\|([0-9.]+)$/, '|d|$1'); }
+					if (self.grass) { tmp.remove(self.grass); scene.add(self.grass); }
+					// the photographed sky, if it arrived meanwhile
+					if (self.env.want && self.env.photo !== self.env.want && SKY.status(self.env.want) === 'ready') { self.envApply(); }
+					self.shadowDirty = true;
+					self.requestRender();
+					finish();
+				};
+				var cmp = Promise.resolve();
+				if (r.compileAsync) {
+					r.setRenderTarget(self.composer && self.useComposer !== false ? self.composer.renderTarget1 : null);
+					try { cmp = Promise.all([r.compileAsync(tmp, self.camera, scene), r.compileAsync(scene, self.camera)]); } catch (e) { cmp = Promise.resolve(); }
+					r.setRenderTarget(prevRT);
+				}
+				cmp.then(done, done);
+			});
+		});
+	});
+};
+Viewer.prototype.woodsFor = function (c) {
+	var near = this.qp ? this.qp.treeNear : 150;
+	this.woodsNear = near;
+	while (this.treeline.children.length) { this.treeline.remove(this.treeline.children[0]); }
+	LAND.setTreeNear(near);
+	try { this.treeline.add(LAND.woods(c, LAND.landKind(c), this.thumb)); } finally { LAND.setTreeNear(150); }
+	this.landKey = this.landKey.replace(/\|[0-9.]+$/, '|' + near);
 };
 // Frames `box` from the direction `dir`: the distance and the point to look at, so that the box fills
 // `fill` of the picture and sits in the middle of it. The eight corners are projected, the camera is
@@ -2144,12 +2544,40 @@ Viewer.prototype.loop = function () {
 	var self = this;
 	if (this.looping) { return; }
 	this.looping = true;
+	var last = 0;
 	(function tick() {
 		if (self.disposed) { return; }
 		self.controls.update(); self.render();
+		// 1.26.0: the frame times of continuous drawing drive the automatic quality level
+		var now = performance.now();
+		if (self.levels && last && self.interacting) { QL.frame(now - last); }
+		last = now;
 		if (self.interacting || performance.now() < (self.settle || 0)) { requestAnimationFrame(tick); }
 		else { self.looping = false; if (self.lowDPR) { self.lowDPR = false; self.setDPR(self.prHi()); self.render(); } }
 	})();
+};
+// First start (automatic quality, no stored result for this graphics card): a short measurement of the
+// frame time once the house is on screen – a few frames drawn back to back while nothing else happens –
+// picks the level. At most three rounds; the result is kept per card, so it runs once per browser.
+Viewer.prototype.probe = function () {
+	var self = this;
+	if (!this.levels || this.probing || !QL.needsProbe() || !this.house || this.compileJob) { return; }
+	this.probing = true;
+	var round = function () {
+		texturesReady().then(function () {
+			setTimeout(function () {
+				if (self.disposed || self.interacting || self.compileJob || !self.w) { self.probing = false; return; }
+				// the first frame of a level pays for its shaders and buffers: not counted
+				self.render(); self.renderer.getContext().finish();
+				var ts = [];
+				for (var i = 0; i < 6; i++) { var t0 = performance.now(); self.render(); self.renderer.getContext().finish(); ts.push(performance.now() - t0); }
+				ts.sort(function (a, b) { return a - b; });
+				var next = QL.probeResult(ts[2]);
+				if (next) { setTimeout(round, 400); } else { self.probing = false; self.requestRender(); }
+			}, 600);
+		});
+	};
+	round();
 };
 // The canvas is stretched to its box by CSS; if the box changed since the last frame (a re-rendered
 // panel, a new step, the summary filling in), the drawing buffer is resized before drawing, so a
@@ -2165,9 +2593,12 @@ Viewer.prototype.render = function () {
 	if (this.compileJob && !this.interacting) { return; }
 	this.renderer.toneMappingExposure = this.exposure;
 	if (this.shadowDirty) { this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = false; }
-	if (this.gtao) { this.gtao.enabled = !this.interacting; }
-	if (this.composer) { this.composer.render(); } else { this.renderer.render(this.scene, this.camera); }
+	if (this.gtao) { this.gtao.enabled = !this.interacting && this.gtaoOn !== false; }
+	if (this.composer && this.useComposer !== false) { this.composer.render(); } else { this.renderer.render(this.scene, this.camera); }
 	this.frames = (this.frames || 0) + 1;
+	// 1.26.0: the first picture is on screen – now the detail (grass, woods, surface detail, sky)
+	if (!DETAIL_ON && !this.upgrading && !this.thumb && this.house && this.levels) { var selfU = this; setTimeout(function () { selfU.upgrade(); }, 0); }
+	if (this.levels && this.frames > 2 && !this.probing && !this.upgrading && QL.needsProbe()) { var self = this; setTimeout(function () { self.probe(); }, 0); }
 };
 // Fingerprint of the current scene: geometry bounds, materials and environment. The tests compare it
 // before and after a parameter change.
@@ -3248,6 +3679,8 @@ function thumb(cfg, w, h, mode, alive) {
 			return new Promise(function (res) {
 				var go = function () {
 					if (alive && !alive()) { res(''); return; }
+					// 1.26.0: the photographed sky of the card is waited for, so a kept picture never has the painted one by chance
+					if (!go.sky) { go.sky = 1; Promise.all([skyReady(cfg), fullDetail(6000)]).then(go); return; }
 					try {
 						var v = sharedThumb();
 						v.setSize(w, h);
@@ -3331,7 +3764,10 @@ function guides(views, w, h, out, opts) {
 	var fixed = views.filter(function (v) { return v.indexOf('interior_') !== 0 && (v !== 'hero' || !exact); });
 	var rooms = views.filter(function (v) { return v.indexOf('interior_') === 0 && opts.rooms && opts.rooms[v.slice(9)]; });
 	var step = function (fn) { return new Promise(function (res) { setTimeout(function () { try { fn(res); } catch (e) { res(); } }, 0); }); };
-	var job = texturesReady();
+	var job = Promise.all([texturesReady(), skyReady(base), fullDetail()]).then(function () { return texturesReady(); }).then(function () {
+		// the live view may still show the painted sky if the photograph arrived a moment ago
+		if (live.env.want && live.env.photo !== live.env.want && SKY.status(live.env.want) === 'ready') { live.envApply(); }
+	});
 	if (exact) {
 		// exactly the visitor's own view: the live camera, only the picture shape differs
 		job = job.then(function () {
@@ -3420,9 +3856,110 @@ function guides(views, w, h, out, opts) {
  * shared helpers (same three.js instance, same materials cache). Unused, nothing here changes. */
 var BUILD_SCENE = null;
 var H3 = { THREE: THREE, X: X, box: box, boxGeo: boxGeo, pbr: pbr, solid: solid, glassMat: glassMat, frameMat: frameMat, House: House, SK: SK, stairPlan: stairPlan, stairParts: stairParts, prism: prism };
+
+/* ------------------------------------------------------------------ 1.26.0: quality control and benchmark */
+// The visitor's quality choice: a small menu in the corner of the live preview (texts from the loader
+// configuration, window.AGH_LOADER.q3d). "Automatic" lets the frame time decide.
+function qualityMenu(v) {
+	var T = (window.AGH_LOADER && window.AGH_LOADER.q3d) || null;
+	if (!v.levels || !v.wrap || v.qmenu || !T) { return; }
+	var sel = document.createElement('select');
+	sel.className = 'agh-3d-quality';
+	sel.setAttribute('aria-label', T.label || '');
+	sel.title = T.label || '';
+	sel.style.cssText = 'position:absolute;z-index:3;right:12px;bottom:54px;max-width:min(190px, calc(100% - 24px));height:30px;padding:0 8px;border:0;border-radius:999px;background:rgba(255,255,255,.9);color:#1E2226;font:inherit;font-size:12px;box-shadow:0 4px 12px rgba(18,24,34,.2);cursor:pointer;';
+	[['auto', T.auto], ['low', T.low], ['medium', T.medium], ['high', T.high], ['ultra', T.ultra]].forEach(function (o) {
+		var op = document.createElement('option'); op.value = o[0]; op.textContent = (T.label ? T.label + ': ' : '') + (o[1] || o[0]); sel.appendChild(op);
+	});
+	// "automatic" says which level it is on now
+	var sync = function () { var s = QL.state(); sel.value = s.choice === 'auto' || s.choice === 'bench' ? 'auto' : s.choice; if (sel.options[0]) { sel.options[0].textContent = (T.label ? T.label + ': ' : '') + (T.auto || 'auto') + (s.choice === 'auto' ? ' (' + (T[s.level] || s.level) + ')' : ''); } };
+	sel.addEventListener('change', function () { QL.choose(sel.value); sync(); });
+	// a press on the menu must not turn the view or pick a piece of the model
+	['pointerdown', 'wheel', 'keydown'].forEach(function (ev) { sel.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+	QL.onChange(sync);
+	sync();
+	v.wrap.appendChild(sel);
+	v.qmenu = sel;
+}
+// The built-in benchmark (admin → "3D teljesítményteszt", or ?agh_bench=1 on the designer page): the same
+// sample house at every level; per level the time to the first finished picture, frame time p50/p95 and
+// frames per second while the camera circles the house (each frame waited for with gl.finish(), so the
+// screen's refresh rate does not cap it), triangles and draw calls of a frame, GPU memory objects.
+// cfg: the house (the plugin's defaults); opts.frames (default 60), opts.levels, opts.onProgress(level, i, n).
+function bench(container, cfg, opts) {
+	opts = opts || {};
+	// outside the designer (admin page) its stylesheet is missing: the canvas box fills the stage by itself
+	var lv = liveViewer();
+	if (!lv.wrap.style.position) { lv.wrap.style.cssText = 'position:absolute;inset:0;'; lv.el.style.display = 'block'; }
+	var v = attach(container, cfg), gl = v.renderer.getContext(), levels = opts.levels || QL.LEVELS, n = Math.max(4, opts.frames || 60);
+	var out = {
+		tool: 'AutoGroweHome 3D benchmark', version: VER.replace(/^\?ver=/, ''), date: new Date().toISOString(),
+		gpu: QL.gpuInfo(gl), userAgent: navigator.userAgent, screen: { w: screen.width, h: screen.height, dpr: window.devicePixelRatio || 1 },
+		canvas: { w: v.w, h: v.h }, webgl2: true, maxTexture: gl.getParameter(gl.MAX_TEXTURE_SIZE), levels: {}, auto: null
+	};
+	var before = QL.state().level, info = v.renderer.info, px = new Uint8Array(4);
+	// reading one pixel back makes the CPU wait until the GPU has really drawn the frame (gl.finish() is
+	// not reliable for that in every browser)
+	var frame = function () { info.reset(); var t0 = performance.now(); v.render(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); return performance.now() - t0; };
+	var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+	// the benchmark measures the full scene: the staged detail is switched on first
+	var job = fullDetail();
+	levels.forEach(function (l, li) {
+		job = job.then(function () {
+			QL.pin(l);
+			if (opts.onProgress) { opts.onProgress(l, li, levels.length); }
+			info.autoReset = false;
+			var t0 = performance.now(), tb = 0, tc = 0;
+			v.memo = null; v.update(Object.assign({}, cfg, { _bench: l }));
+			v.fitCamera(true);
+			tb = performance.now() - t0;
+			return Promise.all([texturesReady(), skyReady(cfg)]).then(function () { if (v.env.want && v.env.photo !== v.env.want) { v.envApply(); } tc = performance.now(); return v.compileFor(v.scene); }).then(function () {
+				v.compileJob = null;
+				tc = performance.now() - tc;
+				frame();
+				var first = performance.now() - t0, calls = info.render.calls, tris = info.render.triangles;
+				var ts = [], tgt = v.controls.target.clone(), off = v.camera.position.clone().sub(tgt), ax = new THREE.Vector3(0, 1, 0);
+				for (var i = 0; i < n; i++) {
+					off.applyAxisAngle(ax, Math.PI * 2 / n);
+					v.camera.position.copy(tgt).add(off); v.camera.lookAt(tgt);
+					ts.push(frame());
+				}
+				var s = ts.slice().sort(function (a, b) { return a - b; }), mean = ts.reduce(function (a, b) { return a + b; }, 0) / ts.length;
+				var r1 = function (x) { return Math.round(x * 10) / 10; };
+				var mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null;
+				out.levels[l] = {
+					first_ms: Math.round(first), build_ms: Math.round(tb), compile_ms: Math.round(tc), fps: r1(1000 / mean), p50_ms: r1(s[Math.floor(s.length * 0.5)]), p95_ms: r1(s[Math.min(s.length - 1, Math.floor(s.length * 0.95))]),
+					triangles: tris, draw_calls: calls, grass_triangles: v.grassInfo ? v.grassInfo.tris : 0, pixel_ratio: r1(v.renderer.getPixelRatio()), shadow_map: v.sun.shadow.mapSize.x,
+					ao: !!(v.gtao && v.gtaoOn), sky: v.env.photo || 'painted', geometries: info.memory.geometries, textures: info.memory.textures, js_heap_mb: mem
+				};
+				info.autoReset = true;
+				return wait(50);
+			});
+		});
+	});
+	return job.then(function () {
+		QL.pin(null);
+		// what the automatic choice would be on this machine: the fastest level whose p95 stays under 33 ms
+		var pickL = 'low';
+		QL.LEVELS.forEach(function (l) { var r = out.levels[l]; if (r && r.p95_ms <= 33) { pickL = l; } });
+		out.auto = { recommended: pickL, current: QL.state().level, before: before };
+		v.memo = null; v.update(cfg); v.fitCamera(true); v.requestRender();
+		return out;
+	}, function (e) { info.autoReset = true; QL.pin(null); throw e; });
+}
 var api = {
-	attach: attach, thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-2',
-	registerBuild: function (fn) { BUILD_SCENE = fn; }, helpers: function () { return H3; }
+	attach: function (container, cfg, opts) { var v = attach(container, cfg, opts); try { qualityMenu(v); } catch (e) { /* the menu is optional */ } return v; },
+	thumb: thumb, warmup: warmup, supported: supported, viewer: function () { return live; }, texturesReady: texturesReady, guides: guides, version: 'r170-3',
+	registerBuild: function (fn) { BUILD_SCENE = fn; }, helpers: function () { return H3; },
+	// 1.26.0: quality levels (profile() is the "quality profile" later effects read), the photographed
+	// skies (paintedSky(true) forces the painted sky of 1.24.0) and the benchmark
+	quality: QL.api,
+	sky: { pick: SKY.pick, status: SKY.status, load: SKY.load, manifest: SKY.manifest, current: function () { return live ? { photo: live.env.photo, want: live.env.want } : null; } },
+	paintedSky: function (on) { NO_PHOTO = !!on; if (live && live.c) { live.envApply(); live.requestRender(); } },
+	bench: bench,
+	// resolves once the staged detail (grass, detailed woods, surface detail) is in the scene
+	detailReady: function () { return fullDetail(); },
+	_shq: SHQ
 };
 window.AGH_3D = api;
 export default api;
