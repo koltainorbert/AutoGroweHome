@@ -10528,3 +10528,67 @@ msgstr "Se recomienda la chimenea a no más de %s m de la cumbrera"
 #: includes/Frontend/Strings.php
 msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
 msgstr "Arrastra el fondo: girar · Agarra un objeto: mover"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségek…"
+msgstr "Estancias…"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségprogram: válaszd ki a helyiségeket, és add meg a méretüket"
+msgstr "Programa de estancias: elige las estancias e indica su tamaño"
+
+#: includes/Frontend/Strings.php
+msgid "Koppints a helyiségekre, és írd be a területüket (ha akarod, a szélességet és a mélységet is). A rajz téglalapokat ad, ezeket te húzod a ház alapjába."
+msgstr "Toca las estancias y escribe su superficie (y, si quieres, el ancho y el fondo). El dibujo las convierte en rectángulos que arrastras a la planta de la casa."
+
+#: includes/Frontend/Strings.php
+msgid "Egyedi helyiség"
+msgstr "Estancia personalizada"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség × mélység (nem kötelező)"
+msgstr "Ancho × fondo (opcional)"
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs helyiség a programban."
+msgstr "Todavía no hay estancias en el programa."
+
+#: includes/Frontend/Strings.php
+msgid "Automatikus elhelyezés"
+msgstr "Colocación automática"
+
+#: includes/Frontend/Strings.php
+msgid "Falak a helyiségek köré"
+msgstr "Muros alrededor de las estancias"
+
+#: includes/Frontend/Strings.php
+msgid "Program törlése"
+msgstr "Borrar el programa"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elhelyezve"
+msgstr "%1$s / %2$s colocadas"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a téglalapokat a ház alapjába. Dupla kattintás: elforgatás 90°-kal, Del: törlés."
+msgstr "Arrastra los rectángulos a la planta. Doble clic: girar 90°, Supr: borrar."
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból"
+msgstr "Sobresale de la casa"
+
+#: includes/Frontend/Strings.php
+msgid "Másik helyiségre lóg"
+msgstr "Se solapa con otra estancia"
+
+#: includes/Frontend/Strings.php
+msgid "%s helyiség nem fért el automatikusan – húzd be kézzel."
+msgstr "%s estancias no cupieron automáticamente: arrástralas a mano."
+
+#: includes/Frontend/Strings.php
+msgid "%s új válaszfal készült."
+msgstr "Se han dibujado %s tabiques nuevos."
+
+#: includes/Frontend/Strings.php
+msgid "Koppints egy helyiségre a hozzáadáshoz:"
+msgstr "Toca una estancia para añadirla:"

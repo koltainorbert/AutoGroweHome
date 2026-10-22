@@ -10528,3 +10528,67 @@ msgstr "The chimney is best at most %s m from the ridge"
 #: includes/Frontend/Strings.php
 msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
 msgstr "Drag the background: turn · Grab a piece: move"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségek…"
+msgstr "Rooms…"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségprogram: válaszd ki a helyiségeket, és add meg a méretüket"
+msgstr "Room programme: pick the rooms and give their size"
+
+#: includes/Frontend/Strings.php
+msgid "Koppints a helyiségekre, és írd be a területüket (ha akarod, a szélességet és a mélységet is). A rajz téglalapokat ad, ezeket te húzod a ház alapjába."
+msgstr "Tap the rooms and type their area (width and depth too, if you like). The drawing turns them into rectangles that you drag into the house's base."
+
+#: includes/Frontend/Strings.php
+msgid "Egyedi helyiség"
+msgstr "Custom room"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség × mélység (nem kötelező)"
+msgstr "Width × depth (optional)"
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs helyiség a programban."
+msgstr "There is no room in the programme yet."
+
+#: includes/Frontend/Strings.php
+msgid "Automatikus elhelyezés"
+msgstr "Place automatically"
+
+#: includes/Frontend/Strings.php
+msgid "Falak a helyiségek köré"
+msgstr "Walls around the rooms"
+
+#: includes/Frontend/Strings.php
+msgid "Program törlése"
+msgstr "Clear the programme"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elhelyezve"
+msgstr "%1$s / %2$s placed"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a téglalapokat a ház alapjába. Dupla kattintás: elforgatás 90°-kal, Del: törlés."
+msgstr "Drag the rectangles into the house's base. Double click: turn by 90°, Del: delete."
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból"
+msgstr "Sticks out of the house"
+
+#: includes/Frontend/Strings.php
+msgid "Másik helyiségre lóg"
+msgstr "Overlaps another room"
+
+#: includes/Frontend/Strings.php
+msgid "%s helyiség nem fért el automatikusan – húzd be kézzel."
+msgstr "%s rooms did not fit automatically – drag them in by hand."
+
+#: includes/Frontend/Strings.php
+msgid "%s új válaszfal készült."
+msgstr "%s new partitions drawn."
+
+#: includes/Frontend/Strings.php
+msgid "Koppints egy helyiségre a hozzáadáshoz:"
+msgstr "Tap a room to add it:"

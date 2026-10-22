@@ -10528,3 +10528,67 @@ msgstr "De schoorsteen staat bij voorkeur hoogstens %s m van de nok"
 #: includes/Frontend/Strings.php
 msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
 msgstr "Sleep de achtergrond: draaien · Pak een object: verplaatsen"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségek…"
+msgstr "Ruimtes…"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségprogram: válaszd ki a helyiségeket, és add meg a méretüket"
+msgstr "Ruimteprogramma: kies de ruimtes en geef hun grootte op"
+
+#: includes/Frontend/Strings.php
+msgid "Koppints a helyiségekre, és írd be a területüket (ha akarod, a szélességet és a mélységet is). A rajz téglalapokat ad, ezeket te húzod a ház alapjába."
+msgstr "Tik op de ruimtes en vul hun oppervlakte in (desgewenst ook breedte en diepte). De tekening maakt er rechthoeken van die je in de plattegrond sleept."
+
+#: includes/Frontend/Strings.php
+msgid "Egyedi helyiség"
+msgstr "Eigen ruimte"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség × mélység (nem kötelező)"
+msgstr "Breedte × diepte (optioneel)"
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs helyiség a programban."
+msgstr "Er staat nog geen ruimte in het programma."
+
+#: includes/Frontend/Strings.php
+msgid "Automatikus elhelyezés"
+msgstr "Automatisch plaatsen"
+
+#: includes/Frontend/Strings.php
+msgid "Falak a helyiségek köré"
+msgstr "Wanden rond de ruimtes"
+
+#: includes/Frontend/Strings.php
+msgid "Program törlése"
+msgstr "Programma wissen"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elhelyezve"
+msgstr "%1$s / %2$s geplaatst"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a téglalapokat a ház alapjába. Dupla kattintás: elforgatás 90°-kal, Del: törlés."
+msgstr "Sleep de rechthoeken in de plattegrond. Dubbelklik: 90° draaien, Del: wissen."
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból"
+msgstr "Steekt buiten het huis"
+
+#: includes/Frontend/Strings.php
+msgid "Másik helyiségre lóg"
+msgstr "Overlapt een andere ruimte"
+
+#: includes/Frontend/Strings.php
+msgid "%s helyiség nem fért el automatikusan – húzd be kézzel."
+msgstr "%s ruimtes pasten niet automatisch – sleep ze er zelf in."
+
+#: includes/Frontend/Strings.php
+msgid "%s új válaszfal készült."
+msgstr "%s nieuwe scheidingswanden getekend."
+
+#: includes/Frontend/Strings.php
+msgid "Koppints egy helyiségre a hozzáadáshoz:"
+msgstr "Tik op een ruimte om haar toe te voegen:"

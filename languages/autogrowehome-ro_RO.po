@@ -10530,3 +10530,67 @@ msgstr "Coșul se recomandă la cel mult %s m de coamă"
 #: includes/Frontend/Strings.php
 msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
 msgstr "Trage fundalul: rotire · Prinde un obiect: mutare"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségek…"
+msgstr "Încăperi…"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségprogram: válaszd ki a helyiségeket, és add meg a méretüket"
+msgstr "Programul încăperilor: alege încăperile și indică mărimea lor"
+
+#: includes/Frontend/Strings.php
+msgid "Koppints a helyiségekre, és írd be a területüket (ha akarod, a szélességet és a mélységet is). A rajz téglalapokat ad, ezeket te húzod a ház alapjába."
+msgstr "Atinge încăperile și scrie suprafața lor (dacă vrei, și lățimea și adâncimea). Desenul le transformă în dreptunghiuri pe care le tragi în planul casei."
+
+#: includes/Frontend/Strings.php
+msgid "Egyedi helyiség"
+msgstr "Încăpere personalizată"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség × mélység (nem kötelező)"
+msgstr "Lățime × adâncime (opțional)"
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs helyiség a programban."
+msgstr "Programul nu are încă nicio încăpere."
+
+#: includes/Frontend/Strings.php
+msgid "Automatikus elhelyezés"
+msgstr "Plasare automată"
+
+#: includes/Frontend/Strings.php
+msgid "Falak a helyiségek köré"
+msgstr "Pereți în jurul încăperilor"
+
+#: includes/Frontend/Strings.php
+msgid "Program törlése"
+msgstr "Șterge programul"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elhelyezve"
+msgstr "%1$s / %2$s plasate"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a téglalapokat a ház alapjába. Dupla kattintás: elforgatás 90°-kal, Del: törlés."
+msgstr "Trage dreptunghiurile în planul casei. Dublu clic: rotire cu 90°, Del: ștergere."
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból"
+msgstr "Iese din casă"
+
+#: includes/Frontend/Strings.php
+msgid "Másik helyiségre lóg"
+msgstr "Se suprapune cu altă încăpere"
+
+#: includes/Frontend/Strings.php
+msgid "%s helyiség nem fért el automatikusan – húzd be kézzel."
+msgstr "%s încăperi nu au încăput automat – trage-le manual."
+
+#: includes/Frontend/Strings.php
+msgid "%s új válaszfal készült."
+msgstr "Au fost desenați %s pereți despărțitori noi."
+
+#: includes/Frontend/Strings.php
+msgid "Koppints egy helyiségre a hozzáadáshoz:"
+msgstr "Atinge o încăpere pentru a o adăuga:"

@@ -10530,3 +10530,67 @@ msgstr "Komín se doporučuje nejvýše %s m od hřebene"
 #: includes/Frontend/Strings.php
 msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
 msgstr "Táhni pozadí: otáčení · Uchop předmět: přesun"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségek…"
+msgstr "Místnosti…"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségprogram: válaszd ki a helyiségeket, és add meg a méretüket"
+msgstr "Program místností: vyber místnosti a zadej jejich velikost"
+
+#: includes/Frontend/Strings.php
+msgid "Koppints a helyiségekre, és írd be a területüket (ha akarod, a szélességet és a mélységet is). A rajz téglalapokat ad, ezeket te húzod a ház alapjába."
+msgstr "Klepni na místnosti a zadej jejich plochu (případně i šířku a hloubku). Výkres z nich udělá obdélníky, které přetáhneš do půdorysu domu."
+
+#: includes/Frontend/Strings.php
+msgid "Egyedi helyiség"
+msgstr "Vlastní místnost"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség × mélység (nem kötelező)"
+msgstr "Šířka × hloubka (nepovinné)"
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs helyiség a programban."
+msgstr "V programu zatím není žádná místnost."
+
+#: includes/Frontend/Strings.php
+msgid "Automatikus elhelyezés"
+msgstr "Automatické umístění"
+
+#: includes/Frontend/Strings.php
+msgid "Falak a helyiségek köré"
+msgstr "Stěny kolem místností"
+
+#: includes/Frontend/Strings.php
+msgid "Program törlése"
+msgstr "Smazat program"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elhelyezve"
+msgstr "%1$s / %2$s umístěno"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a téglalapokat a ház alapjába. Dupla kattintás: elforgatás 90°-kal, Del: törlés."
+msgstr "Přetáhni obdélníky do půdorysu domu. Dvojklik: otočení o 90°, Del: smazat."
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból"
+msgstr "Přečnívá z domu"
+
+#: includes/Frontend/Strings.php
+msgid "Másik helyiségre lóg"
+msgstr "Překrývá jinou místnost"
+
+#: includes/Frontend/Strings.php
+msgid "%s helyiség nem fért el automatikusan – húzd be kézzel."
+msgstr "%s místností se nevešlo automaticky – přetáhni je ručně."
+
+#: includes/Frontend/Strings.php
+msgid "%s új válaszfal készült."
+msgstr "Vzniklo %s nových příček."
+
+#: includes/Frontend/Strings.php
+msgid "Koppints egy helyiségre a hozzáadáshoz:"
+msgstr "Klepnutím místnost přidáš:"

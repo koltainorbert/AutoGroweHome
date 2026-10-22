@@ -321,6 +321,7 @@ final class Build {
 			'services' => array(),
 			'surfaces' => array(),
 			'guessed'  => array(),
+			'prog'     => array(),
 		);
 		if ( $o['ring']['h'] < $o['slab']['t'] ) {
 			$o['ring']['h'] = $o['slab']['t'];
@@ -454,6 +455,30 @@ final class Build {
 			$list = self::at( $b, $k );
 			if ( self::is_list( $list ) ) {
 				$o[ $k ] = array_map( static fn( $x ) => array() === $x ? new \stdClass() : $x, array_slice( array_values( array_filter( $list, array( __CLASS__, 'is_obj' ) ) ), 0, 200 ) );
+			}
+		}
+		// 1.20.0: the room programme (port of the JS normalize)
+		$prog = self::at( $b, 'prog' );
+		if ( self::is_list( $prog ) ) {
+			foreach ( array_slice( $prog, 0, 60 ) as $r ) {
+				if ( ! self::is_obj( $r ) ) {
+					continue;
+				}
+				$w    = self::r2( self::clamp( self::num( self::at( $r, 'w' ), 3.0 ), 0.8, 30 ) );
+				$d    = self::r2( self::clamp( self::num( self::at( $r, 'd' ), 3.0 ), 0.8, 30 ) );
+				$type = self::at( $r, 'type' );
+				$o['prog'][] = array(
+					'id'     => $uid( 'r', self::at( $r, 'id' ) ),
+					'type'   => is_string( $type ) && preg_match( '/^[a-z_]{1,32}\z/', $type ) ? $type : 'other',
+					'name'   => self::text( self::at( $r, 'name' ), 40 ),
+					'area'   => self::r2( self::clamp( self::num( self::at( $r, 'area' ), $w * $d ), 1, 500 ) ),
+					'w'      => $w,
+					'd'      => $d,
+					'x'      => self::r2( self::clamp( self::num( self::at( $r, 'x' ), 0.0 ), -50, 550 ) ),
+					'y'      => self::r2( self::clamp( self::num( self::at( $r, 'y' ), 0.0 ), -50, 1050 ) ),
+					'lv'     => (int) self::clamp( self::js_round( self::num( self::at( $r, 'lv' ), 0.0 ) ), 0, count( $o['levels'] ) - 1 ),
+					'placed' => true === self::at( $r, 'placed' ),
+				);
 			}
 		}
 		return $o;

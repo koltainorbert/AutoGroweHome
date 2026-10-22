@@ -10528,3 +10528,67 @@ msgstr "Der Schornstein wird höchstens %s m vom First empfohlen"
 #: includes/Frontend/Strings.php
 msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
 msgstr "Hintergrund ziehen: drehen · Objekt greifen: verschieben"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségek…"
+msgstr "Räume…"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségprogram: válaszd ki a helyiségeket, és add meg a méretüket"
+msgstr "Raumprogramm: wähle die Räume und gib ihre Größe an"
+
+#: includes/Frontend/Strings.php
+msgid "Koppints a helyiségekre, és írd be a területüket (ha akarod, a szélességet és a mélységet is). A rajz téglalapokat ad, ezeket te húzod a ház alapjába."
+msgstr "Tippe die Räume an und gib ihre Fläche ein (wenn du willst, auch Breite und Tiefe). Die Zeichnung macht daraus Rechtecke, die du in den Grundriss ziehst."
+
+#: includes/Frontend/Strings.php
+msgid "Egyedi helyiség"
+msgstr "Eigener Raum"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség × mélység (nem kötelező)"
+msgstr "Breite × Tiefe (optional)"
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs helyiség a programban."
+msgstr "Im Programm ist noch kein Raum."
+
+#: includes/Frontend/Strings.php
+msgid "Automatikus elhelyezés"
+msgstr "Automatisch platzieren"
+
+#: includes/Frontend/Strings.php
+msgid "Falak a helyiségek köré"
+msgstr "Wände um die Räume"
+
+#: includes/Frontend/Strings.php
+msgid "Program törlése"
+msgstr "Programm löschen"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elhelyezve"
+msgstr "%1$s / %2$s platziert"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a téglalapokat a ház alapjába. Dupla kattintás: elforgatás 90°-kal, Del: törlés."
+msgstr "Ziehe die Rechtecke in den Grundriss. Doppelklick: um 90° drehen, Entf: löschen."
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból"
+msgstr "Ragt aus dem Haus"
+
+#: includes/Frontend/Strings.php
+msgid "Másik helyiségre lóg"
+msgstr "Überlappt einen anderen Raum"
+
+#: includes/Frontend/Strings.php
+msgid "%s helyiség nem fért el automatikusan – húzd be kézzel."
+msgstr "%s Räume passten nicht automatisch – zieh sie von Hand hinein."
+
+#: includes/Frontend/Strings.php
+msgid "%s új válaszfal készült."
+msgstr "%s neue Trennwände angelegt."
+
+#: includes/Frontend/Strings.php
+msgid "Koppints egy helyiségre a hozzáadáshoz:"
+msgstr "Tippe einen Raum an, um ihn hinzuzufügen:"

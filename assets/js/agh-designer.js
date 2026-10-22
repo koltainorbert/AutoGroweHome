@@ -2299,6 +2299,7 @@
 			preview3D: buildPreview3D,
 			setPhase: function (p) { var v = A3 && A3.viewer(); if (v && v.setPhase) { v.setPhase(p); } },
 			viewer: function () { return A3 ? A3.viewer() : null; },
+			toast: function (msg, kind, ms) { toast(msg, kind, ms); },
 			sketch: function (c) { return previewSvg(c); },
 			fsButton: function (getEl, cls) { return fsButton(getEl, cls); },
 			roomTypes: buildRoomTypes,

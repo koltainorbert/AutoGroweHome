@@ -10532,3 +10532,67 @@ msgstr "Dimnik je priporočljiv največ %s m od slemena"
 #: includes/Frontend/Strings.php
 msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
 msgstr "Povleci ozadje: sukanje · Primi predmet: premik"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségek…"
+msgstr "Prostori…"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségprogram: válaszd ki a helyiségeket, és add meg a méretüket"
+msgstr "Program prostorov: izberi prostore in vpiši njihovo velikost"
+
+#: includes/Frontend/Strings.php
+msgid "Koppints a helyiségekre, és írd be a területüket (ha akarod, a szélességet és a mélységet is). A rajz téglalapokat ad, ezeket te húzod a ház alapjába."
+msgstr "Tapni prostore in vpiši njihovo površino (po želji tudi širino in globino). Risba iz njih naredi pravokotnike, ki jih povlečeš v tloris hiše."
+
+#: includes/Frontend/Strings.php
+msgid "Egyedi helyiség"
+msgstr "Lasten prostor"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség × mélység (nem kötelező)"
+msgstr "Širina × globina (neobvezno)"
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs helyiség a programban."
+msgstr "V programu še ni prostora."
+
+#: includes/Frontend/Strings.php
+msgid "Automatikus elhelyezés"
+msgstr "Samodejna postavitev"
+
+#: includes/Frontend/Strings.php
+msgid "Falak a helyiségek köré"
+msgstr "Stene okoli prostorov"
+
+#: includes/Frontend/Strings.php
+msgid "Program törlése"
+msgstr "Izbriši program"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elhelyezve"
+msgstr "%1$s / %2$s postavljenih"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a téglalapokat a ház alapjába. Dupla kattintás: elforgatás 90°-kal, Del: törlés."
+msgstr "Povleci pravokotnike v tloris hiše. Dvojni klik: zasuk za 90°, Del: brisanje."
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból"
+msgstr "Sega iz hiše"
+
+#: includes/Frontend/Strings.php
+msgid "Másik helyiségre lóg"
+msgstr "Prekriva drug prostor"
+
+#: includes/Frontend/Strings.php
+msgid "%s helyiség nem fért el automatikusan – húzd be kézzel."
+msgstr "%s prostorov se ni samodejno prilegalo – povleci jih ročno."
+
+#: includes/Frontend/Strings.php
+msgid "%s új válaszfal készült."
+msgstr "Narisanih je %s novih predelnih sten."
+
+#: includes/Frontend/Strings.php
+msgid "Koppints egy helyiségre a hozzáadáshoz:"
+msgstr "Tapni prostor, da ga dodaš:"

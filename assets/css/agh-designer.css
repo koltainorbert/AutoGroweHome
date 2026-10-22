@@ -1135,3 +1135,32 @@ body.agh-portal-body { margin: 0; min-height: 100vh; background: #F6F3EE; }
 .agh-bld-loading { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 240px; font-size: 14px; color: var(--agh-ink-2); }
 .agh-bld-3dwait { position: absolute; inset: auto 12px 12px auto; z-index: 3; }
 @media (prefers-reduced-motion: reduce) { .agh-boot-in { animation: none; } }
+/* 1.20.0: room programme – the rectangles on the plan and the dialog */
+.agh-bld-progr { fill: rgba(79,124,172,.16); stroke: #4F7CAC; cursor: grab; }
+.agh-bld-progr.r1 { fill: rgba(196,132,62,.16); stroke: #B87A36; }
+.agh-bld-progr.r2 { fill: rgba(95,150,90,.16); stroke: #4F8A4A; }
+.agh-bld-progr.r3 { fill: rgba(150,98,160,.16); stroke: #8A5A96; }
+.agh-bld-progr.r4 { fill: rgba(70,150,150,.16); stroke: #3C8A8A; }
+.agh-bld-progr.r5 { fill: rgba(170,110,110,.16); stroke: #A05A5A; }
+.agh-bld-progr.is-bad { fill: rgba(224,72,62,.18); stroke: #E0483E; stroke-dasharray: .2 .12; }
+.agh-bld-progr.is-sel { fill-opacity: .9; }
+.agh-bld-modal { position: absolute; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; margin: 0; padding: 16px; box-sizing: border-box; background: rgba(18,22,28,.45); }
+.agh-bld-modal-box { display: flex; flex-direction: column; gap: 10px; width: min(720px, 100%); max-height: 100%; overflow-y: auto; margin: 0; padding: 18px; box-sizing: border-box; border-radius: var(--agh-r-l, 18px); background: var(--agh-surface, #fff); color: var(--agh-text, #1E2226); box-shadow: 0 18px 50px rgba(18,24,34,.3); }
+.agh-bld-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin: 0; padding: 0; }
+.agh-bld-modal-head .agh-bld-h { margin: 0; }
+.agh-bld-modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin: 0; padding: 6px 0 0; }
+.agh-bld-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+.agh-bld-pill { display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 0 12px; border: 1px solid var(--agh-border, #D9D4CC); border-radius: 999px; background: var(--agh-surface-2, #F7F4EF); color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.agh-bld-pill:hover, .agh-bld-pill:focus-visible { border-color: var(--agh-primary, #2E6B4F); }
+.agh-bld-pill.is-custom { border-style: dashed; }
+.agh-bld-proglist { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; }
+.agh-bld-progrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 40px; align-items: center; gap: 8px; margin: 0; padding: 6px 8px; box-sizing: border-box; border-radius: 12px; background: var(--agh-surface-2, #F7F4EF); }
+.agh-bld-progname .agh-input { width: 100%; box-sizing: border-box; }
+.agh-bld-progarea, .agh-bld-progwd { display: inline-flex; align-items: center; gap: 4px; margin: 0; font-size: 12.5px; }
+.agh-bld-progarea .agh-bld-num { width: 76px; }
+.agh-bld-progwd .agh-bld-num { width: 64px; }
+@media (max-width: 640px) {
+	.agh-bld-progrow { grid-template-columns: minmax(0, 1fr) 40px; }
+	.agh-bld-progname { grid-column: 1 / -1; }
+	.agh-bld-progarea, .agh-bld-progwd { grid-column: 1 / 2; }
+}

@@ -56,6 +56,7 @@
 	}
 	function commit(opts) {
 		opts = opts || {};
+		(st.b.prog || []).forEach(function (r) { r.placed = progState(st.b, r) === 'ok'; });
 		st.b = B.normalize(st.b);
 		st.b.step = st.step;
 		var ol = B.outline(st.b);
@@ -66,7 +67,7 @@
 	}
 	function undo() { if (!st.undo.length) { return; } st.redo.push(snapshot()); st.b = JSON.parse(st.undo.pop()); commit({ noUndo: true }); }
 	function redo() { if (!st.redo.length) { return; } st.undo.push(snapshot()); st.b = JSON.parse(st.redo.pop()); commit({ noUndo: true }); }
-	function find(sel) { if (!sel) { return null; } var list = sel.k === 'op' ? st.b.openings : st.b.walls; for (var i = 0; i < list.length; i++) { if (list[i].id === sel.id) { return list[i]; } } return null; }
+	function find(sel) { if (!sel) { return null; } var list = sel.k === 'op' ? st.b.openings : (sel.k === 'room' ? (st.b.prog || []) : st.b.walls); for (var i = 0; i < list.length; i++) { if (list[i].id === sel.id) { return list[i]; } } return null; }
 	function bbox(p) { var b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }; p.forEach(function (q) { b.x0 = Math.min(b.x0, q[0]); b.y0 = Math.min(b.y0, q[1]); b.x1 = Math.max(b.x1, q[0]); b.y1 = Math.max(b.y1, q[1]); }); return b; }
 	function plot() { var c = cfg(); return { w: num(c.plot_width, 20) || 20, d: num(c.plot_length, 40) || 40 }; }
 
@@ -359,6 +360,7 @@
 		},
 		function parts(box) {
 			box.appendChild(levelSwitch());
+			box.appendChild(programBox());
 			box.appendChild(toolsBox(['select', 'wall', 'rect'], false));
 			box.appendChild(selectionBox());
 			box.appendChild(roomsBox());
@@ -493,7 +495,17 @@
 		var o = find(st.sel);
 		if (!o) { return group(t('b_selection'), [el('p', { class: 'agh-bld-note', text: t('b_sel_none') })]); }
 		var kids = [];
-		if (st.sel.k === 'wall') {
+		if (st.sel.k === 'room') {
+			var rp = function (k) { return 'prog.' + st.b.prog.indexOf(o) + '.' + k; }, ps = progState(st.b, o);
+			kids.push(el('p', { class: 'agh-bld-sel-h' }, [el('b', { text: o.name || progName(o.type) }), ' · ' + fmt(o.w * o.d, 1) + ' m²']));
+			kids.push(el('div', { class: 'agh-bld-grid2' }, [
+				field(t('b_prog_name'), (function () { var i = el('input', { type: 'text', class: 'agh-input', 'data-k': rp('name'), value: o.name || '', maxlength: '40', 'aria-label': t('b_prog_name') }); i.addEventListener('change', function () { change(function (b) { var q = b.prog.filter(function (x) { return x.id === o.id; })[0]; q.name = i.value; }); }); return i; })()),
+				field(t('b_room_type'), selIn(rp('type'), A.roomTypes())),
+				field(t('b_w'), numIn(rp('w'), { min: 0.8, max: 30, step: 0.1 }), 'm'),
+				field(t('b_d'), numIn(rp('d'), { min: 0.8, max: 30, step: 0.1 }), 'm')
+			]));
+			if (ps !== 'ok') { kids.push(el('p', { class: 'agh-bld-note is-warn', text: t(ps === 'overlap' ? 'b_prog_overlap' : 'b_prog_out') })); }
+		} else if (st.sel.k === 'wall') {
 			var w = o, len = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), path = function (k) { return 'walls.' + st.b.walls.indexOf(w) + '.' + k; };
 			kids.push(el('p', { class: 'agh-bld-sel-h' }, [el('b', { text: t('b_kind_' + w.kind) }), ' · ' + w.id]));
 			kids.push(el('div', { class: 'agh-bld-grid2' }, [
@@ -544,6 +556,7 @@
 		if (!sel) { return; }
 		change(function (b) {
 			if (sel.k === 'wall') { b.walls = b.walls.filter(function (w) { return w.id !== sel.id; }); b.openings = b.openings.filter(function (o) { return o.wall !== sel.id; }); }
+			else if (sel.k === 'room') { b.prog = (b.prog || []).filter(function (r) { return r.id !== sel.id; }); }
 			else { b.openings = b.openings.filter(function (o) { return o.id !== sel.id; }); }
 		});
 		st.sel = null; renderPanel(); renderSelBar();
@@ -690,6 +703,20 @@
 			lb.t.appendChild(t1); lb.t.appendChild(t2); gr.appendChild(lb.g);
 		});
 		s.appendChild(gr);
+		// the room programme (1.20.0): rectangles to place in the base; red when out of the house or on another
+		if (st.step === 6 && (b.prog || []).length) {
+			var gp = sv('g', { class: 'agh-bld-prog' });
+			b.prog.forEach(function (r, i) {
+				if (r.lv !== lv) { return; }
+				var ps = progState(b, r), on = st.sel && st.sel.k === 'room' && st.sel.id === r.id;
+				gp.appendChild(sv('rect', { x: r.x, y: r.y, width: r.w, height: r.d, class: 'agh-bld-progr r' + (i % 6) + (ps === 'ok' ? '' : ' is-bad') + (on ? ' is-sel' : ''), 'data-room': r.id, 'stroke-width': (on ? 3 : 1.5) * lw }));
+				var fs = 12, lb = label(r.x + r.w / 2, r.y + r.d / 2, lw, { class: 'agh-bld-rlabel', 'font-size': fs, 'text-anchor': 'middle' });
+				var t1 = sv('tspan', { x: 0, dy: -0.2 * fs }); t1.textContent = r.w * k > 60 ? (r.name || progName(r.type)) : '';
+				var t2 = sv('tspan', { x: 0, dy: 1.2 * fs, class: 'agh-bld-rarea' }); t2.textContent = fmt(r.w * r.d, 1) + ' m²';
+				lb.t.appendChild(t1); lb.t.appendChild(t2); gp.appendChild(lb.g);
+			});
+			s.appendChild(gp);
+		}
 		// stair hole
 		if (b.slab.stair && b.levels.length > 1 && st.step >= 8) { var sh = b.slab.stair; s.appendChild(sv('rect', { x: sh.x, y: sh.y, width: sh.w, height: sh.d, class: 'agh-bld-stair', 'stroke-width': lw })); }
 		// walls (other levels faint)
@@ -849,7 +876,13 @@
 			var target = e.target, endEl = target && target.getAttribute && target.getAttribute('data-end');
 			if (st.tool === 'select') {
 				if (endEl) { var w0 = find(st.sel); st.drag = { end: endEl, wall: w0.id, from: w0[endEl].slice(), snap: snapshot() }; return; }
-				var hit = hitTest(p, 8 / k);
+				var hit = hitTest(p, 8 / k), now = Date.now(), lt = st.lastTap;
+				// a second tap on the same programme rectangle turns it by 90° (the plan is redrawn between the
+				// taps, so the browser's own dblclick does not reach it)
+				if (hit && hit.k === 'room' && lt && lt.id === hit.id && now - lt.t < 450 && Math.hypot(e.clientX - lt.x, e.clientY - lt.y) < 10) {
+					st.lastTap = null; st.sel = hit; progTurn(hit.id); renderPanel(); renderPlan(); return;
+				}
+				st.lastTap = hit && hit.k === 'room' ? { id: hit.id, t: now, x: e.clientX, y: e.clientY } : null;
 				st.sel = hit; renderPanel(); renderPlan();
 				if (hit) { var o = find(hit); st.drag = { move: hit, p0: p, orig: JSON.parse(JSON.stringify(o)), snap: snapshot() }; }
 				else { st.drag = { pan: true, x: e.clientX, y: e.clientY, vb: Object.assign({}, st.vb) }; }
@@ -918,7 +951,9 @@
 		s.addEventListener('pointerup', up);
 		s.addEventListener('pointercancel', up);
 		s.addEventListener('pointerleave', function () { if (!st.draw) { st.cursor = null; renderPlan(); } });
-		s.addEventListener('dblclick', function () { if (st.draw) { st.draw = null; renderPlan(); } });
+		s.addEventListener('dblclick', function () {
+			if (st.draw) { st.draw = null; renderPlan(); return; }
+		});
 		s.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 		s.addEventListener('wheel', function (e) {
 			e.preventDefault();
@@ -929,11 +964,240 @@
 		s.addEventListener('keydown', function (e) { if (e.key === ' ') { st.space = true; } });
 		s.addEventListener('keyup', function (e) { if (e.key === ' ') { st.space = false; } });
 	}
+	/* ------------------------------------------------------------------ room programme (1.20.0)
+	 * A dialog lists the room types as pills: a tap adds the room, its area (and if wanted width × depth)
+	 * is typed in. Each room becomes a rectangle beside the house; the visitor drags it into the base
+	 * (grid 10 cm, it snaps to the inner faces of the walls), or lets them be placed automatically. When
+	 * they are in place, the partitions are drawn along their edges (not where a wall already stands) and
+	 * the rooms that come out get the chosen types. The automatic room split of the designer stays on its
+	 * own button, as before. */
+	function progTurn(id) { change(function (b) { var q = (b.prog || []).filter(function (x) { return x.id === id; })[0]; if (q) { var cx = q.x + q.w / 2, cy = q.y + q.d / 2, w0 = q.w; q.w = q.d; q.d = w0; q.x = r2(cx - q.w / 2); q.y = r2(cy - q.d / 2); } }); }
+	function progName(type) { var n = ''; A.roomTypes().forEach(function (o) { if (o[0] === type) { n = o[1]; } }); return n || t('b_prog_custom'); }
+	function progDims(area, w, d) {
+		if (w > 0.7 && d > 0.7) { return [w, d]; }
+		var a = Math.max(1, area || 12), ww = Math.round(Math.sqrt(a * 1.25) * 10) / 10;
+		return [ww, r2(a / ww)];
+	}
+	// 'ok' (inside the house, on no other rectangle), 'out' or 'overlap'
+	function progState(b, r) {
+		var ol = B.outline(b);
+		if (!ol.closed) { return 'out'; }
+		var e = 0.01, pts = [[r.x + e, r.y + e], [r.x + r.w - e, r.y + e], [r.x + r.w - e, r.y + r.d - e], [r.x + e, r.y + r.d - e], [r.x + r.w / 2, r.y + r.d / 2]];
+		if (pts.some(function (q) { return !B._inPoly(ol.inner, Math.round(q[0] * 1000), Math.round(q[1] * 1000)); })) { return 'out'; }
+		var hit = (b.prog || []).some(function (q) { return q !== r && q.id !== r.id && q.lv === r.lv && r.x < q.x + q.w - e && r.x + r.w > q.x + e && r.y < q.y + q.d - e && r.y + r.d > q.y + e; });
+		return hit ? 'overlap' : 'ok';
+	}
+	// the inner faces of the walls of the level (axis-aligned), for snapping a rectangle's edges to them
+	function faceLines(lv) {
+		var xs = [], ys = [];
+		st.b.walls.forEach(function (w) {
+			if (!(w.kind === 'ext' || w.lv === lv)) { return; }
+			if (w.a[0] === w.b[0]) { xs.push(w.a[0] - w.t / 2, w.a[0] + w.t / 2); }
+			else if (w.a[1] === w.b[1]) { ys.push(w.a[1] - w.t / 2, w.a[1] + w.t / 2); }
+		});
+		(st.b.prog || []).forEach(function (q) { if (q.lv === lv && (!st.drag || !st.drag.move || q.id !== st.drag.move.id)) { xs.push(q.x, q.x + q.w); ys.push(q.y, q.y + q.d); } });
+		return { xs: xs, ys: ys };
+	}
+	function progSnap(x, y, w, d) {
+		var L = faceLines(st.lv), tol = 0.25;
+		function near(v, list) { var best = null, bd = tol; list.forEach(function (c) { var dd = Math.abs(c - v); if (dd < bd) { bd = dd; best = c; } }); return best; }
+		var a = near(x, L.xs), b2 = near(x + w, L.xs), c = near(y, L.ys), e = near(y + d, L.ys);
+		if (a !== null && (b2 === null || Math.abs(a - x) <= Math.abs(b2 - x - w))) { x = a; } else if (b2 !== null) { x = b2 - w; }
+		if (c !== null && (e === null || Math.abs(c - y) <= Math.abs(e - y - d))) { y = c; } else if (e !== null) { y = e - d; }
+		return [x, y];
+	}
+	// new rectangles wait in a column to the right of the house
+	function progPark(b) {
+		var xs = b.walls.map(function (w) { return Math.max(w.a[0], w.b[0]) + w.t / 2; }), ys = b.walls.map(function (w) { return Math.min(w.a[1], w.b[1]) - w.t / 2; });
+		var x0 = xs.length ? Math.max.apply(null, xs) + 1.5 : 2, y = ys.length ? Math.min.apply(null, ys) : 2;
+		(b.prog || []).forEach(function (r) { if (!r.placed && r.x >= x0 - 0.01) { y = Math.max(y, r.y + r.d + 0.5); } });
+		return [r2(x0), r2(y)];
+	}
+	// Automatic placement: rows inside the house's inner outline, the biggest rooms first.
+	function progAuto() {
+		var miss = 0;
+		change(function (b) {
+			var ol = B.outline(b), lv = st.lv;
+			if (!ol.closed) { miss = (b.prog || []).length; return; }
+			var xs = ol.inner.map(function (q) { return q[0] / 1000; }), ys = ol.inner.map(function (q) { return q[1] / 1000; });
+			var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+			var list = (b.prog || []).filter(function (r) { return r.lv === lv; }).sort(function (p, q) { return q.w * q.d - p.w * p.d; });
+			list.forEach(function (r) { r.x = -999; });
+			// candidate places: a 10 cm grid plus the edges of the rooms already placed (so neighbours share
+			// an edge exactly and one partition goes between them, never two a few cm apart)
+			function cands(lo, hi, size, edges) {
+				var out = [], v;
+				for (v = lo; v + size <= hi + 1e-6; v = r2(v + 0.1)) { out.push(r2(v)); }
+				edges.forEach(function (e) { [e, e - size].forEach(function (q) { q = r2(q); if (q >= lo - 1e-6 && q + size <= hi + 1e-6) { out.push(q); } }); });
+				return out.sort(function (a, c) { return a - c; }).filter(function (q, i, a) { return !i || q - a[i - 1] > 0.004; });
+			}
+			list.forEach(function (r) {
+				var done = false, placed = list.filter(function (q) { return q !== r && q.x > -900; });
+				var ex = [x0, x1].concat(placed.map(function (q) { return q.x; }), placed.map(function (q) { return q.x + q.w; })), ey = [y0, y1].concat(placed.map(function (q) { return q.y; }), placed.map(function (q) { return q.y + q.d; }));
+				for (var pass = 0; pass < 2 && !done; pass++) {
+					if (pass) { var w0 = r.w; r.w = r.d; r.d = w0; }
+					var cy = cands(y0, y1, r.d, ey), cx = cands(x0, x1, r.w, ex);
+					for (var iy = 0; iy < cy.length && !done; iy++) {
+						for (var ix = 0; ix < cx.length && !done; ix++) {
+							r.x = cx[ix]; r.y = cy[iy];
+							if (progState(b, r) === 'ok') { done = true; }
+						}
+					}
+					if (!done && pass) { var w1 = r.w; r.w = r.d; r.d = w1; }
+				}
+				if (!done) { var pk = progPark(b); r.x = pk[0]; r.y = pk[1]; miss++; }
+			});
+		});
+		if (miss && A.toast) { A.toast(tf('b_prog_nofit', miss), 'warn'); }
+	}
+	// Partitions along the edges of the placed rectangles: collinear edges are joined, the parts where a
+	// wall already stands (within its thickness) are left out, the ends reach the wall they touch.
+	function progWalls() {
+		var made = 0;
+		change(function (b) {
+			var lv = st.lv, md = (B.defaults().model || {}).wall || {}, pt = (md.part || {}).t || 0.1, pm = (md.part || {}).mat;
+			var rs = (b.prog || []).filter(function (r) { return r.lv === lv && progState(b, r) === 'ok'; });
+			if (!rs.length) { return; }
+			// the programme draws the partitions of the rooms it covers: earlier partitions of this level that run
+			// through or along a placed room go (with their doors), so no old wall splits a room or leaves a gap
+			var inner = function (w) {
+				if (w.kind === 'ext' || w.lv !== lv) { return false; }
+				var m = w.t / 2 + pt + 0.05;
+				return rs.some(function (r) {
+					var ax = Math.min(w.a[0], w.b[0]), bx2 = Math.max(w.a[0], w.b[0]), ay = Math.min(w.a[1], w.b[1]), by = Math.max(w.a[1], w.b[1]);
+					return bx2 > r.x - m && ax < r.x + r.w + m && by > r.y - m && ay < r.y + r.d + m;
+				});
+			};
+			var gone = b.walls.filter(inner).map(function (w) { return w.id; });
+			if (gone.length) { b.walls = b.walls.filter(function (w) { return gone.indexOf(w.id) === -1; }); b.openings = b.openings.filter(function (o) { return gone.indexOf(o.wall) === -1; }); }
+			var lines = {};
+			function addSeg(dir, c, s0, s1) { var k = dir + ':' + r2(c).toFixed(2); (lines[k] = lines[k] || { dir: dir, c: r2(c), iv: [] }).iv.push([s0, s1]); }
+			rs.forEach(function (r) { addSeg('h', r.y, r.x, r.x + r.w); addSeg('h', r.y + r.d, r.x, r.x + r.w); addSeg('v', r.x, r.y, r.y + r.d); addSeg('v', r.x + r.w, r.y, r.y + r.d); });
+			var walls = b.walls.filter(function (w) { return w.kind === 'ext' || w.lv === lv; });
+			function union(iv) { iv.sort(function (p, q) { return p[0] - q[0]; }); var out = []; iv.forEach(function (q) { var l = out[out.length - 1]; if (l && q[0] <= l[1] + 0.02) { l[1] = Math.max(l[1], q[1]); } else { out.push(q.slice()); } }); return out; }
+			function minus(iv, cut) { var out = []; iv.forEach(function (q) { var parts = [q.slice()]; cut.forEach(function (c) { parts = parts.reduce(function (acc, p) { if (c[1] <= p[0] || c[0] >= p[1]) { acc.push(p); return acc; } if (c[0] > p[0]) { acc.push([p[0], c[0]]); } if (c[1] < p[1]) { acc.push([c[1], p[1]]); } return acc; }, []); }); out = out.concat(parts); }); return out; }
+			var newW = [];
+			Object.keys(lines).forEach(function (k) {
+				var L = lines[k], cut = [];
+				walls.forEach(function (w) {
+					var hz = w.a[1] === w.b[1], vt = w.a[0] === w.b[0];
+					if (L.dir === 'h' && hz && Math.abs(w.a[1] - L.c) <= w.t / 2 + pt + 0.02) { cut.push([Math.min(w.a[0], w.b[0]) - w.t / 2, Math.max(w.a[0], w.b[0]) + w.t / 2]); }
+					if (L.dir === 'v' && vt && Math.abs(w.a[0] - L.c) <= w.t / 2 + pt + 0.02) { cut.push([Math.min(w.a[1], w.b[1]) - w.t / 2, Math.max(w.a[1], w.b[1]) + w.t / 2]); }
+				});
+				minus(union(L.iv), cut).forEach(function (q) {
+					if (q[1] - q[0] < 0.3) { return; }
+					// the ends: onto the centre line of the wall they reach
+					[0, 1].forEach(function (e) {
+						var v = q[e];
+						walls.concat(newW).forEach(function (w) {
+							var hz = w.a[1] === w.b[1];
+							// a rectangle a few cm short of a wall still closes against it (same reach as the cut above)
+							var reach = w.t / 2 + pt + 0.03;
+							if (L.dir === 'h' && !hz && w.a[0] === w.b[0] && Math.abs(w.a[0] - v) <= reach && L.c >= Math.min(w.a[1], w.b[1]) - 0.01 && L.c <= Math.max(w.a[1], w.b[1]) + 0.01) { q[e] = w.a[0]; }
+							if (L.dir === 'v' && hz && Math.abs(w.a[1] - v) <= reach && L.c >= Math.min(w.a[0], w.b[0]) - 0.01 && L.c <= Math.max(w.a[0], w.b[0]) + 0.01) { q[e] = w.a[1]; }
+						});
+					});
+					var a = L.dir === 'h' ? [q[0], L.c] : [L.c, q[0]], c2 = L.dir === 'h' ? [q[1], L.c] : [L.c, q[1]];
+					var nw = { id: B.nextId(b.walls.concat(newW), 'w'), kind: 'part', lv: lv, a: [r2(a[0]), r2(a[1])], b: [r2(c2[0]), r2(c2[1])], t: pt };
+					if (pm) { nw.mat = pm; }
+					newW.push(nw);
+				});
+			});
+			b.walls = b.walls.concat(newW);
+			made = newW.length;
+			// the rooms that come out take the chosen types (the rectangle holding their middle)
+			var rooms = B.rooms(B.normalize(b), lv);
+			rooms.forEach(function (rm) {
+				var cx = rm.cx / 1000, cy = rm.cy / 1000, own = rs.filter(function (r) { return cx > r.x && cx < r.x + r.w && cy > r.y && cy < r.y + r.d; })[0];
+				if (own) { b.rooms[rm.key] = own.type === 'other' ? 'living' : own.type; }
+			});
+		});
+		if (A.toast) { A.toast(tf('b_prog_walls_done', made), 'ok'); }
+	}
+	function programBox() {
+		var list = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }), ok = list.filter(function (r) { return progState(st.b, r) === 'ok'; }).length;
+		var kids = [el('div', { class: 'agh-bld-row' }, [el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-primary agh-bld-progbtn', onclick: progDialog }, [A.icon('plus', 'agh-ico-s'), t('b_prog_open')])])];
+		if (list.length) {
+			kids.push(el('p', { class: 'agh-bld-note', text: tf('b_prog_status', ok, list.length) }));
+			kids.push(el('div', { class: 'agh-bld-row' }, [
+				el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost agh-bld-progauto', onclick: progAuto }, [A.icon('fit', 'agh-ico-s'), t('b_prog_auto')]),
+				el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-bld-progwalls', disabled: ok ? null : 'disabled', onclick: progWalls }, [A.icon('home', 'agh-ico-s'), t('b_prog_walls')]),
+				el('button', { type: 'button', class: 'agh-btn agh-btn-s agh-btn-ghost', onclick: function () { change(function (b) { b.prog = (b.prog || []).filter(function (r) { return r.lv !== st.lv; }); }); st.sel = null; } }, [A.icon('trash', 'agh-ico-s'), t('b_prog_clear')])
+			]));
+			kids.push(el('p', { class: 'agh-bld-note is-small', text: t('b_prog_hint') }));
+		}
+		return group(t('b_prog'), kids);
+	}
+	// The dialog: room pills to add, then one row per room (name, area, optional width × depth).
+	function progDialog() {
+		var old = D.root.querySelector('.agh-bld-modal');
+		if (old) { old.remove(); }
+		var rows = (st.b.prog || []).filter(function (r) { return r.lv === st.lv; }).map(function (r) { return { id: r.id, type: r.type, name: r.name, area: r.area, w: r.w, d: r.d, x: r.x, y: r.y, keepWD: true }; });
+		var list = el('div', { class: 'agh-bld-proglist' });
+		function draw() {
+			list.innerHTML = '';
+			if (!rows.length) { list.appendChild(el('p', { class: 'agh-bld-note', text: t('b_prog_empty') })); return; }
+			rows.forEach(function (r, i) {
+				var nm = el('input', { type: 'text', class: 'agh-input', value: r.name || progName(r.type), maxlength: '40', 'aria-label': t('b_prog_name') });
+				nm.addEventListener('input', function () { r.name = nm.value; });
+				var ar = el('input', { type: 'number', class: 'agh-input agh-bld-num', value: String(r.area), min: '1', max: '500', step: '0.5', inputmode: 'decimal', 'aria-label': t('b_prog_area') });
+				var ww = el('input', { type: 'number', class: 'agh-input agh-bld-num', value: r.keepWD ? String(r.w) : '', min: '0.8', max: '30', step: '0.1', inputmode: 'decimal', placeholder: '–', 'aria-label': t('b_w') });
+				var dd = el('input', { type: 'number', class: 'agh-input agh-bld-num', value: r.keepWD ? String(r.d) : '', min: '0.8', max: '30', step: '0.1', inputmode: 'decimal', placeholder: '–', 'aria-label': t('b_d') });
+				ar.addEventListener('input', function () { r.area = num(ar.value, r.area); r.keepWD = false; ww.value = ''; dd.value = ''; });
+				var wd = function () { var w = num(ww.value, 0), d = num(dd.value, 0); if (w > 0.7 && d > 0.7) { r.w = w; r.d = d; r.area = r2(w * d); ar.value = String(r.area); r.keepWD = true; } };
+				ww.addEventListener('input', wd); dd.addEventListener('input', wd);
+				list.appendChild(el('div', { class: 'agh-bld-progrow', 'data-type': r.type }, [
+					el('div', { class: 'agh-bld-progname' }, [nm]),
+					el('label', { class: 'agh-bld-progarea' }, [ar, el('span', { text: 'm²' })]),
+					el('div', { class: 'agh-bld-progwd', title: t('b_prog_wd') }, [ww, el('span', { text: '×' }), dd, el('span', { text: 'm' })]),
+					el('button', { type: 'button', class: 'agh-iconbtn', title: t('b_prog_remove'), 'aria-label': t('b_prog_remove'), onclick: function () { rows.splice(i, 1); draw(); } }, A.icon('trash'))
+				]));
+			});
+		}
+		var defaults = { living_kitchen: 40, living: 28, kitchen: 12, dining: 14, master: 16, bedroom: 12, kids: 11, guest: 11, bathroom: 7, wc: 2, hall: 8, office: 10, laundry: 5, wardrobe: 5, pantry: 3 };
+		var pills = el('div', { class: 'agh-bld-pills' }, A.roomTypes().map(function (o) {
+			return el('button', { type: 'button', class: 'agh-pill agh-bld-pill', 'data-type': o[0], onclick: function () { rows.push({ type: o[0], name: o[1], area: defaults[o[0]] || 12 }); draw(); list.lastChild && list.lastChild.scrollIntoView && list.lastChild.scrollIntoView({ block: 'nearest' }); } }, o[1]);
+		}).concat([el('button', { type: 'button', class: 'agh-pill agh-bld-pill is-custom', 'data-type': 'other', onclick: function () { rows.push({ type: 'other', name: t('b_prog_custom'), area: 10 }); draw(); } }, [A.icon('plus', 'agh-ico-s'), t('b_prog_custom')])]));
+		var close = function () { modal.remove(); };
+		var done = function () {
+			change(function (b) {
+				var keep = rows.map(function (r) { return r.id; });
+				b.prog = (b.prog || []).filter(function (r) { return r.lv !== st.lv || keep.indexOf(r.id) !== -1; });
+				rows.forEach(function (r) {
+					var dims = r.keepWD ? [r.w, r.d] : progDims(r.area), cur = r.id ? b.prog.filter(function (q) { return q.id === r.id; })[0] : null;
+					if (cur) { cur.name = r.name; cur.type = r.type; cur.area = r2(dims[0] * dims[1]); if (!r.keepWD || cur.w !== dims[0] || cur.d !== dims[1]) { cur.w = dims[0]; cur.d = dims[1]; } return; }
+					var pk = progPark(b);
+					b.prog.push({ id: B.nextId(b.prog, 'r'), type: r.type, name: r.name, area: r2(dims[0] * dims[1]), w: dims[0], d: dims[1], x: pk[0], y: pk[1], lv: st.lv, placed: false });
+				});
+			});
+			close(); fitView(); renderPlan();
+		};
+		var modal = el('div', { class: 'agh-bld-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('b_prog') }, [
+			el('div', { class: 'agh-bld-modal-box' }, [
+				el('div', { class: 'agh-bld-modal-head' }, [el('h3', { class: 'agh-bld-h', text: t('b_prog_title') }), el('button', { type: 'button', class: 'agh-iconbtn', 'aria-label': t('b_prog_done'), title: t('b_prog_done'), onclick: close }, A.icon('close'))]),
+				el('p', { class: 'agh-bld-note', text: t('b_prog_lead') }),
+				el('p', { class: 'agh-bld-note is-small', text: t('b_prog_add_hint') }),
+				pills, list,
+				el('div', { class: 'agh-bld-modal-foot' }, [el('button', { type: 'button', class: 'agh-btn agh-btn-primary agh-bld-progdone', onclick: done }, t('b_prog_done'))])
+			])
+		]);
+		modal.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } });
+		modal.addEventListener('click', function (e) { if (e.target === modal) { close(); } });
+		draw();
+		D.root.appendChild(modal);
+		var first = modal.querySelector('.agh-bld-pill'); if (first) { first.focus(); }
+	}
 	// A held wall slides square to itself (grid steps), the joined walls follow; an opening slides along its
 	// wall (5 cm steps). Shared by the plan and the 3D construction view (1.19.0).
 	function moveSel(p) {
 		var o = find(st.drag.move), dx = p[0] - st.drag.p0[0], dy = p[1] - st.drag.p0[1], g = B.defaults().grid || 0.1;
 		if (!o) { return false; }
+		if (st.drag.move.k === 'room') {
+			var rx = Math.round((st.drag.orig.x + dx) / g) * g, ry = Math.round((st.drag.orig.y + dy) / g) * g, sn = progSnap(rx, ry, o.w, o.d);
+			o.x = r2(sn[0]); o.y = r2(sn[1]);
+			st.drag.moved = true;
+			return true;
+		}
 		if (st.drag.move.k === 'wall') {
 			var od = st.drag.orig, ddx = Math.round(dx / g) * g, ddy = Math.round(dy / g) * g;
 			if (od.a[1] === od.b[1]) { ddx = 0; } else if (od.a[0] === od.b[0]) { ddy = 0; }
@@ -953,6 +1217,7 @@
 		var d = big ? 0.5 : 0.1, dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[key];
 		if (!dir) { return false; }
 		change(function (b) {
+			if (st.sel.k === 'room') { var rr = (b.prog || []).filter(function (q) { return q.id === o.id; })[0]; if (rr) { rr.x = r2(rr.x + dir[0] * d); rr.y = r2(rr.y + dir[1] * d); } return; }
 			if (st.sel.k === 'wall') {
 				var w = b.walls.filter(function (q) { return q.id === o.id; })[0], dx = dir[0] * d, dy = dir[1] * d;
 				if (w.a[1] === w.b[1]) { dx = 0; } else if (w.a[0] === w.b[0]) { dy = 0; }
@@ -1068,14 +1333,16 @@
 		var o = find(st.sel);
 		D.selBar.hidden = !o;
 		if (!o) { return; }
-		var name = st.sel.k === 'wall' ? t('b_kind_' + o.kind) : t('b_op_' + o.type);
-		D.selBar.appendChild(el('span', { class: 'agh-bld-selname', text: name + ' · ' + o.id }));
+		var name = st.sel.k === 'wall' ? t('b_kind_' + o.kind) : (st.sel.k === 'room' ? (o.name || progName(o.type)) + ' · ' + fmt(o.w * o.d, 1) + ' m²' : t('b_op_' + o.type));
+		D.selBar.appendChild(el('span', { class: 'agh-bld-selname', text: st.sel.k === 'room' ? name : name + ' · ' + o.id }));
 		D.selBar.appendChild(el('button', { type: 'button', class: 'agh-iconbtn agh-bld-seldel', title: t('b_delete') + ' (Del)', 'aria-label': t('b_delete') }, A.icon('trash')));
 		D.selBar.lastChild.addEventListener('click', function () { delSel(); });
 		mark3D();
 	}
 	function hitTest(p, tol) {
 		var lv = st.lv, best = null;
+		(st.step === 6 ? st.b.prog || [] : []).forEach(function (r) { if (r.lv === lv && p[0] >= r.x && p[0] <= r.x + r.w && p[1] >= r.y && p[1] <= r.y + r.d) { best = { k: 'room', id: r.id }; } });
+		if (best) { return best; }
 		st.b.openings.forEach(function (o) {
 			if (o.lv !== lv || best) { return; }
 			var w = st.b.walls.filter(function (q) { return q.id === o.wall; })[0];

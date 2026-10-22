@@ -99,7 +99,8 @@
 			rooms: {},
 			services: [],
 			surfaces: [],
-			guessed: []
+			guessed: [],
+			prog: []
 		};
 		if (o.ring.h < o.slab.t) { o.ring.h = o.slab.t; }
 		(Array.isArray(b.levels) ? b.levels : []).slice(0, lvMax).forEach(function (lv) {
@@ -151,6 +152,19 @@
 		// prepared for 1.14.1 (services) and 1.14.2 (surfaces): kept as given, size-limited
 		if (Array.isArray(b.services)) { o.services = b.services.filter(isObj).slice(0, 200); }
 		if (Array.isArray(b.surfaces)) { o.surfaces = b.surfaces.filter(isObj).slice(0, 200); }
+		// 1.20.0: the room programme – rectangles of the chosen rooms (plan metres) the visitor places in the base
+		if (Array.isArray(b.prog)) {
+			b.prog.slice(0, 60).forEach(function (r) {
+				if (!isObj(r)) { return; }
+				var w = r2(clamp(num(r.w, 3), 0.8, 30)), d = r2(clamp(num(r.d, 3), 0.8, 30));
+				o.prog.push({
+					id: uid('r', r.id), type: typeof r.type === 'string' && /^[a-z_]{1,32}$/.test(r.type) ? r.type : 'other', name: text(r.name, 40),
+					area: r2(clamp(num(r.area, w * d), 1, 500)), w: w, d: d,
+					x: r2(clamp(num(r.x, 0), -50, 550)), y: r2(clamp(num(r.y, 0), -50, 1050)),
+					lv: clamp(Math.round(num(r.lv, 0)), 0, o.levels.length - 1), placed: r.placed === true
+				});
+			});
+		}
 		return o;
 	}
 

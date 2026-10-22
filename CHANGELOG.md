@@ -1,5 +1,15 @@
 # Változásnapló
 
+## 1.20.0 – 2026-10-22
+
+Norbi: „helyiségprogram felugró ablakban: pillékből választod a helyiséget, megadod a m²-t, és te teszed be az alapba.” (`docs/FELADAT-1.18.0.md`)
+
+- **Építési mód, 6. lépés – Helyiségprogram:** a „Helyiségek…” gomb felugró ablakot nyit; a helyiségtípusok pillék (nappali, konyha, nappali + konyha + étkező, hálók, fürdő, WC, előtér, dolgozó, kamra, mosókonyha, gardrób, gépészet… és egyedi név). Koppintásra sor kerül a listába: név, m², ha kell szélesség × mélység. „Kész” után minden helyiség egy színes téglalap a ház mellett.
+- A téglalapot egérrel/ujjal a ház alapjába húzod (a fal belső síkjára ugrik), dupla koppintás 90°-kal elfordítja, nyíl léptet, Del töröl; piros, ha kilóg vagy másikra került. **Automatikus elhelyezés** gombra a legnagyobbtól kezdve elhelyezi (a szomszédok élre illeszkednek); ami nem fér el, a ház mellett marad, és jelez.
+- **Falak a helyiségek köré:** a téglalapok határán válaszfalak jönnek létre (közös élen egy fal, ahol már fal áll, ott nem), a régi, a helyiségeken átfutó válaszfalak eltűnnek, és a kapott helyiségek típusa a téglalapé. Ctrl+Z visszavon. A program a tervvel mentődik (`build.prog`, JS = PHP).
+- Mérve: új `tests/e2e/prog.js` 20 ház, 90 téglalap valódi kattintással: m² ±0,5 90/90, a ház mellett indul 90/90, behúzás és falsíkra ugrás 20/20, dupla koppintás 90° 20/20, automatikus elhelyezés 90/90 – átfedés 0, körvonalon kívül 0; falak a téglalapok mentén, típus 90/90, szerkezeti hiba +0, Ctrl+Z 20/20; szerver = JS 10/10; konzolhiba 0 · `buildedit.js` 8 ház zöld · `build.js` zöld · `build-test` 6975/6975 · `build-test.php` 2235/2235 · 15 nyelv × 2550 szöveg, 0 hiba.
+- Megjegyzés: a `build.js` felületmérése 768×1024-en ritkán 43×43 px-es gombot mér (betöltés közbeni pillanat; ismételve 0 hiba).
+
 ## 1.19.0 – 2026-10-22
 
 Norbi: „falak, ablakok, ajtók törlése és mozgatása a rajzon és a 3D-ben.” (`docs/FELADAT-1.18.0.md`)

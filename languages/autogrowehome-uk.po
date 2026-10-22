@@ -10530,3 +10530,67 @@ msgstr "Димар рекомендується не далі %s м від гр�
 #: includes/Frontend/Strings.php
 msgid "Húzd a hátteret: forgatás · Fogd meg a tárgyat: mozgatás"
 msgstr "Тягніть фон: поворот · Візьміть об'єкт: переміщення"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségek…"
+msgstr "Приміщення…"
+
+#: includes/Frontend/Strings.php
+msgid "Helyiségprogram: válaszd ki a helyiségeket, és add meg a méretüket"
+msgstr "Програма приміщень: виберіть приміщення та вкажіть їхній розмір"
+
+#: includes/Frontend/Strings.php
+msgid "Koppints a helyiségekre, és írd be a területüket (ha akarod, a szélességet és a mélységet is). A rajz téglalapokat ad, ezeket te húzod a ház alapjába."
+msgstr "Торкніться приміщень і введіть їхню площу (за бажанням також ширину й глибину). Креслення зробить із них прямокутники, які ви перетягнете в контур будинку."
+
+#: includes/Frontend/Strings.php
+msgid "Egyedi helyiség"
+msgstr "Власне приміщення"
+
+#: includes/Frontend/Strings.php
+msgid "Szélesség × mélység (nem kötelező)"
+msgstr "Ширина × глибина (необов'язково)"
+
+#: includes/Frontend/Strings.php
+msgid "Még nincs helyiség a programban."
+msgstr "У програмі ще немає приміщень."
+
+#: includes/Frontend/Strings.php
+msgid "Automatikus elhelyezés"
+msgstr "Розставити автоматично"
+
+#: includes/Frontend/Strings.php
+msgid "Falak a helyiségek köré"
+msgstr "Стіни навколо приміщень"
+
+#: includes/Frontend/Strings.php
+msgid "Program törlése"
+msgstr "Очистити програму"
+
+#: includes/Frontend/Strings.php
+msgid "%1$s / %2$s elhelyezve"
+msgstr "%1$s / %2$s розміщено"
+
+#: includes/Frontend/Strings.php
+msgid "Húzd a téglalapokat a ház alapjába. Dupla kattintás: elforgatás 90°-kal, Del: törlés."
+msgstr "Перетягніть прямокутники в контур будинку. Подвійне клацання: поворот на 90°, Del: видалити."
+
+#: includes/Frontend/Strings.php
+msgid "Kilóg a házból"
+msgstr "Виходить за будинок"
+
+#: includes/Frontend/Strings.php
+msgid "Másik helyiségre lóg"
+msgstr "Перетинається з іншим приміщенням"
+
+#: includes/Frontend/Strings.php
+msgid "%s helyiség nem fért el automatikusan – húzd be kézzel."
+msgstr "%s приміщень не вмістилося автоматично – перетягніть їх вручну."
+
+#: includes/Frontend/Strings.php
+msgid "%s új válaszfal készült."
+msgstr "Накреслено нових перегородок: %s."
+
+#: includes/Frontend/Strings.php
+msgid "Koppints egy helyiségre a hozzáadáshoz:"
+msgstr "Торкніться приміщення, щоб додати його:"
