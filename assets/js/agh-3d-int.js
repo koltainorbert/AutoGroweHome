@@ -1559,6 +1559,17 @@ function kidsTheme(R, m, c, W, D, H, bx, bw, P, tag, alt) {
 		CY(gc, 0, 0, 0, 0.05, 0.05, 0.44, m.metal, 10); at2(gc, 1.0, 1.15, 180);
 	}
 }
+// 1.25.0: the designed stair of a drawn house in a room view (s: agh-3d.js stairRoom, room frame): the flight
+// from this floor up to the room's height (lower), and the top of the flight under the slab opening of this
+// floor with the railing around the opening (upper). Same treads, same floor material (the stair's floor key) as the finished house.
+function designedStair(c, s, H) {
+	var grp = G(), n = 0, add = function (m) { if (m) { grp.add(m); } };
+	grp.userData.stair = 'designed';
+	if (s.lower) { n += L.stairParts(c, s, 0, add, { hi: H - 0.05, railHi: H - 1.0, hole: false }); }
+	if (s.upper) { n += L.stairParts(c, s, -s.H, add, { lo: s.H - 1.0, hi: s.H }); }
+	grp.userData.treads = n;
+	return grp;
+}
 // A staircase that fits the room: the chosen type where there is room for it, a space-saving shape where
 // there is not. Never returns nothing – a multi-level home must show its stairs.
 export function stairFit(m, c, W, D, H) {
@@ -2275,17 +2286,25 @@ export function interiorScene(c, room) {
 	var tile = wet ? L.bathTileMat(c) : null; m.tile = tile;
 	var fw = (c.wall_finish || []).filter(function (x) { return x !== 'limewash'; });
 	var wallMat = wet ? tile : (Array.isArray(c.wall_finish) && c.wall_finish.indexOf('limewash') !== -1 ? L.pbr('render', { color: wallC, texture: 'coarse' }, { normal: 0.5 }) : L.solid(wallC, 0.92));
+	// 1.25.0: the designed stair of a drawn house (build mode) when it is in this room: from its floor (lower)
+	// and / or arriving through the slab opening in its floor (upper); the room's own floor gets the opening
+	var dst = L.stairRoom ? L.stairRoom(c, room) : null, dHole = null;
+	if (dst && dst.upper) { dHole = [dst.hole.map(function (p) { return [L.clamp(p[0], 0.02, W - 0.02), L.clamp(p[1], 0.02, D - 0.02)]; })]; }
 	// floor slab with a light base around it, and the floor itself
-	hs.add(L.box(-0.35, -0.35, -0.25, W + 0.35, D + 0.35, -0.02, L.solid('#E4DFD7', 0.95)), false);
+	hs.add(dHole ? L.prism([[-0.35, -0.35], [W + 0.35, -0.35], [W + 0.35, D + 0.35], [-0.35, D + 0.35]], -0.25, -0.02, L.solid('#E4DFD7', 0.95), dHole) : L.box(-0.35, -0.35, -0.25, W + 0.35, D + 0.35, -0.02, L.solid('#E4DFD7', 0.95)), false);
 	// the room's own floor covering wins over the house's choice for this room type
 	var floorKey = (room && room.floor) ? room.floor : L.roomFloorKey(c, type);
-	g.add(L.box(0, 0, -0.02, W, D, 0.0, L.roomFloorMat(c, floorKey)));
+	g.add(dHole ? L.prism([[0, 0], [W, 0], [W, D], [0, D]], -0.02, 0, L.roomFloorMat(c, floorKey), dHole) : L.box(0, 0, -0.02, W, D, 0.0, L.roomFloorMat(c, floorKey)));
 	// what stands where: blocking stretches on the back (x) and left (y measured from the front corner) walls
 	var occB = [], occL = [], ws = K._win(c), winW = Math.max(ws.w, 1.0), pano = c.window_style === 'panoramic';
 	var door = { u: wet && D < 2.6 ? 0.12 : 0.3, w: wet && D < 2.0 ? 0.8 : 0.9, style: pick(c, 'door_style') }, hasTV = false, rightFeat = null, fixes = [];
 	occL.push([0, door.u + door.w + (door.style === 'barn' ? 1.1 : 0.15)]);
 	var lights = pick(c, 'ceiling_lights'), pend = pick(c, 'pendant_style'), deco = c.decor !== false;
 	var art = pick(c, 'art_style'), plantK = pick(c, 'plants');
+	// the designed stair stands in the furniture group while the room is furnished (the pieces keep clear of it)
+	// and leaves it before the pieces get their slots: it is part of the house, it cannot be picked up
+	var dstG = dst && !dst.none ? designedStair(c, dst, H) : null;
+	if (dstG) { R.add(dstG); }
 	function P(obj, x, y, rot) { return place(R, obj, x, y, rot); }
 	function onLeft(obj, y, depth) { return P(obj, depth || 0, y, 90); }   // origin on the left wall, facing +x
 	// a plant is scaled to the room: in a small bedroom a tree the size of the bed looks wrong
@@ -2435,7 +2454,7 @@ export function interiorScene(c, room) {
 	} else if (kind === 'hall' || kind === 'stairs') {
 		var multi = c.levels && c.levels !== 'single';
 		// A multi-level home always shows its staircase here; in a narrow hall a shape that fits takes over.
-		if (kind === 'stairs' || multi) { var stp = stairFit(m, c, W, D, H), sty = stp.userData.stairType; if (sty === 'spiral') { var sr = stp.userData.radius; stp.position.set(W - sr - 0.1, 0, sr + 0.1); occB.push([W - 2 * sr - 0.2, W, 9]); } else { stp.rotation.y = -Math.PI / 2; stp.position.set(Math.min(W - 0.3, 3.7), 0, 0.02); occB.push([0, W, 9]); } R.add(stp); }
+		if ((kind === 'stairs' || multi) && !dst) { var stp = stairFit(m, c, W, D, H), sty = stp.userData.stairType; if (sty === 'spiral') { var sr = stp.userData.radius; stp.position.set(W - sr - 0.1, 0, sr + 0.1); occB.push([W - 2 * sr - 0.2, W, 9]); } else { stp.rotation.y = -Math.PI / 2; stp.position.set(Math.min(W - 0.3, 3.7), 0, 0.02); occB.push([0, W, 9]); } R.add(stp); }
 		else {
 			var cs = G(); RB(cs, -0.6, 0.78, 0, 0.6, 0.82, 0.34, 0.005, m.wood, 1); [[-0.56, 0.04], [0.56, 0.04], [-0.56, 0.3], [0.56, 0.3]].forEach(function (q) { ROD(cs, [q[0], 0, q[1]], [q[0], 0.78, q[1]], 0.012, m.metal); }); vase(cs, m, -0.3, 0.82, 0.17, 1.2); bowl(cs, m, 0.3, 0.82, 0.17, 0.1, m.potD);
 			var mi = tag(artwork(m, 'mirror', 1.0), 'art_style'); mi.position.y = 0.1; cs.add(mi);
@@ -2533,7 +2552,7 @@ export function interiorScene(c, room) {
 	}
 	// A multi-level home whose programme has no hall and no stair room: the main living space carries the
 	// staircase, so the stairs are never missing from the house.
-	if (living && c.levels && c.levels !== 'single' && W > 3.0 && D > 2.4 && !rooms0.some(function (q) { var k2 = roomKind(q.type); return k2 === 'hall' || k2 === 'stairs'; })) {
+	if (living && !dst && c.levels && c.levels !== 'single' && W > 3.0 && D > 2.4 && !rooms0.some(function (q) { var k2 = roomKind(q.type); return k2 === 'hall' || k2 === 'stairs'; })) {
 		var lst = stairFit(m, c, Math.min(W, 4.4), D, H), lsty = lst.userData.stairType;
 		// wrap it so the piece is centred on x and runs forward on z: the floor planner can then turn it freely
 		var lw = lsty === 'spiral' ? lst.userData.radius * 2 + 0.2 : L.clamp(Math.min(1.0, D - 1.0), 0.62, 1.0);
@@ -2633,6 +2652,7 @@ export function interiorScene(c, room) {
 	(function () {
 		hs.root.updateMatrixWorld(true);
 		R.children.slice().forEach(function (o) {
+			if (o === dstG) { return; }   // the designed stair stands where the drawing puts it
 			bx3.setFromObject(o);
 			if (bx3.isEmpty() || bx3.max.y < 0.06 || bx3.min.y > 1.3) { return; }
 			var w = bx3.max.x - bx3.min.x, d = bx3.max.z - bx3.min.z, k = 1, dx = 0, dz = 0;
@@ -2805,6 +2825,7 @@ export function interiorScene(c, room) {
 	var fit = new THREE.Mesh(L.boxGeo(W + 0.4, H * 0.75, D + 0.4), new THREE.MeshBasicMaterial({ visible: false }));
 	fit.position.copy(L.X(W / 2, D / 2, H * 0.35)); hs.add(fit);
 	hs.room = { W: W, D: D, H: H, kind: kind, door: [D - door.u - door.w, D - door.u], fixes: fixes.filter(function (k, i) { return k && fixes.indexOf(k) === i; }) };
+	if (dstG) { R.remove(dstG); g.add(dstG); hs.stairTreads = dstG.userData.treads; }
 	hs.items = R;   // the furniture of this room, as one group (the room test walks it)
 	// Every piece gets a slot name ("key#index"), so a hand-made arrangement can be saved and found
 	// again in the next build. Then whatever the visitor moved by hand is put back where they left it.

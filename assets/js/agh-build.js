@@ -906,6 +906,47 @@
 		}
 		return out;
 	}
+	// 1.25.0: the railing lines of a designed stair (local footprint frame, like stairSteps): the open (inner) side
+	// of every flight at the top of its treads, and the edges of the slab opening upstairs (z = H) except where the
+	// stair arrives. [{ a: [u, v, z], b: [u, v, z], hole }]. Used by the finished house and the room views in 3D.
+	function stairRails(cal) {
+		if (!cal) { return []; }
+		var h = cal.rise, g = cal.going, W = cal.width, H = cal.H, out = [], ex = null, i;
+		function seg(a, b, hole) { out.push({ a: [r3(a[0]), r3(a[1]), r3(a[2])], b: [r3(b[0]), r3(b[1]), r3(b[2])], hole: !!hole }); }
+		if (cal.type === 'straight') { seg([W, cal.d, h], [W, 0, H]); ex = [[0, 0], [W, 0]]; }
+		else if (cal.type === 'l') {
+			var a = cal.flights[0];
+			seg([W, cal.d, h], [W, W, (a + 1) * h]); seg([W, W, (a + 2) * h], [cal.w, W, H]); ex = [[cal.w, 0], [cal.w, W]];
+		} else if (cal.type === 'u') {
+			var a2 = cal.flights[0], c2 = cal.flights[1], xr = cal.w - W;
+			seg([W, cal.d, h], [W, W, (a2 + 1) * h]); seg([xr, W, (a2 + 2) * h], [xr, W + c2 * g, H]); ex = [[xr, cal.d], [cal.w, cal.d]];
+		} else {
+			// spiral: along the outer edge of the treads, the opening open where the last tread ends
+			var R = cal.w / 2, n = cal.treads, da = (cal.turn || 360) / n * Math.PI / 180, rr = R - 0.05, prev = null;
+			for (i = 0; i <= n; i++) {
+				var an = Math.PI / 2 + Math.min(i + 0.5, n) * da, p = [R + Math.cos(an) * rr, R + Math.sin(an) * rr, i < n ? (i + 1) * h : H];
+				if (prev) { seg(prev, p); }
+				prev = p;
+			}
+			var ae = Math.PI / 2 + n * da, px = R + Math.cos(ae) * R, py = R + Math.sin(ae) * R, d0 = [py, cal.w - px, cal.w - py, px], k = d0.indexOf(Math.min.apply(null, d0));
+			var c0 = Math.max(0, Math.min(cal.w - W, (k % 2 ? py : px) - W / 2)), c1 = c0 + W;
+			ex = k === 0 ? [[c0, 0], [c1, 0]] : (k === 1 ? [[cal.w, c0], [cal.w, c1]] : (k === 2 ? [[c0, cal.w], [c1, cal.w]] : [[0, c0], [0, c1]]));
+		}
+		var hl = cal.holePoly || [[cal.hole.x, cal.hole.y], [cal.hole.x + cal.hole.w, cal.hole.y], [cal.hole.x + cal.hole.w, cal.hole.y + cal.hole.d], [cal.hole.x, cal.hole.y + cal.hole.d]];
+		hl.forEach(function (p, k2) {
+			var q = hl[(k2 + 1) % hl.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]);
+			if (L < 0.05) { return; }
+			var ux = (q[0] - p[0]) / L, uy = (q[1] - p[1]) / L, parts = [[0, L]];
+			// the stretch where the stair arrives stays open
+			var on = ex && ex.every(function (e) { return Math.abs((e[0] - p[0]) * uy - (e[1] - p[1]) * ux) < 1e-4; });
+			if (on) {
+				var t0 = (ex[0][0] - p[0]) * ux + (ex[0][1] - p[1]) * uy, t1 = (ex[1][0] - p[0]) * ux + (ex[1][1] - p[1]) * uy, lo = Math.min(t0, t1), hi = Math.max(t0, t1);
+				parts = [[0, Math.min(L, lo)], [Math.max(0, hi), L]];
+			}
+			parts.forEach(function (s) { if (s[1] - s[0] > 0.05) { seg([p[0] + ux * s[0], p[1] + uy * s[0], H], [p[0] + ux * s[1], p[1] + uy * s[1], H], true); } });
+		});
+		return out;
+	}
 	// The plan rectangles of a placed stair: footprint, slab opening, free landings (bottom / top), turned by rot.
 	function stairRects(b0, st) {
 		var b = b0 && b0.levels ? b0 : normalize(b0);
@@ -932,7 +973,8 @@
 		// the opening's area (shoelace)
 		var ar = 0; poly.forEach(function (p, i) { var q = poly[(i + 1) % poly.length]; ar += p[0] * q[1] - q[0] * p[1]; });
 		var steps = stairSteps(cal).map(function (q) { return { z: q.z, pts: q.pts.map(function (p0) { var p = tp(p0); return [r3(st.x + p[0]), r3(st.y + p[1])]; }) }; });
-		return { calc: cal, steps: steps, foot: { x: st.x, y: st.y, w: r2(W), d: r2(Dd) }, hole: hole, holePoly: poly, holeArea: r2(Math.abs(ar) / 2), bottom: cal ? turn(cal.bottom) : null, top: cal ? turn(cal.top) : null };
+		var rails = stairRails(cal).map(function (s) { var a = tp(s.a), q = tp(s.b); return { a: [r3(st.x + a[0]), r3(st.y + a[1]), s.a[2]], b: [r3(st.x + q[0]), r3(st.y + q[1]), s.b[2]], hole: s.hole }; });
+		return { calc: cal, steps: steps, rails: rails,foot: { x: st.x, y: st.y, w: r2(W), d: r2(Dd) }, hole: hole, holePoly: poly, holeArea: r2(Math.abs(ar) / 2), bottom: cal ? turn(cal.bottom) : null, top: cal ? turn(cal.top) : null };
 	}
 	function practice(b0, cfg, m) {
 		m = m || metrics(b0, cfg);
@@ -1192,7 +1234,7 @@
 		masonryH: masonryH, clearH: clearH, levelBase: levelBase, snap: snap, nextId: nextId, rectWalls: rectWalls, polyWalls: polyWalls,
 		fromHouse: fromHouse, randomHouse: randomHouse,
 		// geometry internals (tests and the PHP parity check)
-		_edges: edgesOf, _faces: faces, _decompose: decompose, _strips: strips, _offset: offset, _union: unionLoop, _area2: area2, _inPoly: inPoly, stairCalc: stairCalc, stairRects: stairRects, stairTypes: STAIR_TYPES
+		_edges: edgesOf, _faces: faces, _decompose: decompose, _strips: strips, _offset: offset, _union: unionLoop, _area2: area2, _inPoly: inPoly, stairCalc: stairCalc, stairRects: stairRects, stairRails: stairRails, stairTypes: STAIR_TYPES
 	};
 	return api;
 }));
