@@ -10386,3 +10386,53 @@ msgstr "Foto dall’immagine 3D (consigliato)"
 #: includes/Admin/Admin.php
 msgid "Forma-vezetés (régi)"
 msgstr "Guida della forma (vecchio)"
+
+#: includes/Admin/Admin.php
+msgid "A Pro változat bekapcsolva."
+msgstr "Versione Pro attivata."
+
+#: includes/Admin/Admin.php
+msgid "Túl sok hibás próbálkozás. Próbáld újra 15 perc múlva."
+msgstr "Troppi tentativi errati. Riprova tra 15 minuti."
+
+#: includes/Admin/Admin.php
+msgid "Hibás kód."
+msgstr "Codice errato."
+
+#: includes/Admin/Admin.php
+msgid "A Pro változat kikapcsolva."
+msgstr "Versione Pro disattivata."
+
+#: includes/Admin/Pages.php
+msgid "Pro változat"
+msgstr "Versione Pro"
+
+#: includes/Admin/Pages.php
+msgid "Saját oldalon minden funkció él, kód nem kell."
+msgstr "Sul tuo sito tutte le funzioni sono attive, non serve alcun codice."
+
+#. translators: %s: plan name
+#: includes/Admin/Pages.php
+#, php-format
+msgid "A licenc már tartalmazza: %s csomag."
+msgstr "La licenza lo include già: piano %s."
+
+#: includes/Admin/Pages.php
+msgid "A Pro változat kóddal be van kapcsolva: a Professional csomag minden funkciója él (képleíró prompt, teljes paraméterezés, részletes galéria, haladó arculat…)."
+msgstr "La versione Pro è attivata con un codice: tutte le funzioni del piano Professional sono attive (prompt di descrizione immagine, parametri completi, galleria dettagliata, branding avanzato…)."
+
+#: includes/Admin/Pages.php
+msgid "Kikapcsolás"
+msgstr "Disattiva"
+
+#: includes/Admin/Pages.php
+msgid "Add meg a kódot, és a Professional csomag minden funkciója bekapcsol ezen az oldalon."
+msgstr "Inserisci il codice e su questo sito si attiveranno tutte le funzioni del piano Professional."
+
+#: includes/Admin/Pages.php
+msgid "Pro kód"
+msgstr "Codice Pro"
+
+#: includes/Admin/Pages.php
+msgid "Bekapcsolás"
+msgstr "Attiva"

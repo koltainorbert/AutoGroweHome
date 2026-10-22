@@ -499,6 +499,17 @@ final class Admin {
 		}
 		$p = wp_unslash( $_REQUEST ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized per action below.
 		switch ( $do ) {
+			case 'pro_code':
+				$res = \AutoGroweHome\License\ProCode::attempt( (string) ( $p['agh_pro_code'] ?? '' ) );
+				if ( $res['ok'] ) {
+					self::redirect( $back, __( 'A Pro változat bekapcsolva.', 'autogrowehome' ) );
+				}
+				self::redirect( $back, $res['locked'] ? __( 'Túl sok hibás próbálkozás. Próbáld újra 15 perc múlva.', 'autogrowehome' ) : __( 'Hibás kód.', 'autogrowehome' ), true );
+				break;
+			case 'pro_code_off':
+				\AutoGroweHome\License\ProCode::disable();
+				self::redirect( $back, __( 'A Pro változat kikapcsolva.', 'autogrowehome' ) );
+				break;
 			case 'storage_recheck':
 				delete_transient( 'agh_storage_health' );
 				$h = Storage::health();

@@ -10388,3 +10388,53 @@ msgstr "Fotografija iz 3D slike (preporučeno)"
 #: includes/Admin/Admin.php
 msgid "Forma-vezetés (régi)"
 msgstr "Vođenje oblika (staro)"
+
+#: includes/Admin/Admin.php
+msgid "A Pro változat bekapcsolva."
+msgstr "Pro verzija uključena."
+
+#: includes/Admin/Admin.php
+msgid "Túl sok hibás próbálkozás. Próbáld újra 15 perc múlva."
+msgstr "Previše pogrešnih pokušaja. Pokušaj ponovno za 15 minuta."
+
+#: includes/Admin/Admin.php
+msgid "Hibás kód."
+msgstr "Pogrešan kod."
+
+#: includes/Admin/Admin.php
+msgid "A Pro változat kikapcsolva."
+msgstr "Pro verzija isključena."
+
+#: includes/Admin/Pages.php
+msgid "Pro változat"
+msgstr "Pro verzija"
+
+#: includes/Admin/Pages.php
+msgid "Saját oldalon minden funkció él, kód nem kell."
+msgstr "Na vlastitoj stranici sve funkcije rade, kod nije potreban."
+
+#. translators: %s: plan name
+#: includes/Admin/Pages.php
+#, php-format
+msgid "A licenc már tartalmazza: %s csomag."
+msgstr "Licenca to već uključuje: paket %s."
+
+#: includes/Admin/Pages.php
+msgid "A Pro változat kóddal be van kapcsolva: a Professional csomag minden funkciója él (képleíró prompt, teljes paraméterezés, részletes galéria, haladó arculat…)."
+msgstr "Pro verzija uključena je kodom: rade sve funkcije paketa Professional (prompt iz opisa slike, puni parametri, detaljna galerija, napredni vizualni identitet…)."
+
+#: includes/Admin/Pages.php
+msgid "Kikapcsolás"
+msgstr "Isključi"
+
+#: includes/Admin/Pages.php
+msgid "Add meg a kódot, és a Professional csomag minden funkciója bekapcsol ezen az oldalon."
+msgstr "Unesi kod i na ovoj će se stranici uključiti sve funkcije paketa Professional."
+
+#: includes/Admin/Pages.php
+msgid "Pro kód"
+msgstr "Pro kod"
+
+#: includes/Admin/Pages.php
+msgid "Bekapcsolás"
+msgstr "Uključi"

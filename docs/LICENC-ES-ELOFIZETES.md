@@ -46,6 +46,8 @@ A csomagok adatvezéreltek: a beépített mátrix a `Features::default_plans()`-
 | `multi_contractor` | Több kivitelező kezelése | – | – | ✓ | további kivitelezői e-mail-címek |
 | `export_advanced` | Bővített exportálás (CSV, CAD-JSON, DXF) | – | – | ✓ | DXF és a bővítményként regisztrált CAD-exportálók (alapból), a DXF kiszolgálása és ZIP-be kerülése, a statisztika CSV-exportja; a helyiséglista-CSV és az épület-JSON minden csomagban készül |
 
+**Pro változat kóddal (1.16.1):** Arculat és elrendezés → „Pro változat”: a helyes kóddal a Professional csomag minden funkciója és limitje bekapcsol az adott oldalon (`ProCode`, `agh_pro_code` opció); Professional/Agency licencet nem érint, kikapcsolható. A kódból csak a bcrypt kivonat van a pluginban; 5 hibás próba után 15 perc tiltás. A kód minden oldalon ugyanaz – ügyfélnek adva a licencközponti kulcs a biztonságosabb.
+
 A korábbi `roles_advanced` („Haladó jogosultságkezelés”) funkció kikerült a katalógusból, mert nem volt megvalósítva. A plugin szerepkörei (pl. `agh_manager`, `agh_contractor`) minden csomagban létrejönnek.
 
 ### Limitek (alapértelmezés)

@@ -33,6 +33,7 @@ Ez a repó az egyetlen forrás. A repó gyökere maga a WordPress plugin.
 - `php tests/autoloader-test.php` (WordPress nélkül fut)
 - `node tests/sketch-test.js` (élő vázlat, WordPress nélkül fut)
 - Sor/generálás változott: `php tests/stuck-project-test.php` (tesztoldalon; beragadt projekt őrző) és `node tests/e2e/cancel.js` (leállítás beragadt szervernél).
+- Licenc vagy csomag változott: `AGH_PRO_CODE=… php tests/pro-code-test.php` (13/13; a kódot Norbi adja, a repóba nem kerül).
 - Licencközpont változott: `php tests/license-hub-test.php` (a tesztoldalon, a valódi ügyfél-LicenseManagerrel; 40/40).
 - Képgenerálás vagy a 3D vezetőkép változott: `php tests/guide-test.php` (62/62), `php tests/vision-test.php` (55/55, képleíró prompt és licenckapu), `php tests/match-test.php` (26/26, a prompt a 3D színeit és anyagait mondja), `php tests/photo-test.php` (22/22, fotó a 3D képből) és `node tests/e2e/guide.js` (6 nézet + belső vezetőképek, tiszta és szemmagasságú hero, a kérés tartalma).
 - Tárhely vagy az admin figyelmeztetései változtak: `php tests/storage-test.php` (a tesztoldalon; 10/10 + 11/11, a próbafájl HTTP-n, az AGH_PRIVATE_DIR és a fájlok áthozása).

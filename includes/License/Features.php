@@ -121,7 +121,8 @@ final class Features {
 		if ( self::owner_mode() ) {
 			return 'owner';
 		}
-		$p = LicenseManager::effective_plan();
+		// the Pro code on the Branding page lifts a Starter site to Professional (1.16.1)
+		$p = ProCode::apply( LicenseManager::effective_plan() );
 		return isset( self::plans()[ $p ] ) ? $p : 'starter';
 	}
 

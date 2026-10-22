@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 1.16.1 – 2026-10-22
+
+Norbi: „a pro változat kerüljön az arculati menübe”, saját kóddal. Munkaprompt: `docs/FELADAT-1.16.1.md`.
+
+- **Pro változat kóddal:** Arculat és elrendezés → „Pro változat” kártya. A helyes kóddal a Professional csomag minden funkciója és limitje bekapcsol az oldalon (képleíró prompt, teljes paraméterezés, részletes galéria, haladó arculat…); „Kikapcsolás” visszaállít. Professional/Agency licencet nem csökkent; saját oldalon csak tájékoztat.
+- A kód nincs szövegesen a pluginban (csak a bcrypt kivonata); 5 hibás próba után 15 perc tiltás.
+- Mérve: új `tests/pro-code-test.php` 13/13 (a kód környezeti változóból) · böngészőben ügyféloldal módban: hibás kód nem kapcsol, jó kód → Aktív, Kikapcsolás → vissza, konzolhiba 0 · `vision-test` 55/55 · `license-hub-test` 40/40 · `photo-test` 22/22 · autoloader 125/125 · lint 0 · 15 nyelv × 2511 szöveg, 0 hiba.
+- **Figyelem:** a kód minden ügyféloldalon ugyanaz; aki ismeri, a licencközpont nélkül bekapcsolhatja a Pro-t.
+
 ## 1.16.0 – 2026-10-22
 
 Norbi 10 pontos listája (7 képpel). Ebben a verzióban az 1., a 9. és a 10. pont; a többi (helyiségprogram, törlés/mozgatás, globális mozgatás-forgatás, anyagok helye, medence, garázs, melléképületek) ütemezve az 1.17–1.22-re. Munkaprompt: `docs/FELADAT-1.16.0.md`.

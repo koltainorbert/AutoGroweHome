@@ -15,6 +15,7 @@ use AutoGroweHome\Generation\JobQueue;
 use AutoGroweHome\Installer;
 use AutoGroweHome\License\Features;
 use AutoGroweHome\License\LicenseManager;
+use AutoGroweHome\License\ProCode;
 use AutoGroweHome\Params\Definitions;
 use AutoGroweHome\Params\Registry;
 use AutoGroweHome\Projects\Repository;
@@ -584,6 +585,7 @@ final class Pages {
 	/* ------------------------------------------------------------------ branding */
 
 	public static function page_branding(): void {
+		self::pro_code_box();
 		if ( ! Features::enabled( 'branding_advanced' ) ) {
 			echo '<div class="notice notice-info inline"><p>' . esc_html__( 'Starter csomagban a logó, a név és a fő szín módosítható; a haladó arculati beállítások a Professional csomagtól érvényesülnek.', 'autogrowehome' ) . '</p></div>';
 		}
@@ -595,6 +597,36 @@ final class Pages {
 			echo '<li>' . esc_html( $h['time'] ) . ' <span class="agh-sw" style="background:' . esc_attr( (string) ( $h['branding']['color_primary'] ?? '' ) ) . '"></span> <a class="agh-confirm" href="' . esc_url( Admin::action_url( 'design_restore', array( 'i' => $i ) ) ) . '">' . esc_html__( 'Visszaállítás', 'autogrowehome' ) . '</a></li>';
 		}
 		echo '</ul></div></div></div>';
+	}
+
+	/**
+	 * Pro version switch with a code (1.16.1).
+	 */
+	private static function pro_code_box(): void {
+		$licensed = LicenseManager::effective_plan();
+		echo '<div class="agh-card agh-pro-code"><h3>' . esc_html__( 'Pro változat', 'autogrowehome' ) . '</h3>';
+		if ( Features::owner_mode() ) {
+			echo '<p>' . esc_html__( 'Saját oldalon minden funkció él, kód nem kell.', 'autogrowehome' ) . '</p></div>';
+			return;
+		}
+		if ( in_array( $licensed, array( 'professional', 'agency' ), true ) ) {
+			/* translators: %s: plan name */
+			echo '<p>' . esc_html( sprintf( __( 'A licenc már tartalmazza: %s csomag.', 'autogrowehome' ), (string) ( Features::plans()[ $licensed ]['label'] ?? $licensed ) ) ) . '</p></div>';
+			return;
+		}
+		if ( ProCode::active() ) {
+			echo '<p>' . self::badge( __( 'Aktív', 'autogrowehome' ), 'ok' ) . ' ' . esc_html__( 'A Pro változat kóddal be van kapcsolva: a Professional csomag minden funkciója él (képleíró prompt, teljes paraméterezés, részletes galéria, haladó arculat…).', 'autogrowehome' ) . '</p>';
+			echo '<p><a class="button agh-confirm" href="' . esc_url( Admin::action_url( 'pro_code_off', array(), 'agh-branding' ) ) . '">' . esc_html__( 'Kikapcsolás', 'autogrowehome' ) . '</a></p></div>';
+			return;
+		}
+		echo '<p>' . esc_html__( 'Add meg a kódot, és a Professional csomag minden funkciója bekapcsol ezen az oldalon.', 'autogrowehome' ) . '</p>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="agh-pro-code-form">';
+		echo '<input type="hidden" name="action" value="agh_action"><input type="hidden" name="do" value="pro_code"><input type="hidden" name="back" value="agh-branding">';
+		wp_nonce_field( 'agh_action_pro_code' );
+		echo '<label class="screen-reader-text" for="agh-pro-code">' . esc_html__( 'Pro kód', 'autogrowehome' ) . '</label>';
+		echo '<input type="password" id="agh-pro-code" name="agh_pro_code" class="regular-text" autocomplete="off" maxlength="64" placeholder="' . esc_attr__( 'Pro kód', 'autogrowehome' ) . '"> ';
+		submit_button( __( 'Bekapcsolás', 'autogrowehome' ), 'primary', 'submit', false );
+		echo '</form></div>';
 	}
 
 	public static function page_limits(): void {

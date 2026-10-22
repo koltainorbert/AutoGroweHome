@@ -10388,3 +10388,53 @@ msgstr "Fotografie ze 3D obrázku (doporučeno)"
 #: includes/Admin/Admin.php
 msgid "Forma-vezetés (régi)"
 msgstr "Vedení tvaru (staré)"
+
+#: includes/Admin/Admin.php
+msgid "A Pro változat bekapcsolva."
+msgstr "Verze Pro zapnuta."
+
+#: includes/Admin/Admin.php
+msgid "Túl sok hibás próbálkozás. Próbáld újra 15 perc múlva."
+msgstr "Příliš mnoho chybných pokusů. Zkus to znovu za 15 minut."
+
+#: includes/Admin/Admin.php
+msgid "Hibás kód."
+msgstr "Chybný kód."
+
+#: includes/Admin/Admin.php
+msgid "A Pro változat kikapcsolva."
+msgstr "Verze Pro vypnuta."
+
+#: includes/Admin/Pages.php
+msgid "Pro változat"
+msgstr "Verze Pro"
+
+#: includes/Admin/Pages.php
+msgid "Saját oldalon minden funkció él, kód nem kell."
+msgstr "Na vlastním webu fungují všechny funkce, kód není potřeba."
+
+#. translators: %s: plan name
+#: includes/Admin/Pages.php
+#, php-format
+msgid "A licenc már tartalmazza: %s csomag."
+msgstr "Licence to už obsahuje: balíček %s."
+
+#: includes/Admin/Pages.php
+msgid "A Pro változat kóddal be van kapcsolva: a Professional csomag minden funkciója él (képleíró prompt, teljes paraméterezés, részletes galéria, haladó arculat…)."
+msgstr "Verze Pro je zapnuta kódem: fungují všechny funkce balíčku Professional (prompt z popisu obrázku, úplné parametry, podrobná galerie, pokročilá identita…)."
+
+#: includes/Admin/Pages.php
+msgid "Kikapcsolás"
+msgstr "Vypnout"
+
+#: includes/Admin/Pages.php
+msgid "Add meg a kódot, és a Professional csomag minden funkciója bekapcsol ezen az oldalon."
+msgstr "Zadej kód a na tomto webu se zapnou všechny funkce balíčku Professional."
+
+#: includes/Admin/Pages.php
+msgid "Pro kód"
+msgstr "Kód Pro"
+
+#: includes/Admin/Pages.php
+msgid "Bekapcsolás"
+msgstr "Zapnout"

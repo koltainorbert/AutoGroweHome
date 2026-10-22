@@ -10358,3 +10358,53 @@ msgstr ""
 #: includes/Admin/Admin.php
 msgid "Forma-vezetés (régi)"
 msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A Pro változat bekapcsolva."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Túl sok hibás próbálkozás. Próbáld újra 15 perc múlva."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "Hibás kód."
+msgstr ""
+
+#: includes/Admin/Admin.php
+msgid "A Pro változat kikapcsolva."
+msgstr ""
+
+#: includes/Admin/Pages.php
+msgid "Pro változat"
+msgstr ""
+
+#: includes/Admin/Pages.php
+msgid "Saját oldalon minden funkció él, kód nem kell."
+msgstr ""
+
+#. translators: %s: plan name
+#: includes/Admin/Pages.php
+#, php-format
+msgid "A licenc már tartalmazza: %s csomag."
+msgstr ""
+
+#: includes/Admin/Pages.php
+msgid "A Pro változat kóddal be van kapcsolva: a Professional csomag minden funkciója él (képleíró prompt, teljes paraméterezés, részletes galéria, haladó arculat…)."
+msgstr ""
+
+#: includes/Admin/Pages.php
+msgid "Kikapcsolás"
+msgstr ""
+
+#: includes/Admin/Pages.php
+msgid "Add meg a kódot, és a Professional csomag minden funkciója bekapcsol ezen az oldalon."
+msgstr ""
+
+#: includes/Admin/Pages.php
+msgid "Pro kód"
+msgstr ""
+
+#: includes/Admin/Pages.php
+msgid "Bekapcsolás"
+msgstr ""

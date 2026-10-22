@@ -263,6 +263,8 @@ A JSON-mezőkben érvénytelen JSON **üres** értékként mentődik – mentés
 - **Élő előnézet:** mintakártya gombokkal és állapotszínekkel.
 - **Korábbi designverziók:** minden mentés előtt az előző állapot ide kerül (utolsó 10); **Visszaállítás** (megerősítéssel) – a visszaállítás előtti állapot is mentődik.
 
+**Pro változat (1.16.1):** az Arculat lap tetején kóddal bekapcsolható a Professional csomag (ld. LICENC-ES-ELOFIZETES.md).
+
 ### 3.10 Limitek és hozzáférés
 
 - Fejléc: „Aktuális napi időszak: … · effektív IP-limit (csomaggal együtt): N · saját IP ma: M”.
