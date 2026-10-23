@@ -1,5 +1,15 @@
 # Változásnapló
 
+## 1.27.0 – 2026-10-23
+
+Norbi: „fotorealisztikus és nagyon gyors 3D … esetleg dolgozz ki egy egyedi technológiát”. (`docs/FELADAT-1.25.0.md`, 7. pont)
+
+- **Élő fotó (egyedi hibrid megjelenítés):** mozgás közben a gyors raszteres kép; amikor a nézet megáll, a háttérben progresszív sugárkövetés indul ugyanazon a jeleneten (three-gpu-pathtracer 0.0.23 + three-mesh-bvh 0.8.3, MIT), és a kép áttűnéssel valódi fénnyel, tükröződéssel és lágy árnyékkal számolt fotóvá válik; mozdulatra az első képkocka már ismét raszter. A gyorsítóstruktúra (BVH) háttérszálon épül, csak a megváltozott jelenetnél újra, és megvárja az 1.26.0 részleteit (fű, fák, égbolt); kisebb felbontáson gyűjt, zajszűréssel; az égbolt a beépített égbolt-fényképből jön. Kapcsoló a 3D eszköztárában, megjegyezve; telefonon és gyenge gépen alapból ki.
+- **Fotó készítése:** nagy felbontású állókép a mostani nézetből, sugárkövetéssel, a látogató saját gépén számolva, állapotsávval, PNG letöltéssel – a tervező 3D-jében és az építési mód 3D nézetében is. Ingyenes, helyben fut, és nem talál ki semmit (a Magnific mellett).
+- **Méret és sebesség:** a sugárkövető kód (minifikált, csak a használt részek) 206 KB, tömörítve 60 KB; a ZIP ~31 KB-tal nő. Lusta betöltés: az első kép előtt 0 kérés, kikapcsolt élő fotónál a könyvtár be sem töltődik.
+- Ismert könyvtárhiba megkerülve: a `bounces 3` + `transmissiveBounces 4` párosítás a pixelek ~12 %-át feketén hagyta – a `transmissiveBounces` a könyvtár alapértékén marad.
+- Mérve: új `e2e/photo3d.js` 13/13 (SwiftShaderen: zaj sík falon 7,75 mintánál 14,94 → 46,5 mintánál 7,47, szűrve 5,59; mozdulatra az első képkocka raszter; fotó PNG; építési mód 3D-ben is; BVH 187 484 háromszög ~3,5 s háttérszálon) · `fullscreen.js` 76/76 · `build-test` 6975/6975 · autoloader 125/125 · sketch 0 hiba · 15 nyelv × 2744 szöveg, 0 hiba · konzolhiba 0. Valódi GPU-n és telefonon nem mérve.
+
 ## 1.26.0 – 2026-10-23
 
 Norbi: „fotorealisztikus és nagyon gyors 3D” – majd: „a nagy helyet igénylő külső technológiákat ne használjuk, csak ami biztonságos; az ég jó lenne és a háttérben a tárgyak, fák”. (`docs/FELADAT-1.25.0.md`, 2–6. pont, irányváltással)
