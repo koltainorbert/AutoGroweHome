@@ -11331,3 +11331,45 @@ msgstr "Ce navigateur ne prend pas en charge WebGL2 : l'aperçu 3D ne peut pas f
 #: includes/Frontend/Frontend.php
 msgid "A teszt megszakadt:"
 msgstr "Le test a été interrompu :"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó"
+msgstr "Photo en direct"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: ha a nézet megáll, a kép fokozatosan valódi fénnyel (sugárkövetéssel) számolt fotóvá válik. Mozdulatra azonnal visszavált."
+msgstr "Photo en direct : quand la vue s'immobilise, l'image devient peu à peu une photo calculée avec une lumière réelle (lancer de rayons). Au moindre mouvement, elle revient aussitôt."
+
+#: includes/Frontend/Strings.php
+msgid "Fotó készítése"
+msgstr "Prendre une photo"
+
+#: includes/Frontend/Strings.php
+msgid "Nagy felbontású fotó a mostani nézetből, sugárkövetéssel, a saját gépeden számolva (PNG letöltés)"
+msgstr "Photo haute résolution de la vue actuelle, calculée par lancer de rayons sur votre propre appareil (téléchargement PNG)"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó előkészítése…"
+msgstr "Préparation de la photo en direct…"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: %1$s / %2$s minta"
+msgstr "Photo en direct : %1$s / %2$s échantillons"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Fotó készül: %1$s / %2$s minta"
+msgstr "Photo en cours : %1$s / %2$s échantillons"
+
+#: includes/Frontend/Strings.php
+msgid "Fotó leállítása"
+msgstr "Arrêter la photo"
+
+#: includes/Frontend/Strings.php
+msgid "A fotó elkészült, a letöltés elindult."
+msgstr "La photo est prête, le téléchargement a commencé."
+
+#: includes/Frontend/Strings.php
+msgid "A fotó nem készíthető el ezen az eszközön."
+msgstr "Impossible de créer la photo sur cet appareil."

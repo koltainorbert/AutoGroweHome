@@ -11335,3 +11335,45 @@ msgstr "Ta brskalnik ne podpira WebGL2, 3D predogled tukaj ne deluje."
 #: includes/Frontend/Frontend.php
 msgid "A teszt megszakadt:"
 msgstr "Test je bil prekinjen:"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó"
+msgstr "Živa fotografija"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: ha a nézet megáll, a kép fokozatosan valódi fénnyel (sugárkövetéssel) számolt fotóvá válik. Mozdulatra azonnal visszavált."
+msgstr "Živa fotografija: ko se pogled ustavi, slika postopoma postane fotografija, izračunana z resnično svetlobo (sledenjem žarkov). Ob premiku takoj preklopi nazaj."
+
+#: includes/Frontend/Strings.php
+msgid "Fotó készítése"
+msgstr "Posnemi fotografijo"
+
+#: includes/Frontend/Strings.php
+msgid "Nagy felbontású fotó a mostani nézetből, sugárkövetéssel, a saját gépeden számolva (PNG letöltés)"
+msgstr "Fotografija visoke ločljivosti trenutnega pogleda, izračunana s sledenjem žarkov na vaši lastni napravi (prenos PNG)"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó előkészítése…"
+msgstr "Priprava žive fotografije…"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: %1$s / %2$s minta"
+msgstr "Živa fotografija: %1$s / %2$s vzorcev"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Fotó készül: %1$s / %2$s minta"
+msgstr "Izdelava fotografije: %1$s / %2$s vzorcev"
+
+#: includes/Frontend/Strings.php
+msgid "Fotó leállítása"
+msgstr "Ustavi izdelavo fotografije"
+
+#: includes/Frontend/Strings.php
+msgid "A fotó elkészült, a letöltés elindult."
+msgstr "Fotografija je pripravljena, prenos se je začel."
+
+#: includes/Frontend/Strings.php
+msgid "A fotó nem készíthető el ezen az eszközön."
+msgstr "Fotografije na tej napravi ni mogoče izdelati."

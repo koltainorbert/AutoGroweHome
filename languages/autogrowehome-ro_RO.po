@@ -11333,3 +11333,45 @@ msgstr "Acest browser nu acceptă WebGL2, previzualizarea 3D nu poate rula aici.
 #: includes/Frontend/Frontend.php
 msgid "A teszt megszakadt:"
 msgstr "Testul a fost întrerupt:"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó"
+msgstr "Fotografie live"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: ha a nézet megáll, a kép fokozatosan valódi fénnyel (sugárkövetéssel) számolt fotóvá válik. Mozdulatra azonnal visszavált."
+msgstr "Fotografie live: când vizualizarea stă pe loc, imaginea devine treptat o fotografie calculată cu lumină reală (trasarea razelor). La orice mișcare revine imediat."
+
+#: includes/Frontend/Strings.php
+msgid "Fotó készítése"
+msgstr "Fă o fotografie"
+
+#: includes/Frontend/Strings.php
+msgid "Nagy felbontású fotó a mostani nézetből, sugárkövetéssel, a saját gépeden számolva (PNG letöltés)"
+msgstr "Fotografie de înaltă rezoluție a vizualizării curente, calculată prin trasarea razelor pe propriul tău dispozitiv (descărcare PNG)"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó előkészítése…"
+msgstr "Se pregătește fotografia live…"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: %1$s / %2$s minta"
+msgstr "Fotografie live: %1$s / %2$s eșantioane"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Fotó készül: %1$s / %2$s minta"
+msgstr "Se creează fotografia: %1$s / %2$s eșantioane"
+
+#: includes/Frontend/Strings.php
+msgid "Fotó leállítása"
+msgstr "Oprește fotografia"
+
+#: includes/Frontend/Strings.php
+msgid "A fotó elkészült, a letöltés elindult."
+msgstr "Fotografia este gata, descărcarea a început."
+
+#: includes/Frontend/Strings.php
+msgid "A fotó nem készíthető el ezen az eszközön."
+msgstr "Fotografia nu poate fi creată pe acest dispozitiv."

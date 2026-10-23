@@ -11303,3 +11303,45 @@ msgstr ""
 #: includes/Frontend/Frontend.php
 msgid "A teszt megszakadt:"
 msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: ha a nézet megáll, a kép fokozatosan valódi fénnyel (sugárkövetéssel) számolt fotóvá válik. Mozdulatra azonnal visszavált."
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Fotó készítése"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Nagy felbontású fotó a mostani nézetből, sugárkövetéssel, a saját gépeden számolva (PNG letöltés)"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó előkészítése…"
+msgstr ""
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: %1$s / %2$s minta"
+msgstr ""
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Fotó készül: %1$s / %2$s minta"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "Fotó leállítása"
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "A fotó elkészült, a letöltés elindult."
+msgstr ""
+
+#: includes/Frontend/Strings.php
+msgid "A fotó nem készíthető el ezen az eszközön."
+msgstr ""

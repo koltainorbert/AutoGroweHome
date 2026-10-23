@@ -11331,3 +11331,45 @@ msgstr "Deze browser ondersteunt geen WebGL2, de 3D-weergave werkt hier niet."
 #: includes/Frontend/Frontend.php
 msgid "A teszt megszakadt:"
 msgstr "De test is afgebroken:"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó"
+msgstr "Live-foto"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: ha a nézet megáll, a kép fokozatosan valódi fénnyel (sugárkövetéssel) számolt fotóvá válik. Mozdulatra azonnal visszavált."
+msgstr "Live-foto: staat de weergave stil, dan wordt het beeld geleidelijk een foto die met echt licht is berekend (path tracing). Bij elke beweging schakelt het meteen terug."
+
+#: includes/Frontend/Strings.php
+msgid "Fotó készítése"
+msgstr "Foto maken"
+
+#: includes/Frontend/Strings.php
+msgid "Nagy felbontású fotó a mostani nézetből, sugárkövetéssel, a saját gépeden számolva (PNG letöltés)"
+msgstr "Foto in hoge resolutie van de huidige weergave, met path tracing berekend op je eigen apparaat (PNG-download)"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó előkészítése…"
+msgstr "Live-foto voorbereiden…"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: %1$s / %2$s minta"
+msgstr "Live-foto: %1$s / %2$s samples"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Fotó készül: %1$s / %2$s minta"
+msgstr "Foto wordt gemaakt: %1$s / %2$s samples"
+
+#: includes/Frontend/Strings.php
+msgid "Fotó leállítása"
+msgstr "Foto stoppen"
+
+#: includes/Frontend/Strings.php
+msgid "A fotó elkészült, a letöltés elindult."
+msgstr "De foto is klaar, de download is gestart."
+
+#: includes/Frontend/Strings.php
+msgid "A fotó nem készíthető el ezen az eszközön."
+msgstr "De foto kan op dit apparaat niet worden gemaakt."

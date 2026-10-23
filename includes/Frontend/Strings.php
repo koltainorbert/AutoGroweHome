@@ -840,7 +840,9 @@ final class Strings {
 			'photo_take' => __( 'Fotó készítése', 'autogrowehome' ),
 			'photo_take_title' => __( 'Nagy felbontású fotó a mostani nézetből, sugárkövetéssel, a saját gépeden számolva (PNG letöltés)', 'autogrowehome' ),
 			'photo_prep' => __( 'Élő fotó előkészítése…', 'autogrowehome' ),
+			/* translators: 1: finished samples, 2: target samples. */
 			'photo_status' => __( 'Élő fotó: %1$s / %2$s minta', 'autogrowehome' ),
+			/* translators: 1: finished samples, 2: target samples. */
 			'photo_rendering' => __( 'Fotó készül: %1$s / %2$s minta', 'autogrowehome' ),
 			'photo_cancel' => __( 'Fotó leállítása', 'autogrowehome' ),
 			'photo_done' => __( 'A fotó elkészült, a letöltés elindult.', 'autogrowehome' ),

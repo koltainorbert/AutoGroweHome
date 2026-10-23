@@ -11333,3 +11333,45 @@ msgstr "Ta przeglądarka nie obsługuje WebGL2, podgląd 3D tu nie działa."
 #: includes/Frontend/Frontend.php
 msgid "A teszt megszakadt:"
 msgstr "Test został przerwany:"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó"
+msgstr "Żywe zdjęcie"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: ha a nézet megáll, a kép fokozatosan valódi fénnyel (sugárkövetéssel) számolt fotóvá válik. Mozdulatra azonnal visszavált."
+msgstr "Żywe zdjęcie: gdy widok się zatrzyma, obraz stopniowo zamienia się w zdjęcie obliczone z prawdziwym światłem (śledzeniem promieni). Przy ruchu natychmiast wraca."
+
+#: includes/Frontend/Strings.php
+msgid "Fotó készítése"
+msgstr "Zrób zdjęcie"
+
+#: includes/Frontend/Strings.php
+msgid "Nagy felbontású fotó a mostani nézetből, sugárkövetéssel, a saját gépeden számolva (PNG letöltés)"
+msgstr "Zdjęcie w wysokiej rozdzielczości z bieżącego widoku, obliczone śledzeniem promieni na Twoim własnym urządzeniu (pobranie PNG)"
+
+#: includes/Frontend/Strings.php
+msgid "Élő fotó előkészítése…"
+msgstr "Przygotowywanie żywego zdjęcia…"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Élő fotó: %1$s / %2$s minta"
+msgstr "Żywe zdjęcie: %1$s / %2$s próbek"
+
+#. translators: 1: finished samples, 2: target samples.
+#: includes/Frontend/Strings.php
+msgid "Fotó készül: %1$s / %2$s minta"
+msgstr "Tworzenie zdjęcia: %1$s / %2$s próbek"
+
+#: includes/Frontend/Strings.php
+msgid "Fotó leállítása"
+msgstr "Zatrzymaj tworzenie zdjęcia"
+
+#: includes/Frontend/Strings.php
+msgid "A fotó elkészült, a letöltés elindult."
+msgstr "Zdjęcie jest gotowe, pobieranie się rozpoczęło."
+
+#: includes/Frontend/Strings.php
+msgid "A fotó nem készíthető el ezen az eszközön."
+msgstr "Na tym urządzeniu nie można utworzyć zdjęcia."
