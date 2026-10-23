@@ -1,5 +1,18 @@
 # Változásnapló
 
+## 1.26.0 – 2026-10-23
+
+Norbi: „fotorealisztikus és nagyon gyors 3D” – majd: „a nagy helyet igénylő külső technológiákat ne használjuk, csak ami biztonságos; az ég jó lenne és a háttérben a tárgyak, fák”. (`docs/FELADAT-1.25.0.md`, 2–6. pont, irányváltással)
+
+- **Égbolt-fénykép:** 7 CC0 égbolt (Poly Haven) beépítve, erősen tömörítve (`assets/sky/`, összesen 224 KB, `manifest.json`: forrás, licenc, md5). A napszak és az időjárás választja, a tájolás forgatja, a kép napja a jelenet árnyékot adó napja felé néz; a tükröződés és a környezeti fény is ebből jön. Ha a kép nem töltődik be: a mai festett ég. Fotótextúra-csomag és letöltött modell nincs.
+- **Fák és környék (számított, letöltés nélkül):** fák három részletességgel, aljnövényzet, kandeláber, pad, szemetes, villanyoszlop vezetékkel, terelőoszlop, postaláda.
+- **Fű:** sok fűcsomó egy példányos hálóban, szintenként (közepes 2719, magas 5607, ultra 9812 csomó), nem nő a házra és a burkolatra, nem vet árnyékot, gyorsítótárban.
+- **Felület:** a minta ismétlődése elleni sztochasztikus csempézés a meglévő számított textúrákon (magas és ultra szinten), enyhe szennyeződés a lábazaton.
+- **Minőségi szintek:** alacsony / közepes / magas / ultra, automatikus váltással a képkockaidő alapján (hiszterézissel); a látogató a 3D sarkában választhat, a választás megmarad.
+- **Teljesítményteszt:** admin → „3D teljesítményteszt” és `?agh_bench=1` a tervezőn: szintenként első kép ideje, képkocka/s, p50/p95, háromszög, rajzhívás, GPU neve, javasolt szint, JSON másolható – ezzel a valódi gépen és telefonon mérhető.
+- **Sebesség:** az első kép a 1.24.0 anyagaival jön; a fű, a részletes fák, a felületi részlet és az égbolt-fénykép utána, időszeletekben épül fel. A vezetőkép (Magnific) megvárja a teljes jelenetet. Felváltva mérve ugyanazon a gépen (3+3 futás, medián): 1.24.0 12 752 ms → 11 805 ms (−7 %).
+- Mérve: új `e2e/sky.js` 22/22 · új `e2e/scenery.js` 16/16 · új `e2e/bench.js` 17/17 · `stair3d.js` 4/4 · `life.js` 10/10 · `detail.js` 9/9 · autoloader 125/125 · sketch 0 hiba · 15 nyelv × 2734 szöveg, 0 hiba · konzolhiba 0. Valódi GPU-n és telefonon nem mérve.
+
 ## 1.25.0 – 2026-10-22
 
 Norbi: „az elmaradt felső 2 ponttal együtt mindent csinálj meg” – a helyiségek logikus elrendezése és a lépcső a kész ház 3D-jében. (`docs/FELADAT-1.25.0.md`, 1.1 és 1.2)
