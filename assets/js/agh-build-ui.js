@@ -607,7 +607,9 @@
 		// full screen of the drawing side (plan, 3D and the stage slider), the designer's own mechanism
 		D.fsBtn = A.fsButton ? A.fsButton(function () { return D.stage; }, 'agh-iconbtn agh-bld-fs') : null;
 		D.selBar = el('div', { class: 'agh-bld-selbar', role: 'group', 'aria-label': t('b_selection'), hidden: true });
-		D.tabs.appendChild(D.viewSeg); D.tabs.appendChild(D.selBar); D.tabs.appendChild(el('div', { class: 'agh-bld-right' }, [D.tools, D.fsBtn]));
+		// „Élő fotó” and „Fotó készítése” (1.27.0): only with the 3D view
+		D.photo = el('span', { class: 'agh-bld-photo', hidden: true });
+		D.tabs.appendChild(D.viewSeg); D.tabs.appendChild(D.selBar); D.tabs.appendChild(el('div', { class: 'agh-bld-right' }, [D.tools, D.photo, D.fsBtn]));
 		D.planWrap = el('div', { class: 'agh-bld-planwrap' });
 		D.svg = sv('svg', { class: 'agh-bld-svg', role: 'application', 'aria-label': t('b_plan_aria'), tabindex: '0', preserveAspectRatio: 'xMidYMid meet' });
 		D.planWrap.appendChild(D.svg);
@@ -625,6 +627,7 @@
 		Array.prototype.forEach.call(D.viewSeg.children, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-v') === v ? 'true' : 'false'); });
 		D.planWrap.hidden = v !== 'plan'; D.view3.hidden = v !== '3d'; D.phaseBar.hidden = v !== '3d';
 		D.tools.hidden = v !== 'plan';
+		if (D.photo) { D.photo.hidden = v !== '3d'; if (v === '3d' && !D.photo.firstChild && A.photoSlot) { D.photo.appendChild(A.photoSlot()); } }
 		if (st.pane === 'plan' || st.pane === '3d') { st.pane = v; D.root.setAttribute('data-pane', v); Array.prototype.forEach.call(D.panes.children, function (b) { b.setAttribute('aria-selected', b.getAttribute('data-pane') === v ? 'true' : 'false'); }); }
 		if (v === '3d') { renderPhaseBar(); show3D(true); } else { renderPlan(); mark3D(); }
 	}

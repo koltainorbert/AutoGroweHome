@@ -1,0 +1,10 @@
+Élő fotó
+Élő fotó: ha a nézet megáll, a kép fokozatosan valódi fénnyel (sugárkövetéssel) számolt fotóvá válik. Mozdulatra azonnal visszavált.
+Fotó készítése
+Nagy felbontású fotó a mostani nézetből, sugárkövetéssel, a saját gépeden számolva (PNG letöltés)
+Élő fotó előkészítése…
+Élő fotó: %1$s / %2$s minta
+Fotó készül: %1$s / %2$s minta
+Fotó leállítása
+A fotó elkészült, a letöltés elindult.
+A fotó nem készíthető el ezen az eszközön.
