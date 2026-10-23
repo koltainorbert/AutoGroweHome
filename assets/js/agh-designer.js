@@ -332,6 +332,18 @@
 		}).catch(function () { clearTimeout(giveUp); A3 = null; A3wait = false; fallback2D(); });
 		return load3D.p;
 	}
+	// „Élő fotó” switch and „Fotó készítése” button (agh-3d-photo.js, 1.27.0), filled once the module is there.
+	function photoSlot() {
+		var slot = h('span', { class: 'agh-3d-photo', hidden: true }), tries = 0;
+		// the build mode's 3D viewer may still be on its way: a few more looks
+		(function fill() {
+			var v = A3 && A3.viewer();
+			if (v && v.photoUi) { slot.hidden = false; v.photoUi(slot, photoHp()); }
+			else if (++tries < 40 && root) { setTimeout(fill, 250); }
+		})();
+		return slot;
+	}
+	function photoHp() { return { t: t, tf: tf, icon: icon, toast: toast }; }
 	// 3D did not arrive: replace the placeholders with the 2D sketch.
 	function fallback2D() {
 		if (!root) { return; }
@@ -1816,7 +1828,7 @@
 			try { A3.attach(box, viewCfg(c)); box.classList.add('has-3d'); box._aghSk = A3.viewer().signature(); var vw = A3.viewer(); vw.onPick = jumpToField; vw.onLayout = saveLayout; vw.onGrab = grabNote; vw.onSite = saveSite; vw.onMoveState = moveState; vw.place = S.boot.place || null; vw.onPaint = paintAt; vw.paint = S.view !== 'int' && !!S.paint; fixNote(); } catch (e) { A3 = null; box.classList.remove('has-3d'); clear(box); svg = previewSvg(c); box._aghSk = svg.replace(/agh\d+_/g, ''); box.innerHTML = svg; }
 			if (A3 && S.view === 'int') { box.appendChild(roomChips()); box.appendChild(layoutTools()); }
 			else if (A3) { box.appendChild(siteTools()); if ((S.config.facade_accent || []).length || S.paint) { box.appendChild(paintTools()); } }
-			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), S.view === 'int' ? h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }) : h('span', { class: 'agh-3d-hint', title: t('site_hint'), text: t('site_hint_short') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')))); }
+			if (A3) { box.appendChild(h('div', { class: 'agh-3d-tools' }, viewSwitch(), S.view === 'int' ? h('span', { class: 'agh-3d-hint', text: t('sketch_orbit_hint') }) : h('span', { class: 'agh-3d-hint', title: t('site_hint'), text: t('site_hint_short') }), h('button', { type: 'button', class: 'agh-3d-reset', title: t('sketch_reset_view'), 'aria-label': t('sketch_reset_view'), onclick: function () { var v = A3.viewer(); if (v) { v.fitCamera(true); v.requestRender(); } } }, icon('home')), photoSlot())); }
 		} else if (A3wait) {
 			clear(box);
 			box.appendChild(waitBox());
@@ -2371,6 +2383,7 @@
 			toast: function (msg, kind, ms) { toast(msg, kind, ms); },
 			sketch: function (c) { return previewSvg(c); },
 			fsButton: function (getEl, cls) { return fsButton(getEl, cls); },
+			photoSlot: photoSlot,
 			roomTypes: buildRoomTypes,
 			defaultRoomTypes: defaultRoomTypes,
 			confirm: function (title, text, go, fn) { confirmDialog(title, text, go, fn); },

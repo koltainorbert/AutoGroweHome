@@ -2599,6 +2599,7 @@ Viewer.prototype.render = function () {
 	// 1.26.0: the first picture is on screen – now the detail (grass, woods, surface detail, sky)
 	if (!DETAIL_ON && !this.upgrading && !this.thumb && this.house && this.levels) { var selfU = this; setTimeout(function () { selfU.upgrade(); }, 0); }
 	if (this.levels && this.frames > 2 && !this.probing && !this.upgrading && QL.needsProbe()) { var self = this; setTimeout(function () { self.probe(); }, 0); }
+	if (this.photo) { this.photo.frame(); } else if (this.frames === 1 && !this.thumb && !this.shared) { photoLoad(this); }   // „Élő fotó” (agh-3d-photo.js)
 };
 // Fingerprint of the current scene: geometry bounds, materials and environment. The tests compare it
 // before and after a parameter change.
@@ -2624,6 +2625,7 @@ Viewer.prototype.signature = function () {
 };
 Viewer.prototype.dispose = function () {
 	this.disposed = true;
+	if (this.photo) { this.photo.dispose(); }
 	if (this.controls) { this.controls.dispose(); }
 	if (this.onKey) { document.removeEventListener('keydown', this.onKey, true); }
 	if (this.house) { disposeTree(this.house.root); }
@@ -3727,6 +3729,29 @@ onTexture(function () {
 	if (texTimer) { return; }
 	texTimer = setTimeout(function () { texTimer = 0; if (live && !live.disposed) { live.shadowDirty = true; live.requestRender(); } }, 90);
 });
+/* ------------------------------------------------------------------ „Élő fotó” hook (1.27.0)
+ * agh-3d-photo.js: path tracing when the view stands still, „Fotó készítése”. Loaded after the first
+ * picture (never before it), the path tracer itself only when it is first needed. Viewer.render()
+ * hands every raster frame to it; any failure leaves the raster picture as it is. */
+var photoMod = null;
+function photoImport() {
+	if (!photoMod) { photoMod = import('./agh-3d-photo.js' + new URL(import.meta.url).search); photoMod.catch(function () { photoMod = null; }); }
+	return photoMod;
+}
+function photoLoad(v) {
+	setTimeout(function () { photoImport().then(function (m) { if (!v.disposed && !v.photo) { m.attach(v); } }, function () {}); }, 400);
+}
+// The switch and the photo button in a slot of the 3D tools (designer, build mode). hp: { t, tf, icon, toast }.
+Viewer.prototype.photoUi = function (el, hp) {
+	var v = this;
+	return new Promise(function (res) {
+		(function go() {
+			if (v.disposed) { res(null); return; }
+			if (!v.frames) { setTimeout(go, 250); return; }   // not before the first picture
+			photoImport().then(function (m) { res(v.disposed ? null : m.ui(el, v, hp)); }, function () { if (el) { el.hidden = true; } res(null); });
+		})();
+	});
+};
 /* ------------------------------------------------------------------ guide pictures
  * The picture the image model follows: the very house the visitor built, from the angle of the view
  * being generated. "hero" is the visitor's own camera (what they see on screen), the others are fixed
